@@ -14,17 +14,15 @@
 /******************************************************************************\
  *  SECURITY
 \******************************************************************************/
-security.cas.serverName = 'http://alerts.ala.org.au'
 security.cas.casServerName = 'https://auth.ala.org.au'
-security.cas.contextPath = '/ala-postie'
 security.cas.urlPattern = '/ala-postie/notification/myalerts,/notification/myalerts'
 security.cas.urlExclusionPattern = '/images.*,/css.*,/js.*'
-security.cas.loginUrl = '${security.cas.casServerName}/cas/login'
-security.cas.logoutUrl = '${security.cas.casServerName}/cas/logout'
+security.cas.loginUrl = 'https://auth.ala.org.au/cas/login'
+security.cas.logoutUrl = 'https://auth.ala.org.au/cas/logout'
 security.cas.bypass = false
 
 postie.timezone = 'Australia/Sydney'
-postie.emailSender = "alerts@ala.org.au"
+postie.emailSender = "info@ala.org.au"
 
 ala.baseURL = 'http://www.ala.org.au'
 
@@ -76,9 +74,32 @@ grails.rest.injectInto = ["Controller", "Service", "Routes"]
 environments {
     production {
         grails.serverURL = "http://alerts.ala.org.au"
+        security.cas.serverName = 'http://alerts.ala.org.au'
+        security.cas.contextPath = ''
+        grails {
+          mail {
+            host = "localhost"
+            port = 25
+            username = postie.emailSender
+         }
+        }
     }
     development {
         grails.serverURL = "http://localhost:8080/${appName}"
+        security.cas.serverName = 'http://localhost:8080'
+        security.cas.contextPath = '/ala-postie'
+        grails {
+           mail {
+             host = "smtp.gmail.com"
+             port = 465
+             username = postie.emailSender
+             password = "**********"
+             props = ["mail.smtp.auth":"true",
+                      "mail.smtp.socketFactory.port":"465",
+                      "mail.smtp.socketFactory.class":"javax.net.ssl.SSLSocketFactory",
+                      "mail.smtp.socketFactory.fallback":"false"]
+           }
+        }
     }
     test {
         grails.serverURL = "http://localhost:8080/${appName}"
@@ -110,22 +131,4 @@ log4j = {
 
 //    debug   'au.org.ala',
   //          'org.ala'
-}
-grails {
-   mail {
-     host = "smtp.csiro.au"
-     port = 25
-     username = postie.emailSender
-   }
-
-//   mail {
-//     host = "smtp.gmail.com"
-//     port = 465
-//     username = postie.emailSender
-//     password = "**********"
-//     props = ["mail.smtp.auth":"true",
-//              "mail.smtp.socketFactory.port":"465",
-//              "mail.smtp.socketFactory.class":"javax.net.ssl.SSLSocketFactory",
-//              "mail.smtp.socketFactory.fallback":"false"]
-//   }
 }

@@ -13,6 +13,12 @@
             <g:if test="${flash.message}">
             <!--<div class="message">${flash.message}</div>-->
             </g:if>
+
+            <p>
+              Enable an alert to have emails sent to your email address (<cl:loggedInUsername/>)
+            </p>
+
+
             <div class="list">
                 <table style="width:100%">
                     <!--

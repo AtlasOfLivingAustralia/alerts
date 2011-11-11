@@ -20,6 +20,7 @@ class EmailService {
     }
 
     sendMail {
+      from ConfigurationHolder.config.postie.emailSender
       to ConfigurationHolder.config.postie.emailSender
       subject "Update - " + notification.query.name
       bcc notification.userEmail
@@ -45,6 +46,7 @@ class EmailService {
     }
 
     sendMail {
+      from ConfigurationHolder.config.postie.emailSender
       to ConfigurationHolder.config.postie.emailSender
       subject "Update - " + query.name
       bcc addresses
