@@ -21,7 +21,6 @@ class EmailService {
 
     sendMail {
       from ConfigurationHolder.config.postie.emailSender
-      to ConfigurationHolder.config.postie.emailSender
       subject "Update - " + notification.query.name
       bcc notification.userEmail
       body (view: notification.query.emailTemplate,
@@ -47,7 +46,6 @@ class EmailService {
 
     sendMail {
       from ConfigurationHolder.config.postie.emailSender
-      to ConfigurationHolder.config.postie.emailSender
       subject "Update - " + query.name
       bcc addresses
       body (view: query.emailTemplate,
@@ -65,7 +63,7 @@ class EmailService {
     String moreInfoUrl = query.baseUrl + query.queryPathForUI
     if(query.dateFormat){
       SimpleDateFormat sdf = new SimpleDateFormat(query.dateFormat)
-      sdf.setTimeZone(TimeZone.getTimeZone(ConfigurationHolder.config.postie.timezone) )
+      //sdf.setTimeZone(TimeZone.getTimeZone(ConfigurationHolder.config.postie.timezone) )
       def dateValue = sdf.format(query.previousCheck)
       moreInfoUrl = query.baseUrl + query.queryPathForUI.replaceAll("___DATEPARAM___", dateValue)
     }

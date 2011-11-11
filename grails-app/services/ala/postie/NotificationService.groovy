@@ -71,7 +71,7 @@ class NotificationService {
       }
 
       SimpleDateFormat sdf = new SimpleDateFormat(query.dateFormat)
-      sdf.setTimeZone(TimeZone.getTimeZone(ConfigurationHolder.config.postie.timezone))
+      //sdf.setTimeZone(TimeZone.getTimeZone(ConfigurationHolder.config.postie.timezone))
 
       //insert the date to query with
       def dateValue = sdf.format(query.lastChecked)

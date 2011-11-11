@@ -22,7 +22,7 @@ security.cas.logoutUrl = 'https://auth.ala.org.au/cas/logout'
 security.cas.bypass = false
 
 postie.timezone = 'Australia/Sydney'
-postie.emailSender = "info@ala.org.au"
+postie.emailSender = "alerts@ala.org.au"
 
 ala.baseURL = 'http://www.ala.org.au'
 
