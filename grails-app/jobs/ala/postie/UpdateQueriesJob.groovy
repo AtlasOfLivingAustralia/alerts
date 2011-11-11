@@ -2,7 +2,7 @@ package ala.postie
 
 
 class UpdateQueriesJob {
-    def timeout = 360000l // execute job once every hour
+    def timeout = 86400000l // execute job once every hour
     def startDelay = 30000l //delay
 
     def notificationService
