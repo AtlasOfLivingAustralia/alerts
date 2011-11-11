@@ -20,12 +20,12 @@ class EmailService {
     }
 
     sendMail {
-      from ConfigurationHolder.config.postie.emailSender
+      from "Atlas alerts<" + ConfigurationHolder.config.postie.emailSender + ">"
       subject "Update - " + notification.query.name
       bcc notification.userEmail
       body (view: notification.query.emailTemplate,
             plugin:"email-confirmation",
-            model:[title:"Update - " + notification.query.name,
+            model:[title:notification.query.name,
                    message:notification.query.updateMessage,
                    moreInfo: constructMoreInfoUrl(notification.query),
                    stopNotification: ConfigurationHolder.config.security.cas.serverName + ConfigurationHolder.config.security.cas.contextPath  + '/notification/myAlerts',
@@ -45,8 +45,8 @@ class EmailService {
     }
 
     sendMail {
-      from ConfigurationHolder.config.postie.emailSender
-      subject "Update - " + query.name
+      from "Atlas alerts<" + ConfigurationHolder.config.postie.emailSender + ">"
+      subject query.name
       bcc addresses
       body (view: query.emailTemplate,
             plugin:"email-confirmation",

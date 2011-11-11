@@ -4,8 +4,8 @@
   <body>
     <h2>${title}</h2>
     <p>${message}</p>
-    <p>To view a list of changes, <a href="${moreInfo}">click here</a></p>
-    <p>To manage your alerts, <a href="${stopNotification}">click here</a></p>
+    <p>To view a list of all the records that have changed, <a href="${moreInfo}">click here</a></p>
+    <p>To disable this alert or to manage your alerts, <a href="${stopNotification}">click here</a></p>
     <style type="text/css">
     	body { font-family:Arial; }
     	table { border-collapse: collapse; border: 1px solid #CCC; padding:2px; }
