@@ -56,7 +56,7 @@ class NotificationService {
     boolean hasChangedValue = hasChanged(query)
     println("Has changed? : " + hasChangedValue)
     if(hasChangedValue){
-      query.lastChanged(now)
+      query.lastChanged = now
     }
 
     query.save(true)
