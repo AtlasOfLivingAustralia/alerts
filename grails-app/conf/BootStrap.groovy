@@ -25,7 +25,7 @@ class BootStrap {
             description: 'Notify me when annotations are made on any record.',
             queryPath: '/ws/occurrences/search?q=last_assertion_date:[___DATEPARAM___%20TO%20*]&sort=last_assertion_date&dir=desc&pageSize=5&facets=basis_of_record',
             queryPathForUI: '/occurrences/search?q=last_assertion_date:[___DATEPARAM___%20TO%20*]&sort=last_assertion_date&dir=desc',
-            dateFormat: """yyyy-MM-dd'T'hh:mm:ss'Z'""",
+            dateFormat: """yyyy-MM-dd'T'HH:mm:ss'Z'""",
             emailTemplate: '/email/biocache',
             recordJsonPath: '\$.occurrences'
     ])).save()
@@ -39,7 +39,7 @@ class BootStrap {
             description: 'Notify me when new records are added.',
             queryPath: '/ws/occurrences/search?q=last_load_date:[___DATEPARAM___%20TO%20*]&sort=last_load_date&dir=desc&pageSize=5&facets=basis_of_record',
             queryPathForUI: '/occurrences/search?q=last_load_date:[___DATEPARAM___%20TO%20*]&sort=last_load_date&dir=desc',
-            dateFormat: """yyyy-MM-dd'T'hh:mm:ss'Z'""",
+            dateFormat: """yyyy-MM-dd'T'HH:mm:ss'Z'""",
             emailTemplate: '/email/biocache',
             recordJsonPath: '\$.occurrences'
     ])).save()
@@ -53,7 +53,7 @@ class BootStrap {
             description: 'Notify me when new images are added.',
             queryPath: '/ws/occurrences/search?q=last_load_date:[___DATEPARAM___%20TO%20*]&sort=last_load_date&dir=desc&fq=multimedia:Multimedia&pageSize=5&facets=basis_of_record',
             queryPathForUI: '/occurrences/search?q=last_load_date:[___DATEPARAM___%20TO%20*]&sort=last_load_date&dir=desc&fq=multimedia:Multimedia',
-            dateFormat: """yyyy-MM-dd'T'hh:mm:ss'Z'""",
+            dateFormat: """yyyy-MM-dd'T'HH:mm:ss'Z'""",
             emailTemplate: '/email/biocache',
             fireWhenNotZero: true,
             recordJsonPath: '\$.occurrences'
@@ -68,7 +68,7 @@ class BootStrap {
             description: 'Notify me when new citizen science records are added.',
             queryPath: '/ws/occurrences/search?q=last_load_date:[___DATEPARAM___%20TO%20*]&fq=data_resource_uid:dr364&sort=last_load_date&dir=desc&pageSize=5&facets=basis_of_record',
             queryPathForUI: '/occurrences/search?q=last_load_date:[___DATEPARAM___%20TO%20*]&fq=data_resource_uid:dr364&sort=last_load_date&dir=desc',
-            dateFormat: """yyyy-MM-dd'T'hh:mm:ss'Z'""",
+            dateFormat: """yyyy-MM-dd'T'HH:mm:ss'Z'""",
             emailTemplate: '/email/biocache',
             fireWhenNotZero: true,
             recordJsonPath: '\$.occurrences'
@@ -83,7 +83,7 @@ class BootStrap {
             description: 'Notify me when new citizen science records with images are added.',
             queryPath: '/ws/occurrences/search?q=last_load_date:[___DATEPARAM___%20TO%20*]&fq=data_resource_uid:dr364&sort=last_load_date&dir=desc&pageSize=5&facets=basis_of_record&fq=multimedia:Multimedia',
             queryPathForUI: '/occurrences/search?q=last_load_date:[___DATEPARAM___%20TO%20*]&fq=data_resource_uid:dr364&sort=last_load_date&dir=desc&fq=multimedia:Multimedia',
-            dateFormat: """yyyy-MM-dd'T'hh:mm:ss'Z'""",
+            dateFormat: """yyyy-MM-dd'T'HH:mm:ss'Z'""",
             emailTemplate: '/email/biocache',
             recordJsonPath: '\$.occurrences'
     ])).save()

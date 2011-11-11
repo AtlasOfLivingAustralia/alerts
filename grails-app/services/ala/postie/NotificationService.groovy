@@ -47,8 +47,6 @@ class NotificationService {
 
     println("Last result size: " + query.lastResult.length)
 
-    query.save(true)
-
     if(query.hasErrors()){
       query.errors.allErrors.each { println it }
 
@@ -57,6 +55,11 @@ class NotificationService {
     //check the derived properties
     boolean hasChangedValue = hasChanged(query)
     println("Has changed? : " + hasChangedValue)
+    if(hasChangedValue){
+      query.lastChanged(now)
+    }
+
+    query.save(true)
     hasChangedValue
   }
 
