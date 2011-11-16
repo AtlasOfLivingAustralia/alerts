@@ -103,6 +103,19 @@ class BootStrap {
     ])).save()
     new ala.postie.PropertyValue([name: "layer_count", jsonPath: "layerList", query: newSpatialLayers, fireWhenChanged: true]).save()
 
+    Query newDatasets = (new Query([
+            baseUrl: 'http://collections.ala.org.au',
+            name: 'Datasets',
+            updateMessage: 'More datasets have been added.',
+            description: 'Notify me when new datasets are added.',
+            queryPath: '/ws/dataResource',
+            queryPathForUI: '/datasets',
+            emailTemplate: '/email/datasets',
+            idJsonPath: '\$.uid',
+            recordJsonPath: '\$'
+    ])).save()
+    new ala.postie.PropertyValue([name: "layer_count", jsonPath: "layerList", query: newSpatialLayers, fireWhenChanged: true]).save()
+
 //      (new Notification([query: newAssertions, userEmail:"moyesyside@gmail.com"])).save()
     //      (new Notification([query: newRecords, userEmail:"moyesyside@gmail.com"])).save()
     //      (new Notification([query: newRecordsWithImages, userEmail:"moyesyside@gmail.com"])).save()

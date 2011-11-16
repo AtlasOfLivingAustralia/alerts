@@ -7,6 +7,7 @@ class UrlMappings {
 			}
 		}
 
+        "/ws/"(controller:'webservice')
 		"/"(controller:'notification', action:'index')
 		"500"(view:'/error')
 	}

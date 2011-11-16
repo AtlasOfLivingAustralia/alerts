@@ -20,7 +20,7 @@
     <context-param>
         <!-- Parameter used by CAS filters -->
         <param-name>serverName</param-name>
-        <param-value>http://alerts.ala.org.au</param-value>
+        <param-value>http://moyesyside.ala.org.au:8080</param-value>
     </context-param>
 
     <context-param>
@@ -28,16 +28,14 @@
         <param-value>https://auth.ala.org.au</param-value>
     </context-param>
 
-    <!--
     <context-param>
         <param-name>contextPath</param-name>
         <param-value>/ala-postie</param-value>
     </context-param>
-    -->
 
     <context-param>
         <param-name>uriFilterPattern</param-name>
-        <param-value>/notification/myAlerts,/notification/addMyAlert,/notification/addMyAlert/*.,/notification/deleteMyAlert/*.</param-value>
+        <param-value>/notification/myAlerts,/notification/addMyAlert,/notification/addMyAlert/*.,/notification/deleteMyAlert/*.,/webservice/*., /webservice/createTaxonAlert,/webservice/taxonAlerts</param-value>
     </context-param>
 
     <context-param>

@@ -14,8 +14,9 @@ class NotificationController {
 
       //enabled alerts
       def notificationInstanceList = Notification.findAllByUserEmail(authService.username().toString().toLowerCase())
-      def enabledQueries = notificationInstanceList.collect { it.query }
 
+      //split into custom and non-custom...
+      def enabledQueries = notificationInstanceList.collect { it.query }
       def enabledIds =  enabledQueries.collect { it.id }
 
       //all types

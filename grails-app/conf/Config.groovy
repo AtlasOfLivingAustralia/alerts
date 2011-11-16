@@ -85,8 +85,8 @@ environments {
         }
     }
     development {
-        grails.serverURL = "http://localhost:8080/${appName}"
-        security.cas.serverName = 'http://localhost:8080'
+        grails.serverURL = "http://moyesyside.ala.org.au:8080/${appName}"
+        security.cas.serverName = 'http://moyesyside.ala.org.au:8080'
         security.cas.contextPath = '/ala-postie'
         grails {
            mail {
