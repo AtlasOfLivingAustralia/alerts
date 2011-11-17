@@ -114,7 +114,7 @@ class BootStrap {
             idJsonPath: '\$.uid',
             recordJsonPath: '\$'
     ])).save()
-    new ala.postie.PropertyValue([name: "layer_count", jsonPath: "layerList", query: newSpatialLayers, fireWhenChanged: true]).save()
+    new ala.postie.PropertyValue([name: "dataset_count", jsonPath: "\$", query: newDatasets, fireWhenChanged: true]).save()
 
 //      (new Notification([query: newAssertions, userEmail:"moyesyside@gmail.com"])).save()
     //      (new Notification([query: newRecords, userEmail:"moyesyside@gmail.com"])).save()
