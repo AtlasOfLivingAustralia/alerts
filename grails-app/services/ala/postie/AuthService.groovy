@@ -10,7 +10,7 @@ class AuthService {
   def serviceMethod() {}
 
   def username() {
-    return (RequestContextHolder.currentRequestAttributes()?.getUserPrincipal()?.attributes?.email?.toString().toLowerCase()  ) ?: null
+    return (RequestContextHolder.currentRequestAttributes()?.getUserPrincipal()?.attributes?.email?.toString()?.toLowerCase()  ) ?: null
   }
 
   def displayName() {

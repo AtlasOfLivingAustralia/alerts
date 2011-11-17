@@ -51,6 +51,6 @@ class Query {
   }
 
   public String toString() {
-      return name
+    return name
   }
 }

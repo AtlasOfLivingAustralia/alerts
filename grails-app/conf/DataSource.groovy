@@ -13,7 +13,8 @@ hibernate {
 environments {
     development {
         dataSource {
-            dbCreate = "create-drop" // one of 'create', 'create-drop','update'
+            //dbCreate = "create-drop" // one of 'create', 'create-drop','update'
+            dbCreate = "none"
             url = "jdbc:mysql://localhost:3306/postie"
         }
     }

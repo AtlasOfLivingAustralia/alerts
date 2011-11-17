@@ -4,18 +4,19 @@ class WebserviceController {
 
   def authService
   def queryService
+  def userService
 
   def index = {}
 
   def taxonAlerts = {
 
-     println("taxonAlerts lookup for...." + params.guid)
+    println("taxonAlerts lookup for...." + params.guid)
 
     //check for notifications for this query and this user
     Boolean alertExists = false
 
     Query query = queryService.createTaxonQuery(params.guid, params.taxonName)
-
+    Notification n = null
     //find the query
     Query taxonQuery = Query.findByBaseUrlAndQueryPath(query.baseUrl,query.queryPath)
 
@@ -23,7 +24,7 @@ class WebserviceController {
       println("Query already exists...." + taxonQuery.id)
 
       //does a notification exist???
-      Notification n = Notification.findByQueryAndUserEmail(taxonQuery, authService.username())
+      n = Notification.findByQueryAndUser(taxonQuery, userService.getUser())
       if(n != null){
         println("Notification for this user exists...." + authService.username())
         alertExists = true
@@ -32,15 +33,14 @@ class WebserviceController {
       }
     }
 
-    [alertExists:alertExists, guid:params.guid, taxonName:params.taxonName]
+    response.addHeader("Cache-Control","no-cache")
+    response.addHeader("Cache-Control","no-store")
+    response.addHeader("Pragma","no-cache")
+
+    [alertExists:alertExists, guid:params.guid, taxonName:params.taxonName, notification:n]
   }
 
   def createTaxonAlert = {
-
-    println("Create alert redirect: " + params.redirect)
-    println("Create alert redirect: " + params.guid)
-    println("Create alert redirect: " + params.taxonName)
-    println("Create alert redirect - user name: " + authService.username())
 
     Query newQuery = queryService.createTaxonQuery(params.guid, params.taxonName)
 
@@ -54,24 +54,18 @@ class WebserviceController {
       newQuery = taxonQuery
     }
 
-    //add a notification
-    (new Notification([query: newQuery, userEmail: authService.username()])).save(true)
+    //does the notification already exist?
+    def exists = Notification.findByQueryAndUser(newQuery, userService.getUser())
+    if(!exists){
+      (new Notification([query: newQuery, user: userService.getUser()])).save(true)
+    }
 
     redirect([url:params.redirect])
   }
 
   def deleteAlert = {
-
-
-
-
-  }
-
-  def disable = {
-
-
-
-
-
+    Notification n = Notification.findById(params.id)
+    n.delete(flush:true)
+    redirect([url:params.redirect])
   }
 }

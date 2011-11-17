@@ -45,11 +45,10 @@ class NotificationService {
     query.previousResult = query.lastResult
     query.lastResult = bout.toByteArray()
 
-    println("Last result size: " + query.lastResult.length)
+    //println("Last result size: " + query.lastResult.length)
 
     if(query.hasErrors()){
       query.errors.allErrors.each { println it }
-
     }
 
     //check the derived properties
@@ -135,6 +134,9 @@ class NotificationService {
 
 
   private def refreshProperties(Query query, json) {
+
+    println("Refreshing properties for query: " + query.name)
+
     query.propertyValues.each { propertyValue ->
 
       //read the value from the request
@@ -162,7 +164,37 @@ class NotificationService {
         //send an email
         List<Notification> notifications = Notification.findAllByQuery(query)
         List<String> emailAddresses = new ArrayList<String>()
-        notifications.each { n -> emailAddresses.add(n.userEmail) }
+        notifications.each { n -> emailAddresses.add(n.user.email) }
+        println("Sending emails to...." + emailAddresses.join(","))
+        emailService.sendGroupNotification(query, emailAddresses)
+      }
+    }
+  }
+
+  def checkQueryForFrequency(FrequencyType frequency){
+    checkQueryForFrequency(frequency, true)
+  }
+
+  //select q.id, u.frequency from query q inner join notification n on n.query_id=q.id inner join user u on n.user_id=u.id;
+  def checkQueryForFrequency(FrequencyType frequency, Boolean sendEmails){
+
+    def queries = Query.executeQuery(
+               """select q from Query q
+                  inner join q.notifications n
+                  inner join n.user u
+                  where u.frequency = :frequency
+                  group by q""", [frequency: frequency])
+
+    queries.each { query ->
+      boolean hasUpdated = checkStatus(query)
+      if (hasUpdated && sendEmails) {
+        println("Query has been updated. Sending emails....")
+        //send separate emails for now
+        //if there is a change, generate an email list
+        //send an email
+        List<Notification> notifications = Notification.findAllByQuery(query)
+        List<String> emailAddresses = new ArrayList<String>()
+        notifications.each { n -> emailAddresses.add(n.user.email) }
         println("Sending emails to...." + emailAddresses.join(","))
         emailService.sendGroupNotification(query, emailAddresses)
       }

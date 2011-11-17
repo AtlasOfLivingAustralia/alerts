@@ -22,7 +22,7 @@ class EmailService {
     sendMail {
       from "Atlas alerts<" + ConfigurationHolder.config.postie.emailSender + ">"
       subject "Update - " + notification.query.name
-      bcc notification.userEmail
+      bcc notification.user.email
       body (view: notification.query.emailTemplate,
             plugin:"email-confirmation",
             model:[title:notification.query.name,

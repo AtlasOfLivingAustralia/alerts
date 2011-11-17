@@ -35,7 +35,7 @@
 
     <context-param>
         <param-name>uriFilterPattern</param-name>
-        <param-value>/notification/myAlerts,/notification/addMyAlert,/notification/addMyAlert/*.,/notification/deleteMyAlert/*.,/webservice/*., /webservice/createTaxonAlert,/webservice/taxonAlerts</param-value>
+        <param-value>/notification/myAlerts,/notification/changeFrequency,/notification/addMyAlert,/notification/addMyAlert/*.,/notification/deleteMyAlert/*.,/webservice/*., /webservice/createTaxonAlert,/webservice/taxonAlerts,/ala-postie/notification/deleteMyAlert/*.,/notification/deleteMyAlertWR/*.,/grails/notification/deleteMyAlertWR.dispatch, /webservice/deleteTaxonAlert/*.</param-value>
     </context-param>
 
     <context-param>

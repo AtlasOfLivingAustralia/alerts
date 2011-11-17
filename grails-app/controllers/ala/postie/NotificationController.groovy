@@ -1,51 +1,96 @@
 package ala.postie
 
+import org.codehaus.groovy.grails.commons.ConfigurationHolder
+
 class NotificationController {
 
     def notificationService
     def emailService
+    def userService
     def authService
 
     static allowedMethods = [save: "POST", update: "POST", delete: "POST"]
 
     def myalerts = { redirect(action: "myAlerts", params: params) }
 
+
     def myAlerts = {
 
+       User user = userService.getUser()
+
       //enabled alerts
-      def notificationInstanceList = Notification.findAllByUserEmail(authService.username().toString().toLowerCase())
+      def notificationInstanceList = Notification.findAllByUser(user)
 
       //split into custom and non-custom...
       def enabledQueries = notificationInstanceList.collect { it.query }
       def enabledIds =  enabledQueries.collect { it.id }
 
       //all types
-      def allAlertTypes = Query.findAll()
+      def allAlertTypes = Query.findAllByCustom(false)
 
       allAlertTypes.removeAll { enabledIds.contains(it.id) }
+      def customQueries = enabledQueries.findAll { it.custom }
+      def standardQueries = enabledQueries.findAll { !it.custom }
 
-      [disabledQueries:allAlertTypes, enabledQueries:enabledQueries]
+      [disabledQueries:allAlertTypes, enabledQueries:standardQueries, customQueries:customQueries, frequencies:FrequencyType.list(), user:user]
     }
 
     def addMyAlert = {
-        def notificationInstance = new Notification()
-        notificationInstance.query =  Query.findById(params.id)
-        notificationInstance.userEmail = authService.username().toString().toLowerCase()
-        if (notificationInstance.save(flush: true)) {
-            flash.message = "${message(code: 'default.created.message', args: [message(code: 'notification.label', default: 'Notification'), notificationInstance.id])}"
-            redirect(action: "myAlerts")
-        }
+      def notificationInstance = new Notification()
+      notificationInstance.query =  Query.findById(params.id)
+      notificationInstance.user = userService.getUser()
+      //does this already exist?
+      def exists = Notification.findByQueryAndUser(notificationInstance.query, notificationInstance.user)
+      if(!exists){
+        notificationInstance.save(flush: true)
+      }
+      return null
     }
 
-    def deleteMyAlert ={
-        def userEmail = authService.username().toString().toLowerCase()
-        def query = Query.get(params.id)
-        def notificationInstance = Notification.findByUserEmailAndQuery(userEmail, query)
-        if (notificationInstance) {
-            notificationInstance.each { it.delete(flush: true) }
-            flash.message = "${message(code: 'default.deleted.message', args: [message(code: 'notification.label', default: 'Notification'), params.id])}"
-            redirect(action: "myAlerts")
-        }
+    def deleteMyAlert = {
+
+      def user = userService.getUser()
+      def query = Query.get(params.id)
+      println('Deleting my alert :  ' + params.id + ' for user : ' + authService.username())
+
+      def notificationInstance = Notification.findByUserAndQuery(user, query)
+      if (notificationInstance) {
+        println('Deleting my notification :  ' + params.id)
+        notificationInstance.each { it.delete(flush: true) }
+      } else {
+        println('*** Unable to find  my notification - no delete :  ' + params.id)
+      }
+      return null
+    }
+
+    def deleteMyAlertWR = {
+      def user = userService.getUser()
+
+      //this is a hack to get around a CAS issue
+      if(user == null){
+        user = User.findByEmail(params.userId)
+      }
+
+      def query = Query.get(params.id)
+      println('Deleting my alert :  ' + params.id + ' for user : ' + authService.username())
+
+      def notificationInstance = Notification.findByUserAndQuery(user, query)
+      if (notificationInstance) {
+        println('Deleting my notification :  ' + params.id)
+        notificationInstance.each { it.delete(flush: true) }
+      } else {
+        println('*** Unable to find  my notification - no delete :  ' + params.id)
+      }
+      redirect(action:'myAlerts')
+    }
+
+
+    def changeFrequency ={
+        def user = userService.getUser()
+        println(params.frequency)
+        user.frequency = ala.postie.FrequencyType.getByName(params.frequency)
+        user.save(true)
+        return null
     }
 
     def checkNow = {
@@ -58,7 +103,6 @@ class NotificationController {
     }
 
     def index = {
-
       //if is ADMIN, then index page
       //else redirect to /notification/myAlerts
       if(authService.userInRole("ADMIN")){
@@ -118,7 +162,7 @@ class NotificationController {
             if (params.version) {
                 def version = params.version.toLong()
                 if (notificationInstance.version > version) {
-                    
+
                     notificationInstance.errors.rejectValue("version", "default.optimistic.locking.failure", [message(code: 'notification.label', default: 'Notification')] as Object[], "Another user has updated this Notification while you were editing")
                     render(view: "edit", model: [notificationInstance: notificationInstance])
                     return

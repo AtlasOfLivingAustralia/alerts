@@ -13,22 +13,18 @@
             <g:if test="${flash.message}">
             <!--<div class="message">${flash.message}</div>-->
             </g:if>
-
+            <g:set var="userId"><cl:loggedInUsername/></g:set>
             <p>
               Enable an alert to have emails sent to your email address (<cl:loggedInUsername/>)
             </p>
 
+            <h3>
+              Send me alerts:
+              <g:select from="${frequencies}" name="userFrequency" value="${user.frequency}" id="userFrequency"/>
+            </h3>
 
             <div class="list">
                 <table style="width:100%">
-                    <!--
-                    <thead>
-                        <tr>
-                            <th><g:message code="notification.query.label" default="Alert" /></th>
-                            <g:sortableColumn property="description" title="${message(code: 'notification.description.label', default: 'Description')}" />
-                        </tr>
-                    </thead>
-                    -->
                     <tbody>
                     <g:each in="${enabledQueries}" status="i" var="query">
                         <tr class="${(i % 2) == 0 ? 'odd' : 'even'}">
@@ -47,11 +43,11 @@
                     </g:each>
                     <g:each in="${disabledQueries}" status="i" var="query">
                         <tr class="${(i % 2) == 0 ? 'odd' : 'even'}">
-                            <td>
+                            <td class="queryDescription">
                               <h3>${query.name}</h3>
                               ${query.description}
                             </td>
-                            <td>
+                            <td class="queryActions">
                             <p class="field switch">
                                 <label class="cb-enable"><span>Enabled</span></label>
                                 <label class="cb-disable selected"><span>Disabled</span></label>
@@ -62,6 +58,31 @@
                     </g:each>
                     </tbody>
                 </table>
+
+
+                <g:if test="${customQueries}">
+                <h2>My custom alerts</h2>
+                <table style="width:100%">
+                    <tbody>
+                    <g:each in="${customQueries}" status="i" var="query">
+                        <tr class="${(i % 2) == 0 ? 'odd' : 'even'}">
+                            <td class="queryDescription">
+                              <h3>${query.name}</h3>
+                              ${query.description}
+                            </td>
+                            <td class="queryActions">
+                            <p class="field switch">
+                                %{--<span class='button red deleteButton' id='${query.id}'>--}%
+                                  %{--<g:link controller="notification" action="deleteMyAlertWR" id="${query.id}" params="${[userId:userId]}">Delete</g:link>--}%
+                                %{--</span>--}%
+                                <span class='button red deleteButton' id='${query.id}'>Delete</span>
+                            </p>
+                            </td>
+                        </tr>
+                    </g:each>
+                    </tbody>
+                </table>
+                </g:if>
             </div>
         </div>
         <script type="text/javascript">
@@ -84,6 +105,15 @@
                   //send DB update
                   //alert($('.checkbox',parent).attr('id'));
                   $.get('deleteMyAlert/'+$('.checkbox',parent).attr('id'));
+              });
+
+              $("#userFrequency").change(function(){
+                  $.get('changeFrequency?frequency='+$('#userFrequency').val());
+              });
+
+              $('.deleteButton').click(function(data){
+                //$.get('deleteMyAlert/'+ $(this).attr('id'));
+                document.location.href = 'deleteMyAlertWR/'+$(this).attr('id') + '?userId=${userId}'
               });
           });
         </script>
