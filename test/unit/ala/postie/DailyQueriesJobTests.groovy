@@ -2,7 +2,7 @@ package ala.postie
 
 import grails.test.*
 
-class UpdateQueriesJobTests extends GrailsUnitTestCase {
+class DailyQueriesJobTests extends GrailsUnitTestCase {
     protected void setUp() {
         super.setUp()
     }
