@@ -14,12 +14,11 @@ class UserService {
 
     User user = User.findByEmail(authService.username().toString().toLowerCase().trim())
     if(user == null){
-      user = new User([email:authService.username().toString().toLowerCase().trim()])
+      user = new User([email:authService.username().toString().toLowerCase().trim(), frequency:Frequency.findAll().first()])
       user.save(true)
     }
     user
   }
-
 
   def serviceMethod() {}
 }

@@ -1,13 +1,11 @@
 package ala.postie
 
 class PropertyValue {
-  Query query
-  String jsonPath
-  String name
+
+  PropertyPath propertyPath
+  QueryResult queryResult
   String currentValue
   String previousValue
-  boolean fireWhenNotZero = false
-  boolean fireWhenChange = false
 
   static constraints = {
     currentValue nullable:true

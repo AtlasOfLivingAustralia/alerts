@@ -8,75 +8,98 @@ import org.apache.commons.io.IOUtils
 import com.jayway.jsonpath.JsonPath
 import java.text.SimpleDateFormat
 import java.util.zip.GZIPOutputStream
-import org.codehaus.groovy.grails.commons.ConfigurationHolder
+
 import java.util.zip.GZIPInputStream
 
 class NotificationService {
 
   static transactional = true
   def emailService
+  def diffService
 
   def serviceMethod() {}
 
-  def boolean checkStatus(Query query) {
+  QueryResult getQueryResult(Query query, Frequency frequency){
+
+    QueryResult qr = QueryResult.findByQueryAndFrequency(query, frequency)
+    if(qr == null){
+      qr = new QueryResult([query:query, frequency:frequency])
+      qr.save(flush:true)
+    }
+    qr
+  }
+
+  /**
+   * Check the status of queries for this given frequency.
+   *
+   * @param query
+   * @param frequency
+   * @return
+   */
+  def boolean checkStatus(Query query, Frequency frequency) {
+
+    QueryResult qr = getQueryResult(query, frequency)
 
     //boolean hasUpdated = false
-    def now = new Date()
+    Date now = new Date()
 
     //def url = new URL("http://biocache.ala.org.au/ws/occurrences/search?q=*:*&pageSize=1")
-    def urlString = getQueryUrl(query)
+    def urlString = getQueryUrl(query, frequency)
 
     println("Querying URL: " + urlString)
 
     def json = IOUtils.toString(new URL(urlString).newReader())
 
     //update the stored properties
-    refreshProperties(query, json)
+    refreshProperties(qr, json)
 
-    query.previousCheck = query.lastChecked
-    query.lastChecked = now
+    qr.previousCheck = qr.lastChecked
+    qr.lastChecked = now
 
     //store the last result from the webservice call
-    ByteArrayOutputStream bout = new ByteArrayOutputStream()
-    GZIPOutputStream gzout = new java.util.zip.GZIPOutputStream(bout)
-    gzout.write(json.toString().getBytes())
-    gzout.flush()
-    gzout.finish()
-    query.previousResult = query.lastResult
-    query.lastResult = bout.toByteArray()
-
-    //println("Last result size: " + query.lastResult.length)
+    qr.previousResult = qr.lastResult
+    qr.lastResult = gzipResult(json)
 
     if(query.hasErrors()){
       query.errors.allErrors.each { println it }
     }
 
     //check the derived properties
-    boolean hasChangedValue = hasChanged(query)
-    println("Has changed? : " + hasChangedValue)
-    if(hasChangedValue){
-      query.lastChanged = now
+    qr.hasChanged = hasChanged(qr)
+    println("Has changed? : " + qr.hasChanged)
+    if(qr.hasChanged){
+      qr.lastChanged = now
     }
 
-    query.save(true)
-    hasChangedValue
+    qr.save(true)
+    qr.hasChanged
   }
 
-  private String getQueryUrl(Query query){
+  byte[] gzipResult (String json){
+    //store the last result from the webservice call
+    ByteArrayOutputStream bout = new ByteArrayOutputStream()
+    GZIPOutputStream gzout = new java.util.zip.GZIPOutputStream(bout)
+    gzout.write(json.toString().getBytes())
+    gzout.flush()
+    gzout.finish()
+    bout.toByteArray()
+  }
+
+  private String getQueryUrl(Query query, Frequency frequency){
 
     //if there is a date format, then there's a param to replace
     if (query.dateFormat) {
 
+      QueryResult qr = getQueryResult(query, frequency)
+
       //if empty, set to 5 minutes ago, so we can catch latest things
-      if (!query.lastChecked) {
-        query.lastChecked = org.apache.commons.lang.time.DateUtils.addMinutes(new Date(), -5)
+      if (!qr.lastChecked) {
+        qr.lastChecked = org.apache.commons.lang.time.DateUtils.addMinutes(new Date(), -5)
       }
 
-      SimpleDateFormat sdf = new SimpleDateFormat(query.dateFormat)
-      //sdf.setTimeZone(TimeZone.getTimeZone(ConfigurationHolder.config.postie.timezone))
-
       //insert the date to query with
-      def dateValue = sdf.format(query.lastChecked)
+      SimpleDateFormat sdf = new SimpleDateFormat(query.dateFormat)
+      def dateValue = sdf.format(qr.lastChecked)
       query.baseUrl + query.queryPath.replaceAll("___DATEPARAM___", dateValue)
 
     } else {
@@ -85,62 +108,41 @@ class NotificationService {
     }
   }
 
-  private Boolean hasChanged(Query query) {
+  /**
+   * Indicates if the result of a query has changed by checking its properties.
+   *
+   * @param queryResult
+   * @return
+   */
+  Boolean hasChanged(QueryResult queryResult) {
     Boolean changed = false
-    query.propertyValues.each { pv ->
-      if (pv.fireWhenNotZero && pv.currentValue.toInteger() > 0) changed = true
-      else if (pv.fireWhenChange && pv.previousValue != pv.currentValue) changed = true
-      else if (query.idJsonPath){
-        //if an id json path supplied, do a comparison of previous and current
-        if(query.lastResult != null && query.previousResult != null){
-          //decompress both and compare lists
-          String last = decompressZipped(query.lastResult)
-          String previous = decompressZipped(query.previousResult)
-
-          //println(JsonPath.read(last, query.idJsonPath))
-          //println(JsonPath.read(previous, query.idJsonPath))
-          List<String> ids1 = JsonPath.read(last,  query.idJsonPath)
-          List<String> ids2 = JsonPath.read(previous,  query.idJsonPath)
-
-          List<String> diff = ids1.findAll { !ids2.contains(it) }
-
-          diff.each { println it }
-
-          println("has the layer list changed: " + !diff.empty)
-          changed = !diff.empty
-        }
+    queryResult.propertyValues.each { pv ->
+      if (pv.propertyPath.fireWhenNotZero){
+        changed = pv.currentValue.toInteger() > 0
+      }
+      else if (pv.propertyPath.fireWhenChange){
+        changed = pv.previousValue != pv.currentValue
+      }
+      else if (queryResult.query.idJsonPath){
+        changed = diffService.hasChangedJsonDiff(queryResult)
       }
     }
     changed
   }
 
 
-  public static String decompressZipped(byte[] zipped){
-    GZIPInputStream input = new GZIPInputStream(new ByteArrayInputStream(zipped))
-    StringBuffer sb = new StringBuffer()
-    List<String> readed = null
+  private def refreshProperties(QueryResult queryResult, json) {
 
-    try {
-      while (input.available() && !(readed = input.readLines()).isEmpty()) {
-        //println(readed.join(""))
-        sb.append(readed.join(""))
-      }
-    } catch (Exception e) {
-      //e.printStackTrace()
-    }
-    input.close()
-    sb.toString()
-  }
+    println("Refreshing properties for query: " + queryResult.query.name + " : " +  queryResult.frequency)
 
-
-  private def refreshProperties(Query query, json) {
-
-    println("Refreshing properties for query: " + query.name)
-
-    query.propertyValues.each { propertyValue ->
+    queryResult.query.propertyPaths.each { propertyPath ->
 
       //read the value from the request
-      def latestValue = JsonPath.read(json, propertyValue.jsonPath)
+      def latestValue = JsonPath.read(json, propertyPath.jsonPath)
+
+      //get property value for this property path
+      PropertyValue propertyValue = getPropertyValue(propertyPath, queryResult)
+
       propertyValue.previousValue = propertyValue.currentValue
 
       if (latestValue instanceof List) {
@@ -151,6 +153,15 @@ class NotificationService {
 
       propertyValue.save(true)
     }
+  }
+
+  PropertyValue getPropertyValue(PropertyPath pp, QueryResult queryResult){
+    PropertyValue pv = PropertyValue.findByPropertyPath(pp)
+    if(pv == null){
+      pv = new PropertyValue([propertyPath:pp, queryResult:queryResult])
+      //pv.save(flush:true)
+    }
+    pv
   }
 
   def checkAllQueries() {
@@ -171,12 +182,13 @@ class NotificationService {
     }
   }
 
-  def checkQueryForFrequency(FrequencyType frequency){
+  def checkQueryForFrequency(String frequencyName){
+    Frequency frequency = Frequency.findByName(frequencyName)
     checkQueryForFrequency(frequency, true)
   }
 
   //select q.id, u.frequency from query q inner join notification n on n.query_id=q.id inner join user u on n.user_id=u.id;
-  def checkQueryForFrequency(FrequencyType frequency, Boolean sendEmails){
+  def checkQueryForFrequency(Frequency frequency, Boolean sendEmails){
 
     def queries = Query.executeQuery(
                """select q from Query q
@@ -186,17 +198,25 @@ class NotificationService {
                   group by q""", [frequency: frequency])
 
     queries.each { query ->
-      boolean hasUpdated = checkStatus(query)
+      boolean hasUpdated = checkStatus(query,frequency)
       if (hasUpdated && sendEmails) {
         println("Query has been updated. Sending emails....")
         //send separate emails for now
         //if there is a change, generate an email list
         //send an email
-        List<Notification> notifications = Notification.findAllByQuery(query)
+
+        def users = Query.executeQuery(
+               """select u from User u
+                  inner join u.notifications n
+                  where n.query = :query
+                  and u.frequency = :frequency
+                  group by u""", [query: query, frequency: frequency])
+
+
         List<String> emailAddresses = new ArrayList<String>()
-        notifications.each { n -> emailAddresses.add(n.user.email) }
+        users.each { user -> emailAddresses.add(user.email) }
         println("Sending emails to...." + emailAddresses.join(","))
-        emailService.sendGroupNotification(query, emailAddresses)
+        emailService.sendGroupNotification(query, frequency, emailAddresses)
       }
     }
   }

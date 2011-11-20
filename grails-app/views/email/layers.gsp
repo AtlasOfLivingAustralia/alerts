@@ -18,17 +18,16 @@
     	<thead>
 			<th>Name</th>
 			<th>Description</th>
-			<th>Source</th>
+            <th>&nbsp;</th>
     	</thead>
     <g:each in="${records}" var="layer">
       <tbody>
       <tr>
         <td>${layer.name}</td>
         <td>${layer.description}</td>
-        <td>${layer.layer}</td>
-         <td>
+        <td>
            <a href="http://spatial.ala.org.au/layers">click to view</a>
-         </td>
+        </td>
       </tr>
       </tbody>
     </g:each>

@@ -8,15 +8,19 @@ class EmailService {
 
   static transactional = true
 
+  def diffService
+
   def serviceMethod() {}
 
   def sendNotificationEmail(Notification notification){
 
     println("Using email template: " + notification.query.emailTemplate)
 
+    QueryResult queryResult = QueryResult.findByQueryAndFrequency(notification.query, notification.user.frequency)
+
     def records = null
     if(notification.query.recordJsonPath){
-      records = JsonPath.read(NotificationService.decompressZipped(notification.query.lastResult), notification.query.recordJsonPath)
+      records = diffService.getNewRecordsFromDiff(queryResult)
     }
 
     sendMail {
@@ -29,19 +33,22 @@ class EmailService {
                    message:notification.query.updateMessage,
                    moreInfo: constructMoreInfoUrl(notification.query),
                    stopNotification: ConfigurationHolder.config.security.cas.serverName + ConfigurationHolder.config.security.cas.contextPath  + '/notification/myAlerts',
-                   records: records
+                   records: records,
+                   frequency: notification.user.frequency
             ]
       )
     }
   }
 
-  def sendGroupNotification(Query query, List<String> addresses){
+  def sendGroupNotification(Query query, Frequency frequency, List<String> addresses){
 
     println("Using email template: " + query.emailTemplate)
+    QueryResult queryResult = QueryResult.findByQueryAndFrequency(query, frequency)
 
     def records = null
     if(query.recordJsonPath){
-      records = JsonPath.read(NotificationService.decompressZipped(query.lastResult), query.recordJsonPath)
+      //records = JsonPath.read(NotificationService.decompressZipped(queryResult.lastResult), query.recordJsonPath)
+      records = diffService.getNewRecordsFromDiff(queryResult)
     }
 
     sendMail {
@@ -52,19 +59,20 @@ class EmailService {
             plugin:"email-confirmation",
             model:[title:"Update - " + query.name,
                    message:query.updateMessage,
-                   moreInfo: constructMoreInfoUrl(query),
+                   moreInfo: constructMoreInfoUrl(query, frequency),
                    stopNotification: ConfigurationHolder.config.security.cas.serverName + ConfigurationHolder.config.security.cas.contextPath  + '/notification/myAlerts',
-                   records: records
+                   records: records,
+                   frequency: frequency
       ])
     }
   }
 
-  private String constructMoreInfoUrl(Query query) {
+  private String constructMoreInfoUrl(Query query, Frequency frequency) {
+    QueryResult queryResult = QueryResult.findByQueryAndFrequency(query, frequency)
     String moreInfoUrl = query.baseUrl + query.queryPathForUI
     if(query.dateFormat){
       SimpleDateFormat sdf = new SimpleDateFormat(query.dateFormat)
-      //sdf.setTimeZone(TimeZone.getTimeZone(ConfigurationHolder.config.postie.timezone) )
-      def dateValue = sdf.format(query.previousCheck)
+      def dateValue = sdf.format(queryResult.previousCheck)
       moreInfoUrl = query.baseUrl + query.queryPathForUI.replaceAll("___DATEPARAM___", dateValue)
     }
     moreInfoUrl

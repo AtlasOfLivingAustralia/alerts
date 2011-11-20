@@ -3,7 +3,10 @@ package ala.postie
 class User {
 
   String email
-  FrequencyType frequency = FrequencyType.weekly
+  Frequency frequency
+  static hasMany = [ notifications : Notification ]
 
-  static constraints = {}
+  static constraints = {
+     frequency nullable:true
+  }
 }

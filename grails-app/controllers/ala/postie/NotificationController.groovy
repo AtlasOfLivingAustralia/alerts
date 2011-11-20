@@ -1,7 +1,5 @@
 package ala.postie
 
-import org.codehaus.groovy.grails.commons.ConfigurationHolder
-
 class NotificationController {
 
     def notificationService
@@ -12,7 +10,6 @@ class NotificationController {
     static allowedMethods = [save: "POST", update: "POST", delete: "POST"]
 
     def myalerts = { redirect(action: "myAlerts", params: params) }
-
 
     def myAlerts = {
 
@@ -32,10 +29,11 @@ class NotificationController {
       def customQueries = enabledQueries.findAll { it.custom }
       def standardQueries = enabledQueries.findAll { !it.custom }
 
-      [disabledQueries:allAlertTypes, enabledQueries:standardQueries, customQueries:customQueries, frequencies:FrequencyType.list(), user:user]
+      [disabledQueries:allAlertTypes, enabledQueries:standardQueries, customQueries:customQueries, frequencies:Frequency.list(), user:user]
     }
 
     def addMyAlert = {
+      println('add my alert '+ params.id)
       def notificationInstance = new Notification()
       notificationInstance.query =  Query.findById(params.id)
       notificationInstance.user = userService.getUser()
@@ -88,7 +86,7 @@ class NotificationController {
     def changeFrequency ={
         def user = userService.getUser()
         println(params.frequency)
-        user.frequency = ala.postie.FrequencyType.getByName(params.frequency)
+        user.frequency = ala.postie.Frequency.findByName(params.frequency)
         user.save(true)
         return null
     }

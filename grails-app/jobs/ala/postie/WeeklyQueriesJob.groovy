@@ -11,7 +11,7 @@ class WeeklyQueriesJob {
     def execute() {
       // execute task
       println("****** Scheduled weekly update ****** " + new Date())
-      notificationService.checkQueryForFrequency(FrequencyType.weekly)
+      notificationService.checkQueryForFrequency('weekly')
       println("****** Scheduled weekly update finished ******" + new Date())
     }
 }

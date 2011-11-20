@@ -11,7 +11,7 @@ class MonthlyQueriesJob {
     def execute() {
       // execute task
       println("****** Scheduled monthly update ****** " + new Date())
-      notificationService.checkQueryForFrequency(FrequencyType.monthly)
+      notificationService.checkQueryForFrequency('monthly')
       println("****** Scheduled monthly update finished ******" + new Date())
     }
 }

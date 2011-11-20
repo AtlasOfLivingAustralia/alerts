@@ -48,8 +48,8 @@ class WebserviceController {
     Query taxonQuery = Query.findByBaseUrlAndQueryPath(newQuery.baseUrl,newQuery.queryPath)
     if(taxonQuery == null){
       newQuery = newQuery.save(true)
-      new ala.postie.PropertyValue([name: "totalRecords", jsonPath: "totalRecords", query: newQuery, fireWhenNotZero: true]).save(true)
-      new ala.postie.PropertyValue([name: "last_loaded_record", jsonPath: "occurrences[0].rowKey", query: newQuery]).save(true)
+      new ala.postie.PropertyPath([name: "totalRecords", jsonPath: "totalRecords", query: newQuery, fireWhenNotZero: true]).save(true)
+      new ala.postie.PropertyPath([name: "last_loaded_record", jsonPath: "occurrences[0].rowKey", query: newQuery]).save(true)
     } else {
       newQuery = taxonQuery
     }

@@ -1,6 +1,7 @@
 import ala.postie.Notification
 import ala.postie.Query
 import ala.postie.PropertyValue
+import ala.postie.Frequency
 
 class BootStrap {
 
@@ -18,6 +19,12 @@ class BootStrap {
     }
 
   private def preloadQueries() {
+
+    Frequency.findAll().each { f -> f.delete(flush:true)}
+    (new Frequency([name:'daily'])).save()
+    (new Frequency([name:'weekly', periodInSeconds:604800])).save()
+    (new Frequency([name:'monthly', periodInSeconds:2419200])).save()
+
     Query newAssertions = (new Query([
             baseUrl: 'http://biocache.ala.org.au',
             name: 'Annotations',
@@ -27,10 +34,11 @@ class BootStrap {
             queryPathForUI: '/occurrences/search?q=last_assertion_date:[___DATEPARAM___%20TO%20*]&sort=last_assertion_date&dir=desc',
             dateFormat: """yyyy-MM-dd'T'HH:mm:ss'Z'""",
             emailTemplate: '/email/biocache',
-            recordJsonPath: '\$.occurrences'
+            recordJsonPath: '\$.occurrences',
+            idJsonPath: 'uuid'
     ])).save()
-    new ala.postie.PropertyValue([name: "totalRecords", jsonPath: "totalRecords", query: newAssertions, fireWhenNotZero: true]).save()
-    new ala.postie.PropertyValue([name: "last_assertion_record", jsonPath: "occurrences[0].rowKey", query: newAssertions]).save()
+    new ala.postie.PropertyPath([name: "totalRecords", jsonPath: "totalRecords", query: newAssertions, fireWhenNotZero: true]).save()
+    new ala.postie.PropertyPath([name: "last_assertion_record", jsonPath: "occurrences[0].rowKey", query: newAssertions]).save()
 
     Query newRecords = (new Query([
             baseUrl: 'http://biocache.ala.org.au',
@@ -41,10 +49,11 @@ class BootStrap {
             queryPathForUI: '/occurrences/search?q=last_load_date:[___DATEPARAM___%20TO%20*]&sort=last_load_date&dir=desc',
             dateFormat: """yyyy-MM-dd'T'HH:mm:ss'Z'""",
             emailTemplate: '/email/biocache',
-            recordJsonPath: '\$.occurrences'
+            recordJsonPath: '\$.occurrences',
+            idJsonPath: 'uuid'
     ])).save()
-    new ala.postie.PropertyValue([name: "totalRecords", jsonPath: "totalRecords", query: newRecords, fireWhenNotZero: true]).save()
-    new ala.postie.PropertyValue([name: "last_loaded_record", jsonPath: "occurrences[0].rowKey", query: newRecords]).save()
+    new ala.postie.PropertyPath([name: "totalRecords", jsonPath: "totalRecords", query: newRecords, fireWhenNotZero: true]).save()
+    new ala.postie.PropertyPath([name: "last_loaded_record", jsonPath: "occurrences[0].rowKey", query: newRecords]).save()
 
     Query newRecordsWithImages = (new Query([
             baseUrl: 'http://biocache.ala.org.au',
@@ -56,10 +65,11 @@ class BootStrap {
             dateFormat: """yyyy-MM-dd'T'HH:mm:ss'Z'""",
             emailTemplate: '/email/biocache',
             fireWhenNotZero: true,
-            recordJsonPath: '\$.occurrences'
+            recordJsonPath: '\$.occurrences',
+            idJsonPath: 'uuid'
     ])).save()
-    new ala.postie.PropertyValue([name: "totalRecords", jsonPath: "totalRecords", query: newRecordsWithImages, fireWhenNotZero: true]).save()
-    new ala.postie.PropertyValue([name: "last_loaded_record", jsonPath: "occurrences[0].rowKey", query: newRecordsWithImages]).save()
+    new ala.postie.PropertyPath([name: "totalRecords", jsonPath: "totalRecords", query: newRecordsWithImages, fireWhenNotZero: true]).save()
+    new ala.postie.PropertyPath([name: "last_loaded_record", jsonPath: "occurrences[0].rowKey", query: newRecordsWithImages]).save()
 
     Query newCitizenScienceRecords = (new Query([
             baseUrl: 'http://biocache.ala.org.au',
@@ -71,10 +81,11 @@ class BootStrap {
             dateFormat: """yyyy-MM-dd'T'HH:mm:ss'Z'""",
             emailTemplate: '/email/biocache',
             fireWhenNotZero: true,
-            recordJsonPath: '\$.occurrences'
+            recordJsonPath: '\$.occurrences',
+            idJsonPath: 'uuid'
     ])).save()
-    new ala.postie.PropertyValue([name: "totalRecords", jsonPath: "totalRecords", query: newCitizenScienceRecords, fireWhenNotZero: true]).save()
-    new ala.postie.PropertyValue([name: "last_loaded_record", jsonPath: "occurrences[0].rowKey", query: newCitizenScienceRecords]).save()
+    new ala.postie.PropertyPath([name: "totalRecords", jsonPath: "totalRecords", query: newCitizenScienceRecords, fireWhenNotZero: true]).save()
+    new ala.postie.PropertyPath([name: "last_loaded_record", jsonPath: "occurrences[0].rowKey", query: newCitizenScienceRecords]).save()
 
     Query newCitizenScienceRecordsWithImages = (new Query([
             baseUrl: 'http://biocache.ala.org.au',
@@ -85,23 +96,24 @@ class BootStrap {
             queryPathForUI: '/occurrences/search?q=last_load_date:[___DATEPARAM___%20TO%20*]&fq=data_resource_uid:dr364&sort=last_load_date&dir=desc&fq=multimedia:Multimedia',
             dateFormat: """yyyy-MM-dd'T'HH:mm:ss'Z'""",
             emailTemplate: '/email/biocache',
-            recordJsonPath: '\$.occurrences'
+            recordJsonPath: '\$.occurrences',
+            idJsonPath: 'uuid'
     ])).save()
-    new ala.postie.PropertyValue([name: "totalRecords", jsonPath: "totalRecords", query: newCitizenScienceRecordsWithImages, fireWhenNotZero: true]).save()
-    new ala.postie.PropertyValue([name: "last_loaded_record", jsonPath: "occurrences[0].rowKey", query: newCitizenScienceRecordsWithImages]).save()
+    new ala.postie.PropertyPath([name: "totalRecords", jsonPath: "totalRecords", query: newCitizenScienceRecordsWithImages, fireWhenNotZero: true]).save()
+    new ala.postie.PropertyPath([name: "last_loaded_record", jsonPath: "occurrences[0].rowKey", query: newCitizenScienceRecordsWithImages]).save()
 
     Query newSpatialLayers = (new Query([
-            baseUrl: 'http://spatial.ala.org.au',
+            baseUrl: 'http://localhost',
             name: 'Spatial layers',
             updateMessage: 'More spatial layers have been added.',
             description: 'Notify me when new spatial layers are added.',
             queryPath: '/layers.json',
             queryPathForUI: '/layers',
             emailTemplate: '/email/layers',
-            idJsonPath: '\$.layerList.id',
-            recordJsonPath: '\$.layerList'
+            recordJsonPath: '\$.layerList',
+            idJsonPath: 'id'
     ])).save()
-    new ala.postie.PropertyValue([name: "layer_count", jsonPath: "layerList", query: newSpatialLayers, fireWhenChanged: true]).save()
+    new ala.postie.PropertyPath([name: "layer_count", jsonPath: "layerList", query: newSpatialLayers, fireWhenChanged: true]).save()
 
     Query newDatasets = (new Query([
             baseUrl: 'http://collections.ala.org.au',
@@ -111,10 +123,10 @@ class BootStrap {
             queryPath: '/ws/dataResource',
             queryPathForUI: '/datasets',
             emailTemplate: '/email/datasets',
-            idJsonPath: '\$.uid',
-            recordJsonPath: '\$'
+            recordJsonPath: '\$',
+            idJsonPath: 'uid'
     ])).save()
-    new ala.postie.PropertyValue([name: "dataset_count", jsonPath: "\$", query: newDatasets, fireWhenChanged: true]).save()
+    new ala.postie.PropertyPath([name: "dataset_count", jsonPath: "\$", query: newDatasets, fireWhenChanged: true]).save()
 
 //      (new Notification([query: newAssertions, userEmail:"moyesyside@gmail.com"])).save()
     //      (new Notification([query: newRecords, userEmail:"moyesyside@gmail.com"])).save()
