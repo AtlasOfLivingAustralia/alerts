@@ -26,7 +26,7 @@ environments {
     }
     production {
         dataSource {
-            dbCreate = "none"
+            dbCreate = "update"
             url = "jdbc:mysql://ala-authdb1.vm.csiro.au:3306/postie"
             username = "postie"
             password ="RHitoHYAbfmJBCT0zywo143tH"
