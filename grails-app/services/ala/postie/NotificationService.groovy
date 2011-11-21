@@ -156,7 +156,7 @@ class NotificationService {
   }
 
   PropertyValue getPropertyValue(PropertyPath pp, QueryResult queryResult){
-    PropertyValue pv = PropertyValue.findByPropertyPath(pp)
+    PropertyValue pv = PropertyValue.findByPropertyPathAndQueryResult(pp, queryResult)
     if(pv == null){
       pv = new PropertyValue([propertyPath:pp, queryResult:queryResult])
       //pv.save(flush:true)

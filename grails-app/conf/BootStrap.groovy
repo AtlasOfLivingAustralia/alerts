@@ -20,10 +20,12 @@ class BootStrap {
 
   private def preloadQueries() {
 
-    Frequency.findAll().each { f -> f.delete(flush:true)}
-    (new Frequency([name:'daily'])).save()
-    (new Frequency([name:'weekly', periodInSeconds:604800])).save()
-    (new Frequency([name:'monthly', periodInSeconds:2419200])).save()
+    if(Frequency.findAll().isEmpty()){
+      (new Frequency([name:'hourly', periodInSeconds:3600])).save()
+      (new Frequency([name:'daily'])).save()
+      (new Frequency([name:'weekly', periodInSeconds:604800])).save()
+      (new Frequency([name:'monthly', periodInSeconds:2419200])).save()
+    }
 
     if(Query.findAllByName('Annotations').isEmpty()){
       Query newAssertions = (new Query([

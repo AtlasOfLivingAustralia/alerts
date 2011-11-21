@@ -2,7 +2,7 @@ package ala.postie
 
 
 class MonthlyQueriesJob {
-    def timeout = 2419200000l // execute job once every hour
+    def timeout = 2419200000l // execute job once every month
 
     def startDelay = 90000l //delay
 

@@ -29,7 +29,7 @@ class NotificationController {
       def customQueries = enabledQueries.findAll { it.custom }
       def standardQueries = enabledQueries.findAll { !it.custom }
 
-      [disabledQueries:allAlertTypes, enabledQueries:standardQueries, customQueries:customQueries, frequencies:Frequency.list(), user:user]
+      [disabledQueries:allAlertTypes, enabledQueries:standardQueries, customQueries:customQueries, frequencies:Frequency.listOrderByPeriodInSeconds(), user:user]
     }
 
     def addMyAlert = {

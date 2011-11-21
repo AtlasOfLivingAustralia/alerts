@@ -17,6 +17,7 @@ class QueryService {
       dateFormat: """yyyy-MM-dd'T'HH:mm:ss'Z'""",
       emailTemplate: '/email/biocache',
       recordJsonPath: '\$.occurrences',
+      idJsonPath: 'uuid',
       custom:true
     ])
   }
@@ -32,6 +33,7 @@ class QueryService {
       dateFormat: """yyyy-MM-dd'T'HH:mm:ss'Z'""",
       emailTemplate: '/email/biocache',
       recordJsonPath: '\$.occurrences',
+      idJsonPath: 'uuid',
       custom:true
     ])
   }

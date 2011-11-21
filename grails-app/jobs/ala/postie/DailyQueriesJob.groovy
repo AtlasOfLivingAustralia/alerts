@@ -2,7 +2,7 @@ package ala.postie
 
 
 class DailyQueriesJob {
-    def timeout = 86400000l // execute job once every hour
+    def timeout = 86400000l // execute job once every day
 
     def startDelay = 30000l //delay
 
