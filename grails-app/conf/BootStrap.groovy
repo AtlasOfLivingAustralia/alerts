@@ -114,7 +114,7 @@ class BootStrap {
 
     if(Query.findAllByName('Spatial layers').isEmpty()){
       Query newSpatialLayers = (new Query([
-              baseUrl: 'http://localhost',
+              baseUrl: 'http://spatial.ala.org.au',
               name: 'Spatial layers',
               updateMessage: 'More spatial layers have been added.',
               description: 'Notify me when new spatial layers are added.',
