@@ -37,7 +37,7 @@ class WebserviceController {
     response.addHeader("Cache-Control","no-store")
     response.addHeader("Pragma","no-cache")
 
-    [alertExists:alertExists, guid:params.guid, taxonName:params.taxonName, notification:n]
+    [alertExists:alertExists, guid:params.guid, taxonName:params.taxonName, notification:n, redirect:params.redirect]
   }
 
   def createTaxonAlert = {
@@ -60,12 +60,20 @@ class WebserviceController {
       (new Notification([query: newQuery, user: userService.getUser()])).save(true)
     }
 
-    redirect([url:params.redirect])
+    if(params.redirect){
+      redirect([url:params.redirect])
+    } else {
+      redirect([uri:'/'])
+    }
   }
 
   def deleteAlert = {
     Notification n = Notification.findById(params.id)
     n.delete(flush:true)
-    redirect([url:params.redirect])
+    if(params.redirect){
+      redirect([url:params.redirect])
+    } else {
+      redirect([uri:'/'])
+    }
   }
 }
