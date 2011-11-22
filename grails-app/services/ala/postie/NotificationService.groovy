@@ -40,9 +40,6 @@ class NotificationService {
 
     QueryResult qr = getQueryResult(query, frequency)
 
-    //boolean hasUpdated = false
-    Date now = new Date()
-
     //def url = new URL("http://biocache.ala.org.au/ws/occurrences/search?q=*:*&pageSize=1")
     def urlString = getQueryUrl(query, frequency)
 
@@ -54,21 +51,16 @@ class NotificationService {
     refreshProperties(qr, json)
 
     qr.previousCheck = qr.lastChecked
-    qr.lastChecked = now
 
     //store the last result from the webservice call
     qr.previousResult = qr.lastResult
     qr.lastResult = gzipResult(json)
-
-    if(query.hasErrors()){
-      query.errors.allErrors.each { println it }
-    }
-
-    //check the derived properties
+    qr.lastChecked = now
     qr.hasChanged = hasChanged(qr)
+
     println("Has changed? : " + qr.hasChanged)
     if(qr.hasChanged){
-      qr.lastChanged = now
+      qr.lastChanged = new Date()
     }
 
     qr.save(true)
@@ -89,17 +81,7 @@ class NotificationService {
 
     //if there is a date format, then there's a param to replace
     if (query.dateFormat) {
-
-      QueryResult qr = getQueryResult(query, frequency)
-
-      def dateToUse = null
-      //if empty, set to 5 minutes ago, so we can catch latest things
-      if (qr.lastChecked == null) {
-        dateToUse = org.apache.commons.lang.time.DateUtils.addSeconds(new Date(), -1 * frequency.periodInSeconds)
-      } else {
-        dateToUse = qr.lastChecked
-      }
-
+      def dateToUse = org.apache.commons.lang.time.DateUtils.addSeconds(new Date(), -1 * frequency.periodInSeconds)
       //insert the date to query with
       SimpleDateFormat sdf = new SimpleDateFormat(query.dateFormat)
       def dateValue = sdf.format(dateToUse)
