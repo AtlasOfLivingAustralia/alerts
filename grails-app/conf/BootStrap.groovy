@@ -124,7 +124,7 @@ class BootStrap {
               queryPathForUI: '/layers',
               emailTemplate: '/email/layers',
               recordJsonPath: '\$.layerList',
-              idJsonPath: 'id'
+              idJsonPath: 'name'
       ])).save()
       new ala.postie.PropertyPath([name: "layer_count", jsonPath: "layerList", query: newSpatialLayers, fireWhenChanged: true]).save()
     }

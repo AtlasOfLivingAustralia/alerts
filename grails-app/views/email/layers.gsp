@@ -23,10 +23,12 @@
     <g:each in="${records}" var="layer">
       <tbody>
       <tr>
-        <td>${layer.name}</td>
-        <td>${layer.description}</td>
         <td>
-           <a href="http://spatial.ala.org.au/layers">click to view</a>
+          <strong>${layer.name}</strong><br/>
+          ${layer.description}
+        </td>
+        <td>
+           <a href="http://spatial.ala.org.au/layers/more/${layer.name}">click to layer details</a>
         </td>
       </tr>
       </tbody>
