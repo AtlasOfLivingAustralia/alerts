@@ -92,14 +92,17 @@ class NotificationService {
 
       QueryResult qr = getQueryResult(query, frequency)
 
+      def dateToUse = null
       //if empty, set to 5 minutes ago, so we can catch latest things
-      if (!qr.lastChecked) {
-        qr.lastChecked = org.apache.commons.lang.time.DateUtils.addMinutes(new Date(), -5)
+      if (qr.lastChecked == null) {
+        dateToUse = org.apache.commons.lang.time.DateUtils.addSeconds(new Date(), -1 * frequency.periodInSeconds)
+      } else {
+        dateToUse = qr.lastChecked
       }
 
       //insert the date to query with
       SimpleDateFormat sdf = new SimpleDateFormat(query.dateFormat)
-      def dateValue = sdf.format(qr.lastChecked)
+      def dateValue = sdf.format(dateToUse)
       query.baseUrl + query.queryPath.replaceAll("___DATEPARAM___", dateValue)
 
     } else {
@@ -135,23 +138,29 @@ class NotificationService {
 
     println("Refreshing properties for query: " + queryResult.query.name + " : " +  queryResult.frequency)
 
-    queryResult.query.propertyPaths.each { propertyPath ->
+    try {
 
-      //read the value from the request
-      def latestValue = JsonPath.read(json, propertyPath.jsonPath)
+      queryResult.query.propertyPaths.each { propertyPath ->
 
-      //get property value for this property path
-      PropertyValue propertyValue = getPropertyValue(propertyPath, queryResult)
+        //read the value from the request
+        def latestValue = JsonPath.read(json, propertyPath.jsonPath)
 
-      propertyValue.previousValue = propertyValue.currentValue
+        //get property value for this property path
+        PropertyValue propertyValue = getPropertyValue(propertyPath, queryResult)
 
-      if (latestValue instanceof List) {
-        propertyValue.currentValue = latestValue.size().toString()
-      } else {
-        propertyValue.currentValue = latestValue
+        propertyValue.previousValue = propertyValue.currentValue
+
+        if (latestValue instanceof List) {
+          propertyValue.currentValue = latestValue.size().toString()
+        } else {
+          propertyValue.currentValue = latestValue
+        }
+
+        propertyValue.save(true)
       }
-
-      propertyValue.save(true)
+    } catch (Exception e){
+      println("There was a problem reading the supplied JSON.")
+      e.printStackTrace()
     }
   }
 
@@ -183,8 +192,13 @@ class NotificationService {
   }
 
   def checkQueryForFrequency(String frequencyName){
+    Date now = new Date()
     Frequency frequency = Frequency.findByName(frequencyName)
     checkQueryForFrequency(frequency, true)
+    //update the frequency last checked
+    frequency = Frequency.findByName(frequencyName)
+    frequency.lastChecked = now
+    frequency.save()
   }
 
   //select q.id, u.frequency from query q inner join notification n on n.query_id=q.id inner join user u on n.user_id=u.id;

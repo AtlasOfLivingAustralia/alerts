@@ -112,7 +112,16 @@ log4j = {
     // appender:
     //
     appenders {
-        console name:'stdout', layout:pattern(conversionPattern: '[%c{4}] %m%n')
+        console name: "stdout", layout: pattern(conversionPattern: "%c{2} %m%n")
+        environments {
+            production {
+                rollingFile name: "myAppender", maxFileSize: 1024, file: "/var/log/tomcat6/postie.log"
+                rollingFile name: "stacktrace", maxFileSize: 1024, file: "/var/log/tomcat6/postie-stacktrace.log"
+            }
+            development {
+              rollingFile name: "stacktrace", maxFileSize: 1024, file: "/tmp/postie-stacktrace.log"
+            }
+        }
     }
 
     error  'org.codehaus.groovy.grails.web.servlet',  //  controllers
@@ -128,7 +137,6 @@ log4j = {
            'net.sf.ehcache.hibernate'
 
     warn   'org.mortbay.log'
-
 //    debug   'au.org.ala',
   //          'org.ala'
 }

@@ -15,15 +15,13 @@ class DiffService {
       String last = decompressZipped(queryResult.lastResult)
       String previous = decompressZipped(queryResult.previousResult)
 
-      println(JsonPath.read(last, queryResult.query.recordJsonPath + "." +queryResult.query.idJsonPath))
-      println(JsonPath.read(previous, queryResult.query.recordJsonPath + "." +queryResult.query.idJsonPath))
+      //println(JsonPath.read(last, queryResult.query.recordJsonPath + "." +queryResult.query.idJsonPath))
+      //println(JsonPath.read(previous, queryResult.query.recordJsonPath + "." +queryResult.query.idJsonPath))
       List<String> ids1 = JsonPath.read(last, queryResult.query.recordJsonPath + "." +queryResult.query.idJsonPath)
       List<String> ids2 = JsonPath.read(previous, queryResult.query.recordJsonPath + "." +queryResult.query.idJsonPath)
       //println("Comparing: " + ids1 +" TO " + ids2)
 
       List<String> diff = ids1.findAll { !ids2.contains(it) }
-
-      diff.each { println it }
 
       //println("has the layer list changed: " + !diff.empty)
       !diff.empty
