@@ -55,7 +55,7 @@ class NotificationService {
     //store the last result from the webservice call
     qr.previousResult = qr.lastResult
     qr.lastResult = gzipResult(json)
-    qr.lastChecked = now
+    qr.lastChecked = new Date()
     qr.hasChanged = hasChanged(qr)
 
     println("Has changed? : " + qr.hasChanged)
