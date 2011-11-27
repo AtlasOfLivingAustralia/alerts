@@ -33,7 +33,7 @@ class NotificationController {
     }
 
     def addMyAlert = {
-      println('add my alert '+ params.id)
+      log.debug('add my alert '+ params.id)
       def notificationInstance = new Notification()
       notificationInstance.query =  Query.findById(params.id)
       notificationInstance.user = userService.getUser()
@@ -49,14 +49,14 @@ class NotificationController {
 
       def user = userService.getUser()
       def query = Query.get(params.id)
-      println('Deleting my alert :  ' + params.id + ' for user : ' + authService.username())
+      log.debug('Deleting my alert :  ' + params.id + ' for user : ' + authService.username())
 
       def notificationInstance = Notification.findByUserAndQuery(user, query)
       if (notificationInstance) {
-        println('Deleting my notification :  ' + params.id)
+        log.debug('Deleting my notification :  ' + params.id)
         notificationInstance.each { it.delete(flush: true) }
       } else {
-        println('*** Unable to find  my notification - no delete :  ' + params.id)
+        log.error('*** Unable to find  my notification - no delete :  ' + params.id)
       }
       return null
     }
@@ -70,14 +70,14 @@ class NotificationController {
       }
 
       def query = Query.get(params.id)
-      println('Deleting my alert :  ' + params.id + ' for user : ' + authService.username())
+      log.debug('Deleting my alert :  ' + params.id + ' for user : ' + authService.username())
 
       def notificationInstance = Notification.findByUserAndQuery(user, query)
       if (notificationInstance) {
-        println('Deleting my notification :  ' + params.id)
+        log.debug('Deleting my notification :  ' + params.id)
         notificationInstance.each { it.delete(flush: true) }
       } else {
-        println('*** Unable to find  my notification - no delete :  ' + params.id)
+        log.error('*** Unable to find  my notification - no delete :  ' + params.id)
       }
       redirect(action:'myAlerts')
     }
@@ -85,7 +85,7 @@ class NotificationController {
 
     def changeFrequency ={
         def user = userService.getUser()
-        println(params.frequency)
+        log.debug("Changing frequency to: " + params.frequency)
         user.frequency = ala.postie.Frequency.findByName(params.frequency)
         user.save(true)
         return null

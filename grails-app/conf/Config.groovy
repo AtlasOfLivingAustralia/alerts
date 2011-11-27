@@ -137,6 +137,8 @@ log4j = {
            'net.sf.ehcache.hibernate'
 
     warn   'org.mortbay.log'
-//    debug   'au.org.ala',
-  //          'org.ala'
+
+    debug  'ala'
+        //'au.org.ala',
+          //  'org.ala',
 }

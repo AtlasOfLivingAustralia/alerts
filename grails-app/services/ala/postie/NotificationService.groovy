@@ -101,24 +101,40 @@ class NotificationService {
    */
   Boolean hasChanged(QueryResult queryResult) {
     Boolean changed = false
+
+    //if there is a fireWhenNotZero or fireWhenChange ignore  idJsonPath
+    Boolean hasFireProperty = hasAFireProperty(queryResult.query)
+
     queryResult.propertyValues.each { pv ->
+      log.debug("Has change check: "  + pv.propertyPath.name +", value:  " + pv.currentValue +", previous: "+ pv.previousValue)
       if (pv.propertyPath.fireWhenNotZero){
         changed = pv.currentValue.toInteger() > 0
       }
       else if (pv.propertyPath.fireWhenChange){
         changed = pv.previousValue != pv.currentValue
       }
-      else if (queryResult.query.idJsonPath){
-        changed = diffService.hasChangedJsonDiff(queryResult)
-      }
     }
+
+    //if there isnt a fire property, use json diff if configured
+    if (!hasFireProperty && queryResult.query.idJsonPath){
+      log.debug("Has change check. Checking JSON for query : "  + queryResult.query.name)
+      changed = diffService.hasChangedJsonDiff(queryResult)
+    }
+
     changed
   }
 
+  Boolean hasAFireProperty(Query query){
+    Boolean hasFireProperty = false
+    query.propertyPaths.each { pp ->
+      if(pp.fireWhenChange || pp.fireWhenNotZero) hasFireProperty = true
+    }
+    hasFireProperty
+  }
 
   private def refreshProperties(QueryResult queryResult, json) {
 
-    println("Refreshing properties for query: " + queryResult.query.name + " : " +  queryResult.frequency)
+    log.debug("Refreshing properties for query: " + queryResult.query.name + " : " +  queryResult.frequency)
 
     try {
 
@@ -141,8 +157,7 @@ class NotificationService {
         propertyValue.save(true)
       }
     } catch (Exception e){
-      println("There was a problem reading the supplied JSON.")
-      e.printStackTrace()
+      log.error("There was a problem reading the supplied JSON.",e)
     }
   }
 
@@ -160,14 +175,14 @@ class NotificationService {
     Query.list().each { query ->
       boolean hasUpdated = checkStatus(query)
       if (hasUpdated) {
-        println("Query has been updated. Sending emails....")
+        log.debug("Query has been updated. Sending emails....")
         //send separate emails for now
         //if there is a change, generate an email list
         //send an email
         List<Notification> notifications = Notification.findAllByQuery(query)
         List<String> emailAddresses = new ArrayList<String>()
         notifications.each { n -> emailAddresses.add(n.user.email) }
-        println("Sending emails to...." + emailAddresses.join(","))
+        log.debug("Sending emails to...." + emailAddresses.join(","))
         emailService.sendGroupNotification(query, emailAddresses)
       }
     }
@@ -196,7 +211,7 @@ class NotificationService {
     queries.each { query ->
       boolean hasUpdated = checkStatus(query,frequency)
       if (hasUpdated && sendEmails) {
-        println("Query has been updated. Sending emails....")
+        log.debug("Query has been updated. Sending emails....")
         //send separate emails for now
         //if there is a change, generate an email list
         //send an email
@@ -208,11 +223,12 @@ class NotificationService {
                   and u.frequency = :frequency
                   group by u""", [query: query, frequency: frequency])
 
-
         List<String> emailAddresses = new ArrayList<String>()
         users.each { user -> emailAddresses.add(user.email) }
-        println("Sending emails to...." + emailAddresses.join(","))
-        emailService.sendGroupNotification(query, frequency, emailAddresses)
+        log.debug("Sending emails to...." + emailAddresses.join(","))
+        if(!users.isEmpty()){
+          emailService.sendGroupNotification(query, frequency, emailAddresses)
+        }
       }
     }
   }

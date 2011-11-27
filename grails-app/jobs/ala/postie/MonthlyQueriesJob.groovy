@@ -2,16 +2,17 @@ package ala.postie
 
 
 class MonthlyQueriesJob {
-    def timeout = 2419200000l // execute job once every month
 
-    def startDelay = 90000l //delay
+  static triggers = {
+     cron name:'monthly', startDelay:10000, cronExpression: '0 15 10 L * ?'        //fire 10:15 on last day of month
+  }
 
     def notificationService
 
     def execute() {
       // execute task
-      println("****** Scheduled monthly update ****** " + new Date())
+      log.info("****** Scheduled monthly update ****** " + new Date())
       notificationService.checkQueryForFrequency('monthly')
-      println("****** Scheduled monthly update finished ******" + new Date())
+      log.info("****** Scheduled monthly update finished ******" + new Date())
     }
 }

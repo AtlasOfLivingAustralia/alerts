@@ -2,9 +2,9 @@ package ala.postie
 
 
 class WeeklyQueriesJob {
-    def timeout = 604800000l // execute job once every week
-
-    def startDelay = 60000l //delay
+  static triggers = {
+     cron name:'weekly', startDelay:10000, cronExpression: '0 30 10 ? * MON'        //fire 10:30 every monday
+  }
 
     def notificationService
 

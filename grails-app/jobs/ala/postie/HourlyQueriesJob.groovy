@@ -1,17 +1,16 @@
 package ala.postie
 
-
 class HourlyQueriesJob {
-    def timeout = 3600000l // execute job once every hour
 
-    def startDelay = 30000l //delay
+    static triggers = {
+       cron name:'hourly', startDelay:10000, cronExpression: '0 48 * * * ?'
+    }
 
     def notificationService
 
     def execute() {
-      // execute task
-      println("****** Scheduled hourly update ****** " + new Date())
-      notificationService.checkQueryForFrequency('hourly')
-      println("****** Scheduled hourly update finished ******" + new Date())
+        log.info("****** Starting hourly update ****** " + new Date())
+        notificationService.checkQueryForFrequency('hourly')
+        log.info("****** Finished hourly update ******" + new Date())
     }
 }

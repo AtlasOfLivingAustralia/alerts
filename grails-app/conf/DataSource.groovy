@@ -14,7 +14,7 @@ environments {
     development {
         dataSource {
             //dbCreate = "create-drop" // one of 'create', 'create-drop','update'
-            dbCreate = "create"
+            dbCreate = "none"
             url = "jdbc:mysql://localhost:3306/postie"
         }
     }

@@ -2,6 +2,7 @@ import ala.postie.Notification
 import ala.postie.Query
 import ala.postie.PropertyValue
 import ala.postie.Frequency
+import org.springframework.scheduling.support.CronTrigger
 
 class BootStrap {
 
@@ -9,13 +10,13 @@ class BootStrap {
 
     def init = { servletContext ->
 
-      println("Running bootstrap queries")
+      log.info("Running bootstrap queries")
 
       //if(Query.findAll().isEmpty()){
       preloadQueries()
       //}
 
-      println("Done bootstrap queries.")
+      log.info("Done bootstrap queries.")
     }
 
   private def preloadQueries() {

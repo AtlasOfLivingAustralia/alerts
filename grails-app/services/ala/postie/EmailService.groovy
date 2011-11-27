@@ -14,7 +14,7 @@ class EmailService {
 
   def sendNotificationEmail(Notification notification){
 
-    println("Using email template: " + notification.query.emailTemplate)
+    log.debug("Using email template: " + notification.query.emailTemplate)
 
     QueryResult queryResult = QueryResult.findByQueryAndFrequency(notification.query, notification.user.frequency)
 
@@ -42,7 +42,7 @@ class EmailService {
 
   def sendGroupNotification(Query query, Frequency frequency, List<String> addresses){
 
-    println("Using email template: " + query.emailTemplate)
+    log.debug("Using email template: " + query.emailTemplate)
     QueryResult queryResult = QueryResult.findByQueryAndFrequency(query, frequency)
 
     def records = null

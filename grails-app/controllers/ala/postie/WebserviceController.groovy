@@ -10,7 +10,7 @@ class WebserviceController {
 
   def taxonAlerts = {
 
-    println("taxonAlerts lookup for...." + params.guid)
+    log.debug("taxonAlerts lookup for...." + params.guid)
 
     //check for notifications for this query and this user
     Boolean alertExists = false
@@ -21,15 +21,15 @@ class WebserviceController {
     Query taxonQuery = Query.findByBaseUrlAndQueryPath(query.baseUrl,query.queryPath)
 
     if(taxonQuery!=null){
-      println("Query already exists...." + taxonQuery.id)
+      log.debug("Query already exists...." + taxonQuery.id)
 
       //does a notification exist???
       n = Notification.findByQueryAndUser(taxonQuery, userService.getUser())
       if(n != null){
-        println("Notification for this user exists...." + authService.username())
+        log.debug("Notification for this user exists...." + authService.username())
         alertExists = true
       } else {
-        println("Notification for this user DOES NOT exist...." + authService.username())
+        log.debug("Notification for this user DOES NOT exist...." + authService.username())
       }
     }
 
@@ -68,6 +68,7 @@ class WebserviceController {
   }
 
   def deleteAlert = {
+    log.debug("Deleting an alert")
     Notification n = Notification.findById(params.id)
     n.delete(flush:true)
     if(params.redirect){
