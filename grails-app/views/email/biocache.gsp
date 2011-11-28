@@ -18,31 +18,36 @@
     <h3>Occurrences record update</h3>
     <table style="border-collapse: collapse; border: 1px solid #CCC; padding:2px;">
     	<thead>
-			<th>Scientific name</th>
-			<th>Common name</th>
-			<th>Dataset</th>
-			<th>State</th>
+			<th>Species</th>
 			<th>Basis of record</th>
-			<th>Family</th>
 			<th>Image</th>
 			<th>&nbsp;</th>
     	</thead>
     <g:each in="${records}" var="oc">
       <tbody>
       <tr>
-        <td>${oc.scientificName}</td>
-        <td>${oc.vernacularName}</td>
-        <td>${oc.dataResourceName}</td>
+        <td>${oc.scientificName}<br/>
+            ${oc.vernacularName}<br/>
+            ${oc.family}<br/>
+            ${oc.dataResourceName}
+        </td>
         <td>${oc.stateProvince}</td>
         <td>${oc.basisOfRecord}</td>
-        <td>${oc.family}</td>
+        <td></td>
         <td>
           <g:if test="${oc.image != null && oc.image.startsWith('/data/biocache-media')}">
+            <a href="http://biocache.ala.org.au/occurrences/${oc.uuid}">
             <img src="${oc.image.replaceAll('/data/biocache-media/', 'http://biocache.ala.org.au/biocache-media/')}" alt="image for record"/>
+            </a>
           </g:if>
           <g:elseif test="${oc.image}">
+            <a href="http://biocache.ala.org.au/occurrences/${oc.uuid}">
              <img src="${oc.image}" alt="image for record"/>
+            </a>
           </g:elseif>
+          <g:else>
+            No image supplied
+          </g:else>
           </td>
          <td>
            <a href="http://biocache.ala.org.au/occurrences/${oc.uuid}">click to view</a>
