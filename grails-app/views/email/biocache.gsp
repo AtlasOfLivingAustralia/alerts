@@ -20,6 +20,7 @@
     	<thead>
 			<th>Species</th>
 			<th>Basis of record</th>
+            <th>State/Territory</th>
 			<th>Image</th>
 			<th>&nbsp;</th>
     	</thead>
@@ -29,11 +30,9 @@
         <td>${oc.scientificName}<br/>
             ${oc.vernacularName}<br/>
             ${oc.family}<br/>
-            ${oc.dataResourceName}
         </td>
-        <td>${oc.stateProvince}</td>
         <td>${oc.basisOfRecord}</td>
-        <td></td>
+        <td>${oc.stateProvince}</td>
         <td>
           <g:if test="${oc.image != null && oc.image.startsWith('/data/biocache-media')}">
             <a href="http://biocache.ala.org.au/occurrences/${oc.uuid}">

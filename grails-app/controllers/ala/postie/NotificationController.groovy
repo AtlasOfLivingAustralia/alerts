@@ -13,7 +13,8 @@ class NotificationController {
 
     def myAlerts = {
 
-       User user = userService.getUser()
+      User user = userService.getUser()
+      log.debug('Viewing my alerts :  ' + user)
 
       //enabled alerts
       def notificationInstanceList = Notification.findAllByUser(user)

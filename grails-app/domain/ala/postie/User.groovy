@@ -9,4 +9,6 @@ class User {
   static constraints = {
      frequency nullable:true
   }
+
+  public String toString(){ email }
 }
