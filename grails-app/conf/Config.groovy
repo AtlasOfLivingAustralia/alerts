@@ -113,20 +113,20 @@ log4j = {
     //
     appenders {
 
-        console name: "stdout", layout: pattern(conversionPattern: "[POSTIE] %c{2} %m%n"), threshold: org.apache.log4j.Level.DEBUG
+        //console name: "stdout", layout: pattern(conversionPattern: "%d %-5p [%c{1}]  %m%n"), threshold: org.apache.log4j.Level.DEBUG
 //        rollingFile name: "dev2", layout: pattern(conversionPattern: "[POSTIE] %c{2} %m%n"), maxFileSize: 1024, file: "/tmp/postie.log", threshold: org.apache.log4j.Level.DEBUG
 
         environments {
             production {
-              rollingFile name: "tomcatLog", maxFileSize: 102400000, file: "/var/log/tomcat6/postie.log", threshold: org.apache.log4j.Level.DEBUG, layout: pattern(conversionPattern: "[POSTIE] %c{2} %m%n")
+              rollingFile name: "tomcatLog", maxFileSize: 102400000, file: "/var/log/tomcat6/postie.log", threshold: org.apache.log4j.Level.DEBUG, layout: pattern(conversionPattern: "%d %-5p [%c{1}] %m%n")
               'null' name: "stacktrace"
             }
             development {
-              rollingFile name: "tomcatLog", maxFileSize: 102400000, file: "/tmp/postie.log", threshold: org.apache.log4j.Level.DEBUG, layout: pattern(conversionPattern: "[POSTIE] %c{2} %m%n")
+              rollingFile name: "tomcatLog", maxFileSize: 102400000, file: "/tmp/postie.log", threshold: org.apache.log4j.Level.DEBUG, layout: pattern(conversionPattern: "%d %-5p [%c{1}]  %m%n")
               'null' name: "stacktrace"
             }
             test {
-              rollingFile name: "tomcatLog", maxFileSize: 102400000, file: "/tmp/postie-test.log", threshold: org.apache.log4j.Level.DEBUG, layout: pattern(conversionPattern: "[POSTIE] %c{2} %m%n")
+              rollingFile name: "tomcatLog", maxFileSize: 102400000, file: "/tmp/postie-test.log", threshold: org.apache.log4j.Level.DEBUG, layout: pattern(conversionPattern: "%d %-5p [%c{1}]  %m%n")
               'null' name: "stacktrace"
             }
         }
