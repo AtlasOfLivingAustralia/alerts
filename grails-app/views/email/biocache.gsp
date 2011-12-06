@@ -18,21 +18,23 @@
     <h3>Occurrences record update</h3>
     <table style="border-collapse: collapse; border: 1px solid #CCC; padding:2px;">
     	<thead>
-			<th>Species</th>
-			<th>Basis of record</th>
-            <th>State/Territory</th>
+			<th>Record details</th>
 			<th>Image</th>
 			<th>&nbsp;</th>
     	</thead>
     <g:each in="${records}" var="oc">
       <tbody>
       <tr>
-        <td>${oc.scientificName}<br/>
+        <td>
+            <g:if test="${oc.taxonRankID > 5000}"><i></g:if>
+              ${oc.scientificName}
+            <g:if test="${oc.taxonRankID > 5000}"></i></g:if>
+            <br/>
             ${oc.vernacularName}<br/>
             ${oc.family}<br/>
+            ${oc.basisOfRecord}<br/>
+            ${oc.stateProvince}<br/>
         </td>
-        <td>${oc.basisOfRecord}</td>
-        <td>${oc.stateProvince}</td>
         <td>
           <g:if test="${oc.image != null && oc.image.startsWith('/data/biocache-media')}">
             <a href="http://biocache.ala.org.au/occurrences/${oc.uuid}">
@@ -45,11 +47,11 @@
             </a>
           </g:elseif>
           <g:else>
-            No image supplied
+            No image
           </g:else>
           </td>
          <td>
-           <a href="http://biocache.ala.org.au/occurrences/${oc.uuid}">click to view</a>
+           <a href="http://biocache.ala.org.au/occurrences/${oc.uuid}">View</a>
          </td>
       </tr>
       </tbody>
