@@ -20,5 +20,14 @@
               </g:each>
             </ul>
           </div>
+    
+          <div>
+            <ul>
+              <li><g:link controller="admin" action="runChecksNow" params="${[frequency:'hourly']}">Run hourly checks now</g:link></li>
+              <li><g:link controller="admin" action="runChecksNow" params="${[frequency:'daily']}">Run daily checks now</g:link></li>
+              <li><g:link controller="admin" action="runChecksNow" params="${[frequency:'monthly']}">Run monthly checks now</g:link></li>
+            </ul>
+            
+          </div>
     </body>
 </html>

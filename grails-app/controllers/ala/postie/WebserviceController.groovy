@@ -1,65 +1,188 @@
 package ala.postie
 
+import org.codehaus.groovy.grails.web.servlet.mvc.GrailsParameterMap
+
 class WebserviceController {
 
   def authService
   def queryService
   def userService
+  def grailsApplication
 
   def index = {}
 
+  def test = {}
+
+  private def getMyAlertsLink = {
+    grailsApplication.config.serverName + grailsApplication.config.contextPath + '/notification/myAlerts'
+  }
+
+  private def getServerRoot = {
+    grailsApplication.config.serverName + grailsApplication.config.contextPath
+  }
+
+  /**
+   * Service that returns a JSON callback response allowing consuming apps to create links
+   * to create an alert or remove an alert
+   */
   def taxonAlerts = {
 
-    log.debug("taxonAlerts lookup for...." + params.guid)
+    log.debug("TaxonAlerts lookup for...." + params.guid)
+
+    String taxonGuid = params.guid
+    if (taxonGuid == null) taxonGuid =  params.taxonGuid
 
     //check for notifications for this query and this user
-    Boolean alertExists = false
+    Query query = queryService.createTaxonQuery(taxonGuid, params.taxonName)
 
-    Query query = queryService.createTaxonQuery(params.guid, params.taxonName)
-    Notification n = null
-    //find the query
-    Query taxonQuery = Query.findByBaseUrlAndQueryPath(query.baseUrl,query.queryPath)
+    Notification notification = queryService.getNotificationForUser(query, userService.getUser())
 
-    if(taxonQuery!=null){
-      log.debug("Query already exists...." + taxonQuery.id)
-
-      //does a notification exist???
-      n = Notification.findByQueryAndUser(taxonQuery, userService.getUser())
-      if(n != null){
-        log.debug("Notification for this user exists...." + authService.username())
-        alertExists = true
-      } else {
-        log.debug("Notification for this user DOES NOT exist...." + authService.username())
-      }
+    String link = null
+    if (notification  != null){
+      //construct a link to delete the alert & manage alerts
+      link = getMyAlertsLink()
+    } else {
+      //construct a create alert link
+      link = getServerRoot() + '/webservice/createTaxonAlert?redirect='+
+              params.redirect + '&taxonGuid=' + taxonGuid + '&taxonName=' + params.taxonName
     }
 
-    response.addHeader("Cache-Control","no-cache")
-    response.addHeader("Cache-Control","no-store")
-    response.addHeader("Pragma","no-cache")
-
-    [alertExists:alertExists, guid:params.guid, taxonName:params.taxonName, notification:n, redirect:params.redirect]
+    render(view: 'alerts', model:[link:link, deleteLink:getDeleteLink(notification), displayName:params.taxonName, notification: notification])
   }
 
   def createTaxonAlert = {
+    if( (params.guid || params.taxonGuid) && params.taxonName){
+      
+      String taxonGuid = params.guid
+      if (taxonGuid == null) taxonGuid =  params.taxonGuid
 
-    Query newQuery = queryService.createTaxonQuery(params.guid, params.taxonName)
-
-    //find the query
-    Query taxonQuery = Query.findByBaseUrlAndQueryPath(newQuery.baseUrl,newQuery.queryPath)
-    if(taxonQuery == null){
-      newQuery = newQuery.save(true)
-      new ala.postie.PropertyPath([name: "totalRecords", jsonPath: "totalRecords", query: newQuery, fireWhenNotZero: true]).save(true)
-      new ala.postie.PropertyPath([name: "last_loaded_record", jsonPath: "occurrences[0].rowKey", query: newQuery]).save(true)
+      Query newQuery = queryService.createTaxonQuery(taxonGuid, params.taxonName)
+      queryService.createQueryForUserIfNotExists(newQuery, userService.getUser())
+      redirectIfSupplied(params)
     } else {
-      newQuery = taxonQuery
+      response.sendError(400)
+    }
+  }
+
+  def regionAlerts = {
+
+    log.debug("RegionAlerts lookup for...." + params.layerId)
+
+    //check for notifications for this query and this user
+    Query query = queryService.createRegionQuery(params.layerId, params.regionName)
+
+    Notification notification = queryService.getNotificationForUser(query, userService.getUser())
+
+    String link = null
+    if (notification  != null){
+      //construct a link to delete the alert & manage alerts
+      link = getMyAlertsLink()
+    } else {
+      //construct a create alert link
+      link = getServerRoot() + '/webservice/createRegionAlert?layerId=' + params.layerId +
+        '&regionName=' + params.regionName +
+        '&redirect='+ params.redirect
     }
 
-    //does the notification already exist?
-    def exists = Notification.findByQueryAndUser(newQuery, userService.getUser())
-    if(!exists){
-      (new Notification([query: newQuery, user: userService.getUser()])).save(true)
+    render(view: 'alerts', model:[link:link, deleteLink:getDeleteLink(notification), displayName:params.regionName, notification: notification])
+  }
+
+  def taxonRegionAlerts = {
+
+    log.debug("TaxonRegionAlerts lookup for...." + params.layerId)
+
+    //check for notifications for this query and this user
+    Query query = queryService.createTaxonRegionQuery(params.taxonGuid, params.taxonName, params.layerId, params.regionName)
+
+    Notification notification = queryService.getNotificationForUser(query, userService.getUser())
+
+    String link = null
+    if (notification  != null){
+      //construct a link to delete the alert & manage alerts
+      link = getMyAlertsLink()
+    } else {
+      //construct a create alert link
+      link = getServerRoot() + '/webservice/createTaxonRegionAlert' +
+        '?layerId=' + params.layerId +
+        '&regionName=' + params.regionName +
+        '&taxonGuid=' + params.taxonGuid +
+        '&taxonName=' + params.taxonName +
+        '&redirect='+ params.redirect
     }
 
+    String displayName = params.taxonName + " in " + params.regionName
+    
+    render(view: 'alerts', model:[link:link, deleteLink:getDeleteLink(notification), displayName:displayName, notification: notification])
+  }
+
+  def speciesGroupRegionAlerts = {
+
+    log.debug("SpeciesGroupRegionAlerts lookup for...." + params.layerId)
+
+    //check for notifications for this query and this user
+    Query query = queryService.createSpeciesGroupRegionQuery(params.speciesGroup, params.layerId, params.regionName)
+
+    Notification notification = queryService.getNotificationForUser(query, userService.getUser())
+
+    String link = null
+    if (notification  != null){
+      //construct a link to delete the alert & manage alerts
+      link = getMyAlertsLink()
+    } else {
+      //construct a create alert link
+      link = getServerRoot() + '/webservice/createSpeciesGroupRegionAlert?layerId=' + params.layerId +
+        '&regionName=' + params.regionName +
+        '&speciesGroup=' + params.speciesGroup +
+        '&redirect='+ params.redirect
+    }
+
+    String displayName = params.speciesGroup + " in " + params.regionName
+
+    render(view: 'alerts', model:[link:link, deleteLink:getDeleteLink(notification), displayName:displayName, notification: notification])
+  }
+
+  private String getDeleteLink(Notification notification){
+    if (notification ==null) ""
+    else getServerRoot() + '/webservice/deleteAlert/'+notification.id
+  }
+
+  def createRegionAlert = {
+    if(params.regionName && params.layerId){
+      //region + species group
+      Query newQuery = queryService.createRegionQuery(params.layerId, params.regionName)
+      queryService.createQueryForUserIfNotExists(newQuery, userService.getUser())
+      redirectIfSupplied(params)
+    } else {
+      response.sendError(400)
+    }
+  }
+
+  def createTaxonRegionAlert = {
+
+    println('createTaxonRegionAlert ' + params.regionName + ' : ' + params.layerId)
+
+    if(params.regionName && params.layerId && params.taxonGuid && params.taxonName){
+      //region + taxon
+      Query newQuery = queryService.createTaxonRegionQuery(params.taxonGuid, params.taxonName, params.layerId, params.regionName)
+      queryService.createQueryForUserIfNotExists(newQuery, userService.getUser())
+      redirectIfSupplied(params)
+    } else {
+      response.sendError(400)
+    }
+  }
+
+  def createSpeciesGroupRegionAlert = {
+    if(params.regionName && params.layerId && params.speciesGroup){
+        //region + species group
+      Query newQuery = queryService.createSpeciesGroupRegionQuery(params.speciesGroup, params.layerId, params.regionName)
+      queryService.createQueryForUserIfNotExists(newQuery, userService.getUser())
+      redirectIfSupplied(params)
+    } else {
+      response.sendError(400)
+    }
+  }
+
+  private def redirectIfSupplied(GrailsParameterMap params) {
     if(params.redirect){
       redirect([url:params.redirect])
     } else {
@@ -71,10 +194,6 @@ class WebserviceController {
     log.debug("Deleting an alert")
     Notification n = Notification.findById(params.id)
     n.delete(flush:true)
-    if(params.redirect){
-      redirect([url:params.redirect])
-    } else {
-      redirect([uri:'/'])
-    }
+    redirectIfSupplied(params)
   }
 }

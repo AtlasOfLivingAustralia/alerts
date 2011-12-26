@@ -7,12 +7,12 @@ class MonthlyQueriesJob {
      cron name:'monthly', startDelay:10000, cronExpression: '0 15 10 L * ?'        //fire 10:15 on last day of month
   }
 
-    def notificationService
+  def notificationService
 
-    def execute() {
-      // execute task
-      log.info("****** Scheduled monthly update ****** " + new Date())
-      notificationService.checkQueryForFrequency('monthly')
-      log.info("****** Scheduled monthly update finished ******" + new Date())
-    }
+  def execute() {
+    // execute task
+    log.info("****** Scheduled monthly update ****** " + new Date())
+    notificationService.checkQueryForFrequency('monthly')
+    log.info("****** Scheduled monthly update finished ******" + new Date())
+  }
 }

@@ -5,16 +5,16 @@ import java.text.NumberFormat
 import java.text.DecimalFormat
 import org.codehaus.groovy.grails.web.util.StreamCharBuffer
 import grails.converters.JSON
-import org.codehaus.groovy.grails.commons.ConfigurationHolder
 import org.codehaus.groovy.grails.web.converters.exceptions.ConverterException
 import au.org.ala.cas.util.AuthenticationCookieUtils
 
 class PostieTagLib {
-    //def authenticateService
 
     static namespace = 'cl'
 
     def authService
+
+    def grailsApplication
 
     def loggedInName = {
         def userName = authService.username()
@@ -33,11 +33,11 @@ class PostieTagLib {
     def loginoutLink = {
 
         def userName = authService.username()
-        def serverName = ConfigurationHolder.config.security.cas.serverName
+        def serverName = grailsApplication.config.serverName
         def requestUri = serverName + request.forwardURI
         if (userName) {
             // currently logged in
-            out << "<a id='${userName}' href='${resource(file:'logout', dir:'user')}?casUrl=${ConfigurationHolder.config.security.cas.logoutUrl}&appUrl=${requestUri}'><span>Log out</span></a>"
+            out << "<a id='${userName}' href='${resource(file:'logout', dir:'user')}?casUrl=${grailsApplication.config.security.cas.logoutUrl}&appUrl=${requestUri}'><span>Log out</span></a>"
         } else {
             // currently logged out
             out << "<a href='https://auth.ala.org.au/cas/login?service=${requestUri}'><span>Log in</span></a>"
@@ -69,7 +69,7 @@ class PostieTagLib {
      */
     def ifAllGranted = { attrs, body ->
         def granted = true
-        if (ConfigurationHolder.config.security.cas.bypass) {
+        if (grailsApplication.config.security.cas.bypass) {
             granted = true
         } else {
             def roles = attrs.role.toString().tokenize(',')
@@ -90,7 +90,7 @@ class PostieTagLib {
      * </g:ifGranted>
      */
     def ifGranted = { attrs, body ->
-        if (ConfigurationHolder.config.security.cas.bypass || request.isUserInRole(attrs.role)) {
+        if (grailsApplication.config.security.cas.bypass || request.isUserInRole(attrs.role)) {
             out << body()
         }
     }
@@ -101,7 +101,7 @@ class PostieTagLib {
      * </g:ifNotGranted>
      */
     def ifNotGranted = { attrs, body ->
-        if (!ConfigurationHolder.config.security.cas.bypass && !request.isUserInRole(attrs.role)) {
+        if (!grailsApplication.config.security.cas.bypass && !request.isUserInRole(attrs.role)) {
             out << body()
         }
     }
@@ -119,7 +119,7 @@ class PostieTagLib {
     }
 
     def loggedInUsername = { attrs ->
-        if (ConfigurationHolder.config.security.cas.bypass) {
+        if (grailsApplication.config.security.cas.bypass) {
             out << 'cas bypassed'
         } else if (request.getUserPrincipal()) {
         	out << request.getUserPrincipal().name
@@ -127,6 +127,6 @@ class PostieTagLib {
     }
 
     private boolean isAdmin() {
-        return ConfigurationHolder.config.security.cas.bypass || request?.isUserInRole(ProviderGroup.ROLE_ADMIN)
+        return grailsApplication.config.security.cas.bypass || request?.isUserInRole(ProviderGroup.ROLE_ADMIN)
     }
 }

@@ -4,8 +4,13 @@ class QueryResult {
 
   Query query
   Frequency frequency
-  Date lastChecked          // timestamp of last checked date
-  Date previousCheck        // timestamp of last checked date
+  Date lastChecked          // timestamp of last check
+  Date previousCheck        // timestamp of previous check
+  
+  String queryUrlUsed       //query URL used
+  String queryUrlUIUsed       //query URL used
+  
+  
   Boolean hasChanged = false
   Date lastChanged
   byte[] lastResult
@@ -19,10 +24,14 @@ class QueryResult {
     previousCheck nullable: true
     lastChanged nullable:true
     lastChecked nullable:true
+    queryUrlUsed nullable:true
+    queryUrlUIUsed nullable:true
   }
 
   static mapping = {
     lastResult sqlType: 'blob',  minSize:0, maxSize: 200000
     previousResult sqlType: 'blob',  minSize:0, maxSize: 200000
+    queryUrlUsed  sqlType: 'text'
+    queryUrlUIUsed  sqlType: 'text'
   }
 }

@@ -20,7 +20,7 @@
 
             <h3>
               Send me alerts:
-              <g:select from="${frequencies}" id="userFrequency" value="${user.frequency.name}" optionKey="name" />
+              <g:select name="userFrequency" from="${frequencies}" id="userFrequency" value="${user?.frequency?.name}" optionKey="name" />
             </h3>
 
             <div class="list">

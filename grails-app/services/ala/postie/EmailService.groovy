@@ -2,13 +2,16 @@ package ala.postie
 
 import java.text.SimpleDateFormat
 import com.jayway.jsonpath.JsonPath
-import org.codehaus.groovy.grails.commons.ConfigurationHolder
 
 class EmailService {
 
   static transactional = true
 
   def diffService
+
+  def queryService
+
+  def grailsApplication
 
   def serviceMethod() {}
 
@@ -19,22 +22,29 @@ class EmailService {
     QueryResult queryResult = QueryResult.findByQueryAndFrequency(notification.query, notification.user.frequency)
 
     def records = null
-    if(notification.query.recordJsonPath){
+
+    //if theres a fire on property, then dont do a diff
+    if(queryService.hasAFireProperty(notification.query) && notification.query.recordJsonPath){
+      records = diffService.getNewRecords(queryResult)
+    } else if(notification.query.recordJsonPath){
       records = diffService.getNewRecordsFromDiff(queryResult)
     }
 
+    Integer totalRecords = queryService.fireWhenNotZeroProperty(queryResult)
+
     sendMail {
-      from "Atlas alerts<" + ConfigurationHolder.config.postie.emailSender + ">"
+      from "Atlas alerts<" + grailsApplication.config.postie.emailSender + ">"
       subject "Update - " + notification.query.name
       bcc notification.user.email
       body (view: notification.query.emailTemplate,
             plugin:"email-confirmation",
             model:[title:notification.query.name,
                    message:notification.query.updateMessage,
-                   moreInfo: constructMoreInfoUrl(notification.query),
-                   stopNotification: ConfigurationHolder.config.security.cas.serverName + ConfigurationHolder.config.security.cas.contextPath  + '/notification/myAlerts',
+                   moreInfo: queryResult.queryUrlUIUsed,
+                   stopNotification: grailsApplication.config.serverName + grailsApplication.config.contextPath  + '/notification/myAlerts',
                    records: records,
-                   frequency: notification.user.frequency
+                   frequency: notification.user.frequency,
+                   totalRecords: totalRecords
             ]
       )
     }
@@ -46,23 +56,28 @@ class EmailService {
     QueryResult queryResult = QueryResult.findByQueryAndFrequency(query, frequency)
 
     def records = null
-    if(query.recordJsonPath){
-      //records = JsonPath.read(NotificationService.decompressZipped(queryResult.lastResult), query.recordJsonPath)
+    //if theres a fire on property, then dont do a diff
+    if(queryService.hasAFireProperty(query) && query.recordJsonPath){
+      records = diffService.getNewRecords(queryResult)
+    } else if(query.recordJsonPath){
       records = diffService.getNewRecordsFromDiff(queryResult)
     }
+    
+    Integer totalRecords = queryService.fireWhenNotZeroProperty(queryResult)
 
     sendMail {
-      from "Atlas alerts<" + ConfigurationHolder.config.postie.emailSender + ">"
+      from "Atlas alerts<" + grailsApplication.config.postie.emailSender + ">"
       subject query.name
       bcc addresses
       body (view: query.emailTemplate,
             plugin:"email-confirmation",
             model:[title:"Update - " + query.name,
                    message:query.updateMessage,
-                   moreInfo: constructMoreInfoUrl(query, frequency),
-                   stopNotification: ConfigurationHolder.config.security.cas.serverName + ConfigurationHolder.config.security.cas.contextPath  + '/notification/myAlerts',
+                    moreInfo: queryResult.queryUrlUIUsed,
+                   stopNotification: grailsApplication.config.serverName + grailsApplication.config.contextPath  + '/notification/myAlerts',
                    records: records,
-                   frequency: frequency
+                   frequency: frequency,
+                   totalRecords: totalRecords
       ])
     }
   }
@@ -72,7 +87,7 @@ class EmailService {
     String moreInfoUrl = query.baseUrl + query.queryPathForUI
     if(query.dateFormat){
       SimpleDateFormat sdf = new SimpleDateFormat(query.dateFormat)
-      def dateValue = sdf.format(queryResult.previousCheck)
+      def dateValue = sdf.format(queryResult.lastChecked)
       moreInfoUrl = query.baseUrl + query.queryPathForUI.replaceAll("___DATEPARAM___", dateValue)
     }
     moreInfoUrl

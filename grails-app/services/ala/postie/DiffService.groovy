@@ -30,6 +30,17 @@ class DiffService {
     }
   }
 
+  def getNewRecords(QueryResult queryResult){
+
+    //decompress both and compare lists
+    if(queryResult.query.recordJsonPath){
+      String last = decompressZipped(queryResult.lastResult)
+      JsonPath.read(last, queryResult.query.recordJsonPath)
+    } else {
+      []
+    }
+  }
+
   def getNewRecordsFromDiff(QueryResult queryResult){
 
     def records = []
@@ -56,7 +67,6 @@ class DiffService {
     }
     records
   }
-
 
   public static String decompressZipped(byte[] zipped){
     GZIPInputStream input = new GZIPInputStream(new ByteArrayInputStream(zipped))

@@ -15,10 +15,11 @@
  *  SECURITY
 \******************************************************************************/
 security.cas.casServerName = 'https://auth.ala.org.au'
-security.cas.urlPattern = '/ala-postie/notification/myalerts,/notification/myalerts'
-security.cas.urlExclusionPattern = '/images.*,/css.*,/js.*'
+security.cas.uriFilterPattern = '/,/notification/myAlerts,/notification/myAlerts,/notification/changeFrequency,/notification/addMyAlert,/notification/addMyAlert/*.,/notification/deleteMyAlert/*.,/webservice/*.,/webservice/createTaxonAlert,/webservice/taxonAlerts,/webservice/createRegionAlert,/webservice/regionAlerts,/notification/deleteMyAlert/*.,/notification/deleteMyAlertWR/*.,/webservice/deleteTaxonAlert/*.,/webservice/createTaxonRegionAlert,/webservice/createSpeciesGroupRegionAlert'
+security.cas.uriExclusionFilterPattern = '/images.*,/css.*,/js.*'
 security.cas.loginUrl = 'https://auth.ala.org.au/cas/login'
 security.cas.logoutUrl = 'https://auth.ala.org.au/cas/logout'
+security.cas.casServerUrlPrefix = 'https://auth.ala.org.au/cas'
 security.cas.bypass = false
 
 postie.timezone = 'Australia/Sydney'
@@ -74,8 +75,8 @@ grails.rest.injectInto = ["Controller", "Service", "Routes"]
 environments {
     production {
         grails.serverURL = "http://alerts.ala.org.au"
-        security.cas.serverName = 'http://alerts.ala.org.au'
-        security.cas.contextPath = ''
+        serverName = 'http://alerts.ala.org.au'
+        contextPath = ''
         grails {
           mail {
             host = "localhost"
@@ -85,15 +86,15 @@ environments {
         }
     }
     development {
-        grails.serverURL = "http://localhost:8080/${appName}"
-        security.cas.serverName = 'http://localhost:8080'
-        security.cas.contextPath = '/ala-postie'
+        grails.serverURL = "http://alerts-local.ala.org.au:8080/${appName}"     //add a entry into /etc/hosts for this DNS to resolve to localhost
+        serverName = 'http://alerts-local.ala.org.au:8080'
+        contextPath = '/ala-postie'
         grails {
            mail {
              host = "smtp.gmail.com"
              port = 465
-             username = "********@gmail.com"
-             password = "*************"
+             username = "******@gmail.com"
+             password = "*******"
              props = ["mail.smtp.auth":"true",
                       "mail.smtp.socketFactory.port":"465",
                       "mail.smtp.socketFactory.class":"javax.net.ssl.SSLSocketFactory",
@@ -102,7 +103,7 @@ environments {
         }
     }
     test {
-        grails.serverURL = "http://localhost:8080/${appName}"
+        grails.serverURL = "http://alerts-local.ala.org.au:8080/${appName}"
     }
 }
 
@@ -113,7 +114,7 @@ log4j = {
     //
     appenders {
 
-        //console name: "stdout", layout: pattern(conversionPattern: "%d %-5p [%c{1}]  %m%n"), threshold: org.apache.log4j.Level.DEBUG
+        console name: "stdout", layout: pattern(conversionPattern: "%d %-5p [%c{1}]  %m%n"), threshold: org.apache.log4j.Level.DEBUG
 //        rollingFile name: "dev2", layout: pattern(conversionPattern: "[POSTIE] %c{2} %m%n"), maxFileSize: 1024, file: "/tmp/postie.log", threshold: org.apache.log4j.Level.DEBUG
 
         environments {
@@ -122,6 +123,7 @@ log4j = {
               'null' name: "stacktrace"
             }
             development {
+              console name: "stdout", layout: pattern(conversionPattern: "%d %-5p [%c{1}]  %m%n"), threshold: org.apache.log4j.Level.DEBUG
               rollingFile name: "tomcatLog", maxFileSize: 102400000, file: "/tmp/postie.log", threshold: org.apache.log4j.Level.DEBUG, layout: pattern(conversionPattern: "%d %-5p [%c{1}]  %m%n")
               'null' name: "stacktrace"
             }
@@ -160,7 +162,8 @@ log4j = {
            'com',
            'au',
            'grails.app',
-           'net'
+           'net',
+           'grails.util.GrailsUtil'
 
     debug  'grails.app.domain.ala.postie',
            'grails.app.controller.ala.postie',

@@ -1,11 +1,12 @@
 package ala.postie
 
 import org.springframework.web.context.request.RequestContextHolder
-import org.codehaus.groovy.grails.commons.ConfigurationHolder
 
 class AuthService {
 
   static transactional = true
+
+  def grailsApplication
 
   def serviceMethod() {}
 
@@ -23,7 +24,7 @@ class AuthService {
   }
 
   protected boolean userInRole(role) {
-    return ConfigurationHolder.config.security.cas.bypass ||
+    return  grailsApplication.config.security.cas.bypass ||
             RequestContextHolder.currentRequestAttributes()?.isUserInRole(role) // || isAdmin()
   }
 }

@@ -16,6 +16,7 @@ class NotificationService {
   static transactional = true
   def emailService
   def diffService
+  def queryService
 
   def serviceMethod() {}
 
@@ -41,14 +42,19 @@ class NotificationService {
     QueryResult qr = getQueryResult(query, frequency)
 
     //def url = new URL("http://biocache.ala.org.au/ws/occurrences/search?q=*:*&pageSize=1")
-    def urlString = getQueryUrl(query, frequency)
+    def urls = getQueryUrl(query, frequency)
 
-    println("Querying URL: " + urlString)
+    def urlString = urls.first()
+    def urlStringForUI = urls.last()
+
+    log.debug("Querying URL: " + urlString)
 
     def json = IOUtils.toString(new URL(urlString).newReader())
 
     //update the stored properties
     refreshProperties(qr, json)
+
+    qr.refresh()  //refresh from the DB
 
     qr.previousCheck = qr.lastChecked
 
@@ -57,8 +63,10 @@ class NotificationService {
     qr.lastResult = gzipResult(json)
     qr.lastChecked = new Date()
     qr.hasChanged = hasChanged(qr)
+    qr.queryUrlUsed = urlString
+    qr.queryUrlUIUsed = urlStringForUI
 
-    println("Has changed? : " + qr.hasChanged)
+    log.debug("Has changed? : " + qr.hasChanged)
     if(qr.hasChanged){
       qr.lastChanged = new Date()
     }
@@ -77,7 +85,7 @@ class NotificationService {
     bout.toByteArray()
   }
 
-  private String getQueryUrl(Query query, Frequency frequency){
+  private String[] getQueryUrl(Query query, Frequency frequency){
 
     //if there is a date format, then there's a param to replace
     if (query.dateFormat) {
@@ -85,11 +93,9 @@ class NotificationService {
       //insert the date to query with
       SimpleDateFormat sdf = new SimpleDateFormat(query.dateFormat)
       def dateValue = sdf.format(dateToUse)
-      query.baseUrl + query.queryPath.replaceAll("___DATEPARAM___", dateValue)
-
+      [query.baseUrl + query.queryPath.replaceAll("___DATEPARAM___", dateValue), query.baseUrl + query.queryPathForUI.replaceAll("___DATEPARAM___", dateValue)]
     } else {
-
-      query.baseUrl + query.queryPath
+      [query.baseUrl + query.queryPath, query.baseUrl + query.queryPathForUI ]
     }
   }
 
@@ -103,7 +109,7 @@ class NotificationService {
     Boolean changed = false
 
     //if there is a fireWhenNotZero or fireWhenChange ignore  idJsonPath
-    Boolean hasFireProperty = hasAFireProperty(queryResult.query)
+    Boolean hasFireProperty = queryService.hasAFireProperty(queryResult.query)
 
     queryResult.propertyValues.each { pv ->
       log.debug("Has change check: "  + pv.propertyPath.name +", value:  " + pv.currentValue +", previous: "+ pv.previousValue)
@@ -115,21 +121,13 @@ class NotificationService {
       }
     }
 
-    //if there isnt a fire property, use json diff if configured
+    //if there isnt a 'fire-on' property, use json diff if configured
     if (!hasFireProperty && queryResult.query.idJsonPath){
       log.debug("Has change check. Checking JSON for query : "  + queryResult.query.name)
       changed = diffService.hasChangedJsonDiff(queryResult)
     }
 
     changed
-  }
-
-  Boolean hasAFireProperty(Query query){
-    Boolean hasFireProperty = false
-    query.propertyPaths.each { pp ->
-      if(pp.fireWhenChange || pp.fireWhenNotZero) hasFireProperty = true
-    }
-    hasFireProperty
   }
 
   private def refreshProperties(QueryResult queryResult, json) {

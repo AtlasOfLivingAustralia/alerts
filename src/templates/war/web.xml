@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<web-app version="2.4"
-         xmlns="http://java.sun.com/xml/ns/j2ee"
+<web-app version="2.5"
+         xmlns="http://java.sun.com/xml/ns/javaee"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
-    <display-name>ala-postie</display-name>
+         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
+
+    <display-name>/@grails.project.key@</display-name>
 
     <context-param>
         <param-name>contextConfigLocation</param-name>
@@ -16,33 +17,29 @@
     </context-param>
 
     <!-- ***** CAS security ***** -->
-     <!-- CAS Authentication related properties -->
     <context-param>
-        <!-- Parameter used by CAS filters -->
         <param-name>serverName</param-name>
-        <param-value>http://alerts.ala.org.au</param-value>
+        <param-value>@serverName@</param-value>
+    </context-param>
+
+    <context-param>
+        <param-name>contextPath</param-name>
+        <param-value>@contextPath@</param-value>
     </context-param>
 
     <context-param>
         <param-name>casServerName</param-name>
-        <param-value>https://auth.ala.org.au</param-value>
+        <param-value>@security.cas.casServerName@</param-value>
     </context-param>
-
-    <!--
-    <context-param>
-        <param-name>contextPath</param-name>
-        <param-value>/ala-postie</param-value>
-    </context-param>
-    -->
 
     <context-param>
         <param-name>uriFilterPattern</param-name>
-        <param-value>/notification/myAlerts,/notification/changeFrequency,/notification/addMyAlert,/notification/addMyAlert/*.,/notification/deleteMyAlert/*.,/webservice/*., /webservice/createTaxonAlert,/webservice/taxonAlerts,/ala-postie/notification/deleteMyAlert/*.,/notification/deleteMyAlertWR/*.,/grails/notification/deleteMyAlertWR.dispatch, /webservice/deleteTaxonAlert/*.</param-value>
+        <param-value>@security.cas.uriFilterPattern@</param-value>
     </context-param>
 
     <context-param>
         <param-name>uriExclusionFilterPattern</param-name>
-        <param-value>/images.*,/css.*,/js.*</param-value>
+        <param-value>@security.cas.uriExclusionFilterPattern@</param-value>
     </context-param>
 
     <!-- CAS Authentication Service filters -->
@@ -60,7 +57,7 @@
         </init-param>
         <init-param>
             <param-name>casServerLoginUrl</param-name>
-            <param-value>https://auth.ala.org.au/cas/login</param-value>
+            <param-value>@security.cas.loginUrl@</param-value>
         </init-param>
         <init-param>
             <param-name>gateway</param-name>
@@ -77,7 +74,7 @@
         </init-param>
         <init-param>
             <param-name>casServerUrlPrefix</param-name>
-            <param-value>https://auth.ala.org.au/cas</param-value>
+            <param-value>@security.cas.casServerUrlPrefix@</param-value>
         </init-param>
     </filter>
 
@@ -91,8 +88,8 @@
     </filter>
 
     <filter-mapping>
-       <filter-name>CAS Single Sign Out Filter</filter-name>
-       <url-pattern>/*</url-pattern>
+        <filter-name>CAS Single Sign Out Filter</filter-name>
+        <url-pattern>/*</url-pattern>
     </filter-mapping>
 
     <filter-mapping>
@@ -138,11 +135,9 @@
     <filter-mapping>
         <filter-name>sitemesh</filter-name>
         <url-pattern>/*</url-pattern>
+        <dispatcher>REQUEST</dispatcher>
+        <dispatcher>ERROR</dispatcher>
     </filter-mapping>
-
-    <listener>
-        <listener-class>org.codehaus.groovy.grails.web.util.Log4jConfigListener</listener-class>
-    </listener>
 
     <listener>
         <listener-class>org.codehaus.groovy.grails.web.context.GrailsContextLoaderListener</listener-class>

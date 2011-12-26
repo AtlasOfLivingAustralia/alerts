@@ -32,7 +32,7 @@ class BootStrap {
       Query newAssertions = (new Query([
               baseUrl: 'http://biocache.ala.org.au',
               name: 'Annotations',
-              updateMessage: 'Occurrence records have been annotated.',
+              updateMessage: 'annotations.update.message',
               description: 'Notify me when annotations are made on any record.',
               queryPath: '/ws/occurrences/search?q=last_assertion_date:[___DATEPARAM___%20TO%20*]&sort=last_assertion_date&dir=desc&pageSize=20&facets=basis_of_record',
               queryPathForUI: '/occurrences/search?q=last_assertion_date:[___DATEPARAM___%20TO%20*]&sort=last_assertion_date&dir=desc',
@@ -49,7 +49,7 @@ class BootStrap {
       Query newRecords = (new Query([
               baseUrl: 'http://biocache.ala.org.au',
               name: 'New records',
-              updateMessage: 'More occurrence records have been added.',
+              updateMessage: 'more.records.update.message',
               description: 'Notify me when new records are added.',
               queryPath: '/ws/occurrences/search?q=last_load_date:[___DATEPARAM___%20TO%20*]&sort=last_load_date&dir=desc&pageSize=20&facets=basis_of_record',
               queryPathForUI: '/occurrences/search?q=last_load_date:[___DATEPARAM___%20TO%20*]&sort=last_load_date&dir=desc',
@@ -66,7 +66,7 @@ class BootStrap {
       Query newRecordsWithImages = (new Query([
               baseUrl: 'http://biocache.ala.org.au',
               name: 'New images',
-              updateMessage: 'More occurrence records with images have been added.',
+              updateMessage: 'more.images.update.message',
               description: 'Notify me when new images are added.',
               queryPath: '/ws/occurrences/search?q=last_load_date:[___DATEPARAM___%20TO%20*]&sort=last_load_date&dir=desc&fq=multimedia:Multimedia&pageSize=20&facets=basis_of_record',
               queryPathForUI: '/occurrences/search?q=last_load_date:[___DATEPARAM___%20TO%20*]&sort=last_load_date&dir=desc&fq=multimedia:Multimedia',
@@ -84,7 +84,7 @@ class BootStrap {
       Query newCitizenScienceRecords = (new Query([
               baseUrl: 'http://biocache.ala.org.au',
               name: 'Citizen science records',
-              updateMessage: 'More citizen science records have been added.',
+              updateMessage: 'more.cs.update.message',
               description: 'Notify me when new citizen science records are added.',
               queryPath: '/ws/occurrences/search?q=last_load_date:[___DATEPARAM___%20TO%20*]&fq=data_resource_uid:dr364&sort=last_load_date&dir=desc&pageSize=20&facets=basis_of_record',
               queryPathForUI: '/occurrences/search?q=last_load_date:[___DATEPARAM___%20TO%20*]&fq=data_resource_uid:dr364&sort=last_load_date&dir=desc',
@@ -102,7 +102,7 @@ class BootStrap {
       Query newCitizenScienceRecordsWithImages = (new Query([
               baseUrl: 'http://biocache.ala.org.au',
               name: 'Citizen science records with images',
-              updateMessage: 'More citizen science records with images have been added.',
+              updateMessage: 'more.cs.images.update.message',
               description: 'Notify me when new citizen science records with images are added.',
               queryPath: '/ws/occurrences/search?q=last_load_date:[___DATEPARAM___%20TO%20*]&fq=data_resource_uid:dr364&sort=last_load_date&dir=desc&pageSize=20&facets=basis_of_record&fq=multimedia:Multimedia',
               queryPathForUI: '/occurrences/search?q=last_load_date:[___DATEPARAM___%20TO%20*]&fq=data_resource_uid:dr364&sort=last_load_date&dir=desc&fq=multimedia:Multimedia',
@@ -119,7 +119,7 @@ class BootStrap {
       Query newSpatialLayers = (new Query([
               baseUrl: 'http://spatial.ala.org.au',
               name: 'Spatial layers',
-              updateMessage: 'More spatial layers have been added.',
+              updateMessage: 'more.spatial.update.message',
               description: 'Notify me when new spatial layers are added.',
               queryPath: '/layers.json',
               queryPathForUI: '/layers',
@@ -134,7 +134,7 @@ class BootStrap {
       Query newDatasets = (new Query([
               baseUrl: 'http://collections.ala.org.au',
               name: 'Datasets',
-              updateMessage: 'More datasets have been added.',
+              updateMessage: 'more.datasets.update.message',
               description: 'Notify me when new datasets are added.',
               queryPath: '/ws/dataResource',
               queryPathForUI: '/datasets',
