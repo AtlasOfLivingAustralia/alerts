@@ -14,7 +14,7 @@ class NotificationController {
     def myAlerts = {
 
       User user = userService.getUser()
-      println('Viewing my alerts :  ' + user)
+      log.debug('Viewing my alerts :  ' + user)
 
       //enabled alerts
       def notificationInstanceList = Notification.findAllByUser(user)
@@ -29,8 +29,6 @@ class NotificationController {
       allAlertTypes.removeAll { enabledIds.contains(it.id) }
       def customQueries = enabledQueries.findAll { it.custom }
       def standardQueries = enabledQueries.findAll { !it.custom }
-      
-      println("customQueries: " + customQueries.size())
 
       [disabledQueries:allAlertTypes, enabledQueries:standardQueries, customQueries:customQueries, frequencies:Frequency.listOrderByPeriodInSeconds(), user:user]
     }

@@ -14,7 +14,7 @@ class WebserviceController {
   def test = {}
 
   private def getMyAlertsLink = {
-    grailsApplication.config.serverName + grailsApplication.config.contextPath + '/notification/myAlerts'
+    getServerRoot() + '/notification/myAlerts'
   }
 
   private def getServerRoot = {
@@ -159,7 +159,7 @@ class WebserviceController {
 
   def createTaxonRegionAlert = {
 
-    println('createTaxonRegionAlert ' + params.regionName + ' : ' + params.layerId)
+    log.debug('createTaxonRegionAlert ' + params.regionName + ' : ' + params.layerId)
 
     if(params.regionName && params.layerId && params.taxonGuid && params.taxonName){
       //region + taxon

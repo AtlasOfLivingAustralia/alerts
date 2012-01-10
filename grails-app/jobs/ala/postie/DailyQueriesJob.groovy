@@ -3,7 +3,7 @@ package ala.postie
 class DailyQueriesJob {
 
   static triggers = {
-     cron name:'daily', startDelay:10000, cronExpression: '0 30 8 * * ?'
+     cron name:'daily', startDelay:10000, cronExpression: '0 30 8 * * ?'     //8.30am
   }
 
   def notificationService

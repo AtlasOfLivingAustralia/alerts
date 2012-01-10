@@ -54,7 +54,7 @@ class NotificationService {
     //update the stored properties
     refreshProperties(qr, json)
 
-    qr.refresh()  //refresh from the DB
+    qr = QueryResult.findById(qr.id)
 
     qr.previousCheck = qr.lastChecked
 
