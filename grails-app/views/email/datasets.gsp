@@ -3,7 +3,7 @@
   <head><title>Email alert from Atlas of Living Australia</title></head>
   <body>
     <h2>${title}</h2>
-    <p>${message}</p>
+    <p><g:message code="${message}" default="${message}"/></p>
     <p>To view details of the datasets that have been added/changed, <a href="${moreInfo}">click here</a></p>
     <p>To disable this alert or to manage your alerts, <a href="${stopNotification}">click here</a></p>
     <style type="text/css">
