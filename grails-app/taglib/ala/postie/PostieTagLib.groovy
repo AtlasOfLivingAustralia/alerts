@@ -25,6 +25,43 @@ class PostieTagLib {
         }
     }
 
+  /**
+     * Generate the login link for the banner.
+     *
+     * Will be to log in or out based on current auth status.
+     * TODO: also check for user principal in request in case cookies are disabled
+     * 
+     * @attr showUser if supplied, the username will be shown before the logout link
+     * @attr fixedAppUrl if supplied will be used for logout instead of the current page
+     */
+   def loginoutLink2011 = { attrs ->
+       def requestUri = grailsApplication.config.security.cas.casServerName + request.forwardURI
+       if (AuthenticationCookieUtils.cookieExists(request, AuthenticationCookieUtils.ALA_AUTH_COOKIE)) {
+           // currently logged in
+           if (attrs.showUser) {
+               out << "<span id='logged-in'>Logged in as ${loggedInUsername()}</span>"
+             }
+           out << link(controller: 'public', action: 'logout',
+                       params: [casUrl: grailsApplication.config.security.cas.logoutUrl,
+                               appUrl: attrs.fixedAppUrl ?: requestUri]) {'Logout'}
+         } else {
+           // currently logged out
+           out << "<a href='https://auth.ala.org.au/cas/login?service=${requestUri}'><span>Log in</span></a>"
+         }
+     }
+
+   def loggedInUsername = {
+       if (grailsApplication.config.security.cas.bypass) {
+           out << 'cas bypassed'
+         }
+       else if (request.getUserPrincipal()) {
+           out << request.getUserPrincipal().name
+         }
+       else if (AuthenticationCookieUtils.cookieExists(request, AuthenticationCookieUtils.ALA_AUTH_COOKIE)) {
+           out << AuthenticationCookieUtils.getUserName(request) + '*'
+         }
+     }
+
     /**
      * Generate the link the login link for the banner.
      *
@@ -118,13 +155,6 @@ class PostieTagLib {
         }
     }
 
-    def loggedInUsername = { attrs ->
-        if (grailsApplication.config.security.cas.bypass) {
-            out << 'cas bypassed'
-        } else if (request.getUserPrincipal()) {
-        	out << request.getUserPrincipal().name
-        }
-    }
 
     private boolean isAdmin() {
         return grailsApplication.config.security.cas.bypass || request?.isUserInRole(ProviderGroup.ROLE_ADMIN)

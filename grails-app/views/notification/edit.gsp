@@ -4,7 +4,7 @@
 <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-        <meta name="layout" content="main" />
+        <meta name="layout" content="${grailsApplication.ala.layout}" />
         <g:set var="entityName" value="${message(code: 'notification.label', default: 'Notification')}" />
         <title><g:message code="default.edit.label" args="[entityName]" /></title>
     </head>

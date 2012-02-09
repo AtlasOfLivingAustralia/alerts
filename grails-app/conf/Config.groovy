@@ -25,7 +25,12 @@ security.cas.bypass = false
 postie.timezone = 'Australia/Sydney'
 postie.emailSender = "alerts@ala.org.au"
 
+/** Properties used in header and tails tag **/
+headerAndFooter.baseURL = 'http://www2.ala.org.au/commonui'
 ala.baseURL = 'http://www.ala.org.au'
+ala.layout = 'ala2'
+bie.baseURL = "http://bie.ala.org.au"
+bie.searchPath = "/search"
 
 grails.project.groupId = au.org.ala.postie // change this to alter the default package name and Maven publishing destination
 grails.mime.file.extensions = true // enables the parsing of file extensions from URLs into the request format

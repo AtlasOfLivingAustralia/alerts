@@ -7,7 +7,7 @@
   <meta name="robots" content="index,follow"/>
   <meta name="app.version" content="${g.meta(name: 'app.version')}"/>
   <meta name="app.build" content="${g.meta(name: 'app.build')}"/>
-  <meta name="description" content="ALA Data Check | Atlas of Living Australia"/>
+  <meta name="description" content="Alerts | Atlas of Living Australia"/>
 
   <title><g:layoutTitle/></title>
 

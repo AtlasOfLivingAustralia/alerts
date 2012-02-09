@@ -16,6 +16,8 @@ environments {
             //dbCreate = "create-drop" // one of 'create', 'create-drop','update'
             dbCreate = "update"
             url = "jdbc:mysql://localhost:3306/postie"
+          username = "root"
+          password = ""
         }
     }
     test {
