@@ -145,12 +145,23 @@ class BootStrap {
       new ala.postie.PropertyPath([name: "dataset_count", jsonPath: "\$", query: newDatasets, fireWhenChanged: true]).save()
     }
 
-//      (new Notification([query: newAssertions, userEmail:"moyesyside@gmail.com"])).save()
-    //      (new Notification([query: newRecords, userEmail:"moyesyside@gmail.com"])).save()
-    //      (new Notification([query: newRecordsWithImages, userEmail:"moyesyside@gmail.com"])).save()
-    //      (new Notification([query: newCitizenScienceRecords, userEmail:"moyesyside@gmail.com"])).save()
-    //      (new Notification([query: newCitizenScienceRecordsWithImages, userEmail:"moyesyside@gmail.com"])).save()
-    //      (new Notification([query: newSpatialLayers, userEmail:"moyesyside@gmail.com"])).save()
+    // get_category_posts.json
+
+    if(Query.findAllByName('Blogs and News').isEmpty()){
+      Query newBlogs = (new Query([
+              baseUrl: 'http://www.ala.org.au',
+              name: 'Blogs and News',
+              updateMessage: 'more.blogsnews.update.message',
+              description: 'Notify me when blogs and news items are added.',
+              queryPath: '/api/get_category_posts/?slug=blogs-news&count=1',
+              queryPathForUI: '/blogs-news/',
+              emailTemplate: '/email/blogs',
+              recordJsonPath: '\$.posts[0]',
+              idJsonPath: 'id'
+      ])).save()
+
+      new ala.postie.PropertyPath([name: "last_blog_id", jsonPath: "posts", query: newBlogs, fireWhenChanged: true]).save()
+    }
   }
 
   def destroy = {}

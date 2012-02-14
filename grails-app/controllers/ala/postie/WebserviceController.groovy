@@ -35,7 +35,7 @@ class WebserviceController {
     //check for notifications for this query and this user
     Query query = queryService.createTaxonQuery(taxonGuid, params.taxonName)
 
-    Notification notification = queryService.getNotificationForUser(query, userService.getUser())
+    Notification notification = queryService.getNotificationForUser(query, retrieveUser(params))
 
     String link = null
     if (notification  != null){
@@ -71,7 +71,7 @@ class WebserviceController {
     //check for notifications for this query and this user
     Query query = queryService.createRegionQuery(params.layerId, params.regionName)
 
-    Notification notification = queryService.getNotificationForUser(query, userService.getUser())
+    Notification notification = queryService.getNotificationForUser(query, retrieveUser(params))
 
     String link = null
     if (notification  != null){
@@ -94,7 +94,7 @@ class WebserviceController {
     //check for notifications for this query and this user
     Query query = queryService.createTaxonRegionQuery(params.taxonGuid, params.taxonName, params.layerId, params.regionName)
 
-    Notification notification = queryService.getNotificationForUser(query, userService.getUser())
+    Notification notification = queryService.getNotificationForUser(query, retrieveUser(params))
 
     String link = null
     if (notification  != null){
@@ -122,7 +122,7 @@ class WebserviceController {
     //check for notifications for this query and this user
     Query query = queryService.createSpeciesGroupRegionQuery(params.speciesGroup, params.layerId, params.regionName)
 
-    Notification notification = queryService.getNotificationForUser(query, userService.getUser())
+    Notification notification = queryService.getNotificationForUser(query, retrieveUser(params))
 
     String link = null
     if (notification  != null){
@@ -195,5 +195,13 @@ class WebserviceController {
     Notification n = Notification.findById(params.id)
     n.delete(flush:true)
     redirectIfSupplied(params)
+  }
+  
+  private User retrieveUser(params){
+    User user = userService.getUser()
+    if(user == null && params.userName){
+      user = userService.getUserByUserName(params.userName)
+    }
+    user
   }
 }

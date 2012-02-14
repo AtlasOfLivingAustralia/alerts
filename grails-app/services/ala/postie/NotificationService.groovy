@@ -109,6 +109,7 @@ class NotificationService {
     Boolean changed = false
 
     //if there is a fireWhenNotZero or fireWhenChange ignore  idJsonPath
+    println("Checking query: " + queryResult.query.name)
     Boolean hasFireProperty = queryService.hasAFireProperty(queryResult.query)
 
     queryResult.propertyValues.each { pv ->
@@ -127,6 +128,7 @@ class NotificationService {
       changed = diffService.hasChangedJsonDiff(queryResult)
     }
 
+    println("Has changed: " + changed)
     changed
   }
 
@@ -207,6 +209,7 @@ class NotificationService {
                   group by q""", [frequency: frequency])
 
     queries.each { query ->
+      log.debug("Running query: " + query.name)
       boolean hasUpdated = checkStatus(query,frequency)
       if (hasUpdated && sendEmails) {
         log.debug("Query has been updated. Sending emails....")

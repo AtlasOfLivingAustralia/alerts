@@ -1,11 +1,10 @@
 package au.org.ala
 
-import au.org.ala.auth.AuthenticationCookieUtils
+import org.codehaus.groovy.grails.commons.ConfigurationHolder
+import au.org.ala.cas.util.AuthenticationCookieUtils
 
 class HeaderFooterTagLib {
 
-  def grailsApplication
-  
   static namespace = 'hf'     // namespace for headers and footers
 
   /**
@@ -14,10 +13,17 @@ class HeaderFooterTagLib {
    *  ala.baseURL - usually "http://www.ala.org.au"
    *  bie.baseURL - usually "http://bie.ala.org.au"
    *  bie.searchPath - usually "/search"
+   *  headerAndFooter.baseURL - usually "http://www2.ala.org.au/commonui"
+   *  security.cas.loginUrl - usually "https://auth.ala.org.au/cas/login"
+   *  security.cas.logoutUrl - usually "https://auth.ala.org.au/cas/logout"
+   *
+   *  The banner include assumes that ala-cas-client exists in the app library.
    */
 
   /**
    * Display the page banner. Includes login/logout link and search box.
+   *
+   * Usage: <hf:banner [param=""]../>
    *
    * @attr logoutUrl the local url that should invalidate the session and redirect to the auth
    *  logout url - defaults to {CH.config.grails.serverURL}/session/logout
@@ -37,6 +43,8 @@ class HeaderFooterTagLib {
    *
    * Note that highlighting of the current menu item is done by including the apropriate class in the
    * body tag, eg class="collections".
+   *
+   * Usage: <hf:menu/>
    */
   def menu = {
     out << load('menu', [:])
@@ -44,6 +52,8 @@ class HeaderFooterTagLib {
 
   /**
    * Displays the page footer.
+   *
+   * Usage: <hf:footer/>
    */
   def footer = {
     out << load('footer', [:])
@@ -91,7 +101,7 @@ class HeaderFooterTagLib {
    * @return
    */
   String getContent(which) {
-    def url = grailsApplication.config.headerAndFooter.baseURL + '/' + which + ".html"
+    def url = ConfigurationHolder.config.headerAndFooter.baseURL + '/' + which + ".html"
     //println url
     def conn = new URL(url).openConnection()
     try {
@@ -115,9 +125,9 @@ class HeaderFooterTagLib {
    * @return
    */
   String transform(content, attrs) {
-    content = content.replaceAll(/::centralServer::/, grailsApplication.config.ala.baseURL)
-    content = content.replaceAll(/::searchServer::/, grailsApplication.config.bie.baseURL)
-    content = content.replaceAll(/::searchPath::/, grailsApplication.config.bie.searchPath)
+    content = content.replaceAll(/::centralServer::/, ConfigurationHolder.config.ala.baseURL)
+    content = content.replaceAll(/::searchServer::/, ConfigurationHolder.config.bie.baseURL)
+    content = content.replaceAll(/::searchPath::/, ConfigurationHolder.config.bie.searchPath)
     if (content =~ "::loginLogoutListItem::") {
       // only do the work if it is needed
       content = content.replaceAll(/::loginLogoutListItem::/, buildLoginoutLink(attrs))
@@ -131,12 +141,12 @@ class HeaderFooterTagLib {
    * @return
    */
   String buildLoginoutLink(attrs) {
-    def requestUri = removeContext(grailsApplication.config.grails.serverURL) + request.forwardURI
-    def logoutUrl = attrs.logoutUrl ?: grailsApplication.config.grails.serverURL + "/session/logout"
+    def requestUri = removeContext(ConfigurationHolder.config.grails.serverURL) + request.forwardURI
+    def logoutUrl = attrs.logoutUrl ?: ConfigurationHolder.config.grails.serverURL + "/session/logout"
     def loginReturnToUrl = attrs.loginReturnToUrl ?: requestUri
     def logoutReturnToUrl = attrs.logoutReturnToUrl ?: requestUri
-    def casLoginUrl = attrs.casLoginUrl ?: grailsApplication.config.security.cas.loginUrl
-    def casLogoutUrl = attrs.casLogoutUrl ?: grailsApplication.config.security.cas.logoutUrl
+    def casLoginUrl = attrs.casLoginUrl ?: ConfigurationHolder.config.security.cas.loginUrl
+    def casLogoutUrl = attrs.casLogoutUrl ?: ConfigurationHolder.config.security.cas.logoutUrl
 
     if ((attrs.ignoreCookie != "true" &&
             AuthenticationCookieUtils.cookieExists(request, AuthenticationCookieUtils.ALA_AUTH_COOKIE)) ||
@@ -155,8 +165,10 @@ class HeaderFooterTagLib {
    * @param urlString
    * @return
    */
-  private String removeContext(urlString) {
+  String removeContext(urlString) {
     def url = urlString.toURL()
-    return url.protocol + "://"+ url.host + ":" + url.port
+    def protocol = url.protocol != -1 ? url.protocol + "://" : ""
+    def port = url.port != -1 ? ":" + url.port : ""
+    return protocol + url.host + port
   }
 }
