@@ -15,7 +15,7 @@
  *  SECURITY
 \******************************************************************************/
 security.cas.casServerName = 'https://auth.ala.org.au'
-security.cas.uriFilterPattern = '/,/notification/myAlerts,/notification/myAlerts,/notification/changeFrequency,/notification/addMyAlert,/notification/addMyAlert/*.,/notification/deleteMyAlert/*.,/webservice/*.,/webservice/createTaxonAlert,/webservice/taxonAlerts,/webservice/createRegionAlert,/webservice/regionAlerts,/notification/deleteMyAlert/*.,/notification/deleteMyAlertWR/*.,/webservice/deleteTaxonAlert/*.,/webservice/createTaxonRegionAlert,/webservice/createSpeciesGroupRegionAlert'
+security.cas.uriFilterPattern = '/,/notification/myAlerts,/notification/changeFrequency,/notification/addMyAlert,/notification/addMyAlert/.*,/notification/deleteMyAlert/.*,/webservice/.*,/webservice/createTaxonAlert,/webservice/taxonAlerts,/webservice/createRegionAlert,/webservice/regionAlerts,/notification/deleteMyAlert/.*,/notification/deleteMyAlertWR/.*,/webservice/deleteTaxonAlert/.*,/webservice/createTaxonRegionAlert,/webservice/createSpeciesGroupRegionAlert'
 security.cas.uriExclusionFilterPattern = '/images.*,/css.*,/js.*'
 security.cas.loginUrl = 'https://auth.ala.org.au/cas/login'
 security.cas.logoutUrl = 'https://auth.ala.org.au/cas/logout'
