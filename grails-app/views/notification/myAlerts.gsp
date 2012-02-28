@@ -68,8 +68,6 @@
                         </g:each>
                         </tbody>
                     </table>
-
-
                     <g:if test="${customQueries}">
                     <h2>My custom alerts</h2>
                     <table >

@@ -2,9 +2,6 @@
 <html>
   <head><title>Email alert from Atlas of Living Australia</title></head>
   <body>
-    <h2>${title}</h2>
-    <p>To view details, <a href="${moreInfo}">click here</a></p>
-    <p>To manage your alerts, <a href="${stopNotification}">click here</a></p>
     <g:each in="${records}" var="blog">
       <h1>${blog.title}</h1>
       <g:if test="${blog.thumbnail != null}">

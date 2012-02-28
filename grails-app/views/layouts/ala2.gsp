@@ -22,7 +22,7 @@
   <link rel="stylesheet" type="text/css" media="screen" href="http://www.ala.org.au/wp-content/themes/ala2011/css/sf.css" />
 
   <link rel="stylesheet" href="${resource(dir:'css',file:'public.css')}"/>
-  <link rel="stylesheet" href="${resource(dir:'css/smoothness',file:'jquery-ui-1.8.14.custom.css')}" type="text/css" media="screen"/>
+  %{--<link rel="stylesheet" href="${resource(dir:'css/smoothness',file:'jquery-ui-1.8.14.custom.css')}" type="text/css" media="screen"/>--}%
 
   %{--<script language="JavaScript" type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>--}%
   <g:layoutHead />
@@ -32,6 +32,7 @@
   <script language="JavaScript" type="text/javascript" src="${grailsApplication.config.ala.baseURL}/wp-content/themes/ala/scripts/ui.core.js"></script>
   <script language="JavaScript" type="text/javascript" src="${grailsApplication.config.ala.baseURL}/wp-content/themes/ala/scripts/ui.tabs.js"></script>
   <script language="JavaScript" type="text/javascript" src="${grailsApplication.config.ala.baseURL}/wp-content/themes/ala/scripts/hoverintent-min.js"></script>
+  <script type="text/javascript" src="${grailsApplication.config.ala.baseURL}/wp-content/themes/ala2011/scripts/html5.js"></script>
   <script language="JavaScript" type="text/javascript" src="${grailsApplication.config.ala.baseURL}/wp-content/themes/ala/scripts/superfish/superfish.js"></script>
   <script language="JavaScript" type="text/javascript" src="${grailsApplication.config.ala.baseURL}/wp-content/themes/ala/scripts/jquery.autocomplete.js"></script>
   <script language="JavaScript" type="text/javascript" src="${grailsApplication.config.ala.baseURL}/wp-content/themes/ala/scripts/uservoice.js"></script>
