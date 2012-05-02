@@ -29,8 +29,8 @@ class QueryResult {
   }
 
   static mapping = {
-    lastResult sqlType: 'blob',  minSize:0, maxSize: 200000
-    previousResult sqlType: 'blob',  minSize:0, maxSize: 200000
+    lastResult sqlType: 'longblob',  minSize:0, maxSize: 200000
+    previousResult sqlType: 'longblob',  minSize:0, maxSize: 200000
     queryUrlUsed  sqlType: 'text'
     queryUrlUIUsed  sqlType: 'text'
   }
