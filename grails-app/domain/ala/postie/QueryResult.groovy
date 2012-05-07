@@ -6,11 +6,8 @@ class QueryResult {
   Frequency frequency
   Date lastChecked          // timestamp of last check
   Date previousCheck        // timestamp of previous check
-  
   String queryUrlUsed       //query URL used
   String queryUrlUIUsed       //query URL used
-  
-  
   Boolean hasChanged = false
   Date lastChanged
   byte[] lastResult
@@ -19,8 +16,8 @@ class QueryResult {
   static hasMany = [propertyValues : PropertyValue]
 
   static constraints = {
-    lastResult nullable: true, minSize:0, maxSize:200000
-    previousResult nullable: true, minSize:0, maxSize:200000
+    lastResult nullable: true //, minSize:0, maxSize:200000
+    previousResult nullable: true //, minSize:0, maxSize:200000
     previousCheck nullable: true
     lastChanged nullable:true
     lastChecked nullable:true
@@ -29,8 +26,8 @@ class QueryResult {
   }
 
   static mapping = {
-    lastResult sqlType: 'longblob',  minSize:0, maxSize: 200000
-    previousResult sqlType: 'longblob',  minSize:0, maxSize: 200000
+    lastResult sqlType: 'longblob' //,  minSize:0, maxSize: 200000
+    previousResult sqlType: 'longblob' //,  minSize:0, maxSize: 200000
     queryUrlUsed  sqlType: 'text'
     queryUrlUIUsed  sqlType: 'text'
   }

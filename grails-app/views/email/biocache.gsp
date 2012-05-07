@@ -1,6 +1,6 @@
 <%@ page contentType="text/html"%>
 <html>
-  <head><title>Email alert from Atlas of Living Australia</title></head>
+  <head><title>Email alert from ${query.resourceName}</title></head>
   <body>
     <h2>${title}</h2>
     <p>
@@ -41,12 +41,12 @@
         </td>
         <td class="imageCol">
           <g:if test="${oc.image != null && oc.image.startsWith('/data/biocache-media')}">
-            <a href="http://biocache.ala.org.au/occurrences/${oc.uuid}">
+            <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}">
             <biocacheImage:imageTag imageUrl="${oc.image}"/>
             </a>
           </g:if>
           <g:elseif test="${oc.image}">
-            <a href="http://biocache.ala.org.au/occurrences/${oc.uuid}">
+            <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}">
              <img src="${oc.image}" alt="image for record"/>
             </a>
           </g:elseif>
@@ -55,7 +55,7 @@
           </g:else>
           </td>
          <td class="linkCell" nowrap="nowrap">
-           <a href="http://biocache.ala.org.au/occurrences/${oc.uuid}">View</a>
+           <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}">View</a>
          </td>
       </tr>
       </tbody>

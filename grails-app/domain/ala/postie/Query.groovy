@@ -6,6 +6,8 @@ class Query {
   String updateMessage
   String description
   String baseUrl
+  String baseUrlForUI
+  String resourceName     //e.g. Atlas or AVH
   String queryPath          // a URL that returns an XML/JSON response
   String queryPathForUI     // a URL that returns an XML/JSON response
 
@@ -27,7 +29,6 @@ class Query {
     idJsonPath nullable: true
     recordJsonPath nullable: true
   }
-
 
   public String toString() {
     return name

@@ -11,6 +11,7 @@
         ${blog.excerpt}
       </p>
       <p>To view the complete blog, click <a href="${blog.url}">here</a></p>
+      <p>For all the latest blogs, click <a href="http://www.ala.org.au/blogs-news/">here</a></p>
     </g:each>
   </body>
 </html>

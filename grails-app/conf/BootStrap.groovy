@@ -8,14 +8,11 @@ class BootStrap {
 
     javax.sql.DataSource dataSource
 
+    def grailsApplication
+
     def init = { servletContext ->
-
       log.info("Running bootstrap queries")
-
-      //if(Query.findAll().isEmpty()){
       preloadQueries()
-      //}
-
       log.info("Done bootstrap queries.")
     }
 
@@ -31,6 +28,8 @@ class BootStrap {
     if(Query.findAllByName('Annotations').isEmpty()){
       Query newAssertions = (new Query([
               baseUrl: 'http://biocache.ala.org.au',
+              baseUrlForUI: 'http://biocache.ala.org.au',
+              resourceName:  grailsApplication.config.postie.defaultResourceName,
               name: 'Annotations',
               updateMessage: 'annotations.update.message',
               description: 'Notify me when annotations are made on any record.',
@@ -48,7 +47,9 @@ class BootStrap {
     if(Query.findAllByName('New records').isEmpty()){
       Query newRecords = (new Query([
               baseUrl: 'http://biocache.ala.org.au',
+              baseUrlForUI: 'http://biocache.ala.org.au',
               name: 'New records',
+              resourceName:  grailsApplication.config.postie.defaultResourceName,
               updateMessage: 'more.records.update.message',
               description: 'Notify me when new records are added.',
               queryPath: '/ws/occurrences/search?q=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc&pageSize=20&facets=basis_of_record',
@@ -65,7 +66,9 @@ class BootStrap {
     if(Query.findAllByName('New images').isEmpty()){
       Query newRecordsWithImages = (new Query([
               baseUrl: 'http://biocache.ala.org.au',
+              baseUrlForUI: 'http://biocache.ala.org.au',
               name: 'New images',
+              resourceName:  grailsApplication.config.postie.defaultResourceName,
               updateMessage: 'more.images.update.message',
               description: 'Notify me when new images are added.',
               queryPath: '/ws/occurrences/search?q=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc&fq=multimedia:Multimedia&pageSize=20&facets=basis_of_record',
@@ -83,6 +86,7 @@ class BootStrap {
     if(Query.findAllByName('Citizen science records').isEmpty()){
       Query newCitizenScienceRecords = (new Query([
               baseUrl: 'http://biocache.ala.org.au',
+              baseUrlForUI: 'http://biocache.ala.org.au',
               name: 'Citizen science records',
               updateMessage: 'more.cs.update.message',
               description: 'Notify me when new citizen science records are added.',
@@ -101,7 +105,9 @@ class BootStrap {
     if(Query.findAllByName('Citizen science records with images').isEmpty()){
       Query newCitizenScienceRecordsWithImages = (new Query([
               baseUrl: 'http://biocache.ala.org.au',
+              baseUrlForUI: 'http://biocache.ala.org.au',
               name: 'Citizen science records with images',
+              resourceName:  grailsApplication.config.postie.defaultResourceName,
               updateMessage: 'more.cs.images.update.message',
               description: 'Notify me when new citizen science records with images are added.',
               queryPath: '/ws/occurrences/search?q=first_loaded_date:[___DATEPARAM___%20TO%20*]&fq=data_resource_uid:dr364&sort=first_loaded_date&dir=desc&pageSize=20&facets=basis_of_record&fq=multimedia:Multimedia',
@@ -118,7 +124,9 @@ class BootStrap {
     if(Query.findAllByName('Spatial layers').isEmpty()){
       Query newSpatialLayers = (new Query([
               baseUrl: 'http://spatial.ala.org.au',
+              baseUrlForUI: 'http://spatial.ala.org.au',
               name: 'Spatial layers',
+              resourceName:  grailsApplication.config.postie.defaultResourceName,
               updateMessage: 'more.spatial.update.message',
               description: 'Notify me when new spatial layers are added.',
               queryPath: '/layers.json',
@@ -133,7 +141,9 @@ class BootStrap {
     if(Query.findAllByName('Datasets').isEmpty()){
       Query newDatasets = (new Query([
               baseUrl: 'http://collections.ala.org.au',
+              baseUrlForUI: 'http://collections.ala.org.au',
               name: 'Datasets',
+              resourceName:  grailsApplication.config.postie.defaultResourceName,
               updateMessage: 'more.datasets.update.message',
               description: 'Notify me when new datasets are added.',
               queryPath: '/ws/dataResource',
@@ -146,11 +156,12 @@ class BootStrap {
     }
 
     // get_category_posts.json
-
     if(Query.findAllByName('Blogs and News').isEmpty()){
       Query newBlogs = (new Query([
               baseUrl: 'http://www.ala.org.au',
+              baseUrlForUI: 'http://www.ala.org.au',
               name: 'Blogs and News',
+              resourceName:  grailsApplication.config.postie.defaultResourceName,
               updateMessage: 'more.blogsnews.update.message',
               description: 'Notify me when blogs and news items are added.',
               queryPath: '/api/get_category_posts/?slug=blogs-news&count=1',

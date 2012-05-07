@@ -32,6 +32,30 @@
       Create species group & region alert for Insects and NSW
     </g:link>
   </li>
+
+  <li>
+    <g:link controller="webservice" action="createBiocacheNewRecordsAlert" params="${[
+            webserviceQuery:'/ws/occurrences/search?q=*:*',
+            uiQuery:'/occurrences/search?q=*:*',
+            queryDisplayName:'AVH',
+            baseUrlForWS:'http://biocache.ala.org.au',
+            baseUrlForUI:'http://avh-demo.ala.org.au',
+            resourceName:'Australian Virtual Herbarium'
+    ]}">Create an AdHoc biocache alerts for new records AVH records
+    </g:link>
+  </li>
+
+  <li>
+    <g:link controller="webservice" action="createBiocacheNewAnnotationsAlert" params="${[
+            webserviceQuery:'/ws/occurrences/search?q=*:*',
+            uiQuery:'/occurrences/search?q=*:*',
+            queryDisplayName:'Annotations in AVH',
+            baseUrlForWS:'http://biocache.ala.org.au',
+            baseUrlForUI:'http://avh-demo.ala.org.au',
+            resourceName:'Australian Virtual Herbarium'
+    ]}">Create an AdHoc biocache alerts for new annotations AVH records
+    </g:link>
+  </li>
 </ul>
 
 <h2>Check Alerts - for embedding JSON</h2>

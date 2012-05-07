@@ -4,7 +4,6 @@ import org.codehaus.groovy.grails.web.servlet.mvc.GrailsParameterMap
 
 class WebserviceController {
 
-  def authService
   def queryService
   def userService
   def grailsApplication
@@ -144,6 +143,132 @@ class WebserviceController {
   private String getDeleteLink(Notification notification){
     if (notification ==null) ""
     else getServerRoot() + '/webservice/deleteAlert/'+notification.id
+  }
+
+  def createBiocacheNewRecordsAlert = {
+    //biocacheWebserviceQueryPath, String biocacheUIQueryPath, String queryDisplayName
+    if(params.webserviceQuery && params.uiQuery && params.queryDisplayName && params.baseUrlForWS && params.baseUrlForUI && params.resourceName){
+      //region + species group
+      Query newQuery = queryService.createBioCacheChangeQuery(params.webserviceQuery,params.uiQuery,params.queryDisplayName, params.baseUrlForWS, params.baseUrlForUI, params.resourceName)
+      queryService.createQueryForUserIfNotExists(newQuery, userService.getUser())
+      redirectIfSupplied(params)
+    } else {
+      response.sendError(400)
+    }
+  }
+
+  def biocacheNewRecordAlerts = {
+
+    log.debug("Biocache new records alerts lookup for...." + params.webserviceQuery)
+
+    //y(String biocacheWebserviceQueryPath, String biocacheUIQueryPath, String queryDisplayName, String baseUrlForWS, String baseUrlForUI, String resourceName)
+
+    //check for notifications for this query and this user
+    Query query = queryService.createBioCacheChangeQuery(params.webserviceQuery,params.uiQuery,params.queryDisplayName,
+      params.baseUrlForWS, params.baseUrlForUI, params.resourceName)
+
+    Notification notification = queryService.getNotificationForUser(query, retrieveUser(params))
+
+    String link = null
+    if (notification  != null){
+      //construct a link to delete the alert & manage alerts
+      link = getMyAlertsLink()
+    } else {
+      //construct a create alert link
+      link = getServerRoot() + '/webservice/createBiocacheAlert?' +
+              'webserviceQuery=' + params.webserviceQuery +
+              '&uiQuery=' + params.uiQuery +
+              '&queryDisplayName=' + params.queryDisplayName +
+              '&redirect='+ params.redirect +
+              '&baseUrlForWS='+ params.baseUrlForWS +
+              '&baseUrlForUI='+ params.baseUrlForUI +
+              '&resourceName='+ params.resourceName
+    }
+    render(view:'alerts', model:[link:link, deleteLink:getDeleteLink(notification), displayName:params.queryDisplayName, notification: notification])
+  }
+
+  def createBiocacheNewAnnotationsAlert = {
+    //biocacheWebserviceQueryPath, String biocacheUIQueryPath, String queryDisplayName
+    if(params.webserviceQuery && params.uiQuery && params.queryDisplayName){
+      //region + species group
+      Query newQuery = queryService.createBioCacheAnnotationQuery(params.webserviceQuery,params.uiQuery,params.queryDisplayName, params.baseUrlForWS, params.baseUrlForUI, params.resourceName)
+      queryService.createQueryForUserIfNotExists(newQuery, userService.getUser())
+      redirectIfSupplied(params)
+    } else {
+      response.sendError(400)
+    }
+  }
+
+  def biocacheNewAnnotationAlerts = {
+
+    log.debug("Biocache annotation alerts lookup for...." + params.webserviceQuery)
+
+    //y(String biocacheWebserviceQueryPath, String biocacheUIQueryPath, String queryDisplayName, String baseUrlForWS, String baseUrlForUI, String resourceName)
+
+    //check for notifications for this query and this user
+    Query query = queryService.createBioCacheAnnotationQuery(params.webserviceQuery,params.uiQuery,params.queryDisplayName,
+            params.baseUrlForWS, params.baseUrlForUI, params.resourceName)
+
+    Notification notification = queryService.getNotificationForUser(query, retrieveUser(params))
+
+    String link = null
+    if (notification  != null){
+      //construct a link to delete the alert & manage alerts
+      link = getMyAlertsLink()
+    } else {
+      //construct a create alert link
+      link = getServerRoot() + '/webservice/createBiocacheAlert?' +
+              'webserviceQuery=' + params.webserviceQuery +
+              '&uiQuery=' + params.uiQuery +
+              '&queryDisplayName=' + params.queryDisplayName +
+              '&redirect='+ params.redirect +
+              '&baseUrlForWS='+ params.baseUrlForWS +
+              '&baseUrlForUI='+ params.baseUrlForUI +
+              '&resourceName='+ params.resourceName
+    }
+    render(view:'alerts', model:[link:link, deleteLink:getDeleteLink(notification), displayName:params.queryDisplayName, notification: notification])
+  }
+
+  def createBiocacheAlert = {
+    //biocacheWebserviceQueryPath, String biocacheUIQueryPath, String queryDisplayName
+    if(params.webserviceQuery && params.uiQuery && params.queryDisplayName){
+      //region + species group
+      Query newQuery = queryService.createBioCacheQuery(params.webserviceQuery,params.uiQuery,params.queryDisplayName, params.baseUrlForWS, params.baseUrlForUI, params.resourceName)
+      queryService.createQueryForUserIfNotExists(newQuery, userService.getUser())
+      redirectIfSupplied(params)
+    } else {
+      response.sendError(400)
+    }
+  }
+
+  def biocacheAlerts = {
+
+    log.debug("Biocache annotation alerts lookup for...." + params.webserviceQuery)
+
+    //y(String biocacheWebserviceQueryPath, String biocacheUIQueryPath, String queryDisplayName, String baseUrlForWS, String baseUrlForUI, String resourceName)
+
+    //check for notifications for this query and this user
+    Query query = queryService.createBioCacheQuery(params.webserviceQuery,params.uiQuery,params.queryDisplayName,
+            params.baseUrlForWS, params.baseUrlForUI, params.resourceName)
+
+    Notification notification = queryService.getNotificationForUser(query, retrieveUser(params))
+
+    String link = null
+    if (notification  != null){
+      //construct a link to delete the alert & manage alerts
+      link = getMyAlertsLink()
+    } else {
+      //construct a create alert link
+      link = getServerRoot() + '/webservice/createBiocacheAlert?' +
+              'webserviceQuery=' + params.webserviceQuery +
+              '&uiQuery=' + params.uiQuery +
+              '&queryDisplayName=' + params.queryDisplayName +
+              '&redirect='+ params.redirect +
+              '&baseUrlForWS='+ params.baseUrlForWS +
+              '&baseUrlForUI='+ params.baseUrlForUI +
+              '&resourceName='+ params.resourceName
+    }
+    render(view:'alerts', model:[link:link, deleteLink:getDeleteLink(notification), displayName:params.queryDisplayName, notification: notification])
   }
 
   def createRegionAlert = {

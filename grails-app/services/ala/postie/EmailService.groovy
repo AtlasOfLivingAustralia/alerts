@@ -33,7 +33,7 @@ class EmailService {
     Integer totalRecords = queryService.fireWhenNotZeroProperty(queryResult)
 
     sendMail {
-      from "Atlas alerts<" + grailsApplication.config.postie.emailSender + ">"
+      from grailsApplication.config.postie.emailAlertAddressTitle+"<" + grailsApplication.config.postie.emailSender + ">"
       subject "Update - " + notification.query.name
       bcc notification.user.email
       body (view: notification.query.emailTemplate,
@@ -41,6 +41,7 @@ class EmailService {
             model:[title:notification.query.name,
                    message:notification.query.updateMessage,
                    moreInfo: queryResult.queryUrlUIUsed,
+                   query: notification.query,
                    stopNotification: grailsApplication.config.serverName + grailsApplication.config.contextPath  + '/notification/myAlerts',
                    records: records,
                    frequency: notification.user.frequency,
@@ -66,14 +67,15 @@ class EmailService {
     Integer totalRecords = queryService.fireWhenNotZeroProperty(queryResult)
 
     sendMail {
-      from "Atlas alerts<" + grailsApplication.config.postie.emailSender + ">"
+      from grailsApplication.config.postie.emailAlertAddressTitle+"<" + grailsApplication.config.postie.emailSender + ">"
       subject query.name
       bcc addresses
       body (view: query.emailTemplate,
             plugin:"email-confirmation",
             model:[title:"Update - " + query.name,
                    message:query.updateMessage,
-                    moreInfo: queryResult.queryUrlUIUsed,
+                   query:query,
+                   moreInfo: queryResult.queryUrlUIUsed,
                    stopNotification: grailsApplication.config.serverName + grailsApplication.config.contextPath  + '/notification/myAlerts',
                    records: records,
                    frequency: frequency,
@@ -84,11 +86,11 @@ class EmailService {
 
   private String constructMoreInfoUrl(Query query, Frequency frequency) {
     QueryResult queryResult = QueryResult.findByQueryAndFrequency(query, frequency)
-    String moreInfoUrl = query.baseUrl + query.queryPathForUI
+    String moreInfoUrl = query.baseUrlForUI + query.queryPathForUI
     if(query.dateFormat){
       SimpleDateFormat sdf = new SimpleDateFormat(query.dateFormat)
       def dateValue = sdf.format(queryResult.lastChecked)
-      moreInfoUrl = query.baseUrl + query.queryPathForUI.replaceAll("___DATEPARAM___", dateValue)
+      moreInfoUrl = query.baseUrlForUI + query.queryPathForUI.replaceAll("___DATEPARAM___", dateValue)
     }
     moreInfoUrl
   }

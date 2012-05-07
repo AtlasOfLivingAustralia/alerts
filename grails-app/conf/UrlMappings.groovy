@@ -7,7 +7,7 @@ class UrlMappings {
 			}
 		}
 
-        "/ws/"(controller:'webservice')
+        "/ws/$action"(controller:'webservice')
         "/ws/noauth/$action"(controller:'webservice')
 		"/"(controller:'notification', action:'index')
 		"500"(view:'/error')

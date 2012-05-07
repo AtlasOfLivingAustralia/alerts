@@ -15,7 +15,7 @@
  *  SECURITY
 \******************************************************************************/
 security.cas.casServerName = 'https://auth.ala.org.au'
-security.cas.uriFilterPattern = '/,/notification/myAlerts,/notification/changeFrequency,/notification/addMyAlert,/notification/addMyAlert/.*,/notification/deleteMyAlert/.*,/webservice/.*,/webservice/createTaxonAlert,/webservice/taxonAlerts,/webservice/createRegionAlert,/webservice/regionAlerts,/notification/deleteMyAlert/.*,/notification/deleteMyAlertWR/.*,/webservice/deleteTaxonAlert/.*,/webservice/createTaxonRegionAlert,/webservice/createSpeciesGroupRegionAlert'
+security.cas.uriFilterPattern = '/,/notification/myAlerts,/notification/changeFrequency,/notification/addMyAlert,/notification/addMyAlert/.*,/notification/deleteMyAlert/.*,/notification/deleteMyAlert/.*,/notification/deleteMyAlertWR/.*,/webservice/.*,/webservice/createTaxonAlert,/webservice/taxonAlerts,/webservice/createRegionAlert,/webservice/regionAlerts,/webservice/deleteTaxonAlert/.*,/webservice/create*,/webservice/createSpeciesGroupRegionAlert,/ws/.*,/ws/createTaxonAlert,/ws/taxonAlerts,/ws/createRegionAlert,/ws/regionAlerts,/ws/deleteTaxonAlert/.*,/ws/createTaxonRegionAlert,/ws/createSpeciesGroupRegionAlert,/admin/runChecksNow'
 security.cas.uriExclusionFilterPattern = '/images.*,/css.*,/js.*'
 security.cas.loginUrl = 'https://auth.ala.org.au/cas/login'
 security.cas.logoutUrl = 'https://auth.ala.org.au/cas/logout'
@@ -23,7 +23,9 @@ security.cas.casServerUrlPrefix = 'https://auth.ala.org.au/cas'
 security.cas.bypass = false
 
 postie.timezone = 'Australia/Sydney'
-postie.emailSender = "alerts@ala.org.au"
+postie.emailSender = 'alerts@ala.org.au'
+postie.emailAlertAddressTitle = 'Atlas alerts'
+postie.defaultResourceName = 'Atlas'
 
 /** Properties used in header and tails tag **/
 headerAndFooter.baseURL = 'http://www2.ala.org.au/commonui'

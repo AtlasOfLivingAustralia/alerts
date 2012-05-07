@@ -118,7 +118,9 @@
               });
 
               $("#userFrequency").change(function(){
-                  $.get('changeFrequency?frequency='+$('#userFrequency').val());
+                  $.get('changeFrequency?frequency='+$('#userFrequency').val())
+                          .success(function() { alert("Your alerts have been changed to :" + $('#userFrequency').val()); })
+                          .error(function() { alert("There was a problem updating your alert frequency. Please try again."); });
               });
 
               $('.deleteButton').click(function(data){

@@ -17,7 +17,7 @@ environments {
             dbCreate = "update"
             url = "jdbc:mysql://localhost:3306/postie"
           username = "root"
-          password = ""
+          password = "password"
         }
     }
     test {

@@ -24,7 +24,13 @@ class AuthService {
   }
 
   protected boolean userInRole(role) {
+
+    println('Printing roles.....')
+    def attributes = RequestContextHolder.currentRequestAttributes()
+    attributes.each { println it }
+    println('Printing roles.....')
+
     return  grailsApplication.config.security.cas.bypass ||
-            RequestContextHolder.currentRequestAttributes()?.isUserInRole(role) // || isAdmin()
+            RequestContextHolder.requestAttributes?.isUserInRole(role) // || isAdmin()
   }
 }
