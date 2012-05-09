@@ -106,7 +106,7 @@ class QueryService {
       name: 'New annotations on records for ' + queryDisplayName,
       updateMessage: 'More occurrence records have been added for ' + queryDisplayName,
       description: 'Notify me when new records are added for ' + queryDisplayName,
-      queryPath: biocacheWebserviceQueryPath + '&fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=last_assertion_date&dir=desc&pageSize=20&facets=basis_of_record',
+      queryPath: biocacheWebserviceQueryPath + '&fq=user_assertions:true&fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=last_assertion_date&dir=desc&pageSize=20&facets=basis_of_record',
       queryPathForUI: biocacheUIQueryPath + '&fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=last_assertion_date&dir=desc',
       dateFormat: """yyyy-MM-dd'T'HH:mm:ss'Z'""",
       emailTemplate: '/email/biocache',

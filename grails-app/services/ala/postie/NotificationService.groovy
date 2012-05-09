@@ -47,32 +47,36 @@ class NotificationService {
     def urlString = urls.first()
     def urlStringForUI = urls.last()
 
-    log.debug("Querying URL: " + urlString)
+    println("Querying URL: " + urlString)
 
-    def json = IOUtils.toString(new URL(urlString).newReader())
+    try {
+        def json = IOUtils.toString(new URL(urlString).newReader())
 
-    //update the stored properties
-    refreshProperties(qr, json)
+        //update the stored properties
+        refreshProperties(qr, json)
 
-    qr = QueryResult.findById(qr.id)
+        qr = QueryResult.findById(qr.id)
 
-    qr.previousCheck = qr.lastChecked
+        qr.previousCheck = qr.lastChecked
 
-    //store the last result from the webservice call
-    qr.previousResult = qr.lastResult
-    qr.lastResult = gzipResult(json)
-    qr.lastChecked = new Date()
-    qr.hasChanged = hasChanged(qr)
-    qr.queryUrlUsed = urlString
-    qr.queryUrlUIUsed = urlStringForUI
+        //store the last result from the webservice call
+        qr.previousResult = qr.lastResult
+        qr.lastResult = gzipResult(json)
+        qr.lastChecked = new Date()
+        qr.hasChanged = hasChanged(qr)
+        qr.queryUrlUsed = urlString
+        qr.queryUrlUIUsed = urlStringForUI
 
-    log.debug("Has changed? : " + qr.hasChanged)
-    if(qr.hasChanged){
-      qr.lastChanged = new Date()
+        log.debug("Has changed? : " + qr.hasChanged)
+        if(qr.hasChanged){
+          qr.lastChanged = new Date()
+        }
+
+        qr.save(true)
+        qr.hasChanged
+    } catch (Exception e){
+        log.error("There was a problem checking the URL :" + urlString, e)
     }
-
-    qr.save(true)
-    qr.hasChanged
   }
 
   byte[] gzipResult (String json){
