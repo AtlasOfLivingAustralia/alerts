@@ -26,6 +26,7 @@ postie.timezone = 'Australia/Sydney'
 postie.emailSender = 'alerts@ala.org.au'
 postie.emailAlertAddressTitle = 'Atlas alerts'
 postie.defaultResourceName = 'Atlas'
+postie.enableEmail = true
 
 /** Properties used in header and tails tag **/
 headerAndFooter.baseURL = 'http://www2.ala.org.au/commonui'
@@ -78,6 +79,9 @@ grails.exceptionresolver.params.exclude = ['password']
 // inject REST methods into stuff
 grails.rest.injectInto = ["Controller", "Service", "Routes"]
 
+
+
+
 // set per-environment serverURL stem for creating absolute links
 environments {
     production {
@@ -96,6 +100,7 @@ environments {
         grails.serverURL = "http://alerts-local.ala.org.au:8080/${appName}"     //add a entry into /etc/hosts for this DNS to resolve to localhost
         serverName = 'http://alerts-local.ala.org.au:8080'
         contextPath = '/ala-postie'
+        postie.enableEmail = false
         grails {
            mail {
              host = "smtp.gmail.com"
@@ -132,7 +137,7 @@ log4j = {
             development {
               console name: "stdout", layout: pattern(conversionPattern: "%d %-5p [%c{1}]  %m%n"), threshold: org.apache.log4j.Level.DEBUG
               rollingFile name: "tomcatLog", maxFileSize: 102400000, file: "/tmp/postie.log", threshold: org.apache.log4j.Level.DEBUG, layout: pattern(conversionPattern: "%d %-5p [%c{1}]  %m%n")
-              'null' name: "stacktrace"
+              //'null' name: "stacktrace"
             }
             test {
               rollingFile name: "tomcatLog", maxFileSize: 102400000, file: "/tmp/postie-test.log", threshold: org.apache.log4j.Level.DEBUG, layout: pattern(conversionPattern: "%d %-5p [%c{1}]  %m%n")
@@ -172,7 +177,8 @@ log4j = {
            'net',
            'grails.util.GrailsUtil'
 
-    debug  'grails.app.domain.ala.postie',
+    debug   'ala.postie',
+            'grails.app.domain.ala.postie',
            'grails.app.controller.ala.postie',
            'grails.app.service.ala.postie',
            'grails.app.tagLib.ala.postie'

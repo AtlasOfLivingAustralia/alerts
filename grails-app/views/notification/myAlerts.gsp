@@ -33,7 +33,7 @@
                   <g:select name="userFrequency" from="${frequencies}" id="userFrequency" value="${user?.frequency?.name}" optionKey="name" />
                 </h3>
 
-                <div class="list">
+                <div class="list" style="width:970px;">
                     <table>
                         <tbody>
                         <g:each in="${enabledQueries}" status="i" var="query">
@@ -70,7 +70,7 @@
                     </table>
                     <g:if test="${customQueries}">
                     <h2>My custom alerts</h2>
-                    <table >
+                    <table>
                         <tbody>
                         <g:each in="${customQueries}" status="i" var="query">
                             <tr class="${(i % 2) == 0 ? 'odd' : 'even'}">

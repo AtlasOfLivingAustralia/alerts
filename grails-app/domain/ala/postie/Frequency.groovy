@@ -10,5 +10,9 @@ class Frequency {
     lastChecked nullable : true
   }
 
+  static mapping = {
+    version false
+  }
+
   public String toString() { name }
 }

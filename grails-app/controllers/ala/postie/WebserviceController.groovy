@@ -146,6 +146,7 @@ class WebserviceController {
   }
 
   def createBiocacheNewRecordsAlert = {
+    log.debug("Create biocache new records alert for " + params.resourceName?:"all resources")
     //biocacheWebserviceQueryPath, String biocacheUIQueryPath, String queryDisplayName
     if(params.webserviceQuery && params.uiQuery && params.queryDisplayName && params.baseUrlForWS && params.baseUrlForUI && params.resourceName){
       //region + species group
@@ -160,8 +161,6 @@ class WebserviceController {
   def biocacheNewRecordAlerts = {
 
     log.debug("Biocache new records alerts lookup for...." + params.webserviceQuery)
-
-    //y(String biocacheWebserviceQueryPath, String biocacheUIQueryPath, String queryDisplayName, String baseUrlForWS, String baseUrlForUI, String resourceName)
 
     //check for notifications for this query and this user
     Query query = queryService.createBioCacheChangeQuery(params.webserviceQuery,params.uiQuery,params.queryDisplayName,
@@ -188,6 +187,7 @@ class WebserviceController {
   }
 
   def createBiocacheNewAnnotationsAlert = {
+    log.debug("Create biocache new annotations alert for " + params.resourceName?:"all resources")
     //biocacheWebserviceQueryPath, String biocacheUIQueryPath, String queryDisplayName
     if(params.webserviceQuery && params.uiQuery && params.queryDisplayName){
       //region + species group
@@ -202,8 +202,6 @@ class WebserviceController {
   def biocacheNewAnnotationAlerts = {
 
     log.debug("Biocache annotation alerts lookup for...." + params.webserviceQuery)
-
-    //y(String biocacheWebserviceQueryPath, String biocacheUIQueryPath, String queryDisplayName, String baseUrlForWS, String baseUrlForUI, String resourceName)
 
     //check for notifications for this query and this user
     Query query = queryService.createBioCacheAnnotationQuery(params.webserviceQuery,params.uiQuery,params.queryDisplayName,
@@ -230,7 +228,7 @@ class WebserviceController {
   }
 
   def createBiocacheAlert = {
-    //biocacheWebserviceQueryPath, String biocacheUIQueryPath, String queryDisplayName
+    log.debug("Create biocache alert for " + params.resourceName?:"all resources")
     if(params.webserviceQuery && params.uiQuery && params.queryDisplayName){
       //region + species group
       Query newQuery = queryService.createBioCacheQuery(params.webserviceQuery,params.uiQuery,params.queryDisplayName, params.baseUrlForWS, params.baseUrlForUI, params.resourceName)

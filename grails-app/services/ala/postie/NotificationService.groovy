@@ -97,9 +97,9 @@ class NotificationService {
       //insert the date to query with
       SimpleDateFormat sdf = new SimpleDateFormat(query.dateFormat)
       def dateValue = sdf.format(dateToUse)
-      [query.baseUrl + query.queryPath.replaceAll("___DATEPARAM___", dateValue), query.baseUrl + query.queryPathForUI.replaceAll("___DATEPARAM___", dateValue)]
+      [query.baseUrl + query.queryPath.replaceAll("___DATEPARAM___", dateValue), query.baseUrlForUI + query.queryPathForUI.replaceAll("___DATEPARAM___", dateValue)]
     } else {
-      [query.baseUrl + query.queryPath, query.baseUrl + query.queryPathForUI ]
+      [query.baseUrl + query.queryPath, query.baseUrlForUI + query.queryPathForUI ]
     }
   }
 
@@ -193,13 +193,14 @@ class NotificationService {
   }
 
   def checkQueryForFrequency(String frequencyName){
+    log.debug("Checking frequency : " + frequencyName)
     Date now = new Date()
     Frequency frequency = Frequency.findByName(frequencyName)
     checkQueryForFrequency(frequency, true)
     //update the frequency last checked
     frequency = Frequency.findByName(frequencyName)
     frequency.lastChecked = now
-    frequency.save()
+    frequency.save(flush:true)
   }
 
   //select q.id, u.frequency from query q inner join notification n on n.query_id=q.id inner join user u on n.user_id=u.id;
