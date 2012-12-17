@@ -11,19 +11,31 @@ class DiffService {
 
   Boolean hasChangedJsonDiff(QueryResult queryResult){
     if(queryResult.lastResult != null && queryResult.previousResult != null){
-      //decompress both and compare lists
       String last = decompressZipped(queryResult.lastResult)
       String previous = decompressZipped(queryResult.previousResult)
+      hasChangedJsonDiff(previous, last, queryResult.query)
+    } else {
+      false
+    }
+  }
 
-      //println(JsonPath.read(last, queryResult.query.recordJsonPath + "." +queryResult.query.idJsonPath))
-      //println(JsonPath.read(previous, queryResult.query.recordJsonPath + "." +queryResult.query.idJsonPath))
-      List<String> ids1 = JsonPath.read(last, queryResult.query.recordJsonPath + "." +queryResult.query.idJsonPath)
-      List<String> ids2 = JsonPath.read(previous, queryResult.query.recordJsonPath + "." +queryResult.query.idJsonPath)
-      //println("Comparing: " + ids1 +" TO " + ids2)
-
+  Boolean hasChangedJsonDiff(QueryResult queryResult, String last, Query query){
+    if(last != null && queryResult.previousResult != null){
+      List<String> ids1 = JsonPath.read(last, query.recordJsonPath + "." + query.idJsonPath)
+      String previous = decompressZipped(queryResult.previousResult)
+      List<String> ids2 = JsonPath.read(previous, query.recordJsonPath + "." + query.idJsonPath)
       List<String> diff = ids1.findAll { !ids2.contains(it) }
+      !diff.empty
+    } else {
+      false
+    }
+  }
 
-      //println("has the layer list changed: " + !diff.empty)
+  Boolean hasChangedJsonDiff(String previous, String last, Query query){
+    if(last != null && previous != null){
+      List<String> ids1 = JsonPath.read(last, query.recordJsonPath + "." + query.idJsonPath)
+      List<String> ids2 = JsonPath.read(previous, query.recordJsonPath + "." + query.idJsonPath)
+      List<String> diff = ids1.findAll { !ids2.contains(it) }
       !diff.empty
     } else {
       false
@@ -68,7 +80,7 @@ class DiffService {
     records
   }
 
-  public static String decompressZipped(byte[] zipped){
+  def String decompressZipped(byte[] zipped){
     GZIPInputStream input = new GZIPInputStream(new ByteArrayInputStream(zipped))
     StringBuffer sb = new StringBuffer()
     List<String> readed = null

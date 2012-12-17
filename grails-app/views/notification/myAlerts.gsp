@@ -3,8 +3,8 @@
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
         <meta name="layout" content="${grailsApplication.config.ala.layout}" />
-        <g:set var="entityName" value="${message(code: 'notification.label', default: 'Notification')}" />
-        <title>My email alerts | Atlas of Living Australia</title>
+        <g:set var="userPrefix" value="${adminUser ? user.email : 'My' }"/>
+        <title>${userPrefix} email alerts | Atlas of Living Australia</title>
     </head>
     <body>
         <div id="content">
@@ -14,18 +14,21 @@
                 <ol>
                   <li><a href="http://www.ala.org.au">Home</a></li>
                   <li><a href="http://www.ala.org.au/my-profile/">My Profile</a></li>
-                  <li class="last">My email alerts</li>
+                  <li class="last">${userPrefix} email alerts</li>
                 </ol>
               </nav>
-              <h1>My email alerts</h1>
+              <h1>
+                ${userPrefix}
+                email alerts
+              </h1>
             </div><!--inner-->
           </header>
           <div class="inner">
             <div id="section" class="col-wide">
 
-                <g:set var="userId"><cl:loggedInUsername/></g:set>
+                <g:set var="userId">${user.userId}</g:set>
                 <p>
-                  Enable an alert to have emails sent to your email address (<cl:loggedInUsername/>)
+                  Enable an alert to have emails sent to your email address (${user.email})
                 </p>
 
                 <h3>
@@ -96,6 +99,11 @@
           </div>
         </div>
         <script type="text/javascript">
+
+          var addMyAlertUrl = 'addMyAlert/';
+          var deleteMyAlertUrl = 'deleteMyAlert/';
+          var deleteMyAlertWRUrl ='deleteMyAlertWR/'
+
           $(document).ready( function(){
               $(".cb-enable").click(function(){
                   var parent = $(this).parents('.switch');
@@ -104,7 +112,7 @@
                   $('.checkbox',parent).attr('checked', true);
                   //send DB update
                   //alert($('.checkbox',parent).attr('id'));
-                  $.get('addMyAlert/'+$('.checkbox',parent).attr('id'));
+                  $.get(addMyAlertUrl + $('.checkbox',parent).attr('id'));
               });
               $(".cb-disable").click(function(){
                   var parent = $(this).parents('.switch');
@@ -114,18 +122,20 @@
                   //send DB update
                   //send DB update
                   //alert($('.checkbox',parent).attr('id'));
-                  $.get('deleteMyAlert/'+$('.checkbox',parent).attr('id'));
+                  $.get(deleteMyAlertUrl + $('.checkbox',parent).attr('id'));
               });
-
               $("#userFrequency").change(function(){
                   $.get('changeFrequency?frequency='+$('#userFrequency').val())
-                          .success(function() { alert("Your alerts have been changed to :" + $('#userFrequency').val()); })
-                          .error(function() { alert("There was a problem updating your alert frequency. Please try again."); });
+                      .success(function() {
+                          alert("Your alerts have been changed to :" + $('#userFrequency').val());
+                      })
+                      .error(function() {
+                          alert("There was a problem updating your alert frequency. Please try again.");
+                      });
               });
-
               $('.deleteButton').click(function(data){
                 //$.get('deleteMyAlert/'+ $(this).attr('id'));
-                document.location.href = 'deleteMyAlertWR/'+$(this).attr('id') + '?userId=${userId}'
+                document.location.href = deleteMyAlertWRUrl + $(this).attr('id') + '?userId=${userId}'
               });
           });
         </script>
