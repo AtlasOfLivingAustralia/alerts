@@ -98,13 +98,13 @@ environments {
         grails.serverURL = "http://alerts-local.ala.org.au:8080/${appName}"     //add a entry into /etc/hosts for this DNS to resolve to localhost
         serverName = 'http://alerts-local.ala.org.au:8080'
         contextPath = '/ala-postie'
-        postie.enableEmail = true
+        postie.enableEmail = false
         grails {
            mail {
              host = "smtp.gmail.com"
              port = 465
-             username = "nickdos@gmail.com"
-             password = "act10n"
+             username = "******@gmail.com"
+             password = "******:"
              props = ["mail.smtp.auth":"true",
                       "mail.smtp.socketFactory.port":"465",
                       "mail.smtp.socketFactory.class":"javax.net.ssl.SSLSocketFactory",
