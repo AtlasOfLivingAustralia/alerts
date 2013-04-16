@@ -34,4 +34,9 @@ grails.project.dependency.resolution = {
         runtime 'org.apache.httpcomponents:httpcore:4.2.2'
         runtime 'org.apache.httpcomponents:httpclient:4.2.2'
     }
+
+    plugins {
+        runtime ":hibernate:$grailsVersion"
+        build ":tomcat:$grailsVersion"
+    }
 }

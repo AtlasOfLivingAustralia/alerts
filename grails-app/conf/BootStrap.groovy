@@ -25,6 +25,25 @@ class BootStrap {
       (new Frequency([name:'monthly', periodInSeconds:2419200])).save()
     }
 
+    // get_category_posts.json
+    if(Query.findAllByName('Blogs and News').isEmpty()){
+      Query newBlogs = (new Query([
+              baseUrl: 'http://www.ala.org.au',
+              baseUrlForUI: 'http://www.ala.org.au',
+              name: 'Atlas Blogs and News',
+              resourceName:  grailsApplication.config.postie.defaultResourceName,
+              updateMessage: 'more.blogsnews.update.message',
+              description: 'Notify me when blogs and news items are added.',
+              queryPath: '/api/get_category_posts/?slug=blogs-news&count=4',
+              queryPathForUI: '/blogs-news/',
+              emailTemplate: '/email/blogs',
+              recordJsonPath: '\$.posts',
+              idJsonPath: 'id'
+      ])).save()
+
+      new ala.postie.PropertyPath([name: "last_blog_id", jsonPath: "posts", query: newBlogs, fireWhenChanged: true]).save()
+    }
+
     if(Query.findAllByName('Annotations').isEmpty()){
       Query newAssertions = (new Query([
               baseUrl: 'http://biocache.ala.org.au',
@@ -153,25 +172,6 @@ class BootStrap {
               idJsonPath: 'uid'
       ])).save()
       new ala.postie.PropertyPath([name: "dataset_count", jsonPath: "\$", query: newDatasets, fireWhenChanged: true]).save()
-    }
-
-    // get_category_posts.json
-    if(Query.findAllByName('Blogs and News').isEmpty()){
-      Query newBlogs = (new Query([
-              baseUrl: 'http://www.ala.org.au',
-              baseUrlForUI: 'http://www.ala.org.au',
-              name: 'Blogs and News',
-              resourceName:  grailsApplication.config.postie.defaultResourceName,
-              updateMessage: 'more.blogsnews.update.message',
-              description: 'Notify me when blogs and news items are added.',
-              queryPath: '/api/get_category_posts/?slug=blogs-news&count=1',
-              queryPathForUI: '/blogs-news/',
-              emailTemplate: '/email/blogs',
-              recordJsonPath: '\$.posts[0]',
-              idJsonPath: 'id'
-      ])).save()
-
-      new ala.postie.PropertyPath([name: "last_blog_id", jsonPath: "posts", query: newBlogs, fireWhenChanged: true]).save()
     }
   }
 

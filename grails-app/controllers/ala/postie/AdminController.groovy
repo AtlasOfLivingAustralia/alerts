@@ -28,7 +28,7 @@ class AdminController {
           response.setStatus(200)
       } else {
           log.info("Run checks UNAUTHORIZED....")
-          response.sendError(401)
+          response.sendError(401, "Unauthorized")
       }
       null
   }
@@ -45,6 +45,9 @@ class AdminController {
             log.error "user with id " + params.userId + " not found."
             response.sendError(404)
         }
+      } else {
+          log.info("Debug alerts UNAUTHORIZED....")
+          response.sendError(401, "Unauthorized")
       }
   }
 
@@ -53,7 +56,7 @@ class AdminController {
           response.setContentType("text/plain")
           notificationService.checkAllQueries(response.getWriter())
       } else {
-          response.sendError(403)
+          response.sendError(401, "Unauthorized")
       }
   }
 
@@ -81,7 +84,7 @@ class AdminController {
             ])
         } else {
             log.info "user with id " + params.userId + " not found."
-            response.sendError(404)
+            response.sendError(404, "Record with id: " + params.userId + " was not found.")
         }
       } else {
           log.info("Run checks UNAUTHORIZED....")

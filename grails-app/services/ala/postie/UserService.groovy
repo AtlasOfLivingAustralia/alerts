@@ -2,26 +2,32 @@ package ala.postie
 
 class UserService {
 
-  static transactional = true
+    static transactional = true
 
-  def authService
+    def authService
 
-  def serviceMethod() {}
+    def serviceMethod() {}
 
-  User getUser(){
+    User getUser() {
 
-    def userDetails = authService.userDetails()
+        def userDetails = authService.userDetails()
 
-    if(!userDetails["userId"]){
-      println "User isnt logged in - or there is a problem with CAS configuration"
-      return null
+        if (!userDetails["userId"]) {
+            println "User isn't logged in - or there is a problem with CAS configuration"
+            return null
+        }
+
+        User user = User.findByUserId(userDetails["userId"])
+        if (user == null) {
+            log.debug "User is not in user table - creating new record for " + userDetails
+            user = new User([email: userDetails["email"], userId: userDetails["userId"], frequency: Frequency.findByName("weekly")])
+            user.save(true)
+            // new user gets "Blogs and News" by default (opt out)
+            def notificationInstance = new Notification()
+            notificationInstance.query = Query.findByName("Blogs and News") //Query.findById(params.id)
+            notificationInstance.user = user
+            notificationInstance.save(flush: true)
+        }
+        user
     }
-
-    User user = User.findByUserId(userDetails["userId"])
-    if(user == null){
-      user = new User([email:userDetails["email"], userId:userDetails["userId"], frequency:Frequency.findAll().first()])
-      user.save(true)
-    }
-    user
-  }
 }
