@@ -13,7 +13,7 @@ class UserService {
         def userDetails = authService.userDetails()
 
         if (!userDetails["userId"]) {
-            println "User isn't logged in - or there is a problem with CAS configuration"
+            log.error "User isn't logged in - or there is a problem with CAS configuration"
             return null
         }
 

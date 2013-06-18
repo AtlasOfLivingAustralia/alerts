@@ -13,6 +13,7 @@
 
     <%-- Do not include JS & CSS files here - add them to your app's "application" module (in "Configuration/ApplicationResources.groovy") --%>
     <r:require modules="bootstrap, application"/>
+
     <r:script disposition='head'>
         // initialise plugins
         jQuery(function(){

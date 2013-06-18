@@ -33,7 +33,7 @@ class AdminController {
       } else {
          // def users = [User.findByEmail("david.martin@csiro.au")]
          User.findAll().each { user ->
-             println "Sending email to: "+ user.email
+             log.info "Sending email to: "+ user.email
              try {
                  sendMail {
                           to user.email.toString()
@@ -45,7 +45,7 @@ class AdminController {
                           )
                   }
              } catch (Exception e){
-                 println("Problem sending email to: " + email)
+                 log.error("Problem sending email to: " + email)
              }
           }
       }
@@ -58,7 +58,7 @@ class AdminController {
           params.emailsToUse.trim().split("\n").each { email ->
              if(email){
                  try {
-                     println "Sending email to: " + email
+                     log.info "Sending email to: " + email
                      sendMail {
                               to email.toString()
                               from grailsApplication.config.postie.emailInfoAddressTitle + "<" + grailsApplication.config.postie.emailInfoSender + ">"
@@ -69,7 +69,7 @@ class AdminController {
                               )
                       }
                  } catch (Exception e){
-                     println("Problem sending email to: " + email)
+                     log.error("Problem sending email to: " + email)
                  }
              }
           }

@@ -47,7 +47,7 @@ grails.project.dependency.resolution = {
         runtime 'org.apache.httpcomponents:httpclient:4.2.2'
     }
     plugins {
-        runtime ":ala-web-theme:0.1.9"
+        runtime ":ala-web-theme:0.1.10"
         runtime ":hibernate:$grailsVersion"
         runtime ":jquery:1.8.3"
         runtime ":resources:1.1.6"

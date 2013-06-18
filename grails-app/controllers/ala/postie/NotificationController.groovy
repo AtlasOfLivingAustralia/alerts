@@ -41,10 +41,10 @@ class NotificationController {
       //does this already exist?
       def exists = Notification.findByQueryAndUser(notificationInstance.query, notificationInstance.user)
       if(!exists){
-        println("Adding alert for user: " + notificationInstance.user + ", query id: " + params.id)
+        log.info("Adding alert for user: " + notificationInstance.user + ", query id: " + params.id)
         notificationInstance.save(flush: true)
       } else {
-        println("NOT Adding alert for user: " + notificationInstance.user + ", query id: " + params.id + ", already exists...")
+        log.info("NOT Adding alert for user: " + notificationInstance.user + ", query id: " + params.id + ", already exists...")
       }
       return null
     }
