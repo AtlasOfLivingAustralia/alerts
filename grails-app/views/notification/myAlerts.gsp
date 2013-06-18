@@ -39,13 +39,13 @@
                         <tbody>
                         <g:each in="${enabledQueries}" status="i" var="query">
                             <tr class="${(i % 2) == 0 ? 'odd' : 'even'}">
-                                <td>
+                                <td class="queryDescription">
                                   <h3>${query.name}</h3>
                                   ${query.description}
                                 </td>
-                                <td>
-                                    <div class="switch switch-large" data-on="danger">
-                                        <input  id="${query.id}"  name="field2"  type="checkbox" checked />
+                                <td class="queryActions">
+                                    <div class="switch" data-on="danger">
+                                        <input id="${query.id}" class="query-cb" name="field2"  type="checkbox" checked />
                                     </div>
                                 </td>
                             </tr>
@@ -57,8 +57,8 @@
                                   ${query.description}
                                 </td>
                                 <td class="queryActions">
-                                    <div class="switch switch-large" data-on="danger" >
-                                        <input  id="${query.id}"  name="field2"  type="checkbox" checked />
+                                    <div class="switch" data-on="danger" >
+                                        <input  id="${query.id}" class="query-cb" name="field2"  type="checkbox" />
                                     </div>
                                 </td>
                             </tr>
@@ -66,22 +66,17 @@
                         </tbody>
                     </table>
                     <g:if test="${customQueries}">
-                    <h2>My custom alerts</h2>
+                    <h2 id="customQueriesHdr">My custom alerts</h2>
                     <table>
-                        <tbody>
+                        <tbody id="customQueries">
                         <g:each in="${customQueries}" status="i" var="query">
-                            <tr class="${(i % 2) == 0 ? 'odd' : 'even'}">
+                            <tr class="${(i % 2) == 0 ? 'odd' : 'even'}" id='custom-${query.id}'>
                                 <td class="queryDescription">
                                   <h3>${query.name}</h3>
                                   ${query.description}
                                 </td>
                                 <td class="queryActions">
-                                <p class="field switch">
-                                    %{--<span class='button red deleteButton' id='${query.id}'>--}%
-                                      %{--<g:link controller="notification" action="deleteMyAlertWR" id="${query.id}" params="${[userId:userId]}">Delete</g:link>--}%
-                                    %{--</span>--}%
-                                    <span class='btn-ala' id='${query.id}'>Delete</span>
-                                </p>
+                                    <a href="javascript:void(0);" class='btn-ala btn deleteButton' id='${query.id}'>Delete</a>
                                 </td>
                             </tr>
                         </g:each>
@@ -99,24 +94,13 @@
           var deleteMyAlertWRUrl ='deleteMyAlertWR/'
 
           $(document).ready( function(){
-              $(".cb-enable").click(function(){
-                  var parent = $(this).parents('.switch');
-                  $('.cb-disable',parent).removeClass('selected');
-                  $(this).addClass('selected');
-                  $('.checkbox',parent).attr('checked', true);
-                  //send DB update
-                  //alert($('.checkbox',parent).attr('id'));
-                  $.get(addMyAlertUrl + $('.checkbox',parent).attr('id'));
-              });
-              $(".cb-disable").click(function(){
-                  var parent = $(this).parents('.switch');
-                  $('.cb-enable',parent).removeClass('selected');
-                  $(this).addClass('selected');
-                  $('.checkbox',parent).attr('checked', false);
-                  //send DB update
-                  //send DB update
-                  //alert($('.checkbox',parent).attr('id'));
-                  $.get(deleteMyAlertUrl + $('.checkbox',parent).attr('id'));
+
+              $(".query-cb").change(function(e){
+                  if($(this).is(':checked')){
+                     $.get(addMyAlertUrl + $(this).attr('id'));
+                  } else {
+                      $.get(deleteMyAlertUrl + $(this).attr('id'));
+                  }
               });
               $("#userFrequency").change(function(){
                   $.get('changeFrequency?frequency='+$('#userFrequency').val())
@@ -128,8 +112,14 @@
                       });
               });
               $('.deleteButton').click(function(data){
-                //$.get('deleteMyAlert/'+ $(this).attr('id'));
-                document.location.href = deleteMyAlertWRUrl + $(this).attr('id') + '?userId=${userId}'
+                var id = $(this).attr('id');
+                $.get(deleteMyAlertWRUrl + id + '?userId=${userId}');
+                $('#custom-' + id).hide('slow', function(){
+                    $('#custom-' + id).remove();
+                    if($('#customQueries').children().size() == 0){
+                      $('#customQueriesHdr').hide('slow');
+                    }
+                });
               });
           });
         </script>
