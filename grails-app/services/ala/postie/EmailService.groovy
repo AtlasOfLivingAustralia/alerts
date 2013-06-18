@@ -1,7 +1,6 @@
 package ala.postie
 
 import java.text.SimpleDateFormat
-import com.jayway.jsonpath.JsonPath
 
 class EmailService {
 

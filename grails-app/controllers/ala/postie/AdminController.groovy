@@ -1,7 +1,5 @@
 package ala.postie
 
-import grails.converters.JSON
-import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.impl.client.DefaultHttpClient
@@ -17,6 +15,67 @@ class AdminController {
 
   def notificationService
 
+  def createBulkEmail = {
+      if(!authService.userInRole("ROLE_ADMIN")){
+          response.sendError(401)
+      }
+  }
+
+  def createBulkEmailForRegisteredUsers = {
+      if(!authService.userInRole("ROLE_ADMIN")){
+          response.sendError(401)
+      }
+  }
+
+  def sendBulkEmailForRegisteredUsers = {
+      if(!authService.userInRole("ROLE_ADMIN")){
+          response.sendError(401)
+      } else {
+         // def users = [User.findByEmail("david.martin@csiro.au")]
+         User.findAll().each { user ->
+             println "Sending email to: "+ user.email
+             try {
+                 sendMail {
+                          to user.email.toString()
+                          from grailsApplication.config.postie.emailInfoAddressTitle + "<" + grailsApplication.config.postie.emailInfoSender + ">"
+                          subject params.emailSubject
+                          body (view: "/email/htmlEmail",
+                                plugin:"email-confirmation",
+                                model:[htmlBody:params.htmlEmailToSend]
+                          )
+                  }
+             } catch (Exception e){
+                 println("Problem sending email to: " + email)
+             }
+          }
+      }
+  }
+
+  def sendBulkEmail = {
+      if(!authService.userInRole("ROLE_ADMIN")){
+          response.sendError(401)
+      } else {
+          params.emailsToUse.trim().split("\n").each { email ->
+             if(email){
+                 try {
+                     println "Sending email to: " + email
+                     sendMail {
+                              to email.toString()
+                              from grailsApplication.config.postie.emailInfoAddressTitle + "<" + grailsApplication.config.postie.emailInfoSender + ">"
+                              subject params.emailSubject
+                              body (view: "/email/htmlEmail",
+                                    plugin:"email-confirmation",
+                                    model:[htmlBody:params.htmlEmailToSend]
+                              )
+                      }
+                 } catch (Exception e){
+                     println("Problem sending email to: " + email)
+                 }
+             }
+          }
+      }
+  }
+
   def runChecksNow = {
       if(authService.userInRole("ROLE_ADMIN")){
           log.info("Run checks....")
@@ -28,7 +87,7 @@ class AdminController {
           response.setStatus(200)
       } else {
           log.info("Run checks UNAUTHORIZED....")
-          response.sendError(401, "Unauthorized")
+          response.sendError(401)
       }
       null
   }
@@ -45,9 +104,6 @@ class AdminController {
             log.error "user with id " + params.userId + " not found."
             response.sendError(404)
         }
-      } else {
-          log.info("Debug alerts UNAUTHORIZED....")
-          response.sendError(401, "Unauthorized")
       }
   }
 
@@ -56,7 +112,7 @@ class AdminController {
           response.setContentType("text/plain")
           notificationService.checkAllQueries(response.getWriter())
       } else {
-          response.sendError(401, "Unauthorized")
+          response.sendError(403)
       }
   }
 
@@ -84,7 +140,7 @@ class AdminController {
             ])
         } else {
             log.info "user with id " + params.userId + " not found."
-            response.sendError(404, "Record with id: " + params.userId + " was not found.")
+            response.sendError(404)
         }
       } else {
           log.info("Run checks UNAUTHORIZED....")

@@ -1,42 +1,40 @@
+<%@ page contentType="text/html;charset=UTF-8" %>
 <%@ page import="ala.postie.Notification" %>
+<!doctype html>
 <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-        <meta name="layout" content="${grailsApplication.config.ala.layout}" />
+        <meta name="layout" content="main" />
         <g:set var="userPrefix" value="${adminUser ? user.email : 'My' }"/>
         <title>${userPrefix} email alerts | Atlas of Living Australia</title>
+        <r:require modules="bootstrapSwitch"/>
     </head>
     <body>
-        <div id="content">
+      <a href="#page-body" class="skip"><g:message code="default.link.skip.label" default="Skip to content&hellip;"/></a>
+      <div id="content">
           <header id="page-header">
-            <div class="inner">
-              <nav id="breadcrumb">
-                <ol>
-                  <li><a href="http://www.ala.org.au">Home</a></li>
-                  <li><a href="http://www.ala.org.au/my-profile/">My Profile</a></li>
-                  <li class="last">${userPrefix} email alerts</li>
+            <div class="inner row-fluid">
+              <nav id="breadcrumb" class="span12">
+                <ol class="breadcrumb">
+                  <li><a href="http://www.ala.org.au">Home</a> <span class="icon icon-arrow-right"></span></li>
+                  <li><a href="http://www.ala.org.au/my-profile/">My Profile</a> <span class="icon icon-arrow-right"></span></li>
+                  <li class="active">${userPrefix} email alerts</li>
                 </ol>
               </nav>
-              <h1>
-                ${userPrefix}
-                email alerts
-              </h1>
-            </div><!--inner-->
+              <hgroup>
+                <h1>${userPrefix} email alerts</h1>
+              </hgroup>
+            </div>
           </header>
-          <div class="inner">
-            <div id="section" class="col-wide">
-
+          <div id="page-body" role="main">
                 <g:set var="userId">${user.userId}</g:set>
-                <p>
-                  Enable an alert to have emails sent to your email address (${user.email})
-                </p>
-
+                <p>Enable an alert to have emails sent to your email address (${user.email})</p>
                 <h3>
                   Send me alerts:
                   <g:select name="userFrequency" from="${frequencies}" id="userFrequency" value="${user?.frequency?.name}" optionKey="name" />
                 </h3>
-
-                <div class="list" style="width:970px;">
+            <div class="row-fluid">
+                <div class="span12">
                     <table>
                         <tbody>
                         <g:each in="${enabledQueries}" status="i" var="query">
@@ -46,11 +44,9 @@
                                   ${query.description}
                                 </td>
                                 <td>
-                                <p class="field switch">
-                                    <label class="cb-enable selected"><span>Enabled</span></label>
-                                    <label class="cb-disable"><span>Disabled</span></label>
-                                    <input type="checkbox" id="${query.id}" class="checkbox" name="field2" />
-                                </p>
+                                    <div class="switch switch-large" data-on="danger">
+                                        <input  id="${query.id}"  name="field2"  type="checkbox" checked />
+                                    </div>
                                 </td>
                             </tr>
                         </g:each>
@@ -61,11 +57,9 @@
                                   ${query.description}
                                 </td>
                                 <td class="queryActions">
-                                <p class="field switch">
-                                    <label class="cb-enable"><span>Enabled</span></label>
-                                    <label class="cb-disable selected"><span>Disabled</span></label>
-                                    <input type="checkbox" id="${query.id}" class="checkbox" name="field2" />
-                                </p>
+                                    <div class="switch switch-large" data-on="danger" >
+                                        <input  id="${query.id}"  name="field2"  type="checkbox" checked />
+                                    </div>
                                 </td>
                             </tr>
                         </g:each>
@@ -86,7 +80,7 @@
                                     %{--<span class='button red deleteButton' id='${query.id}'>--}%
                                       %{--<g:link controller="notification" action="deleteMyAlertWR" id="${query.id}" params="${[userId:userId]}">Delete</g:link>--}%
                                     %{--</span>--}%
-                                    <span class='button red deleteButton' id='${query.id}'>Delete</span>
+                                    <span class='btn-ala' id='${query.id}'>Delete</span>
                                 </p>
                                 </td>
                             </tr>
@@ -94,11 +88,11 @@
                         </tbody>
                     </table>
                     </g:if>
-                </div>
+                 </div>
             </div>
           </div>
-        </div>
-        <script type="text/javascript">
+      </div>
+      <script type="text/javascript">
 
           var addMyAlertUrl = 'addMyAlert/';
           var deleteMyAlertUrl = 'deleteMyAlert/';
@@ -127,10 +121,10 @@
               $("#userFrequency").change(function(){
                   $.get('changeFrequency?frequency='+$('#userFrequency').val())
                       .success(function() {
-                          alert("Your alerts have been changed to :" + $('#userFrequency').val());
+                          //alert("Your alerts have been changed to : " + $('#userFrequency').val());
                       })
                       .error(function() {
-                          alert("There was a problem updating your alert frequency. Please try again.");
+                          alert("There was a problem updating your alert frequency. Please try again later.");
                       });
               });
               $('.deleteButton').click(function(data){
