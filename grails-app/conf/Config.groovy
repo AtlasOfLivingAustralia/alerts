@@ -101,7 +101,7 @@ log4j = {
     debug  'ala'
 }
 
-/************** copied from ala-config.groovy due to bugs with the ala-web-theme plugin ************************/
+/************** Custom config ************************/
 
 postie.timezone = 'Australia/Sydney'
 postie.emailSender = 'info@ala.org.au'

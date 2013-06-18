@@ -7,7 +7,7 @@
         <meta name="layout" content="main" />
         <g:set var="userPrefix" value="${adminUser ? user.email : 'My' }"/>
         <title>${userPrefix} email alerts | Atlas of Living Australia</title>
-        <r:require modules="bootstrapSwitch"/>
+        <r:require modules="bootstrapSwitch,alerts"/>
     </head>
     <body>
       <a href="#page-body" class="skip"><g:message code="default.link.skip.label" default="Skip to content&hellip;"/></a>
