@@ -5,3 +5,9 @@
 #userFrequency {
     width:auto;
 }
+
+#customQueriesHdr {
+    margin-top: 20px;
+    margin-bottom: 5px;
+    padding-bottom: 0px;
+}
