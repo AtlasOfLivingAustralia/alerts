@@ -14,6 +14,10 @@
 <h2>Admin functions</h2>
 <div>
   <ul>
+    <li><g:link controller="admin" action="debugAllAlerts">Debug all alerts</g:link></li>
+    <li>
+        Debug an alert: /admin/debugAlert?id=.....
+    </li>
     <li><g:link controller="query" action="list">View list of alert types</g:link></li>
     <g:each var="c" in="${grailsApplication.controllerClasses.sort { it.fullName } }">
       <li class="controller"><g:link controller="${c.logicalPropertyName}">${c.fullName}</g:link></li>

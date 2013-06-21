@@ -68,7 +68,7 @@ log4j = {
                 rollingFile name: "postie-prod",
                     maxFileSize: 104857600,
                     file: "/var/log/tomcat6/postie.log",
-                    threshold: org.apache.log4j.Level.DEBUG,
+                    threshold: org.apache.log4j.Level.ERROR,
                     layout: pattern(conversionPattern: "%d [%c{1}]  %m%n")
                 rollingFile name: "stacktrace", maxFileSize: 1024, file: "/var/log/tomcat6/postie-stacktrace.log"
             }
@@ -97,6 +97,11 @@ log4j = {
            'grails.spring',
            'grails.util.GrailsUtil',
            'net.sf.ehcache'
+           'grails.app.service.org.grails.plugin.resource'
+           'grails.app.service'
+           'org.ala'
+           'au.org.ala'
+           'grails.app.service.org.grails.plugin.resource.ResourceTagLib'
 
     debug  'ala'
 }

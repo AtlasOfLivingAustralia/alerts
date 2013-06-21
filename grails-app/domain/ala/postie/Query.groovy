@@ -28,6 +28,10 @@ class Query {
     dateFormat nullable: true
     idJsonPath nullable: true
     recordJsonPath nullable: true
+    description  sqlType: 'text'
+    updateMessage  sqlType: 'text'
+    queryPathForUI  sqlType: 'text'
+    queryPath  sqlType: 'text'
   }
 
   public String toString() {

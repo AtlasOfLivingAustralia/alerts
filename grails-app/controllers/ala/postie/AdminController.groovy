@@ -116,6 +116,15 @@ class AdminController {
       }
   }
 
+  def debugAlert(){
+      if(authService.userInRole("ROLE_ADMIN")){
+          response.setContentType("text/plain")
+          notificationService.checkQueryById(params.id, response.getWriter())
+      } else {
+          response.sendError(403)
+      }
+  }
+
   def showUsersAlerts(){
       if(authService.userInRole("ROLE_ADMIN")){
         User user = User.findByUserId(params.userId)

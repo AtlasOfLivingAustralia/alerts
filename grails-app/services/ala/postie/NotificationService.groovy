@@ -41,7 +41,7 @@ class NotificationService {
     def urlString = urls.first()
     def urlStringForUI = urls.last()
 
-    log.debug("Querying URL: " + urlString)
+    log.debug("[QUERY " + query.id + "] Querying URL: " + urlString)
 
     try {
         def json = IOUtils.toString(new URL(urlString).newReader())
@@ -61,7 +61,7 @@ class NotificationService {
         qr.queryUrlUsed = urlString
         qr.queryUrlUIUsed = urlStringForUI
 
-        log.debug("Has changed?: " + qr.hasChanged)
+        log.debug("[QUERY " + query.id + "] Has changed?: " + qr.hasChanged)
         if(qr.hasChanged){
           qr.lastChanged = new Date()
         }
@@ -69,7 +69,7 @@ class NotificationService {
         qr.save(true)
         qr.hasChanged
     } catch (Exception e){
-        log.error("There was a problem checking the URL :" + urlString, e)
+        log.error("[QUERY " + query.id + "] There was a problem checking the URL :" + urlString, e)
     }
   }
 
@@ -82,7 +82,7 @@ class NotificationService {
     //get the urls to query
     def urls = getQueryUrl(query, frequency)
     def urlString = urls.first()
-    log.debug("Querying URL: " + urlString)
+    log.debug("[QUERY " + query.id + "] Querying URL: " + urlString)
 
     try {
         def json = IOUtils.toString(new URL(urlString).newReader())
@@ -91,7 +91,7 @@ class NotificationService {
         def previousJson = diffService.decompressZipped(lastQueryResult.lastResult)
         hasPropertiesChanged(query, propertyPaths, previousJson, json)
     } catch (Exception e){
-        log.error("There was a problem checking the URL :" + urlString, e)
+        log.error("[QUERY " + query.id + "] There was a problem checking the URL :" + urlString, e)
     }
   }
 
@@ -107,16 +107,33 @@ class NotificationService {
 
   private String[] getQueryUrl(Query query, Frequency frequency){
 
+    def queryURL = ""
+    def queryURLForUI = ""
+
     //if there is a date format, then there's a param to replace
     if (query.dateFormat) {
       def dateToUse = org.apache.commons.lang.time.DateUtils.addSeconds(new Date(), -1 * frequency.periodInSeconds)
       //insert the date to query with
       SimpleDateFormat sdf = new SimpleDateFormat(query.dateFormat)
       def dateValue = sdf.format(dateToUse)
-      [query.baseUrl + query.queryPath.replaceAll("___DATEPARAM___", dateValue), query.baseUrlForUI + query.queryPathForUI.replaceAll("___DATEPARAM___", dateValue)]
+      queryURL = query.baseUrl + query.queryPath.replaceAll("___DATEPARAM___", dateValue)
+      queryURLForUI = query.baseUrlForUI + query.queryPathForUI.replaceAll("___DATEPARAM___", dateValue)
     } else {
-      [query.baseUrl + query.queryPath, query.baseUrlForUI + query.queryPathForUI ]
+      queryURL = query.baseUrl + query.queryPath
+      queryURLForUI = query.baseUrlForUI + query.queryPathForUI
     }
+
+    [cleanUpUrl(queryURL),cleanUpUrl(queryURLForUI)]
+  }
+
+  def cleanUpUrl(url){
+      def queryStart = url.indexOf("?")
+      if(queryStart>0){
+          def queryString = url.substring(queryStart+1)
+          url.substring(0, queryStart+1) + queryString.replaceAll(" ", "%20").replaceAll(":", "%3A").replaceAll("\"","%22")
+      } else {
+          url
+      }
   }
 
   /**
@@ -129,11 +146,11 @@ class NotificationService {
     Boolean changed = false
 
     //if there is a fireWhenNotZero or fireWhenChange ignore  idJsonPath
-    log.debug("Checking query: " + queryResult.query.name)
+    log.debug("[QUERY " + queryResult.query.id + "] Checking query: " + queryResult.query.name)
     Boolean hasFireProperty = queryService.hasAFireProperty(queryResult.query)
 
     queryResult.propertyValues.each { pv ->
-      log.debug("Has change check:" + pv.propertyPath.name
+      log.debug("[QUERY " + queryResult.query.id + "] Has change check:" + pv.propertyPath.name
               + ", value:" + pv.currentValue
               + ", previous:" + pv.previousValue
               + ", fireWhenNotZero:" + pv.propertyPath.fireWhenNotZero
@@ -149,7 +166,7 @@ class NotificationService {
 
     //if there isnt a 'fire-on' property, use json diff if configured
     if (!hasFireProperty && queryResult.query.idJsonPath){
-      log.debug("Has change check. Checking JSON for query : "  + queryResult.query.name)
+      log.debug("[QUERY " + queryResult.query.id + "] Has change check. Checking JSON for query : "  + queryResult.query.name)
       changed = diffService.hasChangedJsonDiff(queryResult)
     }
     changed
@@ -165,11 +182,11 @@ class NotificationService {
     Boolean changed = false
 
     //if there is a fireWhenNotZero or fireWhenChange ignore  idJsonPath
-    log.debug("Checking query: " + query.name)
+    log.debug("[QUERY " + query.id + "] Checking query: " + query.name)
     Boolean hasFireProperty = queryService.hasAFireProperty(query)
 
     propertyPathMap.each { propertyPath, value ->
-      log.debug("Has change check:" + propertyPath.name
+      log.debug("[QUERY " + query.id + "] Has change check:" + propertyPath.name
               + ", value:" + value.current
               + ", previous:" + value.previous
               + ", fireWhenNotZero:" + propertyPath.fireWhenNotZero
@@ -185,10 +202,10 @@ class NotificationService {
 
     //if there isnt a 'fire-on' property, use json diff if configured
     if (!hasFireProperty && query.idJsonPath){
-      log.debug("Has change check. Checking JSON for query : "  + query.name)
+      log.debug("[QUERY " + query.id + "] Has change check. Checking JSON for query : "  + query.name)
       changed = diffService.hasChangedJsonDiff(jsonPrevious, jsonCurrent, query)
     }
-    log.debug("Has changed: " + changed)
+    log.debug("[QUERY " + query.id + "] Has changed: " + changed)
     changed
   }
 
@@ -202,7 +219,7 @@ class NotificationService {
 
     def propertyPaths = [:]
 
-    log.debug("Refreshing properties for query: " + queryResult.query.name + " : " +  queryResult.frequency)
+    log.debug("[QUERY " + queryResult?.query?.id?:'NULL' + "] Refreshing properties for query: " + queryResult.query.name + " : " +  queryResult.frequency)
 
     try {
 
@@ -219,7 +236,7 @@ class NotificationService {
         propertyPaths.put(propertyPath, [previous: propertyValue.currentValue, current: latestValue])
       }
     } catch (Exception e){
-      log.error("There was a problem reading the supplied JSON.",e)
+      log.error("[QUERY " + queryResult?.query?.id?:'NULL' + "] There was a problem reading the supplied JSON.",e)
     }
 
     propertyPaths
@@ -228,7 +245,7 @@ class NotificationService {
 
   private def refreshProperties(QueryResult queryResult, json) {
 
-    log.debug("Refreshing properties for query: " + queryResult.query.name + " : " +  queryResult.frequency)
+    log.debug("[QUERY " + queryResult?.query?.id?:'NULL' + "] Refreshing properties for query: " + queryResult.query.name + " : " +  queryResult.frequency)
 
     try {
 
@@ -251,7 +268,7 @@ class NotificationService {
         propertyValue.save(true)
       }
     } catch (Exception e){
-      log.error("There was a problem reading the supplied JSON.",e)
+      log.error("[QUERY " + queryResult?.query?.id?:'NULL' + "] There was a problem reading the supplied JSON.",e)
     }
   }
 
@@ -262,6 +279,27 @@ class NotificationService {
       //pv.save(flush:true)
     }
     pv
+  }
+
+  def checkQueryById(queryId, writer) {
+    def checkedCount = 0
+    def checkedAndUpdatedCount = 0
+    def frequency =  Frequency.findAll().first()
+    log.debug("[QUERY " + queryId +"] Running query...")
+    def query = Query.get(queryId)
+    long start = System.currentTimeMillis()
+    boolean hasUpdated = checkStatusDontUpdate(query, Frequency.findAll().first())
+    long finish = System.currentTimeMillis()
+    checkedCount++
+    if (hasUpdated) {
+      checkedAndUpdatedCount++
+    }
+    writer.write(query.id +": " + query.toString())
+    writer.write("\nUpdated (" + frequency.name+ "):" + hasUpdated)
+    writer.write("\nTime taken: " + (finish - start)/1000 +' secs \n')
+    writer.write(("-" * 80) + "\n")
+    writer.flush()
+    log.debug("Query checked: " + checkedCount + ", updated: " + checkedAndUpdatedCount)
   }
 
   def checkAllQueries(PrintWriter writer) {

@@ -81,19 +81,23 @@ class DiffService {
   }
 
   def String decompressZipped(byte[] zipped){
-    GZIPInputStream input = new GZIPInputStream(new ByteArrayInputStream(zipped))
-    StringBuffer sb = new StringBuffer()
-    List<String> readed = null
+    if(zipped){
+        GZIPInputStream input = new GZIPInputStream(new ByteArrayInputStream(zipped))
+        StringBuffer sb = new StringBuffer()
+        List<String> readed = null
 
-    try {
-      while (input.available() && !(readed = input.readLines()).isEmpty()) {
-        //println(readed.join(""))
-        sb.append(readed.join(""))
-      }
-    } catch (Exception e) {
-      //e.printStackTrace()
+        try {
+          while (input.available() && !(readed = input.readLines()).isEmpty()) {
+            //println(readed.join(""))
+            sb.append(readed.join(""))
+          }
+        } catch (Exception e) {
+          //e.printStackTrace()
+        }
+        input.close()
+        sb.toString()
+    } else {
+        null
     }
-    input.close()
-    sb.toString()
   }
 }
