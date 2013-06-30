@@ -41,7 +41,7 @@ class EmailService {
                        message:notification.query.updateMessage,
                        moreInfo: queryResult.queryUrlUIUsed,
                        query: notification.query,
-                       stopNotification: grailsApplication.config.serverName + grailsApplication.config.contextPath  + '/notification/myAlerts',
+                       stopNotification: grailsApplication.config.security.cas.appServerName + grailsApplication.config.security.cas.contextPath  + '/notification/myAlerts',
                        records: records,
                        frequency: notification.user.frequency,
                        totalRecords: totalRecords
@@ -52,7 +52,7 @@ class EmailService {
         log.debug("Email would have been sent to: " + notification.user.email)
         log.debug("message:" + notification.query.updateMessage)
         log.debug("moreInfo:" + queryResult.queryUrlUIUsed)
-        log.debug("stopNotification:" + grailsApplication.config.serverName + grailsApplication.config.contextPath  + '/notification/myAlerts')
+        log.debug("stopNotification:" + grailsApplication.config.security.cas.appServerName + grailsApplication.config.security.cas.contextPath  + '/notification/myAlerts')
         log.debug("records:" + records)
         log.debug("frequency:" + notification.user.frequency)
         log.debug("totalRecords:" + totalRecords)
@@ -85,7 +85,7 @@ class EmailService {
                        message:query.updateMessage,
                        query:query,
                        moreInfo: queryResult.queryUrlUIUsed,
-                       stopNotification: grailsApplication.config.serverName + grailsApplication.config.contextPath  + '/notification/myAlerts',
+                       stopNotification: grailsApplication.config.security.cas.appServerName + grailsApplication.config.security.cas.contextPath  + '/notification/myAlerts',
                        records: records,
                        frequency: frequency,
                        totalRecords: totalRecords
@@ -95,7 +95,7 @@ class EmailService {
         log.debug("Email would have been sent to: " + addresses.join(','))
         log.debug("message:" +query.updateMessage)
         log.debug("moreInfo:" + queryResult.queryUrlUIUsed)
-        log.debug("stopNotification:" + grailsApplication.config.serverName + grailsApplication.config.contextPath  + '/notification/myAlerts')
+        log.debug("stopNotification:" + grailsApplication.config.security.cas.appServerName + grailsApplication.config.security.cas.contextPath  + '/notification/myAlerts')
         log.debug("records:" + records)
         log.debug("frequency:" + frequency)
         log.debug("totalRecords:" + totalRecords)
