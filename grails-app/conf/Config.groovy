@@ -143,18 +143,13 @@ environments {
         security.cas.appServerName = "${grails.host}:8080"
         security.cas.contextPath = "/${appContext}"
         grails.resources.debug = true // cached-resources plugin - keeps original filenames but adds cache-busting params
-        postie.enableEmail = false
+        //postie.enableEmail = false
         grails {
-           mail {
-             host = "smtp.gmail.com"
-             port = 465
-             username = "******@gmail.com"
-             password = "******:"
-             props = ["mail.smtp.auth":"true",
-                      "mail.smtp.socketFactory.port":"465",
-                      "mail.smtp.socketFactory.class":"javax.net.ssl.SSLSocketFactory",
-                      "mail.smtp.socketFactory.fallback":"false"]
-           }
+          mail {
+            host = "localhost"
+            port = 1025
+            username = postie.emailSender
+          }
         }
     }
     test {

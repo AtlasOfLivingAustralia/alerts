@@ -13,11 +13,18 @@ hibernate {
 environments {
     development {
         dataSource {
-            //dbCreate = "create-drop" // one of 'create', 'create-drop','update'
-            dbCreate = "update"
+          //dbCreate = "create-drop" // one of 'create', 'create-drop','update'
+          //dbCreate = "update"
+            dbCreate = "none"
             url = "jdbc:mysql://localhost:3306/postie"
-          username = "root"
-          password = "password"
+            username = "root"
+            password = "password"
+
+
+//            dbCreate = "none"
+//            url = "jdbc:mysql://ala-authdb1.vm.csiro.au:3306/postie"
+//            username = "postie"
+//            password ="RHitoHYAbfmJBCT0zywo143tH"
         }
     }
     test {
