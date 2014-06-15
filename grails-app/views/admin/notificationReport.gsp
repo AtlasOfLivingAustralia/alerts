@@ -1,5 +1,3 @@
-
-<%@ page import="ala.postie.Query" %>
 <!doctype html>
 <html>
 	<head>

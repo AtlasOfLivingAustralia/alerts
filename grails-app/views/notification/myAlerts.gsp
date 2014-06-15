@@ -1,5 +1,5 @@
 <%@ page contentType="text/html;charset=UTF-8" %>
-<%@ page import="ala.postie.Notification" %>
+<%@ page import="au.org.ala.alerts.Notification" %>
 <!doctype html>
 <html>
     <head>

@@ -61,9 +61,8 @@ grails.project.dependency.resolution = {
         runtime ":ala-web-theme:0.5"
         runtime ":hibernate:3.6.10.16"
         runtime ":jquery:1.8.3"
-        runtime ":resources:1.1.6"
-
-
+        runtime ":resources:1.2.8"
+        build ":release:3.0.1"
         compile ":mail:1.0.1"
         runtime ":pretty-time:0.3"
         runtime ":quartz:1.0.1"

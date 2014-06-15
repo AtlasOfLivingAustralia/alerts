@@ -1,4 +1,4 @@
-<%@ page import="ala.postie.Query" %>
+<%@ page import="au.org.ala.alerts.Query" %>
 <!doctype html>
 <html>
 	<head>
