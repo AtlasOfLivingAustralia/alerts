@@ -75,7 +75,7 @@ grails.exceptionresolver.params.exclude = ['password']
 grails.hibernate.cache.queries = false
 
 //override this in external configuration
-logging.dir = (System.getProperty('catalina.base') ?: '/var/log/tomcat6/')
+logging.dir = (System.getProperty('catalina.base') ? System.getProperty('catalina.base') + '/logs'  : '/var/log/tomcat6/')
 
 // log4j configuration
 log4j = {
@@ -95,7 +95,7 @@ log4j = {
                     file: logging.dir + "/alerts.log",
                     threshold: org.apache.log4j.Level.ERROR,
                     layout: pattern(conversionPattern: "%d [%c{1}]  %m%n")
-                rollingFile name: "stacktrace", maxFileSize: 1024, file: "/var/log/tomcat6/postie-stacktrace.log"
+                rollingFile name: "stacktrace", maxFileSize: 1024, file: logging.dir + "/postie-stacktrace.log"
             }
             development{
                 console name: "stdout", layout: pattern(conversionPattern: "%d [%c{1}]  %m%n"), threshold: org.apache.log4j.Level.DEBUG
@@ -195,7 +195,6 @@ environments {
         grails.serverURL = "http://${grails.host}"
         security.cas.appServerName = grails.serverURL
         security.cas.contextPath = ""
-        log4j.appender.'errors.File'="/var/log/tomcat6/alerts-stacktrace.log"
         grails {
           mail {
             host = "localhost"
