@@ -95,7 +95,7 @@ log4j = {
                     file: logging.dir + "/alerts.log",
                     threshold: org.apache.log4j.Level.ERROR,
                     layout: pattern(conversionPattern: "%d [%c{1}]  %m%n")
-                rollingFile name: "stacktrace", maxFileSize: 1024, file: logging.dir + "/postie-stacktrace.log"
+                rollingFile name: "stacktrace", maxFileSize: 1024, file: logging.dir + "/alerts-stacktrace.log"
             }
             development{
                 console name: "stdout", layout: pattern(conversionPattern: "%d [%c{1}]  %m%n"), threshold: org.apache.log4j.Level.DEBUG
