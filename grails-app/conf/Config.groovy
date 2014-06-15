@@ -1,15 +1,30 @@
-// locations to search for config files that get merged into the main config;
-// config files can be ConfigSlurper scripts, Java properties files, or classes
-// in the classpath in ConfigSlurper format
+/******************************************************************************\
+ *  CONFIG MANAGEMENT
+ \******************************************************************************/
+def appName = 'alerts'
+def ENV_NAME = "${appName.toUpperCase()}_CONFIG"
+default_config = "/data/${appName}/config/${appName}-config.properties"
+if(!grails.config.locations || !(grails.config.locations instanceof List)) {
+    grails.config.locations = []
+}
 
-// grails.config.locations = [ "classpath:${appName}-config.properties",
-//                             "classpath:${appName}-config.groovy",
-//                             "file:${userHome}/.grails/${appName}-config.properties",
-//                             "file:${userHome}/.grails/${appName}-config.groovy"]
+if(System.getenv(ENV_NAME) && new File(System.getenv(ENV_NAME)).exists()) {
+    println "[${appName}] Including configuration file specified in environment: " + System.getenv(ENV_NAME);
+    grails.config.locations.add "file:" + System.getenv(ENV_NAME)
+} else if(System.getProperty(ENV_NAME) && new File(System.getProperty(ENV_NAME)).exists()) {
+    println "[${appName}] Including configuration file specified on command line: " + System.getProperty(ENV_NAME);
+    grails.config.locations.add "file:" + System.getProperty(ENV_NAME)
+} else if(new File(default_config).exists()) {
+    println "[${appName}] Including default configuration file: " + default_config
+    grails.config.locations.add "file:" + default_config
+} else if(!new File(default_config).exists()) {
+    println "[${appName}] WARNING!!!! unable to load: " + default_config
+} else {
+    println "[${appName}] No external configuration file defined."
+}
 
-// if (System.properties["${appName}.config.location"]) {
-//    grails.config.locations << "file:" + System.properties["${appName}.config.location"]
-// }
+println "[${appName}] (*) grails.config.locations = ${grails.config.locations}"
+println "default_config = ${default_config}"
 
 grails.project.groupId = au.org.ala.postie // change this to alter the default package name and Maven publishing destination
 grails.mime.file.extensions = true // enables the parsing of file extensions from URLs into the request format
@@ -59,15 +74,25 @@ grails.exceptionresolver.params.exclude = ['password']
 // configure auto-caching of queries by default (if false you can cache individual queries with 'cache: true')
 grails.hibernate.cache.queries = false
 
+//override this in external configuration
+logging.dir = (System.getProperty('catalina.base') ?: '/var/log/tomcat6/')
 
 // log4j configuration
 log4j = {
+
+    off 'grails.app.services.org.grails.plugin.resource',
+            'grails.app.taglib.org.grails.plugin.resource',
+            'grails.app.resourceMappers.org.grails.plugin.resource',
+            'au.org.ala.cas',
+            'org.quartz.core',
+            'com.jayway.jsonpath'
+
     appenders {
         environments {
             production {
                 rollingFile name: "postie-prod",
                     maxFileSize: 104857600,
-                    file: "/var/log/tomcat6/postie.log",
+                    file: logging.dir + "/alerts.log",
                     threshold: org.apache.log4j.Level.ERROR,
                     layout: pattern(conversionPattern: "%d [%c{1}]  %m%n")
                 rollingFile name: "stacktrace", maxFileSize: 1024, file: "/var/log/tomcat6/postie-stacktrace.log"
@@ -85,10 +110,10 @@ log4j = {
     error  'org.codehaus.groovy.grails.web.servlet',  //  controllers
            'org.codehaus.groovy.grails.web.pages', //  GSP
            'org.codehaus.groovy.grails.web.sitemesh', //  layouts
-	         'org.codehaus.groovy.grails.web.mapping.filter', // URL mapping
+	       'org.codehaus.groovy.grails.web.mapping.filter', // URL mapping
            'org.codehaus.groovy.grails.web.mapping', // URL mapping
-	         'org.codehaus.groovy.grails.commons', // core / classloading
-	         'org.codehaus.groovy.grails.plugins', // plugins
+	       'org.codehaus.groovy.grails.commons', // core / classloading
+	       'org.codehaus.groovy.grails.plugins', // plugins
            'org.springframework.jdbc',
            'org.springframework.transaction',
            'org.codehaus.groovy',
@@ -103,7 +128,7 @@ log4j = {
            'au.org.ala'
            'grails.app.service.org.grails.plugin.resource.ResourceTagLib'
 
-    debug  'ala'
+    debug  'au.org.ala.alerts'
 }
 
 /************** Custom config ************************/
@@ -119,7 +144,7 @@ postie.defaultResourceName = 'Atlas'
 postie.enableEmail = true
 
 security.cas.casServerName = 'https://auth.ala.org.au'
-security.cas.uriFilterPattern = '/,/testAuth.*,/query/.*,/admin/.*,/admin/user/.*,/admin/user/debug/.*,/admin/debug/all,/notification/myAlerts,/notification/changeFrequency,/notification/addMyAlert,/notification/addMyAlert/.*,/notification/deleteMyAlert/.*,/notification/deleteMyAlert/.*,/notification/deleteMyAlertWR/.*,/webservice/.*,/webservice/createTaxonAlert,/webservice/taxonAlerts,/webservice/createRegionAlert,/webservice/regionAlerts,/webservice/deleteTaxonAlert/.*,/webservice/create*,/webservice/createSpeciesGroupRegionAlert,/ws/.*,/ws/createTaxonAlert,/ws/taxonAlerts,/ws/createRegionAlert,/ws/regionAlerts,/ws/deleteTaxonAlert/.*,/ws/createTaxonRegionAlert,/ws/createSpeciesGroupRegionAlert,/admin/runChecksNow'
+security.cas.uriFilterPattern = ''
 security.cas.uriExclusionFilterPattern = '/images.*,/css.*,/js.*,/less.*'
 security.cas.authenticateOnlyIfLoggedInPattern = "" // pattern for pages that can optionally display info about the logged-in user
 security.cas.loginUrl = 'https://auth.ala.org.au/cas/login'
@@ -135,15 +160,19 @@ bie.searchPath = "/search"
 grails.project.groupId = "au.org.ala" // change this to alter the default package name and Maven publishing destination
 ala.userDetailsURL = 'http://auth.ala.org.au/userdetails/userDetails/getUserListFull'
 
+biocache.baseURL = "http://biocache.ala.org.au"
+spatial.baseURL = "http://spatial.ala.org.au"
+collectory.baseURL = "http://collections.ala.org.au"
+
+
 environments {
     development {
         grails.logging.jul.usebridge = true
-        grails.host = "http://alerts-local.ala.org.au"
+        grails.host = "http://dev.ala.org.au"
         grails.serverURL = "${grails.host}:8080/${appContext}"
         security.cas.appServerName = "${grails.host}:8080"
         security.cas.contextPath = "/${appContext}"
         grails.resources.debug = true // cached-resources plugin - keeps original filenames but adds cache-busting params
-        //postie.enableEmail = false
         grails {
           mail {
             host = "localhost"
@@ -176,3 +205,27 @@ environments {
         }
     }
 }
+
+// Uncomment and edit the following lines to start using Grails encoding & escaping improvements
+
+/* remove this line
+// GSP settings
+grails {
+    views {
+        gsp {
+            encoding = 'UTF-8'
+            htmlcodec = 'xml' // use xml escaping instead of HTML4 escaping
+            codecs {
+                expression = 'html' // escapes values inside null
+                scriptlet = 'none' // escapes output from scriptlets in GSPs
+                taglib = 'none' // escapes output from taglibs
+                staticparts = 'none' // escapes output from static template parts
+            }
+        }
+        // escapes all not-encoded output at final stage of outputting
+        filteringCodecForContentType {
+            //'text/html' = 'html'
+        }
+    }
+}
+remove this line */

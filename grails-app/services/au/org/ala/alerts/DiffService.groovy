@@ -1,7 +1,8 @@
-package ala.postie
+package au.org.ala.alerts
+
+import com.jayway.jsonpath.JsonPath
 
 import java.util.zip.GZIPInputStream
-import com.jayway.jsonpath.JsonPath
 
 class DiffService {
 
@@ -31,10 +32,22 @@ class DiffService {
     }
   }
 
+  boolean isCollectionOrArray(object) {
+        [Collection, Object[]].any { it.isAssignableFrom(object.getClass()) }
+  }
+
   Boolean hasChangedJsonDiff(String previous, String last, Query query){
     if(last != null && previous != null){
-      List<String> ids1 = JsonPath.read(last, query.recordJsonPath + "." + query.idJsonPath)
-      List<String> ids2 = JsonPath.read(previous, query.recordJsonPath + "." + query.idJsonPath)
+
+      def ids1 = JsonPath.read(last, query.recordJsonPath + "." + query.idJsonPath)
+      if(!isCollectionOrArray(ids1)){
+          ids1 = [ids1]
+      }
+
+      def ids2 = JsonPath.read(previous, query.recordJsonPath + "." + query.idJsonPath)
+      if(!isCollectionOrArray(ids2)){
+          ids2 = [ids2]
+      }
       List<String> diff = ids1.findAll { !ids2.contains(it) }
       !diff.empty
     } else {
@@ -62,9 +75,6 @@ class DiffService {
       String last = decompressZipped(queryResult.lastResult)
       String previous = decompressZipped(queryResult.previousResult)
 
-      //println(JsonPath.read(last, queryResult.query.recordJsonPath + "." +queryResult.query.idJsonPath))
-      //println(JsonPath.read(previous, queryResult.query.recordJsonPath + "." +queryResult.query.idJsonPath))
-
       List<String> ids1 = JsonPath.read(last, queryResult.query.recordJsonPath + "." +queryResult.query.idJsonPath)
       List<String> ids2 = JsonPath.read(previous, queryResult.query.recordJsonPath + "." +queryResult.query.idJsonPath)
       List<String> diff = ids1.findAll { !ids2.contains(it) }
@@ -88,11 +98,10 @@ class DiffService {
 
         try {
           while (input.available() && !(readed = input.readLines()).isEmpty()) {
-            //println(readed.join(""))
             sb.append(readed.join(""))
           }
         } catch (Exception e) {
-          //e.printStackTrace()
+          log.error(e.getMessage(), e)
         }
         input.close()
         sb.toString()

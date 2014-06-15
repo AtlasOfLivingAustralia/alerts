@@ -1,4 +1,4 @@
-package ala.postie
+package au.org.ala.alerts
 
 import org.codehaus.groovy.grails.web.servlet.mvc.GrailsParameterMap
 

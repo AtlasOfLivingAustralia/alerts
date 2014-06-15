@@ -1,8 +1,5 @@
 dataSource {
     pooled = true
-    driverClassName = "com.mysql.jdbc.Driver"
-    username = "root"
-    password = "password"
 }
 hibernate {
     cache.use_second_level_cache = true
@@ -13,32 +10,14 @@ hibernate {
 environments {
     development {
         dataSource {
-          //dbCreate = "create-drop" // one of 'create', 'create-drop','update'
-          //dbCreate = "update"
-            dbCreate = "none"
-            url = "jdbc:mysql://localhost:3306/postie"
+            dbCreate = "update"
+            url = "jdbc:mysql://localhost:3306/alerts"
             username = "root"
             password = "password"
-
-
-//            dbCreate = "none"
-//            url = "jdbc:mysql://ala-authdb1.vm.csiro.au:3306/postie"
-//            username = "postie"
-//            password ="RHitoHYAbfmJBCT0zywo143tH"
+            driverClassName = "com.mysql.jdbc.Driver"
         }
     }
-    test {
-        dataSource {
-            dbCreate = "update"
-            url = "jdbc:mysql://localhost:3306/postie-test"
-        }
-    }
+
     production {
-        dataSource {
-            dbCreate = "none"
-            url = "jdbc:mysql://ala-authdb1.vm.csiro.au:3306/postie"
-            username = "postie"
-            password ="RHitoHYAbfmJBCT0zywo143tH"
-        }
     }
 }

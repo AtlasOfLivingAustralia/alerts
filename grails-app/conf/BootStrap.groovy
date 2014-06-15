@@ -1,7 +1,8 @@
-import ala.postie.Notification
-import ala.postie.Query
-import ala.postie.PropertyValue
-import ala.postie.Frequency
+import au.org.ala.alerts.Notification
+import au.org.ala.alerts.Query
+import au.org.ala.alerts.PropertyValue
+import au.org.ala.alerts.Frequency
+import au.org.ala.alerts.PropertyPath
 import org.springframework.scheduling.support.CronTrigger
 
 class BootStrap {
@@ -27,8 +28,8 @@ class BootStrap {
 
         if(Query.findAllByName('Annotations').isEmpty()){
           Query newAssertions = (new Query([
-                  baseUrl: 'http://biocache.ala.org.au',
-                  baseUrlForUI: 'http://biocache.ala.org.au',
+                  baseUrl: grailsApplication.config.biocache.baseURL,
+                  baseUrlForUI: grailsApplication.config.biocache.baseURL,
                   resourceName:  grailsApplication.config.postie.defaultResourceName,
                   name: 'Annotations',
                   updateMessage: 'annotations.update.message',
@@ -40,14 +41,14 @@ class BootStrap {
                   recordJsonPath: '\$.occurrences',
                   idJsonPath: 'uuid'
           ])).save()
-          new ala.postie.PropertyPath([name: "totalRecords", jsonPath: "totalRecords", query: newAssertions, fireWhenNotZero: true]).save()
-          new ala.postie.PropertyPath([name: "last_assertion_record", jsonPath: "occurrences[0].rowKey", query: newAssertions]).save()
+          new PropertyPath([name: "totalRecords", jsonPath: "totalRecords", query: newAssertions, fireWhenNotZero: true]).save()
+          new PropertyPath([name: "last_assertion_record", jsonPath: "occurrences[0].rowKey", query: newAssertions]).save()
         }
 
         if(Query.findAllByName('New records').isEmpty()){
           Query newRecords = (new Query([
-                  baseUrl: 'http://biocache.ala.org.au',
-                  baseUrlForUI: 'http://biocache.ala.org.au',
+                  baseUrl: grailsApplication.config.biocache.baseURL,
+                  baseUrlForUI: grailsApplication.config.biocache.baseURL,
                   name: 'New records',
                   resourceName:  grailsApplication.config.postie.defaultResourceName,
                   updateMessage: 'more.records.update.message',
@@ -59,14 +60,14 @@ class BootStrap {
                   recordJsonPath: '\$.occurrences',
                   idJsonPath: 'uuid'
           ])).save()
-          new ala.postie.PropertyPath([name: "totalRecords", jsonPath: "totalRecords", query: newRecords, fireWhenNotZero: true]).save()
-          new ala.postie.PropertyPath([name: "last_loaded_record", jsonPath: "occurrences[0].rowKey", query: newRecords]).save()
+          new PropertyPath([name: "totalRecords", jsonPath: "totalRecords", query: newRecords, fireWhenNotZero: true]).save()
+          new PropertyPath([name: "last_loaded_record", jsonPath: "occurrences[0].rowKey", query: newRecords]).save()
         }
 
         if(Query.findAllByName('New images').isEmpty()){
           Query newRecordsWithImages = (new Query([
-                  baseUrl: 'http://biocache.ala.org.au',
-                  baseUrlForUI: 'http://biocache.ala.org.au',
+                  baseUrl: grailsApplication.config.biocache.baseURL,
+                  baseUrlForUI: grailsApplication.config.biocache.baseURL,
                   name: 'New images',
                   resourceName:  grailsApplication.config.postie.defaultResourceName,
                   updateMessage: 'more.images.update.message',
@@ -79,14 +80,14 @@ class BootStrap {
                   recordJsonPath: '\$.occurrences',
                   idJsonPath: 'uuid'
           ])).save()
-          new ala.postie.PropertyPath([name: "totalRecords", jsonPath: "totalRecords", query: newRecordsWithImages, fireWhenNotZero: true]).save()
-          new ala.postie.PropertyPath([name: "last_loaded_record", jsonPath: "occurrences[0].rowKey", query: newRecordsWithImages]).save()
+          new PropertyPath([name: "totalRecords", jsonPath: "totalRecords", query: newRecordsWithImages, fireWhenNotZero: true]).save()
+          new PropertyPath([name: "last_loaded_record", jsonPath: "occurrences[0].rowKey", query: newRecordsWithImages]).save()
         }
 
         if(Query.findAllByName('Citizen science records').isEmpty()){
           Query newCitizenScienceRecords = (new Query([
-                  baseUrl: 'http://biocache.ala.org.au',
-                  baseUrlForUI: 'http://biocache.ala.org.au',
+                  baseUrl: grailsApplication.config.biocache.baseURL,
+                  baseUrlForUI: grailsApplication.config.biocache.baseURL,
                   name: 'Citizen science records',
                   updateMessage: 'more.cs.update.message',
                   description: 'Notify me when new citizen science records are added.',
@@ -98,14 +99,14 @@ class BootStrap {
                   recordJsonPath: '\$.occurrences',
                   idJsonPath: 'uuid'
           ])).save()
-          new ala.postie.PropertyPath([name: "totalRecords", jsonPath: "totalRecords", query: newCitizenScienceRecords, fireWhenNotZero: true]).save()
-          new ala.postie.PropertyPath([name: "last_loaded_record", jsonPath: "occurrences[0].rowKey", query: newCitizenScienceRecords]).save()
+          new PropertyPath([name: "totalRecords", jsonPath: "totalRecords", query: newCitizenScienceRecords, fireWhenNotZero: true]).save()
+          new PropertyPath([name: "last_loaded_record", jsonPath: "occurrences[0].rowKey", query: newCitizenScienceRecords]).save()
         }
 
         if(Query.findAllByName('Citizen science records with images').isEmpty()){
           Query newCitizenScienceRecordsWithImages = (new Query([
-                  baseUrl: 'http://biocache.ala.org.au',
-                  baseUrlForUI: 'http://biocache.ala.org.au',
+                  baseUrl: grailsApplication.config.biocache.baseURL,
+                  baseUrlForUI: grailsApplication.config.biocache.baseURL,
                   name: 'Citizen science records with images',
                   resourceName:  grailsApplication.config.postie.defaultResourceName,
                   updateMessage: 'more.cs.images.update.message',
@@ -117,14 +118,14 @@ class BootStrap {
                   recordJsonPath: '\$.occurrences',
                   idJsonPath: 'uuid'
           ])).save()
-          new ala.postie.PropertyPath([name: "totalRecords", jsonPath: "totalRecords", query: newCitizenScienceRecordsWithImages, fireWhenNotZero: true]).save()
-          new ala.postie.PropertyPath([name: "last_loaded_record", jsonPath: "occurrences[0].rowKey", query: newCitizenScienceRecordsWithImages]).save()
+          new PropertyPath([name: "totalRecords", jsonPath: "totalRecords", query: newCitizenScienceRecordsWithImages, fireWhenNotZero: true]).save()
+          new PropertyPath([name: "last_loaded_record", jsonPath: "occurrences[0].rowKey", query: newCitizenScienceRecordsWithImages]).save()
         }
 
         if(Query.findAllByName('Spatial layers').isEmpty()){
           Query newSpatialLayers = (new Query([
-                  baseUrl: 'http://spatial.ala.org.au',
-                  baseUrlForUI: 'http://spatial.ala.org.au',
+                  baseUrl: grailsApplication.config.spatial.baseURL,
+                  baseUrlForUI: grailsApplication.config.spatial.baseURL,
                   name: 'Spatial layers',
                   resourceName:  grailsApplication.config.postie.defaultResourceName,
                   updateMessage: 'more.spatial.update.message',
@@ -135,13 +136,13 @@ class BootStrap {
                   recordJsonPath: '\$.layerList',
                   idJsonPath: 'name'
           ])).save()
-          new ala.postie.PropertyPath([name: "layer_count", jsonPath: "layerList", query: newSpatialLayers, fireWhenChanged: true]).save()
+          new PropertyPath([name: "layer_count", jsonPath: "layerList", query: newSpatialLayers, fireWhenChanged: true]).save()
         }
 
         if(Query.findAllByName('Datasets').isEmpty()){
           Query newDatasets = (new Query([
-                  baseUrl: 'http://collections.ala.org.au',
-                  baseUrlForUI: 'http://collections.ala.org.au',
+                  baseUrl: grailsApplication.config.collectory.baseURL,
+                  baseUrlForUI: grailsApplication.config.collectory.baseURL,
                   name: 'Datasets',
                   resourceName:  grailsApplication.config.postie.defaultResourceName,
                   updateMessage: 'more.datasets.update.message',
@@ -152,14 +153,14 @@ class BootStrap {
                   recordJsonPath: '\$',
                   idJsonPath: 'uid'
           ])).save()
-          new ala.postie.PropertyPath([name: "dataset_count", jsonPath: "\$", query: newDatasets, fireWhenChanged: true]).save()
+          new PropertyPath([name: "dataset_count", jsonPath: "\$", query: newDatasets, fireWhenChanged: true]).save()
         }
 
         // get_category_posts.json
         if(Query.findAllByName('Blogs and News').isEmpty()){
           Query newBlogs = (new Query([
-                  baseUrl: 'http://www.ala.org.au',
-                  baseUrlForUI: 'http://www.ala.org.au',
+                  baseUrl: grailsApplication.config.ala.baseURL,
+                  baseUrlForUI: grailsApplication.config.ala.baseURL,
                   name: 'Blogs and News',
                   resourceName:  grailsApplication.config.postie.defaultResourceName,
                   updateMessage: 'more.blogsnews.update.message',
@@ -171,7 +172,7 @@ class BootStrap {
                   idJsonPath: 'id'
           ])).save()
 
-          new ala.postie.PropertyPath([name: "last_blog_id", jsonPath: "posts", query: newBlogs, fireWhenChanged: true]).save()
+          new PropertyPath([name: "last_blog_id", jsonPath: "posts", query: newBlogs, fireWhenChanged: true]).save()
         }
     }
 

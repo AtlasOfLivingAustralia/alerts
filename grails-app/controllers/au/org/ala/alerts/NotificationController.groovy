@@ -1,4 +1,4 @@
-package ala.postie
+package au.org.ala.alerts
 
 class NotificationController {
 
@@ -53,7 +53,7 @@ class NotificationController {
 
       def user = userService.getUser()
       def query = Query.get(params.id)
-      log.debug('Deleting my alert :  ' + params.id + ' for user : ' + authService.username())
+      log.debug('Deleting my alert :  ' + params.id + ' for user : ' + authService.getDisplayName())
 
       def notificationInstance = Notification.findByUserAndQuery(user, query)
       if (notificationInstance) {
@@ -89,7 +89,7 @@ class NotificationController {
     def changeFrequency = {
         def user = userService.getUser()
         log.debug("Changing frequency to: " + params.frequency)
-        user.frequency = ala.postie.Frequency.findByName(params.frequency)
+        user.frequency = Frequency.findByName(params.frequency)
         user.save(true)
         return null
     }

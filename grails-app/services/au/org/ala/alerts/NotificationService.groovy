@@ -1,7 +1,8 @@
-package ala.postie
+package au.org.ala.alerts
 
-import org.apache.commons.io.IOUtils
 import com.jayway.jsonpath.JsonPath
+import org.apache.commons.io.IOUtils
+
 import java.text.SimpleDateFormat
 import java.util.zip.GZIPOutputStream
 

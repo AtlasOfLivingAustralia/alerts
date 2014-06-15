@@ -120,7 +120,7 @@
 					<span id="propertyPaths-label" class="property-label"><g:message code="query.propertyPaths.label" default="Property Paths" /></span>
 					
 						<g:each in="${queryInstance.propertyPaths}" var="p">
-						<span class="property-value" aria-labelledby="propertyPaths-label"><g:link controller="propertyPath" action="show" id="${p.id}">${p?.encodeAsHTML()}</g:link></span>
+						<span class="property-value" aria-labelledby="propertyPaths-label">${p?.encodeAsHTML()}</span>
 						</g:each>
 					
 				</li>
@@ -149,7 +149,7 @@
 					<span id="queryResults-label" class="property-label"><g:message code="query.queryResults.label" default="Query Results" /></span>
 					
 						<g:each in="${queryInstance.queryResults}" var="q">
-						<span class="property-value" aria-labelledby="queryResults-label"><g:link controller="queryResult" action="show" id="${q.id}">${q?.encodeAsHTML()}</g:link></span>
+						<span class="property-value" aria-labelledby="queryResults-label">${q?.encodeAsHTML()}</span>
 						</g:each>
 					
 				</li>

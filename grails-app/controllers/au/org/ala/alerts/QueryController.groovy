@@ -1,5 +1,6 @@
-package ala.postie
+package au.org.ala.alerts
 
+import au.org.ala.alerts.Query
 import org.springframework.dao.DataIntegrityViolationException
 
 class QueryController {

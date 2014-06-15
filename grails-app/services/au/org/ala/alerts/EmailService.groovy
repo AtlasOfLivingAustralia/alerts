@@ -1,6 +1,4 @@
-package ala.postie
-
-import java.text.SimpleDateFormat
+package au.org.ala.alerts
 
 class EmailService {
 
@@ -117,16 +115,5 @@ class EmailService {
         } catch(Exception e){
             log.error("Error sending email to addresses: " + subsetOfAddresses, e)
         }
-    }
-
-    private String constructMoreInfoUrl(Query query, Frequency frequency) {
-        QueryResult queryResult = QueryResult.findByQueryAndFrequency(query, frequency)
-        String moreInfoUrl = query.baseUrlForUI + query.queryPathForUI
-        if (query.dateFormat) {
-            SimpleDateFormat sdf = new SimpleDateFormat(query.dateFormat)
-            def dateValue = sdf.format(queryResult.lastChecked)
-            moreInfoUrl = query.baseUrlForUI + query.queryPathForUI.replaceAll("___DATEPARAM___", dateValue)
-        }
-        moreInfoUrl
     }
 }

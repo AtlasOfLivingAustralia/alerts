@@ -39,31 +39,42 @@ grails.project.dependency.resolution = {
     dependencies {
         // specify dependencies here under either 'build', 'compile', 'runtime', 'test' or 'provided' scopes eg.
 
-        // runtime 'mysql:mysql-connector-java:5.1.13'
+        runtime 'mysql:mysql-connector-java:5.1.13'
 
         runtime 'org.apache.httpcomponents:httpcore:4.2.2'
         runtime 'org.apache.httpcomponents:httpclient:4.2.2'
         runtime 'org.apache.httpcomponents:httpcore:4.2.2'
         runtime 'org.apache.httpcomponents:httpclient:4.2.2'
+
+//        runtime 'com.jayway.jsonpath:json-path:0.9.1'
+//        runtime 'com.jayway.jsonpath:json-path-parent:0.9.1'
+//        runtime 'com.jayway.jsonpath:json-path-assert:0.9.1'
+//        runtime 'net.minidev:json-smart:1.2'
+
+        runtime 'com.jayway.jsonpath:json-path:0.5.6'
+        runtime 'com.jayway.jsonpath:json-path-parent:0.5.6'
+        runtime 'com.jayway.jsonpath:json-path-assert:0.5.6'
+//        runtime 'net.minidev:json-smart:1.2'
+//        runtime 'com.jayway.jsonpath:json-path:0.5.6'
     }
     plugins {
-        runtime ":ala-web-theme:0.1.10"
-        runtime ":hibernate:$grailsVersion"
+        runtime ":ala-web-theme:0.5"
+        runtime ":hibernate:3.6.10.16"
         runtime ":jquery:1.8.3"
         runtime ":resources:1.1.6"
 
 
         compile ":mail:1.0.1"
         runtime ":pretty-time:0.3"
-        runtime ":quartz:0.4.2"
-        runtime ":quartz-monitor:0.1"
+        runtime ":quartz:1.0.1"
+        runtime ":quartz-monitor:1.0"
 
         // Uncomment these (or add new ones) to enable additional resources capabilities
         //runtime ":zipped-resources:1.0"
         //runtime ":cached-resources:1.0"
         //runtime ":yui-minify-resources:0.1.5"
 
-        build ":tomcat:$grailsVersion"
+        build ":tomcat:7.0.54"
 
         compile ':cache:1.0.1'
     }

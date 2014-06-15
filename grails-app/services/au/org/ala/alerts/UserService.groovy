@@ -1,4 +1,4 @@
-package ala.postie
+package au.org.ala.alerts
 
 class UserService {
 

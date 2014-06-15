@@ -1,8 +1,6 @@
 package ala.postie
 
-
-
-import org.junit.*
+import au.org.ala.alerts.QueryController
 import grails.test.mixin.*
 
 @TestFor(QueryController)

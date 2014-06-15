@@ -1,4 +1,4 @@
-package ala.postie
+package au.org.ala.alerts
 
 class QueryService {
 
@@ -55,8 +55,8 @@ class QueryService {
     Query retrievedQuery = Query.findByBaseUrlAndQueryPath(newQuery.baseUrl,newQuery.queryPath)
     if(retrievedQuery == null){
       newQuery = newQuery.save(true)
-      new ala.postie.PropertyPath([name: "totalRecords", jsonPath: "totalRecords", query: newQuery, fireWhenNotZero: true]).save(true)
-      new ala.postie.PropertyPath([name: "last_loaded_record", jsonPath: "occurrences[0].rowKey", query: newQuery]).save(true)
+      new PropertyPath([name: "totalRecords", jsonPath: "totalRecords", query: newQuery, fireWhenNotZero: true]).save(true)
+      new PropertyPath([name: "last_loaded_record", jsonPath: "occurrences[0].rowKey", query: newQuery]).save(true)
     } else {
       newQuery = retrievedQuery
     }
@@ -136,8 +136,8 @@ class QueryService {
 
   Query createTaxonQuery(String taxonGuid, String taxonName){
     new Query([
-      baseUrl: 'http://biocache.ala.org.au',
-      baseUrlForUI: 'http://biocache.ala.org.au',
+      baseUrl: grailsApplication.config.biocacheURL,
+      baseUrlForUI: grailsApplication.config.biocacheURL,
       name: 'New records for ' + taxonName,
       resourceName:  grailsApplication.config.postie.defaultResourceName,
       updateMessage: 'More occurrence records have been added for ' + taxonName,
@@ -154,8 +154,8 @@ class QueryService {
 
   Query createTaxonRegionQuery(String taxonGuid, String taxonName, String layerId, String regionName){
     new Query([
-      baseUrl: 'http://biocache.ala.org.au',
-      baseUrlForUI: 'http://biocache.ala.org.au',
+      baseUrl: grailsApplication.config.biocacheURL,
+      baseUrlForUI: grailsApplication.config.biocacheURL,
       name: 'New records for ' + taxonName + ' recorded in ' + regionName,
       resourceName:  grailsApplication.config.postie.defaultResourceName,
       updateMessage: 'More occurrence records have been added for ' + taxonName + ' recorded in ' + regionName,
@@ -172,8 +172,8 @@ class QueryService {
 
   Query createSpeciesGroupRegionQuery(String speciesGroup, String layerId, String regionName){
     new Query([
-      baseUrl: 'http://biocache.ala.org.au',
-      baseUrlForUI: 'http://biocache.ala.org.au',
+      baseUrl: grailsApplication.config.biocacheURL,
+      baseUrlForUI: grailsApplication.config.biocacheURL,
       name: 'New records for ' + speciesGroup + ' recorded in ' + regionName,
       resourceName:  grailsApplication.config.postie.defaultResourceName,
       updateMessage: 'More occurrence records have been added for ' + speciesGroup + ' recorded in ' + regionName,
@@ -190,8 +190,8 @@ class QueryService {
 
   Query createRegionQuery(String layerId, String regionName){
     new Query([
-      baseUrl: 'http://biocache.ala.org.au',
-      baseUrlForUI: 'http://biocache.ala.org.au',
+      baseUrl: grailsApplication.config.biocacheURL,
+      baseUrlForUI: grailsApplication.config.biocacheURL,
       name: 'New records for ' + regionName,
       resourceName:  grailsApplication.config.postie.defaultResourceName,
       updateMessage: 'More occurrence records have been added for ' + regionName,

@@ -4,24 +4,17 @@
   <meta name="layout" content="main" />
 </head>
 <body>
-<h1>Welcome to the Notification service</h1>
+<h1>Admin functions - Alert service</h1>
 <div>
   <ul>
     <li><g:link controller="notification" action="myAlerts">View my alerts</g:link></li>
-  </ul>
-</div>
-
-<h2>Admin functions</h2>
-<div>
-  <ul>
     <li><g:link controller="admin" action="debugAllAlerts">Debug all alerts</g:link></li>
-    <li>
-        Debug an alert: /admin/debugAlert?id=.....
-    </li>
     <li><g:link controller="query" action="list">View list of alert types</g:link></li>
-    <g:each var="c" in="${grailsApplication.controllerClasses.sort { it.fullName } }">
-      <li class="controller"><g:link controller="${c.logicalPropertyName}">${c.fullName}</g:link></li>
-    </g:each>
+    <li class="controller"><g:link controller="quartz">View scheduling</g:link></li>
+    <li class="controller"><g:link controller="admin" action="createBulkEmailForRegisteredUsers">
+        Ad hoc bulk email to registered users</g:link></li>
+      <li class="controller"><g:link controller="admin" action="notificationReport">
+          Notification report</g:link></li>
   </ul>
 </div>
 </body>

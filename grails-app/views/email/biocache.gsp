@@ -40,9 +40,9 @@
             ${oc.stateProvince}<br/>
         </td>
         <td class="imageCol">
-          <g:if test="${oc.image != null && oc.image.startsWith('/data/biocache-media')}">
+          <g:if test="${oc.image != null}">
             <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}">
-            <biocacheImage:imageTag imageUrl="${oc.image}"/>
+            <biocacheImage:imageTag imageUrl="${oc.smallImageUrl}"/>
             </a>
           </g:if>
           <g:elseif test="${oc.image}">

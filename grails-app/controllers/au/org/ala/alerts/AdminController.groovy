@@ -1,9 +1,8 @@
-package ala.postie
+package au.org.ala.alerts
 
 import groovy.json.JsonSlurper
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.impl.client.DefaultHttpClient
-
 
 class AdminController {
 
@@ -45,10 +44,11 @@ class AdminController {
                           )
                   }
              } catch (Exception e){
-                 log.error("Problem sending email to: " + email)
+                 log.error("Problem sending email to: " + user.email)
              }
           }
       }
+      redirect(action:'index')
   }
 
   def sendBulkEmail = {
@@ -74,6 +74,10 @@ class AdminController {
              }
           }
       }
+  }
+
+  def notificationReport = {
+      [queryInstanceList: Query.list()]
   }
 
   def runChecksNow = {
