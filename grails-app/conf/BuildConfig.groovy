@@ -67,6 +67,7 @@ grails.project.dependency.resolution = {
         runtime ":pretty-time:0.3"
         runtime ":quartz:1.0.1"
         runtime ":quartz-monitor:1.0"
+        compile ":scaffolding:2.0.3"
 
         // Uncomment these (or add new ones) to enable additional resources capabilities
         //runtime ":zipped-resources:1.0"
