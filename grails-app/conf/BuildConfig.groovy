@@ -58,6 +58,7 @@ grails.project.dependency.resolution = {
 //        runtime 'com.jayway.jsonpath:json-path:0.5.6'
     }
     plugins {
+        build ":release:3.0.1"
         runtime ":ala-web-theme:0.5"
         runtime ":hibernate:3.6.10.16"
         runtime ":jquery:1.8.3"
