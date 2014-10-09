@@ -11,5 +11,5 @@ class User {
      frequency nullable:true
   }
 
-  public String toString(){ email }
+  public String toString(){ userId + " - " + email }
 }

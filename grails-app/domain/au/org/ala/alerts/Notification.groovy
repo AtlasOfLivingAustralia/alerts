@@ -6,6 +6,6 @@ class Notification {
   User user
 
   String toString(){
-        "Query: " + query.id + " for user ID: " + user.id + ", Email" + user.email
+        "Query: " + query.id + " for user ID: " + user.id + ", Email: " + user.email
   }
 }

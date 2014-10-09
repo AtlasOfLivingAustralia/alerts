@@ -212,7 +212,7 @@ class NotificationService {
 
     /**
      * Compares the stored values with the values in the JSON
-      * @param queryResult
+     * @param queryResult
      * @param json
      * @return
      */
@@ -225,9 +225,14 @@ class NotificationService {
     try {
 
       queryResult.query.propertyPaths.each { propertyPath ->
-
         //read the value from the request
-        def latestValue = JsonPath.read(json, propertyPath.jsonPath)
+        def latestValue = null
+
+        try {
+            latestValue = JsonPath.read(json, propertyPath.jsonPath)
+        } catch (Exception e){
+            //expected behaviour for missing properties
+        }
 
         //get property value for this property path
         PropertyValue propertyValue = getPropertyValue(propertyPath, queryResult)
@@ -237,7 +242,7 @@ class NotificationService {
         propertyPaths.put(propertyPath, [previous: propertyValue.currentValue, current: latestValue])
       }
     } catch (Exception e){
-      log.error("[QUERY " + queryResult?.query?.id?:'NULL' + "] There was a problem reading the supplied JSON.",e)
+      log.error("[QUERY " + queryResult?.query?.id?:'NULL' + "] There was a problem reading the supplied JSON.", e)
     }
 
     propertyPaths
