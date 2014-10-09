@@ -1,6 +1,13 @@
 <%@ page import="au.org.ala.alerts.Query" %>
 
+<div class="fieldcontain ${hasErrors(bean: queryInstance, field: 'name', 'error')} required">
+    <label for="name">
+        <g:message code="query.name.label" default="Name" />
+        <span class="required-indicator">*</span>
+    </label>
+    <g:textField name="name" required="" value="${queryInstance?.name}" class="input-xxlarge"/>
 
+</div>
 
 <div class="fieldcontain ${hasErrors(bean: queryInstance, field: 'description', 'error')} ">
 	<label for="description">
@@ -43,7 +50,7 @@
 		<g:message code="query.updateMessage.label" default="Update Message" />
 		<span class="required-indicator">*</span>
 	</label>
-	<g:textField name="updateMessage" required="" class="input-xxlarge"  value="${queryInstance?.updateMessage}"/>
+	<g:textArea name="updateMessage" required="" class="input-xxlarge"  value="${queryInstance?.updateMessage}"/>
 
 </div>
 
@@ -101,28 +108,20 @@
 
 </div>
 
-<div class="fieldcontain ${hasErrors(bean: queryInstance, field: 'name', 'error')} required">
-	<label for="name">
-		<g:message code="query.name.label" default="Name" />
-		<span class="required-indicator">*</span>
-	</label>
-	<g:textField name="name" required="" value="${queryInstance?.name}"/>
 
-</div>
-
-<div class="fieldcontain ${hasErrors(bean: queryInstance, field: 'notifications', 'error')} ">
-	<label for="notifications">
-		<g:message code="query.notifications.label" default="Notifications" />
-	</label>
-	
-<ul class="one-to-many">
-<g:each in="${queryInstance?.notifications?}" var="n">
-    <li><g:link controller="notification" action="show" id="${n.id}">${n?.encodeAsHTML()}</g:link></li>
-</g:each>
-</ul>
+%{--<div class="fieldcontain ${hasErrors(bean: queryInstance, field: 'notifications', 'error')} ">--}%
+	%{--<label for="notifications">--}%
+		%{--<g:message code="query.notifications.label" default="Notifications" />--}%
+	%{--</label>--}%
+	%{----}%
+%{--<ul class="one-to-many">--}%
+%{--<g:each in="${queryInstance?.notifications?}" var="n">--}%
+    %{--<li><g:link controller="notification" action="show" id="${n.id}">${n?.encodeAsHTML()}</g:link></li>--}%
+%{--</g:each>--}%
+%{--</ul>--}%
 
 
-</div>
+%{--</div>--}%
 
 <div class="fieldcontain ${hasErrors(bean: queryInstance, field: 'propertyPaths', 'error')} ">
 	<label for="propertyPaths">

@@ -131,17 +131,6 @@
 				</li>
 				</g:if>
 			
-				<g:if test="${queryInstance?.notifications}">
-				<li class="fieldcontain">
-					<span id="notifications-label" class="property-label"><g:message code="query.notifications.label" default="Notifications" /></span>
-					
-						<g:each in="${queryInstance.notifications}" var="n">
-						<span class="property-value" aria-labelledby="notifications-label"><g:link controller="notification" action="show" id="${n.id}">${n?.encodeAsHTML()}</g:link></span>
-						</g:each>
-					
-				</li>
-				</g:if>
-			
 				<g:if test="${queryInstance?.propertyPaths}">
 				<li class="fieldcontain">
 					<span id="propertyPaths-label" class="property-label"><g:message code="query.propertyPaths.label" default="Property Paths" /></span>
