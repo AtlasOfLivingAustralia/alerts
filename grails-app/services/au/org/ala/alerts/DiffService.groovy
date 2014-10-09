@@ -89,21 +89,50 @@ class DiffService {
     }
     records
   }
+//
+//  def String decompressZipped(byte[] zipped){
+//
+//
+//    if(zipped){
+//
+//        GZIPInputStream input = null
+//
+//        try {
+//            input = new GZIPInputStream(new ByteArrayInputStream(zipped))
+//            StringBuffer sb = new StringBuffer()
+//            List<String> readed = null
+//            while (input.available() && !(readed = input.readLines()).isEmpty()) {
+//                sb.append(readed.join(""))
+//            }
+//            sb.toString()
+//        } catch (Exception e) {
+//            log.error(e.getMessage() + ", zipped content length " + zipped.length, e)
+//        } finally {
+//            if(input != null){
+//                input.close()
+//            }
+//        }
+//    } else {
+//        null
+//    }
+//  }
 
   def String decompressZipped(byte[] zipped){
     if(zipped){
         GZIPInputStream input = new GZIPInputStream(new ByteArrayInputStream(zipped))
         StringBuffer sb = new StringBuffer()
-        List<String> readed = null
-
+        Reader decoder = new InputStreamReader(input, "UTF-8");
+        BufferedReader buffered = new BufferedReader(decoder);
         try {
-          while (input.available() && !(readed = input.readLines()).isEmpty()) {
-            sb.append(readed.join(""))
+          def currentLine = buffered.readLine()
+          while (currentLine != null) {
+            sb.append(currentLine)
+            currentLine = buffered.readLine()
           }
         } catch (Exception e) {
-          log.error(e.getMessage(), e)
+            log.error(e.getMessage() + ", zipped content length " + zipped.length, e)
         }
-        input.close()
+        buffered.close()
         sb.toString()
     } else {
         null
