@@ -28,13 +28,12 @@
           </header>
           <div id="page-body" role="main">
                 <g:set var="userId">${user.userId}</g:set>
-                <p>Enable an alert to have emails sent to your email address (${user.email})</p>
                 <h3>
                   Send me alerts:
                   <g:select name="userFrequency" from="${frequencies}" id="userFrequency" value="${user?.frequency?.name}" optionKey="name" />
                 </h3>
             <div class="row-fluid">
-                <div class="span12">
+                <div class="span6">
                     <table>
                         <tbody>
                         <g:each in="${enabledQueries}" status="i" var="query">
@@ -84,6 +83,36 @@
                     </table>
                     </g:if>
                  </div>
+                <div class="span6">
+                    <div class="well">
+                        <p>Enable an alert to have emails sent to your email address <b>${user.email}</b></p>
+                        <p>
+                            Specific alerts can be created in a number of places in the Atlas.<br/>
+                            These include:
+                            <ul>
+                                <li>
+                                    Collection pages e.g. <a href="http://collections.ala.org.au/public/show/co13">ANIC</a>
+                                    for alerts on new records or annotations.
+                                </li>
+                                <li>
+                                    Species pages e.g. <a href="http://bie.ala.org.au/species/Tiliqua+rugosa">Shingle-back</a>
+                                    for alerts on new records or annotations.
+                                </li>
+                                <li>
+                                    Region pages e.g. <a href="http://regions.ala.org.au/states/Australian+Capital+Territory">ACT</a>
+                                    for alerts on new records or annotations.
+                                </li>
+                                <li>
+                                    Any <a href="http://biocache.ala.org.au/occurrences/search?q=passer">occurrence search</a>
+                                    for alerts on new records or annotations.
+                                </li>
+                            </ul>
+                        </p>
+                        <p>
+                            Look for the <a class="btn" href="javascript:void(0);" disabled="true"><i class="icon icon-bell"></i> Alerts</a> button.
+                        </p>
+                    </div>
+                </div>
             </div>
           </div>
       </div>
