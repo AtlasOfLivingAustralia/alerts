@@ -5,7 +5,7 @@ import org.springframework.dao.DataIntegrityViolationException
 
 class QueryController {
 
-    static allowedMethods = [save: "POST", update: "POST", delete: "POST"]
+    static allowedMethods = [save: "POST", update: "POST", update: "PUT", delete: "POST"]
     def authService
 
     def index() {
