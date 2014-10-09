@@ -74,7 +74,7 @@ class NotificationController {
       }
 
       def query = Query.get(params.id)
-      log.debug('Deleting my alert :  ' + params.id + ' for user : ' + authService.username())
+      log.debug('Deleting my alert :  ' + params.id + ' for user : ' + user)
 
       def notificationInstance = Notification.findByUserAndQuery(user, query)
       if (notificationInstance) {
