@@ -6,13 +6,21 @@ import org.apache.http.impl.client.DefaultHttpClient
 
 class AdminController {
 
-  def index() { }
+  def index() {
+      if(!authService.userInRole("ROLE_ADMIN")){
+          response.sendError(401)
+      }
+  }
 
   def grailsApplication
 
   def authService
 
   def notificationService
+
+  def emailService
+
+  def queryService
 
   def createBulkEmail = {
       if(!authService.userInRole("ROLE_ADMIN")){
@@ -49,6 +57,33 @@ class AdminController {
           }
       }
       redirect(action:'index')
+  }
+
+  def fixupBiocacheQueries(){
+
+      def toUpdate = []
+      Query.findAllByQueryPathForUI('/occurrences/search?q=*:*&fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc').each {
+          it.queryPathForUI =  it.queryPath.substring(3)
+          toUpdate << it
+      }
+      toUpdate.each {it.save(flush:true)}
+      toUpdate.clear()
+
+
+      Query.findAllByQueryPathForUI('/occurrences/search?q=*:*&fq=user_assertions:true&fq=last_assertion_date:[___DATEPARAM___%20TO%20*]&sort=last_assertion_date&dir=desc').each {
+          it.queryPathForUI =  it.queryPath.substring(3)
+          toUpdate << it
+      }
+      toUpdate.each {it.save(flush:true)}
+      toUpdate.clear()
+
+
+      Query.findAllByQueryPathForUI('/occurrences/search?q=*:*&fq=last_assertion_date:[___DATEPARAM___%20TO%20*]&sort=last_assertion_date&dir=desc').each {
+          it.queryPathForUI =  it.queryPath.substring(3)
+          toUpdate << it
+      }
+      toUpdate.each {it.save(flush:true)}
+      toUpdate.clear()
   }
 
   def sendBulkEmail = {
@@ -120,10 +155,35 @@ class AdminController {
       }
   }
 
+  def debugAlertEmail(){
+      if(authService.userInRole("ROLE_ADMIN")){
+          def frequency = params.frequency?:'weekly'
+          def qcr = notificationService.checkQueryById(params.id, params.frequency?:'weekly')
+          def model = emailService.generateEmailModel(qcr.query, frequency, qcr.queryResult)
+          render(view: qcr.query.emailTemplate, model: model)
+      } else {
+          response.sendError(403)
+      }
+  }
+
   def debugAlert(){
       if(authService.userInRole("ROLE_ADMIN")){
-          response.setContentType("text/plain")
-          notificationService.checkQueryById(params.id, response.getWriter())
+          [ alerts:[
+             hourly: notificationService.checkQueryById(params.id, params.frequency?:'hourly'),
+             daily: notificationService.checkQueryById(params.id, params.frequency?:'daily'),
+             weekly: notificationService.checkQueryById(params.id, params.frequency?:'weekly'),
+             monthly: notificationService.checkQueryById(params.id, params.frequency?:'monthly')
+            ]
+          ]
+      } else {
+          response.sendError(403)
+      }
+  }
+
+  def deleteOrphanAlerts() {
+      if(authService.userInRole("ROLE_ADMIN")) {
+          int noDeleted = queryService.deleteOrphanedQueries()
+          render(view:'index', model:[message:"""Removed ${noDeleted} queries from system"""])
       } else {
           response.sendError(403)
       }

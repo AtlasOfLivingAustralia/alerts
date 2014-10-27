@@ -1,5 +1,4 @@
 package au.org.ala.alerts
-
 import com.jayway.jsonpath.JsonPath
 import org.apache.commons.io.IOUtils
 
@@ -74,26 +73,51 @@ class NotificationService {
     }
   }
 
-
-  def boolean checkStatusDontUpdate(Query query, Frequency frequency) {
+  def QueryCheckResult checkStatusDontUpdate(Query query, Frequency frequency) {
 
     //get the previous result
     QueryResult lastQueryResult = getQueryResult(query, frequency)
+    QueryCheckResult qcr = new QueryCheckResult()
 
     //get the urls to query
     def urls = getQueryUrl(query, frequency)
     def urlString = urls.first()
+    qcr.frequency = frequency
+    qcr.urlChecked = urlString
+    qcr.query = query
+    qcr.queryResult = QueryResult.findByQueryAndFrequency(query, frequency)
+
     log.debug("[QUERY " + query.id + "] Querying URL: " + urlString)
 
     try {
         def json = IOUtils.toString(new URL(urlString).newReader())
+        qcr.response = json
+
         //update the stored properties
         def propertyPaths = compareProperties(lastQueryResult, json)
+
+        //decompress the last result
         def previousJson = diffService.decompressZipped(lastQueryResult.lastResult)
-        hasPropertiesChanged(query, propertyPaths, previousJson, json)
+
+        //set the has changed
+        qcr.queryResult.hasChanged = hasPropertiesChanged(query, propertyPaths, previousJson, json)
+
+        //set the last result
+        qcr.queryResult.lastResult = gzipResult(json)
+
+        //set the property values
+        def propertyValues = []
+        propertyPaths.values().each {
+//            new PropertyValue()
+//            it.
+        }
+
+
     } catch (Exception e){
         log.error("[QUERY " + query.id + "] There was a problem checking the URL :" + urlString, e)
+        qcr.errored = true
     }
+    qcr
   }
 
   byte[] gzipResult (String json){
@@ -124,7 +148,7 @@ class NotificationService {
       queryURLForUI = query.baseUrlForUI + query.queryPathForUI
     }
 
-    [cleanUpUrl(queryURL),cleanUpUrl(queryURLForUI)]
+    [cleanUpUrl(queryURL), cleanUpUrl(queryURLForUI)]
   }
 
   def cleanUpUrl(url){
@@ -151,7 +175,8 @@ class NotificationService {
     Boolean hasFireProperty = queryService.hasAFireProperty(queryResult.query)
 
     queryResult.propertyValues.each { pv ->
-      log.debug("[QUERY " + queryResult.query.id + "] Has change check:" + pv.propertyPath.name
+      log.debug("[QUERY " + queryResult.query.id + "] " +
+              " Has changed check:" + pv.propertyPath.name
               + ", value:" + pv.currentValue
               + ", previous:" + pv.previousValue
               + ", fireWhenNotZero:" + pv.propertyPath.fireWhenNotZero
@@ -195,8 +220,7 @@ class NotificationService {
       )
       if (propertyPath.fireWhenNotZero){
         changed = value.current.toInteger() > 0
-      }
-      else if (propertyPath.fireWhenChange){
+      } else if (propertyPath.fireWhenChange){
         changed = value.previous != value.current
       }
     }
@@ -210,12 +234,15 @@ class NotificationService {
     changed
   }
 
-    /**
-     * Compares the stored values with the values in the JSON
-     * @param queryResult
-     * @param json
-     * @return
-     */
+  /**
+   * Compares the stored values with the values in the JSON returning a map of
+   *
+   * propertyPath -> [current, previous]
+   *
+   * @param queryResult
+   * @param json
+   * @return
+   */
   private def compareProperties(QueryResult queryResult, json) {
 
     def propertyPaths = [:]
@@ -258,14 +285,21 @@ class NotificationService {
       queryResult.query.propertyPaths.each { propertyPath ->
 
         //read the value from the request
-        def latestValue = JsonPath.read(json, propertyPath.jsonPath)
+//        println(propertyPath.jsonPath)
+        def latestValue = null
+        try {
+            latestValue = JsonPath.read(json, propertyPath.jsonPath)
+        } catch (Exception e){
+            //expected behaviour if JSON doesnt contain the element
+        }
+
 
         //get property value for this property path
         PropertyValue propertyValue = getPropertyValue(propertyPath, queryResult)
 
         propertyValue.previousValue = propertyValue.currentValue
 
-        if (latestValue instanceof List) {
+        if (latestValue != null && latestValue instanceof List) {
           propertyValue.currentValue = latestValue.size().toString()
         } else {
           propertyValue.currentValue = latestValue
@@ -282,30 +316,29 @@ class NotificationService {
     PropertyValue pv = PropertyValue.findByPropertyPathAndQueryResult(pp, queryResult)
     if(pv == null){
       pv = new PropertyValue([propertyPath:pp, queryResult:queryResult])
-      //pv.save(flush:true)
     }
     pv
   }
 
-  def checkQueryById(queryId, writer) {
+  def checkQueryById(queryId, freqStr) {
+
+    log.debug("[QUERY " + queryId +"] Running query...")
+
     def checkedCount = 0
     def checkedAndUpdatedCount = 0
-    def frequency =  Frequency.findAll().first()
-    log.debug("[QUERY " + queryId +"] Running query...")
     def query = Query.get(queryId)
+    def frequency = Frequency.findByName(freqStr)
+
     long start = System.currentTimeMillis()
-    boolean hasUpdated = checkStatusDontUpdate(query, Frequency.findAll().first())
+    QueryCheckResult qcr = checkStatusDontUpdate(query, frequency)
     long finish = System.currentTimeMillis()
     checkedCount++
-    if (hasUpdated) {
+    if (qcr.queryResult.hasChanged) {
       checkedAndUpdatedCount++
     }
-    writer.write(query.id +": " + query.toString())
-    writer.write("\nUpdated (" + frequency.name+ "):" + hasUpdated)
-    writer.write("\nTime taken: " + (finish - start)/1000 +' secs \n')
-    writer.write(("-" * 80) + "\n")
-    writer.flush()
     log.debug("Query checked: " + checkedCount + ", updated: " + checkedAndUpdatedCount)
+    qcr.timeTaken = finish - start
+    qcr
   }
 
   def checkAllQueries(PrintWriter writer) {
@@ -406,6 +439,13 @@ class NotificationService {
     }
   }
 
+  /**
+   * Check the queries of a specific user.
+   *
+   * @param user
+   * @param sendEmails
+   * @return
+   */
   def checkQueriesForUser(User user, Boolean sendEmails){
 
     log.debug("Checking queries for user: " + user)
@@ -429,5 +469,4 @@ class NotificationService {
       }
     }
   }
-
 }

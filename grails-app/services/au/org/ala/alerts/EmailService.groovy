@@ -12,22 +12,31 @@ class EmailService {
 
     def serviceMethod() {}
 
+    /**
+     * Returns a list of records
+     * @param query
+     * @param queryResult
+     * @return
+     */
+    def retrieveRecordForQuery(query, queryResult){
+        //if there's a fire on property, then don't do a diff
+        if (queryService.hasAFireProperty(query) && query.recordJsonPath) {
+            diffService.getNewRecords(queryResult)
+        } else if (query.recordJsonPath) {
+            diffService.getNewRecordsFromDiff(queryResult)
+        } else {
+            null
+        }
+    }
+
     def sendNotificationEmail(Notification notification) {
 
         log.debug("Using email template: " + notification.query.emailTemplate)
 
-        QueryResult queryResult = QueryResult.findByQueryAndFrequency(notification.query, notification.user.frequency)
+        def queryResult = QueryResult.findByQueryAndFrequency(notification.query, notification.user.frequency)
 
-        def records = null
+        def emailModel = generateEmailModel(notification, queryResult)
 
-        //if theres a fire on property, then dont do a diff
-        if (queryService.hasAFireProperty(notification.query) && notification.query.recordJsonPath) {
-            records = diffService.getNewRecords(queryResult)
-        } else if (notification.query.recordJsonPath) {
-            records = diffService.getNewRecordsFromDiff(queryResult)
-        }
-
-        Integer totalRecords = queryService.fireWhenNotZeroProperty(queryResult)
         if (grailsApplication.config.postie.enableEmail) {
             sendMail {
                 from grailsApplication.config.postie.emailAlertAddressTitle + "<" + grailsApplication.config.postie.emailSender + ">"
@@ -35,15 +44,7 @@ class EmailService {
                 bcc notification.user.email
                 body(view: notification.query.emailTemplate,
                     plugin: "email-confirmation",
-                    model: [title: notification.query.name,
-                        message: notification.query.updateMessage,
-                        moreInfo: queryResult.queryUrlUIUsed,
-                        query: notification.query,
-                        stopNotification: grailsApplication.config.security.cas.appServerName + grailsApplication.config.security.cas.contextPath + '/notification/myAlerts',
-                        records: records,
-                        frequency: notification.user.frequency,
-                        totalRecords: totalRecords
-                    ]
+                    model: emailModel
                 )
             }
         } else {
@@ -51,10 +52,41 @@ class EmailService {
             log.debug("message:" + notification.query.updateMessage)
             log.debug("moreInfo:" + queryResult.queryUrlUIUsed)
             log.debug("stopNotification:" + grailsApplication.config.security.cas.appServerName + grailsApplication.config.security.cas.contextPath + '/notification/myAlerts')
-            log.debug("records:" + records)
+            log.debug("records:" + emailModel.records)
             log.debug("frequency:" + notification.user.frequency)
-            log.debug("totalRecords:" + totalRecords)
+            log.debug("totalRecords:" + emailModel.totalRecords)
         }
+    }
+
+    /**
+     * Generate the email model.
+     *
+     * @param notification
+     * @param queryResult
+     * @return
+     */
+    def Map generateEmailModel(Notification notification, QueryResult queryResult) {
+        generateEmailModel(notification.query, notification.user.frequency, queryResult)
+    }
+
+    /**
+     * Generate the email model.
+     *
+     * @param notification
+     * @param queryResult
+     * @return
+     */
+    def Map generateEmailModel(Query query, String frequency, QueryResult queryResult) {
+        [
+            title           : query.name,
+            message         : query.updateMessage,
+            moreInfo        : queryResult.queryUrlUIUsed,
+            query           : query,
+            stopNotification: grailsApplication.config.security.cas.appServerName + grailsApplication.config.security.cas.contextPath + '/notification/myAlerts',
+            frequency       : frequency,
+            records         : retrieveRecordForQuery(query, queryResult),
+            totalRecords    : queryService.fireWhenNotZeroProperty(queryResult)
+        ]
     }
 
     def sendGroupNotification(Query query, Frequency frequency, List<String> addresses) {
@@ -62,24 +94,11 @@ class EmailService {
         log.debug("Using email template: " + query.emailTemplate)
         QueryResult queryResult = QueryResult.findByQueryAndFrequency(query, frequency)
 
-        def records = null
-        //if theres a fire on property, then dont do a diff
-        if (queryService.hasAFireProperty(query) && query.recordJsonPath) {
-            records = diffService.getNewRecords(queryResult)
-        } else if (query.recordJsonPath) {
-            records = diffService.getNewRecordsFromDiff(queryResult)
-        }
+        def records = retrieveRecordForQuery(query, queryResult)
 
         Integer totalRecords = queryService.fireWhenNotZeroProperty(queryResult)
 
         if (grailsApplication.config.postie.enableEmail) {
-            //split the mailing list into multiple lists
-//            def sublists = addresses.collate(25, true)
-//            sublists.each { sublist ->
-//                sendGroupEmail(query, sublist, queryResult, records, frequency, totalRecords)
-//            }
-
-            //def sublists = addresses.collate(25, true)
             addresses.each { address ->
                 sendGroupEmail(query, [address], queryResult, records, frequency, totalRecords)
             }
@@ -94,7 +113,7 @@ class EmailService {
         }
     }
 
-    private void sendGroupEmail(Query query, subsetOfAddresses, queryResult, records, Frequency frequency, int totalRecords) {
+    private void sendGroupEmail(Query query, subsetOfAddresses, QueryResult queryResult, records, Frequency frequency, int totalRecords) {
         try {
             sendMail {
                 from grailsApplication.config.postie.emailAlertAddressTitle + "<" + grailsApplication.config.postie.emailSender + ">"

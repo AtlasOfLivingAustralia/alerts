@@ -161,7 +161,13 @@
 					
 				</li>
 				</g:if>
-			
+
+                <li class="fieldcontain">
+                    <span id="nousers-label" class="property-label"><g:message code="query.nousers.label" default="Number of users registered for alert" /></span>
+                    <span class="property-value" aria-labelledby="nousers-label">${queryInstance.notifications?.size()}</span>
+
+                </li>
+
 			</ol>
 			<g:form url="[resource:queryInstance, action:'delete']" method="DELETE">
 				<fieldset class="buttons">

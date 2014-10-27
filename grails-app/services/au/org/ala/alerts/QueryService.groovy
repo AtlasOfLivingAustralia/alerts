@@ -34,20 +34,30 @@ class QueryService {
     hasFireProperty
   }
 
-  Boolean hasAFireWhenNotZeroProperty(Query query){
-    Boolean hasFireProperty = false
-    query.propertyPaths.each { pp ->
-      if( pp.fireWhenNotZero) hasFireProperty = true
-    }
-    hasFireProperty
-  }
-
   Integer fireWhenNotZeroProperty(QueryResult queryResult){
     Integer fireWhenNotZeroValue = -1
     queryResult.propertyValues.each { pv ->
-      if( pv.propertyPath.fireWhenNotZero) fireWhenNotZeroValue = pv.currentValue.toInteger()
+      if( pv.propertyPath.fireWhenNotZero) {
+          fireWhenNotZeroValue = pv.currentValue.toInteger()
+      }
     }
     fireWhenNotZeroValue
+  }
+
+  int deleteOrphanedQueries(){
+
+    def toBeRemoved = []
+    Query.findAll().each {
+        if(it.notifications.size() == 0){
+            toBeRemoved << it
+        }
+    }
+
+    toBeRemoved.each {
+        Query.deleteAll(toBeRemoved)
+    }
+
+    toBeRemoved.size()
   }
 
   def createQueryForUserIfNotExists(Query newQuery, User user){
@@ -104,8 +114,8 @@ class QueryService {
       baseUrlForUI: baseUrlForUI,
       resourceName:  resourceName,
       name: 'New annotations on records for ' + queryDisplayName,
-      updateMessage: 'More occurrence records have been added for ' + queryDisplayName,
-      description: 'Notify me when new records are added for ' + queryDisplayName,
+      updateMessage: 'Annotations have been added for ' + queryDisplayName,
+      description: 'Notify me when new annotations are added for ' + queryDisplayName,
       queryPath: biocacheWebserviceQueryPath + '&fq=user_assertions:true&fq=last_assertion_date:[___DATEPARAM___%20TO%20*]&sort=last_assertion_date&dir=desc&pageSize=20&facets=basis_of_record',
       queryPathForUI: biocacheUIQueryPath + '&fq=user_assertions:true&fq=last_assertion_date:[___DATEPARAM___%20TO%20*]&sort=last_assertion_date&dir=desc',
       dateFormat: """yyyy-MM-dd'T'HH:mm:ss'Z'""",

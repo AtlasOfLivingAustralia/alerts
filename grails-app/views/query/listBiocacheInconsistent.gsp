@@ -27,6 +27,8 @@
                         <g:sortableColumn property="description" title="${message(code: 'query.description.label', default: 'Query title')}" />
                         %{--<g:sortableColumn property="resourceName" title="${message(code: 'query.description.label', default: 'Resource')}" />--}%
                         <th></th>
+                        <th>Q&nbsp;inconsistent</th>
+                        <th>FQ&nbsp;inconsistent</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -36,6 +38,8 @@
                         %{--<td>${fieldValue(bean: queryInstance, field: "resourceName")}</td>--}%
 						<td><g:link action="show" id="${queryInstance.id}">${fieldValue(bean: queryInstance, field: "description")}</g:link></td>
                         <td><g:link class="btn btn-mini" action="debugAlert" controller="admin" id="${queryInstance.id}">Debug&nbsp;alert</g:link></td>
+                        <td>${results.get(queryInstance.id).qInconsistent}</td>
+                        <td>${results.get(queryInstance.id).fqInconsistent}</td>
 					</tr>
 				</g:each>
 				</tbody>

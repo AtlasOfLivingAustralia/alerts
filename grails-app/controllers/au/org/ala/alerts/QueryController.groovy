@@ -12,9 +12,64 @@ class QueryController {
         redirect(action: "list", params: params)
     }
 
+    Map getQueryAndFQ(String str){
+        int startOfQuery = str.indexOf('?')
+        def q = ""
+        def fq = []
+
+        if(startOfQuery > 0) {
+            String queryPart = str.substring(startOfQuery + 1)
+
+            queryPart.split('&').each {
+                if(it.startsWith('q=')){
+                    q = it.substring(2)
+                } else if(it.startsWith('fq=')){
+                    fq << it.substring(2)
+                }
+            }
+        }
+        ['q': q, 'fq': fq]
+    }
+
+    def listBiocacheInconsistent() {
+        if(authService.userInRole("ROLE_ADMIN") ){
+            def inconsistentQueries = []
+
+            def results = [:]
+
+            def queries = Query.findAll()
+            queries.each {
+                def queryPathParams = getQueryAndFQ(it.queryPath)
+                def queryPathUIParams = getQueryAndFQ(it.queryPathForUI)
+
+                println(queryPathParams.q +"\t\t\t\t"+queryPathUIParams.q)
+
+                def qInconsistent = queryPathParams.q != queryPathUIParams.q
+                def fqInconsistent = queryPathParams.fq.size() != queryPathUIParams.fq.size()
+                if(!fqInconsistent){
+                    queryPathParams.fq.eachWithIndex { param, idx ->
+                        if(queryPathUIParams.fq[idx] != param){
+                            fqInconsistent = true
+                        }
+                    }
+                }
+                if(qInconsistent || fqInconsistent){
+                    inconsistentQueries << it
+                    results.put(it.id, [qInconsistent: qInconsistent, fqInconsistent: fqInconsistent])
+                }
+            }
+
+            params.max = Math.min(params.max ? params.int('max') : 1000, 10000)
+            [queryInstanceList:inconsistentQueries, queryInstanceTotal: inconsistentQueries.size(), results: results]
+
+        } else {
+            response.sendError(401)
+        }
+    }
+
     def list() {
       if(authService.userInRole("ROLE_ADMIN") ){
-        params.max = Math.min(params.max ? params.int('max') : 300, 1000)
+        params.max = Math.min(params.max ? params.int('max') : 1000, 10000)
         [queryInstanceList: Query.list(params), queryInstanceTotal: Query.count()]
 
       } else {

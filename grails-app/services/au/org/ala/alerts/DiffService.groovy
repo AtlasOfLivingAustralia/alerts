@@ -20,17 +20,17 @@ class DiffService {
     }
   }
 
-  Boolean hasChangedJsonDiff(QueryResult queryResult, String last, Query query){
-    if(last != null && queryResult.previousResult != null){
-      List<String> ids1 = JsonPath.read(last, query.recordJsonPath + "." + query.idJsonPath)
-      String previous = decompressZipped(queryResult.previousResult)
-      List<String> ids2 = JsonPath.read(previous, query.recordJsonPath + "." + query.idJsonPath)
-      List<String> diff = ids1.findAll { !ids2.contains(it) }
-      !diff.empty
-    } else {
-      false
-    }
-  }
+//  Boolean hasChangedJsonDiff(QueryResult queryResult, String last, Query query){
+//    if(last != null && queryResult.previousResult != null){
+//      List<String> ids1 = JsonPath.read(last, query.recordJsonPath + "." + query.idJsonPath)
+//      String previous = decompressZipped(queryResult.previousResult)
+//      List<String> ids2 = JsonPath.read(previous, query.recordJsonPath + "." + query.idJsonPath)
+//      List<String> diff = ids1.findAll { !ids2.contains(it) }
+//      !diff.empty
+//    } else {
+//      false
+//    }
+//  }
 
   boolean isCollectionOrArray(object) {
         [Collection, Object[]].any { it.isAssignableFrom(object.getClass()) }
@@ -60,7 +60,11 @@ class DiffService {
     //decompress both and compare lists
     if(queryResult.query.recordJsonPath){
       String last = decompressZipped(queryResult.lastResult)
-      JsonPath.read(last, queryResult.query.recordJsonPath)
+      if(last){
+          JsonPath.read(last, queryResult.query.recordJsonPath)
+      } else {
+        []
+      }
     } else {
       []
     }
@@ -89,33 +93,6 @@ class DiffService {
     }
     records
   }
-//
-//  def String decompressZipped(byte[] zipped){
-//
-//
-//    if(zipped){
-//
-//        GZIPInputStream input = null
-//
-//        try {
-//            input = new GZIPInputStream(new ByteArrayInputStream(zipped))
-//            StringBuffer sb = new StringBuffer()
-//            List<String> readed = null
-//            while (input.available() && !(readed = input.readLines()).isEmpty()) {
-//                sb.append(readed.join(""))
-//            }
-//            sb.toString()
-//        } catch (Exception e) {
-//            log.error(e.getMessage() + ", zipped content length " + zipped.length, e)
-//        } finally {
-//            if(input != null){
-//                input.close()
-//            }
-//        }
-//    } else {
-//        null
-//    }
-//  }
 
   def String decompressZipped(byte[] zipped){
     if(zipped){

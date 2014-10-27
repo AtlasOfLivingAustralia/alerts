@@ -59,7 +59,7 @@
 		<g:message code="query.queryPathForUI.label" default="Query Path For UI" />
 		<span class="required-indicator">*</span>
 	</label>
-	<g:textField name="queryPathForUI" required="" class="input-xxlarge"  value="${queryInstance?.queryPathForUI}"/>
+	<g:textArea name="queryPathForUI" required="" class="input-xxlarge"  value="${queryInstance?.queryPathForUI}"/>
 
 </div>
 
@@ -68,7 +68,7 @@
 		<g:message code="query.queryPath.label" default="Query Path" />
 		<span class="required-indicator">*</span>
 	</label>
-	<g:textField name="queryPath" required="" class="input-xxlarge"  value="${queryInstance?.queryPath}"/>
+	<g:textArea name="queryPath" required="" class="input-xxlarge"  value="${queryInstance?.queryPath}"/>
 
 </div>
 
