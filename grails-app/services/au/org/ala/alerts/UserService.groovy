@@ -1,5 +1,7 @@
 package au.org.ala.alerts
 
+import au.org.ala.web.UserDetails
+
 class UserService {
 
     static transactional = true
@@ -7,6 +9,21 @@ class UserService {
     def authService
 
     def serviceMethod() {}
+
+    int updateUserEmails(){
+        def toUpdate = []
+        User.findAll().each {
+            UserDetails userDetails = authService.getUserForUserId(it.userId)
+            if(userDetails != null && it.email != userDetails.userName){
+                it.email = userDetails.userName
+                toUpdate << it
+            }
+        }
+        toUpdate.each {
+            it.save(flush:true)
+        }
+        toUpdate.size()
+    }
 
     User getUser() {
 

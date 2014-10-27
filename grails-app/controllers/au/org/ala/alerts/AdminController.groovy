@@ -22,6 +22,17 @@ class AdminController {
 
   def queryService
 
+  def userService
+
+  def updateUserEmails(){
+      if(authService.userInRole("ROLE_ADMIN")){
+          def updated = userService.updateUserEmails()
+          render(view:'index', model:[message:"""Updated ${updated} email addresses in system"""])
+      } else {
+          response.sendError(401)
+      }
+  }
+
   def createBulkEmail = {
       if(!authService.userInRole("ROLE_ADMIN")){
           response.sendError(401)

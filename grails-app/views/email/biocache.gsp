@@ -42,7 +42,7 @@
         <td class="imageCol">
           <g:if test="${oc.image != null}">
             <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}">
-            <img src="${oc.smallImageUrl}" alt="image for record"/>'
+            <img src="${oc.smallImageUrl}" alt="image for record"/>
             </a>
           </g:if>
           <g:elseif test="${oc.image}">
