@@ -62,7 +62,7 @@ class QueryService {
 
   def createQueryForUserIfNotExists(Query newQuery, User user){
     //find the query
-    Query retrievedQuery = Query.findByBaseUrlAndQueryPath(newQuery.baseUrl,newQuery.queryPath)
+    Query retrievedQuery = Query.findByBaseUrlAndQueryPath(newQuery.baseUrl, newQuery.queryPath)
     if(retrievedQuery == null){
       newQuery = newQuery.save(true)
       new PropertyPath([name: "totalRecords", jsonPath: "totalRecords", query: newQuery, fireWhenNotZero: true]).save(true)
@@ -92,8 +92,8 @@ class QueryService {
    */
   Query createBioCacheChangeQuery(String biocacheWebserviceQueryPath, String biocacheUIQueryPath, String queryDisplayName, String baseUrlForWS, String baseUrlForUI, String resourceName){
     new Query([
-      baseUrl: baseUrlForWS,
-      baseUrlForUI: baseUrlForUI,
+      baseUrl: baseUrlForWS?:grailsApplication.config.biocache.baseURL,
+      baseUrlForUI: baseUrlForUI?:grailsApplication.config.biocache.baseURL,
       resourceName:  resourceName,
       name: 'New records for ' + queryDisplayName,
       updateMessage: 'More occurrence records have been added for ' + queryDisplayName,
@@ -110,8 +110,8 @@ class QueryService {
 
   Query createBioCacheAnnotationQuery(String biocacheWebserviceQueryPath, String biocacheUIQueryPath, String queryDisplayName, String baseUrlForWS, String baseUrlForUI, String resourceName){
     new Query([
-      baseUrl: baseUrlForWS,
-      baseUrlForUI: baseUrlForUI,
+      baseUrl: baseUrlForWS?:grailsApplication.config.biocache.baseURL,
+      baseUrlForUI: baseUrlForUI?:grailsApplication.config.biocache.baseURL,
       resourceName:  resourceName,
       name: 'New annotations on records for ' + queryDisplayName,
       updateMessage: 'Annotations have been added for ' + queryDisplayName,
@@ -128,8 +128,8 @@ class QueryService {
 
   Query createBioCacheQuery(String biocacheWebserviceQueryPath, String biocacheUIQueryPath, String queryDisplayName, String baseUrlForWS, String baseUrlForUI, String resourceName){
     new Query([
-      baseUrl: baseUrlForWS,
-      baseUrlForUI: baseUrlForUI,
+      baseUrl: baseUrlForWS?:grailsApplication.config.biocache.baseURL,
+      baseUrlForUI: baseUrlForUI?:grailsApplication.config.biocache.baseURL,
       resourceName:  resourceName,
       name: 'New records for ' + queryDisplayName,
       updateMessage: 'More occurrence records have been added for ' + queryDisplayName + ' - '+resourceName,
@@ -146,8 +146,8 @@ class QueryService {
 
   Query createTaxonQuery(String taxonGuid, String taxonName){
     new Query([
-      baseUrl: grailsApplication.config.biocacheURL,
-      baseUrlForUI: grailsApplication.config.biocacheURL,
+      baseUrl: grailsApplication.config.biocache.baseURL,
+      baseUrlForUI: grailsApplication.config.biocache.baseURL,
       name: 'New records for ' + taxonName,
       resourceName:  grailsApplication.config.postie.defaultResourceName,
       updateMessage: 'More occurrence records have been added for ' + taxonName,
@@ -164,8 +164,8 @@ class QueryService {
 
   Query createTaxonRegionQuery(String taxonGuid, String taxonName, String layerId, String regionName){
     new Query([
-      baseUrl: grailsApplication.config.biocacheURL,
-      baseUrlForUI: grailsApplication.config.biocacheURL,
+      baseUrl: grailsApplication.config.biocache.baseURL,
+      baseUrlForUI: grailsApplication.config.biocache.baseURL,
       name: 'New records for ' + taxonName + ' recorded in ' + regionName,
       resourceName:  grailsApplication.config.postie.defaultResourceName,
       updateMessage: 'More occurrence records have been added for ' + taxonName + ' recorded in ' + regionName,
@@ -182,8 +182,8 @@ class QueryService {
 
   Query createSpeciesGroupRegionQuery(String speciesGroup, String layerId, String regionName){
     new Query([
-      baseUrl: grailsApplication.config.biocacheURL,
-      baseUrlForUI: grailsApplication.config.biocacheURL,
+      baseUrl: grailsApplication.config.biocache.baseURL,
+      baseUrlForUI: grailsApplication.config.biocache.baseURL,
       name: 'New records for ' + speciesGroup + ' recorded in ' + regionName,
       resourceName:  grailsApplication.config.postie.defaultResourceName,
       updateMessage: 'More occurrence records have been added for ' + speciesGroup + ' recorded in ' + regionName,
@@ -200,8 +200,8 @@ class QueryService {
 
   Query createRegionQuery(String layerId, String regionName){
     new Query([
-      baseUrl: grailsApplication.config.biocacheURL,
-      baseUrlForUI: grailsApplication.config.biocacheURL,
+      baseUrl: grailsApplication.config.biocache.baseURL,
+      baseUrlForUI: grailsApplication.config.biocache.baseURL,
       name: 'New records for ' + regionName,
       resourceName:  grailsApplication.config.postie.defaultResourceName,
       updateMessage: 'More occurrence records have been added for ' + regionName,
