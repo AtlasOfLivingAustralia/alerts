@@ -41,9 +41,6 @@ class QueryController {
             queries.each {
                 def queryPathParams = getQueryAndFQ(it.queryPath)
                 def queryPathUIParams = getQueryAndFQ(it.queryPathForUI)
-
-                println(queryPathParams.q +"\t\t\t\t"+queryPathUIParams.q)
-
                 def qInconsistent = queryPathParams.q != queryPathUIParams.q
                 def fqInconsistent = queryPathParams.fq.size() != queryPathUIParams.fq.size()
                 if(!fqInconsistent){

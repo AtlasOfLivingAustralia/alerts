@@ -243,7 +243,6 @@ class AdminController {
                     userEmailMap.put(it.email.toLowerCase(),it.id.toString())
                 }
                 userEmailMap.each {email, id ->
-                    println email
                     def user = User.findByEmail(email)
                     if (user){
                         user.userId = id
@@ -273,7 +272,7 @@ class AdminController {
             return [error: error]
         } catch (Exception e) {
             def error = [error: "Failed calling web service. ${e.getClass()} ${e.getMessage()} ${e} URL= ${url}."]
-            println error.error
+            log.error(error.error)
             return [error: error]
         } finally {
             post.releaseConnection()
