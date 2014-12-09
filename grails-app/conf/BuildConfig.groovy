@@ -11,6 +11,8 @@ grails.project.source.level = 1.6
 //   run: [maxMemory:1024, minMemory:64, debug:false, maxPerm:256]
 //]
 
+grails.project.dependency.resolver = "maven"
+
 grails.project.dependency.resolution = {
     // inherit Grails' default dependencies
     inherits("global") {
@@ -22,20 +24,12 @@ grails.project.dependency.resolution = {
     legacyResolve false // whether to do a secondary resolve on plugin installation, not advised and here for backwards compatibility
 
     repositories {
-        inherits true // Whether to inherit repository definitions from plugins
-
-        grailsPlugins()
-        grailsHome()
-        grailsCentral()
-
         mavenLocal()
-        mavenCentral()
-        //mavenRepo "http://snapshots.repository.codehaus.org"
-        //mavenRepo "http://repository.codehaus.org"
-        //mavenRepo "http://download.java.net/maven/2/"
-        //mavenRepo "http://repository.jboss.com/maven2/"
-        mavenRepo "http://maven.ala.org.au/repository"
+        mavenRepo ("http://nexus.ala.org.au/content/groups/public/") {
+            updatePolicy 'always'
+        }
     }
+
     dependencies {
         // specify dependencies here under either 'build', 'compile', 'runtime', 'test' or 'provided' scopes eg.
 
@@ -45,18 +39,10 @@ grails.project.dependency.resolution = {
         runtime 'org.apache.httpcomponents:httpclient:4.2.2'
         runtime 'org.apache.httpcomponents:httpcore:4.2.2'
         runtime 'org.apache.httpcomponents:httpclient:4.2.2'
-
-//        runtime 'com.jayway.jsonpath:json-path:0.9.1'
-//        runtime 'com.jayway.jsonpath:json-path-parent:0.9.1'
-//        runtime 'com.jayway.jsonpath:json-path-assert:0.9.1'
-//        runtime 'net.minidev:json-smart:1.2'
-
         runtime 'com.jayway.jsonpath:json-path:0.5.6'
-        runtime 'com.jayway.jsonpath:json-path-parent:0.5.6'
         runtime 'com.jayway.jsonpath:json-path-assert:0.5.6'
-//        runtime 'net.minidev:json-smart:1.2'
-//        runtime 'com.jayway.jsonpath:json-path:0.5.6'
     }
+
     plugins {
         build ":release:3.0.1"
         runtime ":ala-web-theme:0.5"
