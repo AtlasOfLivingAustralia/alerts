@@ -153,7 +153,6 @@ security.cas.casServerUrlPrefix = 'https://auth.ala.org.au/cas'
 security.cas.bypass = false
 
 appContext = 'alerts'
-headerAndFooter.baseURL = 'http://www2.ala.org.au/commonui'
 ala.baseURL = "http://www.ala.org.au"
 bie.baseURL = "http://bie.ala.org.au"
 bie.searchPath = "/search"
