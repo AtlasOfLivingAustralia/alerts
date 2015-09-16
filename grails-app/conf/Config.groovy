@@ -134,11 +134,11 @@ log4j = {
 /************** Custom config ************************/
 
 postie.timezone = 'Australia/Sydney'
-postie.emailSender = 'info@ala.org.au'
+postie.emailSender = 'atlas-alerts@ala.org.au'
 postie.emailAlertAddressTitle = 'Atlas alerts'
 
 postie.emailInfoAddressTitle = 'Atlas of Living Australia'
-postie.emailInfoSender = 'info@ala.org.au'
+postie.emailInfoSender = 'atlas-alerts@ala.org.au'
 
 postie.defaultResourceName = 'Atlas'
 postie.enableEmail = true
