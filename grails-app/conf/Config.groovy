@@ -75,7 +75,11 @@ grails.exceptionresolver.params.exclude = ['password']
 grails.hibernate.cache.queries = false
 
 //override this in external configuration
-logging.dir = (System.getProperty('catalina.base') ? System.getProperty('catalina.base') + '/logs'  : '/var/log/tomcat6/')
+def logging_dir = (System.getProperty('catalina.base') ? System.getProperty('catalina.base') + '/logs'  : '/var/log/tomcat7/')
+if(!new File(logging_dir).exists()){
+    logging_dir = '/tmp'
+}
+
 
 // log4j configuration
 log4j = {
@@ -92,10 +96,10 @@ log4j = {
             production {
                 rollingFile name: "postie-prod",
                     maxFileSize: 104857600,
-                    file: logging.dir + "/alerts.log",
+                    file: logging_dir + "/alerts.log",
                     threshold: org.apache.log4j.Level.ERROR,
                     layout: pattern(conversionPattern: "%d [%c{1}]  %m%n")
-                rollingFile name: "stacktrace", maxFileSize: 1024, file: logging.dir + "/alerts-stacktrace.log"
+                rollingFile name: "stacktrace", maxFileSize: 1024, file: logging_dir + "/alerts-stacktrace.log"
             }
             development{
                 console name: "stdout", layout: pattern(conversionPattern: "%d [%c{1}]  %m%n"), threshold: org.apache.log4j.Level.DEBUG
