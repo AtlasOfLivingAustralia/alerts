@@ -45,7 +45,7 @@ grails.project.dependency.resolution = {
 
     plugins {
         build ":release:3.0.1"
-        runtime ":ala-bootstrap2:2.3"
+        runtime ":ala-bootstrap2:2.4"
         runtime ":ala-auth:1.3.1"
         runtime ":hibernate:3.6.10.16"
         runtime ":jquery:1.8.3"
