@@ -63,7 +63,7 @@ class AdminController {
                           )
                   }
              } catch (Exception e){
-                 log.error("Problem sending email to: " + user.email)
+                 log.error("Problem sending email to ${user.email} - ${e.message}")
              }
           }
       }
