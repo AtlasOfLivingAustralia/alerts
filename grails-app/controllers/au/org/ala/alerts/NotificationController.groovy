@@ -1,5 +1,7 @@
 package au.org.ala.alerts
 
+import grails.converters.JSON
+
 class NotificationController {
 
     def notificationService
@@ -12,25 +14,41 @@ class NotificationController {
     def myalerts = { redirect(action: "myAlerts", params: params) }
 
     def myAlerts = {
-
       User user = userService.getUser()
       log.debug('Viewing my alerts :  ' + user)
+      getUserAlertsConfig(user)
+    }
 
-      //enabled alerts
-      def notificationInstanceList = Notification.findAllByUser(user)
+    def getUserAlerts = {
+        User user = userService.getUserById(params.userId)
+        log.debug('Viewing my alerts :  ' + user)
+        def model = getUserAlertsConfig(user)
+        render model as JSON
+    }
 
-      //split into custom and non-custom...
-      def enabledQueries = notificationInstanceList.collect { it.query }
-      def enabledIds =  enabledQueries.collect { it.id }
+    def getUserAlertsConfig(User user) {
 
-      //all types
-      def allAlertTypes = Query.findAllByCustom(false)
+        log.debug('Viewing my alerts :  ' + user)
 
-      allAlertTypes.removeAll { enabledIds.contains(it.id) }
-      def customQueries = enabledQueries.findAll { it.custom }
-      def standardQueries = enabledQueries.findAll { !it.custom }
+        //enabled alerts
+        def notificationInstanceList = Notification.findAllByUser(user)
 
-      [disabledQueries:allAlertTypes, enabledQueries:standardQueries, customQueries:customQueries, frequencies:Frequency.listOrderByPeriodInSeconds(), user:user]
+        //split into custom and non-custom...
+        def enabledQueries = notificationInstanceList.collect { it.query }
+        def enabledIds =  enabledQueries.collect { it.id }
+
+        //all types
+        def allAlertTypes = Query.findAllByCustom(false)
+
+        allAlertTypes.removeAll { enabledIds.contains(it.id) }
+        def customQueries = enabledQueries.findAll { it.custom }
+        def standardQueries = enabledQueries.findAll { !it.custom }
+
+        [disabledQueries:allAlertTypes,
+         enabledQueries:standardQueries,
+         customQueries:customQueries,
+         frequencies:Frequency.listOrderByPeriodInSeconds(),
+         user:user]
     }
 
     def addMyAlert = {

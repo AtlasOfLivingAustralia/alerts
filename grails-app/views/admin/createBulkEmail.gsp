@@ -2,8 +2,8 @@
 <html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-  <meta name="layout" content="${grailsApplication.config.ala.layout}" />
-  <title>Send Bulk Email | Atlas of Living Australia</title>
+  <meta name="layout" content="${grailsApplication.config.skin.layout}" />
+  <title>Send Bulk Email | ${grailsApplication.config.skin.orgNameLong}</title>
 </head>
 <body>
 <div id="content">

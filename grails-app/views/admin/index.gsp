@@ -1,7 +1,7 @@
 <html>
 <head>
-  <title>Notification service | Atlas of Living Australia</title>
-  <meta name="layout" content="main" />
+  <title>Notification service | ${grailsApplication.config.skin.orgNameLong}</title>
+    <meta name="layout" content="${grailsApplication.config.skin.layout}" />
 </head>
 <body>
 <h1>Admin functions - Alert service</h1>

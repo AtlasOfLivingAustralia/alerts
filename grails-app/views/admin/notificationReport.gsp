@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
 	<head>
-		<meta name="layout" content="main">
+		<meta name="layout" content="${grailsApplication.config.skin.layout}" />
 		<g:set var="entityName" value="${message(code: 'query.label', default: 'Query')}" />
 		<title>Notification report | Atlas of Living Australia</title>
 	</head>

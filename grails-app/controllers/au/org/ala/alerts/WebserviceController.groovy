@@ -20,6 +20,12 @@ class WebserviceController {
     grailsApplication.config.serverName + grailsApplication.config.contextPath
   }
 
+  def listAlertsForUser = {
+
+
+
+  }
+
   /**
    * Service that returns a JSON callback response allowing consuming apps to create links
    * to create an alert or remove an alert
@@ -243,8 +249,6 @@ class WebserviceController {
 
     log.debug("Biocache annotation alerts lookup for...." + params.webserviceQuery)
 
-    //y(String biocacheWebserviceQueryPath, String biocacheUIQueryPath, String queryDisplayName, String baseUrlForWS, String baseUrlForUI, String resourceName)
-
     //check for notifications for this query and this user
     Query query = queryService.createBioCacheQuery(params.webserviceQuery,params.uiQuery,params.queryDisplayName,
             params.baseUrlForWS, params.baseUrlForUI, params.resourceName)
@@ -283,7 +287,6 @@ class WebserviceController {
   def createTaxonRegionAlert = {
 
     log.debug('createTaxonRegionAlert ' + params.regionName + ' : ' + params.layerId)
-
     if(params.regionName && params.layerId && params.taxonGuid && params.taxonName){
       //region + taxon
       Query newQuery = queryService.createTaxonRegionQuery(params.taxonGuid, params.taxonName, params.layerId, params.regionName)

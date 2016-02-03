@@ -4,20 +4,19 @@
 <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-        <meta name="layout" content="main" />
+        <meta name="layout" content="${grailsApplication.config.skin.layout}" />
         <g:set var="userPrefix" value="${adminUser ? user.email : 'My' }"/>
-        <title>${userPrefix} email alerts | Atlas of Living Australia</title>
+        <title>${userPrefix} email alerts | ${grailsApplication.config.skin.orgNameLong}</title>
         <r:require modules="bootstrapSwitch,alerts"/>
     </head>
     <body>
-      <a href="#page-body" class="skip"><g:message code="default.link.skip.label" default="Skip to content&hellip;"/></a>
       <div id="content">
           <header id="page-header">
             <div class="inner row-fluid">
               <nav id="breadcrumb" class="span12">
                 <ol class="breadcrumb">
-                  <li><a href="http://www.ala.org.au">Home</a> <span class="icon icon-arrow-right"></span></li>
-                  <li><a href="http://www.ala.org.au/my-profile/">My Profile</a> <span class="icon icon-arrow-right"></span></li>
+                  <li><a href="${grailsApplication.config.ala.baseURL}">Home</a> <span class="icon icon-arrow-right"></span></li>
+                  <li><a href="${grailsApplication.config.casServerName}/userdetails/myprofile">My Profile</a> <span class="icon icon-arrow-right"></span></li>
                   <li class="active">${userPrefix} email alerts</li>
                 </ol>
               </nav>
@@ -91,19 +90,19 @@
                             These include:
                             <ul>
                                 <li>
-                                    Collection pages e.g. <a href="http://collections.ala.org.au/public/show/co13">ANIC</a>
+                                    Data resource pages e.g. <a href="${grailsApplication.config.collection.searchURL}">${grailsApplication.config.collection.searchTitle}</a>
                                     for alerts on new records or annotations.
                                 </li>
                                 <li>
-                                    Species pages e.g. <a href="http://bie.ala.org.au/species/Tiliqua+rugosa">Shingle-back</a>
+                                    Species pages e.g. <a href="${grailsApplication.config.speciesPages.searchURL}">${grailsApplication.config.speciesPages.searchTitle}</a>
                                     for alerts on new records or annotations.
                                 </li>
                                 <li>
-                                    Region pages e.g. <a href="http://regions.ala.org.au/states/Australian+Capital+Territory">ACT</a>
+                                    Region pages e.g. <a href="${grailsApplication.config.regions.searchURL}">${grailsApplication.config.regions.searchTitle}</a>
                                     for alerts on new records or annotations.
                                 </li>
                                 <li>
-                                    Any <a href="http://biocache.ala.org.au/occurrences/search?q=passer">occurrence search</a>
+                                    Any <a href="${grailsApplication.config.occurrence.searchURL}">${grailsApplication.config.occurrence.searchTitle}</a>
                                     for alerts on new records or annotations.
                                 </li>
                             </ul>
@@ -120,7 +119,7 @@
 
           var addMyAlertUrl = 'addMyAlert/';
           var deleteMyAlertUrl = 'deleteMyAlert/';
-          var deleteMyAlertWRUrl ='deleteMyAlertWR/'
+          var deleteMyAlertWRUrl ='deleteMyAlertWR/';
 
           $(document).ready( function(){
 
@@ -128,7 +127,7 @@
                   if($(this).is(':checked')){
                      $.get(addMyAlertUrl + $(this).attr('id'));
                   } else {
-                      $.get(deleteMyAlertUrl + $(this).attr('id'));
+                     $.get(deleteMyAlertUrl + $(this).attr('id'));
                   }
               });
               $("#userFrequency").change(function(){

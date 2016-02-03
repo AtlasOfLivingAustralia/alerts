@@ -28,13 +28,13 @@ class BootStrap {
 
         if(Query.findAllByName('Annotations').isEmpty()){
           Query newAssertions = (new Query([
-                  baseUrl: grailsApplication.config.biocache.baseURL,
+                  baseUrl: grailsApplication.config.biocacheService.baseURL,
                   baseUrlForUI: grailsApplication.config.biocache.baseURL,
                   resourceName:  grailsApplication.config.postie.defaultResourceName,
                   name: 'Annotations',
                   updateMessage: 'annotations.update.message',
                   description: 'Notify me when annotations are made on any record.',
-                  queryPath: '/ws/occurrences/search?fq=user_assertions:true&q=user_assertions:true AND last_assertion_date:[___DATEPARAM___%20TO%20*]&sort=last_assertion_date&dir=desc&pageSize=20&facets=basis_of_record',
+                  queryPath: '/occurrences/search?fq=user_assertions:true&q=user_assertions:true AND last_assertion_date:[___DATEPARAM___%20TO%20*]&sort=last_assertion_date&dir=desc&pageSize=20&facets=basis_of_record',
                   queryPathForUI: '/occurrences/search?fq=user_assertions:true&q=last_assertion_date:[___DATEPARAM___%20TO%20*]&sort=last_assertion_date&dir=desc',
                   dateFormat: """yyyy-MM-dd'T'HH:mm:ss'Z'""",
                   emailTemplate: '/email/biocache',
@@ -47,13 +47,13 @@ class BootStrap {
 
         if(Query.findAllByName('New records').isEmpty()){
           Query newRecords = (new Query([
-                  baseUrl: grailsApplication.config.biocache.baseURL,
+                  baseUrl: grailsApplication.config.biocacheService.baseURL,
                   baseUrlForUI: grailsApplication.config.biocache.baseURL,
                   name: 'New records',
                   resourceName:  grailsApplication.config.postie.defaultResourceName,
                   updateMessage: 'more.records.update.message',
                   description: 'Notify me when new records are added.',
-                  queryPath: '/ws/occurrences/search?q=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc&pageSize=20&facets=basis_of_record',
+                  queryPath: '/occurrences/search?q=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc&pageSize=20&facets=basis_of_record',
                   queryPathForUI: '/occurrences/search?q=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc',
                   dateFormat: """yyyy-MM-dd'T'HH:mm:ss'Z'""",
                   emailTemplate: '/email/biocache',
@@ -66,13 +66,13 @@ class BootStrap {
 
         if(Query.findAllByName('New images').isEmpty()){
           Query newRecordsWithImages = (new Query([
-                  baseUrl: grailsApplication.config.biocache.baseURL,
+                  baseUrl: grailsApplication.config.biocacheService.baseURL,
                   baseUrlForUI: grailsApplication.config.biocache.baseURL,
                   name: 'New images',
                   resourceName:  grailsApplication.config.postie.defaultResourceName,
                   updateMessage: 'more.images.update.message',
                   description: 'Notify me when new images are added.',
-                  queryPath: '/ws/occurrences/search?q=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc&fq=multimedia:Image&pageSize=20&facets=basis_of_record',
+                  queryPath: '/occurrences/search?q=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc&fq=multimedia:Image&pageSize=20&facets=basis_of_record',
                   queryPathForUI: '/occurrences/search?q=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc&fq=multimedia:Image',
                   dateFormat: """yyyy-MM-dd'T'HH:mm:ss'Z'""",
                   emailTemplate: '/email/biocache',
@@ -86,12 +86,12 @@ class BootStrap {
 
         if(Query.findAllByName('Citizen science records').isEmpty()){
           Query newCitizenScienceRecords = (new Query([
-                  baseUrl: grailsApplication.config.biocache.baseURL,
+                  baseUrl: grailsApplication.config.biocacheService.baseURL,
                   baseUrlForUI: grailsApplication.config.biocache.baseURL,
                   name: 'Citizen science records',
                   updateMessage: 'more.cs.update.message',
                   description: 'Notify me when new citizen science records are added.',
-                  queryPath: '/ws/occurrences/search?q=first_loaded_date:[___DATEPARAM___%20TO%20*]&fq=data_resource_uid:dr364&sort=first_loaded_date&dir=desc&pageSize=20&facets=basis_of_record',
+                  queryPath: '/occurrences/search?q=first_loaded_date:[___DATEPARAM___%20TO%20*]&fq=data_resource_uid:dr364&sort=first_loaded_date&dir=desc&pageSize=20&facets=basis_of_record',
                   queryPathForUI: '/occurrences/search?q=first_loaded_date:[___DATEPARAM___%20TO%20*]&fq=data_resource_uid:dr364&sort=first_loaded_date&dir=desc',
                   dateFormat: """yyyy-MM-dd'T'HH:mm:ss'Z'""",
                   emailTemplate: '/email/biocache',
@@ -105,13 +105,13 @@ class BootStrap {
 
         if(Query.findAllByName('Citizen science records with images').isEmpty()){
           Query newCitizenScienceRecordsWithImages = (new Query([
-                  baseUrl: grailsApplication.config.biocache.baseURL,
+                  baseUrl: grailsApplication.config.biocacheService.baseURL,
                   baseUrlForUI: grailsApplication.config.biocache.baseURL,
                   name: 'Citizen science records with images',
                   resourceName:  grailsApplication.config.postie.defaultResourceName,
                   updateMessage: 'more.cs.images.update.message',
                   description: 'Notify me when new citizen science records with images are added.',
-                  queryPath: '/ws/occurrences/search?q=first_loaded_date:[___DATEPARAM___%20TO%20*]&fq=data_resource_uid:dr364&sort=first_loaded_date&dir=desc&pageSize=20&facets=basis_of_record&fq=multimedia:Image',
+                  queryPath: '/occurrences/search?q=first_loaded_date:[___DATEPARAM___%20TO%20*]&fq=data_resource_uid:dr364&sort=first_loaded_date&dir=desc&pageSize=20&facets=basis_of_record&fq=multimedia:Image',
                   queryPathForUI: '/occurrences/search?q=first_loaded_date:[___DATEPARAM___%20TO%20*]&fq=data_resource_uid:dr364&sort=first_loaded_date&dir=desc&fq=multimedia:Image',
                   dateFormat: """yyyy-MM-dd'T'HH:mm:ss'Z'""",
                   emailTemplate: '/email/biocache',

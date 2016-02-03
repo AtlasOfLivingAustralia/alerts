@@ -20,18 +20,6 @@ class DiffService {
     }
   }
 
-//  Boolean hasChangedJsonDiff(QueryResult queryResult, String last, Query query){
-//    if(last != null && queryResult.previousResult != null){
-//      List<String> ids1 = JsonPath.read(last, query.recordJsonPath + "." + query.idJsonPath)
-//      String previous = decompressZipped(queryResult.previousResult)
-//      List<String> ids2 = JsonPath.read(previous, query.recordJsonPath + "." + query.idJsonPath)
-//      List<String> diff = ids1.findAll { !ids2.contains(it) }
-//      !diff.empty
-//    } else {
-//      false
-//    }
-//  }
-
   boolean isCollectionOrArray(object) {
         [Collection, Object[]].any { it.isAssignableFrom(object.getClass()) }
   }

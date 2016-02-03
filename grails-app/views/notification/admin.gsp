@@ -1,7 +1,7 @@
 <html>
     <head>
         <title>Notification service | Atlas of Living Australia</title>
-        <meta name="layout" content="${grailsApplication.ala.layout}" />
+        <meta name="layout" content="${grailsApplication.config.skin.layout}" />
     </head>
     <body>
           <h1>Welcome to the Notification service</h1>

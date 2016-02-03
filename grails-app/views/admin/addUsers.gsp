@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-  <meta name="layout" content="${grailsApplication.config.ala.layout}" />
+  <meta name="layout" content="${grailsApplication.config.skin.layout}" />
   <g:set var="entityName" value="${message(code: 'notification.label', default: 'Notification')}" />
   <title>My email alerts | Atlas of Living Australia</title>
 </head>

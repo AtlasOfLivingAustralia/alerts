@@ -13,6 +13,7 @@ class UrlMappings {
 			}
 		}
 
+	"/ws/alerts/user/$userId"(controller:'notification', action: 'getUserAlerts')
     "/ws/$action"(controller:'webservice')
     "/ws/noauth/$action"(controller:'webservice')
 		"/"(controller:'notification', action:'index')

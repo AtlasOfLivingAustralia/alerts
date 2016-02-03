@@ -47,4 +47,9 @@ class UserService {
         }
         user
     }
+
+    User getUserById(userId) {
+        User.findByUserId(userId)
+    }
+
 }
