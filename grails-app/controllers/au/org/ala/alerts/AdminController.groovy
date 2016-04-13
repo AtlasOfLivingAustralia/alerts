@@ -25,11 +25,15 @@ class AdminController {
   def userService
 
   def findUser() {
-      List users = []
-      if (params.term) {
-          users = userService.findUsers(params.term)
+      if (!authService.userInRole("ROLE_ADMIN")){
+          response.sendError(401)
+      } else {
+          List users = []
+          if (params.term) {
+              users = userService.findUsers(params.term)
+          }
+          render view: "/admin/userAlerts", model: [users: users]
       }
-      render view: "/admin/userAlerts", model: [users: users]
   }
 
   def updateUserEmails(){
