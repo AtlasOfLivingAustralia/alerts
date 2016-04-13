@@ -62,7 +62,7 @@ class NotificationController {
 
         if (!user) {
             response.status = HttpStatus.SC_NOT_FOUND
-            response.sendError(HttpStatus.SC_NOT_FOUND, "Unrecognised token")
+            response.sendError(HttpStatus.SC_NOT_FOUND, "Unrecognised user")
         } else {
             log.debug('add my alert ' + params.id)
             def notificationInstance = new Notification()
@@ -90,7 +90,7 @@ class NotificationController {
 
         if (!user) {
             response.status = HttpStatus.SC_NOT_FOUND
-            response.sendError(HttpStatus.SC_NOT_FOUND, "Unrecognised token")
+            response.sendError(HttpStatus.SC_NOT_FOUND, "Unrecognised user")
         } else {
             def query = Query.get(params.id)
             log.debug('Deleting my alert :  ' + params.id + ' for user : ' + authService.getDisplayName())
