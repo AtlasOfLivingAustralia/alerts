@@ -67,6 +67,7 @@
       iPhone/iPad users: To view the images in this email, you may need to enable "Load Remote Images" on your iOS
       device. This is done via "Settings" then "Mail" on iOS5.
     </p>
-  
+
+    <g:render template="/email/unsubscribe"/>
   </body>
 </html>
