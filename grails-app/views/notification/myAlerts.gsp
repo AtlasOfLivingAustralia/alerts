@@ -125,9 +125,9 @@
 
               $(".query-cb").change(function(e){
                   if($(this).is(':checked')){
-                     $.get(addMyAlertUrl + $(this).attr('id'));
+                     $.get(addMyAlertUrl + $(this).attr('id') + '?userId=${userId}');
                   } else {
-                     $.get(deleteMyAlertUrl + $(this).attr('id'));
+                     $.get(deleteMyAlertUrl + $(this).attr('id')+ '?userId=${userId}');
                   }
               });
               $("#userFrequency").change(function(){
