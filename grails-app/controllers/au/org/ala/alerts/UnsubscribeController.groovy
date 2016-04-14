@@ -17,7 +17,7 @@ class UnsubscribeController {
         } else {
             Map userAndNotifications = user ? [user: user, notifications: user.notifications] : findUserAndNotificationsForToken(params.token)
 
-            if (userAndNotifications) {
+            if (userAndNotifications.user) {
                 render view: "/unsubscribe/index", model: userAndNotifications
             } else {
                 response.status = HttpStatus.SC_BAD_REQUEST
