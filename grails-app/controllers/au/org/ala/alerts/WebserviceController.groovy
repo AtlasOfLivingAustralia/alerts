@@ -325,22 +325,22 @@ class WebserviceController {
 
   @RequireApiKey
   def deleteAllAlertsForUser() {
-    def user = null
-    if (authService.userInRole("ROLE_ADMIN")) {
-      user = userService.getUserById(params.userId)
-    } else if (params.userId) {
-      user = userService.getUserById(params.userId)
-    } else {
+    if (!params.userId) {
       response.status = HttpStatus.SC_BAD_REQUEST
-      response.sendError(HttpStatus.SC_BAD_REQUEST, "Unrecognised user")
-    }
+      response.sendError(HttpStatus.SC_BAD_REQUEST, "userId is a required parameter")
+    } else {
+      def user = userService.getUserById(params.userId)
 
-    if (user) {
-      List<Notification> notifications = Notification.findAllByUser(user)
-      if (notifications) {
-        Notification.deleteAll(notifications)
-        user.notifications?.clear()
-        user.save(flush: true)
+      if (user) {
+        List<Notification> notifications = Notification.findAllByUser(user)
+        if (notifications) {
+          Notification.deleteAll(notifications)
+          user.notifications?.clear()
+          user.save(flush: true)
+        }
+      } else {
+        response.status = HttpStatus.SC_NOT_FOUND
+        response.sendError(HttpStatus.SC_NOT_FOUND, "Unable to find user with userId ${params.userId}")
       }
     }
   }
