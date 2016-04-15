@@ -9,41 +9,39 @@ class UnsubscribeController {
     UserService userService
 
     def index() {
-        User user = userService.getUser()
+        User loggedInUser = userService.getUser()
 
-        if (!user && !params.token || (user && params.token && user.unsubscribeToken != params.token)) {
+        Map userAndNotifications = findUserAndNotificationsForToken(params.token)
+
+        if (!userAndNotifications?.user) {
             response.status = HttpStatus.SC_BAD_REQUEST
             response.sendError(HttpStatus.SC_BAD_REQUEST)
+        } else if (loggedInUser && userAndNotifications.user.userId != loggedInUser.userId) {
+            response.status = HttpStatus.SC_FORBIDDEN
+            response.sendError(HttpStatus.SC_FORBIDDEN)
         } else {
-            Map userAndNotifications = user ? [user: user, notifications: user.notifications] : findUserAndNotificationsForToken(params.token)
-
-            if (userAndNotifications.user) {
-                render view: "/unsubscribe/index", model: userAndNotifications
-            } else {
-                response.status = HttpStatus.SC_BAD_REQUEST
-                response.sendError(HttpStatus.SC_BAD_REQUEST, "Unrecognized token")
-            }
+            render view: "/unsubscribe/index", model: userAndNotifications
         }
     }
 
     def unsubscribe() {
-        User user = userService.getUser()
+        User loggedInUser = userService.getUser()
 
-        if (!user && !params.token || (user && params.token && user.unsubscribeToken != params.token)) {
+        Map userAndNotifications = findUserAndNotificationsForToken(params.token)
+
+        if (!userAndNotifications?.user) {
             response.status = HttpStatus.SC_BAD_REQUEST
             response.sendError(HttpStatus.SC_BAD_REQUEST)
+        } else if (loggedInUser && userAndNotifications.user.userId != loggedInUser.userId) {
+            response.status = HttpStatus.SC_FORBIDDEN
+            response.sendError(HttpStatus.SC_FORBIDDEN)
         } else {
-            Map userAndNotifications = user ? [user: user, notifications: user.notifications] : findUserAndNotificationsForToken(params.token)
-
             if (userAndNotifications.notifications) {
                 Notification.deleteAll(userAndNotifications.notifications)
-                userAndNotifications.user.notifications?.clear()
+                userAndNotifications.user.notifications?.removeAll(userAndNotifications.notifications)
                 userAndNotifications.user.save(flush: true)
 
                 render view: "unsubscribed"
-            } else {
-                response.status = HttpStatus.SC_NOT_FOUND
-                response.sendError(HttpStatus.SC_NOT_FOUND, "Unrecognised token")
             }
         }
     }
@@ -53,20 +51,28 @@ class UnsubscribeController {
     }
 
     private Map findUserAndNotificationsForToken(String token) {
+        Map userAndNotifications = [:]
+
+        List<Notification> notifications
         User user
+        if (token) {
+            notifications = Notification.findAllByUnsubscribeToken(token)
+            if (notifications) {
+                userAndNotifications = [user: notifications[0].user, notifications: notifications]
+            } else {
+                user = User.findByUnsubscribeToken(token)
 
-        List<Notification> notifications = Notification.findAllByUnsubscribeToken(token)
-        if (notifications) {
-            user = notifications[0].user
+                if (user) {
+                    userAndNotifications = [user: user, notifications: user.notifications]
+                }
+            }
         } else {
-            user = User.findByUnsubscribeToken(token)
-
+            user = userService.getUser()
             if (user) {
-                notifications = user.notifications as List
+                userAndNotifications = [user: user, notifications: user?.notifications]
             }
         }
 
-        [user: user, notifications: notifications]
+        userAndNotifications
     }
-
 }
