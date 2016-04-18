@@ -35,5 +35,8 @@
     </g:each>
     </table>
     </g:if>
+
+    <g:render template="/email/unsubscribe"/>
+
   </body>
 </html>

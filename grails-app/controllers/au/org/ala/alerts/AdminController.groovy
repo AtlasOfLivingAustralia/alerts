@@ -24,6 +24,18 @@ class AdminController {
 
   def userService
 
+  def findUser() {
+      if (!authService.userInRole("ROLE_ADMIN")){
+          response.sendError(401)
+      } else {
+          List users = []
+          if (params.term) {
+              users = userService.findUsers(params.term)
+          }
+          render view: "/admin/userAlerts", model: [users: users]
+      }
+  }
+
   def updateUserEmails(){
       if(authService.userInRole("ROLE_ADMIN")){
           def updated = userService.updateUserEmails()
@@ -279,30 +291,7 @@ class AdminController {
         }
   }
 
-//  def saveUsers = {
-//
-//    def emailAddresses = params.usersToAdd.toString().split("\n")
-//
-//    def monthlyFrequency = Frequency.findByName("monthly")
-//
-//    def blogQuery = Query.findByName("Blogs and News")
-//
-//    log.debug("Retrieved blog query: " + blogQuery)
-//
-//    emailAddresses.each { email ->
-//      if (email.trim().length() >0){
-//        log.debug('Adding user: ' + email.trim().toLowerCase())
-//        //add to the DB
-//        User user = User.findByEmail(email.trim())
-//        if (user == null){
-//          user = new User([email:email.trim().toLowerCase(), frequency:monthlyFrequency ])
-//          user.save(flush:true)
-//
-//          //add notification to blogs
-//          Notification n = new Notification([user: user, query:blogQuery])
-//          n.save(flush: true)
-//        }
-//      }
-//    }
-//  }
+  def unsubscribeUser(String id) {
+
+  }
 }

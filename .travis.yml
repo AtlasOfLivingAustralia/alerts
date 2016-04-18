@@ -12,7 +12,7 @@ before_install:
  - source ./ala_common.sh
  - ala_travis_grails_setup_env
 script:
- - ala_travis_grails_build
+- grails clean && grails refresh-dependencies --non-interactive && grails test-app --stacktrace --non-interactive && grails prod war --non-interactive && grails prod maven-deploy --repository=$MAVEN_REPO --non-interactive --stacktrace
 env:
   global:
   - secure: OqyYLYoeTw2ifeopsXEQnLDF8DA5j12iSH9mKGXjE6abkrhXCghWOtb+jGstRvJr/ZrpJfFK3VOkistgkf6y8/RYxB7a0MJsr+1GUXtdHhtPbUcShJDybj6AlbgPCI2J4VdIQSB+ey2XZKOMOO3+XwbsczrTHBh5KpBHdI7Tw8I=

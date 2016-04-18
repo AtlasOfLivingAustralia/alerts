@@ -29,7 +29,7 @@ class UserService {
 
         def userDetails = authService.userDetails()
 
-        if (!userDetails["userId"]) {
+        if (!userDetails?.userId) {
             log.error "User isn't logged in - or there is a problem with CAS configuration"
             return null
         }
@@ -52,4 +52,7 @@ class UserService {
         User.findByUserId(userId)
     }
 
+    List<User> findUsers(String term) {
+        User.findAllByEmailIlike("%${term}%")
+    }
 }

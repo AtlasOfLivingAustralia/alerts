@@ -79,5 +79,8 @@
       device. This is done via "Settings" then "Mail" on iOS5.
     </p>
     </div>
+
+    <g:render template="/email/unsubscribe"/>
+
   </body>
 </html>

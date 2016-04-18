@@ -2,14 +2,28 @@ package au.org.ala.alerts
 
 class User {
 
-  String userId //ALA CAS ID
-  String email
-  Frequency frequency
-  static hasMany = [ notifications : Notification ]
+    String userId //ALA CAS ID
+    String email
+    Frequency frequency
+    String unsubscribeToken
+    static hasMany = [notifications: Notification]
 
-  static constraints = {
-     frequency nullable:true
-  }
+    static constraints = {
+        frequency nullable: true
+        unsubscribeToken nullable: true
+    }
 
-  public String toString(){ userId + " - " + email }
+    /**
+     * Generate a new unsubscribe token each time the user is updated - this reduces the chance that a token can be
+     * maliciously re-used by ensuring any change the user produces a new token. This isn't perfect, of course.
+     */
+    def beforeUpdate() {
+        unsubscribeToken = UUID.randomUUID().toString()
+    }
+
+    def beforeInsert() {
+        unsubscribeToken = UUID.randomUUID().toString()
+    }
+
+    public String toString() { userId + " - " + email }
 }

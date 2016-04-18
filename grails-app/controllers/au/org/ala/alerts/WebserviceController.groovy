@@ -1,5 +1,7 @@
 package au.org.ala.alerts
 
+import au.ala.org.ws.security.RequireApiKey
+import org.apache.http.HttpStatus
 import org.codehaus.groovy.grails.web.servlet.mvc.GrailsParameterMap
 
 class WebserviceController {
@@ -7,6 +9,7 @@ class WebserviceController {
   def queryService
   def userService
   def grailsApplication
+  def authService
 
   def index = {}
 
@@ -21,9 +24,6 @@ class WebserviceController {
   }
 
   def listAlertsForUser = {
-
-
-
   }
 
   /**
@@ -322,7 +322,29 @@ class WebserviceController {
     n.delete(flush:true)
     redirectIfSupplied(params)
   }
-  
+
+  @RequireApiKey
+  def deleteAllAlertsForUser() {
+    if (!params.userId) {
+      response.status = HttpStatus.SC_BAD_REQUEST
+      response.sendError(HttpStatus.SC_BAD_REQUEST, "userId is a required parameter")
+    } else {
+      def user = userService.getUserById(params.userId)
+
+      if (user) {
+        List<Notification> notifications = Notification.findAllByUser(user)
+        if (notifications) {
+          Notification.deleteAll(notifications)
+          user.notifications?.clear()
+          user.save(flush: true)
+        }
+      } else {
+        response.status = HttpStatus.SC_NOT_FOUND
+        response.sendError(HttpStatus.SC_NOT_FOUND, "Unable to find user with userId ${params.userId}")
+      }
+    }
+  }
+
   private User retrieveUser(params){
     User user = userService.getUser()
     if(user == null && params.userName){

@@ -12,12 +12,18 @@ environments {
         dataSource {
             dbCreate = "update"
             url = "jdbc:mysql://localhost:3306/alerts"
-            username = "root"
-            password = "password"
+            username = "alerts_user"
+            password = "alerts_user"
             driverClassName = "com.mysql.jdbc.Driver"
         }
     }
-
+    test {
+        dataSource {
+            dialect = "org.hibernate.dialect.H2Dialect"
+            dbCreate = "create-drop"
+            url = "jdbc:h2:mem:alerts;MVCC=TRUE;LOCK_TIMEOUT=10000;MODE=MYSQL;DB_CLOSE_ON_EXIT=FALSE;"
+        }
+    }
     production {
         dataSource {
             dbCreate = "update"

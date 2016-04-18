@@ -49,6 +49,7 @@ grails.project.dependency.resolution = {
         runtime ":ala-auth:1.3.1"
         runtime ":hibernate:3.6.10.16"
         runtime ":resources:1.2.8"
+        runtime ":ala-ws-security:1.3"
         compile ":mail:1.0.1"
         runtime ":pretty-time:0.3"
         runtime ":quartz:1.0.1"

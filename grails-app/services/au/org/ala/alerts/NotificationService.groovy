@@ -69,7 +69,7 @@ class NotificationService {
         qr.save(true)
         qr.hasChanged
     } catch (Exception e){
-        log.error("[QUERY " + query.id + "] There was a problem checking the URL :" + urlString, e)
+        log.error("[QUERY " + query.id + "] There was a problem checking the URL: " + urlString, e)
     }
   }
 
@@ -423,17 +423,18 @@ class NotificationService {
         //send an email
 
         def users = Query.executeQuery(
-               """select u from User u
+               """select u.email, u.unsubscribeToken, n.unsubscribeToken from User u
                   inner join u.notifications n
                   where n.query = :query
                   and u.frequency = :frequency
                   group by u""", [query: query, frequency: frequency])
 
-        List<String> emailAddresses = new ArrayList<String>()
-        users.each { user -> emailAddresses.add(user.email) }
-        log.debug("Sending emails to...." + emailAddresses.join(","))
+        List<Map> recipients = users.collect { user ->
+          [email: user[0], userUnsubToken: user[1], notificationUnsubToken: user[2]]
+        }
+        log.debug("Sending emails to...." + recipients*.email.join(","))
         if(!users.isEmpty()){
-          emailService.sendGroupNotification(query, frequency, emailAddresses)
+          emailService.sendGroupNotification(query, frequency, recipients)
         }
       }
     }
@@ -465,7 +466,7 @@ class NotificationService {
         //send separate emails for now
         //if there is a change, generate an email list
         //send an email
-        emailService.sendGroupNotification(query, user.frequency, [user.email])
+        emailService.sendGroupNotification(query, user.frequency, [[email: user.email, userToken: user.unsubscribeToken, notificationToken: ""]])
       }
     }
   }

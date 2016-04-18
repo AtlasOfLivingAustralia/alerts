@@ -271,5 +271,8 @@
     </tr>
     </tbody>
 </table>
+
+<g:render template="/email/unsubscribe"/>
+
 </body>
 </html>

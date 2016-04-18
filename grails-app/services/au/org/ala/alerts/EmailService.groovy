@@ -89,7 +89,7 @@ class EmailService {
         ]
     }
 
-    def sendGroupNotification(Query query, Frequency frequency, List<String> addresses) {
+    def sendGroupNotification(Query query, Frequency frequency, List<Map> recipients) {
 
         log.debug("Using email template: " + query.emailTemplate)
         QueryResult queryResult = QueryResult.findByQueryAndFrequency(query, frequency)
@@ -99,11 +99,11 @@ class EmailService {
         Integer totalRecords = queryService.fireWhenNotZeroProperty(queryResult)
 
         if (grailsApplication.config.postie.enableEmail) {
-            addresses.each { address ->
-                sendGroupEmail(query, [address], queryResult, records, frequency, totalRecords)
+            recipients.each { recipient ->
+                sendGroupEmail(query, [recipient.email], queryResult, records, frequency, totalRecords, recipient.userUnsubToken, recipient.notificationUnsubToken)
             }
         } else {
-            log.debug("Email would have been sent to: " + addresses.join(','))
+            log.debug("Email would have been sent to: " + recipients*.email.join(','))
             log.debug("message:" + query.updateMessage)
             log.debug("moreInfo:" + queryResult.queryUrlUIUsed)
             log.debug("stopNotification:" + grailsApplication.config.security.cas.appServerName + grailsApplication.config.security.cas.contextPath + '/notification/myAlerts')
@@ -113,7 +113,8 @@ class EmailService {
         }
     }
 
-    private void sendGroupEmail(Query query, subsetOfAddresses, QueryResult queryResult, records, Frequency frequency, int totalRecords) {
+    private void sendGroupEmail(Query query, subsetOfAddresses, QueryResult queryResult, records, Frequency frequency, int totalRecords, String userUnsubToken, String notificationUnsubToken) {
+        String urlPrefix = "${grailsApplication.config.security.cas.appServerName}${grailsApplication.config.security.cas.contextPath}"
         try {
             sendMail {
                 from grailsApplication.config.postie.emailAlertAddressTitle + "<" + grailsApplication.config.postie.emailSender + ">"
@@ -125,10 +126,12 @@ class EmailService {
                         message: query.updateMessage,
                         query: query,
                         moreInfo: queryResult.queryUrlUIUsed,
-                        stopNotification: grailsApplication.config.security.cas.appServerName + grailsApplication.config.security.cas.contextPath + '/notification/myAlerts',
+                        stopNotification: urlPrefix + '/notification/myAlerts',
                         records: records,
                         frequency: frequency,
-                        totalRecords: totalRecords
+                        totalRecords: totalRecords,
+                        unsubscribeAll: urlPrefix + "/unsubscribe?token=" + userUnsubToken,
+                        unsubscribeOne: urlPrefix + "/unsubscribe?token=" + notificationUnsubToken
                     ])
             }
         } catch(Exception e){
