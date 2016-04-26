@@ -1,6 +1,7 @@
 package au.org.ala.alerts
 
 import au.ala.org.ws.security.RequireApiKey
+import grails.converters.JSON
 import org.apache.http.HttpStatus
 import org.codehaus.groovy.grails.web.servlet.mvc.GrailsParameterMap
 
@@ -338,6 +339,8 @@ class WebserviceController {
           user.notifications?.clear()
           user.save(flush: true)
         }
+
+        render ([success: true] as JSON)
       } else {
         response.status = HttpStatus.SC_NOT_FOUND
         response.sendError(HttpStatus.SC_NOT_FOUND, "Unable to find user with userId ${params.userId}")
