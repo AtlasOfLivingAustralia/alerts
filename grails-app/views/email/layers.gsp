@@ -28,7 +28,7 @@
           ${layer.description}
         </td>
         <td>
-           <a href="http://spatial.ala.org.au/layers/more/${layer.name}">click to layer details</a>
+           <a href="${grailsApplication.config.spatial.baseURL}/layers/more/${layer.name}">click to layer details</a>
         </td>
       </tr>
       </tbody>

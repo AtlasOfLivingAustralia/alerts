@@ -2,6 +2,6 @@
     <div>
         To stop receiving alerts for ${query.name}, <a href="${unsubscribeOne}">click here</a>.
 
-        To stop receiving all Atlas of Living Australia alerts, <a href="${unsubscribeAll}">click here</a>.
+        To stop receiving all ${grailsApplication.config.skin.orgNameLong} alerts, <a href="${unsubscribeAll}">click here</a>.
     </div>
 </div>

@@ -4,7 +4,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
   <meta name="layout" content="${grailsApplication.config.skin.layout}" />
   <g:set var="entityName" value="${message(code: 'notification.label', default: 'Notification')}" />
-  <title>My email alerts | Atlas of Living Australia</title>
+  <title>My email alerts | ${grailsApplication.config.skin.orgNameLong}</title>
 </head>
 <body>
 <div id="content">

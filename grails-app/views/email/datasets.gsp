@@ -24,7 +24,7 @@
       <tr>
         <td>${dataset.name}</td>
          <td>
-           <a href="http://collections.ala.org.au/public/show/${dataset.uid}">click to details</a>
+           <a href="${grailsApplication.config.collectory.baseURL}/public/show/${dataset.uid}">click to details</a>
          </td>
       </tr>
       </tbody>
