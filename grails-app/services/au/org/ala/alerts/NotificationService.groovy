@@ -423,7 +423,8 @@ class NotificationService {
         //send an email
 
         def users = Query.executeQuery(
-               """select u.email, u.unsubscribeToken, n.unsubscribeToken from User u
+               """select u.email, max(u.unsubscribeToken), max(n.unsubscribeToken)
+                  from User u
                   inner join u.notifications n
                   where n.query = :query
                   and u.frequency = :frequency

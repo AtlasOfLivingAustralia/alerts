@@ -109,6 +109,7 @@ class QueryService {
   }
 
   Query createBioCacheAnnotationQuery(String biocacheWebserviceQueryPath, String biocacheUIQueryPath, String queryDisplayName, String baseUrlForWS, String baseUrlForUI, String resourceName){
+    // Alert for Unconfirmed (50005), Verified (50002), Corrected (50003)
     new Query([
       baseUrl: baseUrlForWS?:grailsApplication.config.biocache.baseURL,
       baseUrlForUI: baseUrlForUI?:grailsApplication.config.biocache.baseURL,
@@ -116,8 +117,8 @@ class QueryService {
       name: 'New annotations on records for ' + queryDisplayName,
       updateMessage: 'Annotations have been added for ' + queryDisplayName,
       description: 'Notify me when new annotations are added for ' + queryDisplayName,
-      queryPath: biocacheWebserviceQueryPath + '&fq=user_assertions:true&fq=last_assertion_date:[___DATEPARAM___%20TO%20*]&sort=last_assertion_date&dir=desc&pageSize=20&facets=basis_of_record',
-      queryPathForUI: biocacheUIQueryPath + '&fq=user_assertions:true&fq=last_assertion_date:[___DATEPARAM___%20TO%20*]&sort=last_assertion_date&dir=desc',
+      queryPath: biocacheWebserviceQueryPath + '&fq=(user_assertions:50005%20OR%20user_assertions:50003%20OR%20user_assertions:50002)&fq=last_assertion_date:[___DATEPARAM___%20TO%20*]&sort=last_assertion_date&dir=desc&pageSize=20&facets=basis_of_record',
+      queryPathForUI: biocacheUIQueryPath + '&fq=(user_assertions:50005%20OR%20user_assertions:50003%20OR%20user_assertions:50002)&fq=last_assertion_date:[___DATEPARAM___%20TO%20*]&sort=last_assertion_date&dir=desc',
       dateFormat: """yyyy-MM-dd'T'HH:mm:ss'Z'""",
       emailTemplate: '/email/biocache',
       recordJsonPath: '\$.occurrences',
