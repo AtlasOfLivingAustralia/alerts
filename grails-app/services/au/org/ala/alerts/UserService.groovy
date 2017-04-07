@@ -25,9 +25,11 @@ class UserService {
         toUpdate.size()
     }
 
-    User getUser() {
+    User getUser(userDetailsParam = null) {
 
-        def userDetails = authService.userDetails()
+        def userDetails = !userDetailsParam? authService.userDetails(): userDetailsParam
+
+       // def userDetails = authService.userDetails()
 
         if (!userDetails?.userId) {
             log.error "User isn't logged in - or there is a problem with CAS configuration"

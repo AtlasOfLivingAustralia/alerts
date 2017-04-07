@@ -348,6 +348,28 @@ class WebserviceController {
     }
   }
 
+  @RequireApiKey
+  def createUserAlerts() {
+    if (!params.userId) {
+      response.status = HttpStatus.SC_BAD_REQUEST
+      response.sendError(HttpStatus.SC_BAD_REQUEST, "userId is a required parameter")
+    } else {
+      def user = User.findByUserId(params.userId)
+      if (!user) {
+        Map userDetails = ["userId": params.userId, "email": params.email, "userDisplayName": params.firstName + " " + params.lastName]
+        user = userService.getUser(userDetails)
+        response.status = HttpStatus.SC_CREATED
+      } else {
+        response.status = HttpStatus.SC_OK
+      }
+
+      def notificationInstanceList = Notification.findAllByUser(user)
+      def enabledQueries = notificationInstanceList.collect { it.query?.name }
+      render(enabledQueries as JSON)
+    }
+  }
+
+
   private User retrieveUser(params){
     User user = userService.getUser()
     if(user == null && params.userName){

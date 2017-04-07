@@ -27,6 +27,8 @@ class UrlMappings {
         // they are always invoked via javascript (and have the CAS cookie), but doesn't work when invoked from a service.
         // /api/* will not be protected by CAS, but all operations should be protected with @RequireApiKey
         "/api/alerts/user/$userId/unsubscribe"(controller: 'webservice', action: [POST: 'deleteAllAlertsForUser'])
+        "/api/alerts/user/createAlerts"(controller: 'webservice', action: [POST: 'createUserAlerts'])
+
     }
 
 }
