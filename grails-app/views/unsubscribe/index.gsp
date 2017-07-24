@@ -5,7 +5,8 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <meta name="layout" content="${grailsApplication.config.skin.layout}"/>
-
+    <meta name="breadcrumb" content="Unsubscribe" />
+    <meta name="breadcrumbParent" content="${request.contextPath?:'/'},Alerts" />
     <title>Unsubscribe</title>
     <r:require modules="bootstrapSwitch,alerts"/>
 </head>
@@ -13,7 +14,7 @@
 <body>
 <div id="content">
     <header id="page-header">
-        <div class="inner row-fluid">
+        <div class="inner row">
             <hgroup>
                 <h1>Unsubscribe</h1>
             </hgroup>

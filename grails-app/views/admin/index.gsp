@@ -2,6 +2,8 @@
 <head>
     <title>Notification service | ${grailsApplication.config.skin.orgNameLong}</title>
     <meta name="layout" content="${grailsApplication.config.skin.layout}"/>
+    <meta name="breadcrumb" content="Admin functions" />
+    <meta name="breadcrumbParent" content="${request.contextPath?:'/'},Alerts" />
 </head>
 
 <body>

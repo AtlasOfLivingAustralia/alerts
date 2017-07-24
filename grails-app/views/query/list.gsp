@@ -4,6 +4,8 @@
 <html>
 	<head>
 		<meta name="layout" content="${grailsApplication.config.skin.layout}" />
+		<meta name="breadcrumb" content="Query list" />
+		<meta name="breadcrumbParent" content="${request.contextPath?:'/'},Alerts" />
 		<g:set var="entityName" value="${message(code: 'query.label', default: 'Query')}" />
 		<title><g:message code="default.list.label" args="[entityName]" /></title>
 	</head>

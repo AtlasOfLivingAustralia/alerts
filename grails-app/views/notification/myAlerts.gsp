@@ -5,6 +5,8 @@
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
         <meta name="layout" content="${grailsApplication.config.skin.layout}" />
+        <meta name="breadcrumb" content="My alerts" />
+        <meta name="breadcrumbParent" content="${grailsApplication.config.security.cas.casServerName}/userdetails/myprofile, My profile" />
         <g:set var="userPrefix" value="${adminUser ? user.email : 'My' }"/>
         <title>${userPrefix} email alerts | ${grailsApplication.config.skin.orgNameLong}</title>
         <r:require modules="bootstrapSwitch,alerts"/>
@@ -13,13 +15,6 @@
       <div id="content">
           <header id="page-header">
             <div class="inner row-fluid">
-              <nav id="breadcrumb" class="span12">
-                <ol class="breadcrumb">
-                  <li><a href="${grailsApplication.config.ala.baseURL}">Home</a> <span class="icon icon-arrow-right"></span></li>
-                  <li><a href="${grailsApplication.config.casServerName}/userdetails/myprofile">My Profile</a> <span class="icon icon-arrow-right"></span></li>
-                  <li class="active">${userPrefix} email alerts</li>
-                </ol>
-              </nav>
               <hgroup>
                 <h1>${userPrefix} email alerts</h1>
               </hgroup>
@@ -31,8 +26,8 @@
                   Send me alerts:
                   <g:select name="userFrequency" from="${frequencies}" id="userFrequency" value="${user?.frequency?.name}" optionKey="name" />
                 </h3>
-            <div class="row-fluid">
-                <div class="span6">
+            <div class="row">
+                <div class="col-md-6">
                     <table>
                         <tbody>
                         <g:each in="${enabledQueries}" status="i" var="query">
@@ -64,6 +59,7 @@
                         </tbody>
                     </table>
                     <g:if test="${customQueries}">
+                    <hr>
                     <h2 id="customQueriesHdr">My custom alerts</h2>
                     <table>
                         <tbody id="customQueries">
@@ -74,7 +70,7 @@
                                   ${query.description}
                                 </td>
                                 <td class="queryActions">
-                                    <a href="javascript:void(0);" class='btn-ala btn deleteButton' id='${query.id}'>Delete</a>
+                                    <a href="javascript:void(0);" class='btn btn-danger deleteButton' id='${query.id}'>Delete</a>
                                 </td>
                             </tr>
                         </g:each>
@@ -82,7 +78,7 @@
                     </table>
                     </g:if>
                  </div>
-                <div class="span6">
+                <div class="col-md-6">
                     <div class="well">
                         <p>Enable an alert to have emails sent to your email address <b>${user.email}</b></p>
                         <p>
@@ -108,7 +104,7 @@
                             </ul>
                         </p>
                         <p>
-                            Look for the <a class="btn" href="javascript:void(0);" disabled="true"><i class="icon icon-bell"></i> Alerts</a> button.
+                            Look for the <a class="btn btn-default" href="javascript:void(0);" disabled="true"><i class="icon icon-bell"></i> Alerts</a> button.
                         </p>
                     </div>
                 </div>

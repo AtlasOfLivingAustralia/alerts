@@ -32,9 +32,12 @@ grails.project.dependency.resolution = {
 
     dependencies {
         // specify dependencies here under either 'build', 'compile', 'runtime', 'test' or 'provided' scopes eg.
-
-        runtime 'mysql:mysql-connector-java:5.1.13'
-
+        runtime 'mysql:mysql-connector-java:5.1.40'
+        runtime 'commons-lang:commons-lang:2.6'
+        runtime 'org.hamcrest:hamcrest-core:1.3'
+        runtime 'org.hamcrest:hamcrest-library:1.3'
+        runtime 'net.minidev:json-smart:1.3.1'
+        runtime 'xalan:xalan:2.7.2'
         runtime 'org.apache.httpcomponents:httpcore:4.2.2'
         runtime 'org.apache.httpcomponents:httpclient:4.2.2'
         runtime 'org.apache.httpcomponents:httpcore:4.2.2'
@@ -45,25 +48,22 @@ grails.project.dependency.resolution = {
 
     plugins {
         build ":release:3.0.1"
-        runtime ":ala-bootstrap2:2.4"
-        runtime ":ala-auth:1.3.1"
+        build ":tomcat:7.0.54"
+
         runtime ":hibernate:3.6.10.16"
-        runtime ":resources:1.2.8"
-        runtime ":ala-ws-security:1.3"
-        compile ":mail:1.0.1"
+        runtime ":resources:1.2.14"
         runtime ":pretty-time:0.3"
         runtime ":quartz:1.0.1"
         runtime ":quartz-monitor:1.0"
-        compile ":scaffolding:2.0.3"
+
+        compile ":mail:1.0.7"
+        compile ":scaffolding:2.1.2"
         compile ":markdown:1.1.1"
+        compile ':cache:1.1.8'
 
-        // Uncomment these (or add new ones) to enable additional resources capabilities
-        //runtime ":zipped-resources:1.0"
-        //runtime ":cached-resources:1.0"
-        //runtime ":yui-minify-resources:0.1.5"
-
-        build ":tomcat:7.0.54"
-
-        compile ':cache:1.0.1'
+        runtime ":ala-bootstrap3:2.0.0"
+        runtime ":ala-admin-plugin:1.3"
+        runtime ":ala-auth:2.1.3"
+        runtime ":ala-ws-security:1.4"
     }
 }

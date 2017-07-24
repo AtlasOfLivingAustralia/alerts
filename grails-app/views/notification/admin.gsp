@@ -2,6 +2,8 @@
     <head>
         <title>Notification service | Atlas of Living Australia</title>
         <meta name="layout" content="${grailsApplication.config.skin.layout}" />
+        <meta name="breadcrumb" content="Admin functions" />
+        <meta name="breadcrumbParent" content="${request.contextPath?:'/'},Alerts" />
     </head>
     <body>
           <h1>Welcome to the Notification service</h1>

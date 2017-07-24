@@ -16,3 +16,15 @@
     opacity:0.6;
     filter:alpha(opacity=60);
 }
+
+#content .btn-danger:hover, #content .btn-danger:focus {
+    color: #fff;
+}
+
+#content h3 {
+    font-weight: 500;
+}
+
+#content h3 select {
+    font-size: 18px;
+}
