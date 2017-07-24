@@ -23,6 +23,18 @@ if(System.getenv(ENV_NAME) && new File(System.getenv(ENV_NAME)).exists()) {
     println "[${appName}] No external configuration file defined."
 }
 
+//security.cas.bypass = "false"
+//security.cas.appServerName = "http://dev.ala.org.au:8080/alerts"
+//security.cas.adminRole = "ROLE_ADMIN"
+//security.cas.contextPath = "/alerts"
+//security.cas.uriFilterPattern = "/,/alaAdmin.*,/testAuth.*,/query/.*,/admin/?.*,/admin/user/.*,/admin/user/debug/.*,/admin/debug/all,/notification/myAlerts,/notification/changeFrequency,/notification/addMyAlert,/notification/addMyAlert/.*,/notification/deleteMyAlert/.*,/notification/deleteMyAlert/.*,/notification/deleteMyAlertWR/.*,/webservice/.*,/webservice/createTaxonAlert,/webservice/taxonAlerts,/webservice/createRegionAlert,/webservice/regionAlerts,/webservice/deleteTaxonAlert/.*,/webservice/create*,/webservice/createSpeciesGroupRegionAlert,/ws/.*,/ws/createTaxonAlert,/ws/taxonAlerts,/ws/createRegionAlert,/ws/regionAlerts,/ws/deleteTaxonAlert/.*,/ws/createTaxonRegionAlert,/ws/createSpeciesGroupRegionAlert,/admin/runChecksNow"
+//security.cas.uriExclusionFilterPattern = "/images.*,/css.*,/js.*,/less.*"
+//security.cas.loginUrl = "https://auth.ala.org.au/cas/loginUrl"
+//security.cas.casServerUrlPrefix = "https://auth.ala.org.au/cas"
+//security.cas.casServerName = "https://auth.ala.org.au"
+//security.cas.logoutUrl = "https://auth.ala.org.au/cas/logout"
+//disableCAS
+
 skin.layout = 'main'
 skin.orgNameLong = 'Atlas of Living Australia'
 
@@ -77,12 +89,25 @@ grails.exceptionresolver.params.exclude = ['password']
 // configure auto-caching of queries by default (if false you can cache individual queries with 'cache: true')
 grails.hibernate.cache.queries = false
 
+environments {
+   production {
+        grails.logging.jul.usebridge = false
+        // TODO: grails.serverURL = "http://www.changeme.com"
+    }
+    development {
+        grails.logging.jul.usebridge = true
+    }
+    test {
+        security.cas.bypass = "true"
+        security.cas.appServerName = "http://dev.ala.org.au:8080/alerts"
+    }
+}
+
 //override this in external configuration
 def logging_dir = (System.getProperty('catalina.base') ? System.getProperty('catalina.base') + '/logs'  : '/var/log/tomcat7/')
 if(!new File(logging_dir).exists()){
     logging_dir = '/tmp'
 }
-
 
 // log4j configuration
 log4j = {
