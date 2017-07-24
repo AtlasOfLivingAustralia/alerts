@@ -42,15 +42,15 @@ grails.project.dependency.resolution = {
         runtime 'org.apache.httpcomponents:httpclient:4.2.2'
         runtime 'org.apache.httpcomponents:httpcore:4.2.2'
         runtime 'org.apache.httpcomponents:httpclient:4.2.2'
-        runtime 'com.jayway.jsonpath:json-path:0.5.6'
-        runtime 'com.jayway.jsonpath:json-path-assert:0.5.6'
+        test 'com.jayway.jsonpath:json-path:0.5.6'
+        test 'com.jayway.jsonpath:json-path-assert:0.5.6'
     }
 
     plugins {
         build ":release:3.0.1"
-        build ":tomcat:7.0.54"
+        build ":tomcat:7.0.70"
 
-        runtime ":hibernate:3.6.10.16"
+        runtime ":hibernate:3.6.10.18"
         runtime ":resources:1.2.14"
         runtime ":pretty-time:0.3"
         runtime ":quartz:1.0.1"

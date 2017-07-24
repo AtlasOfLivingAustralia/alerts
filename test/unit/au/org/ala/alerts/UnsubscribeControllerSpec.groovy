@@ -202,6 +202,7 @@ class UnsubscribeControllerSpec extends Specification {
         controller.userService.getUser() >> null
 
         when:
+        request.method = 'POST'
         controller.unsubscribe()
 
         then:
@@ -214,6 +215,7 @@ class UnsubscribeControllerSpec extends Specification {
 
         when:
         params.token = "invalid"
+        request.method = 'POST'
         controller.unsubscribe()
 
         then:
@@ -268,9 +270,11 @@ class UnsubscribeControllerSpec extends Specification {
 
         when:
         params.token = user1.unsubscribeToken
+        request.method = 'POST'
         controller.unsubscribe()
 
         then:
+        log.info "token = ${params.token}"
         response.status == HttpStatus.SC_OK
         User.count() == 2
         !User.findByUserId("user1").notifications
@@ -295,6 +299,7 @@ class UnsubscribeControllerSpec extends Specification {
 
         when:
         params.token = notification1.unsubscribeToken
+        request.method = 'POST'
         controller.unsubscribe()
 
         then:
@@ -321,6 +326,7 @@ class UnsubscribeControllerSpec extends Specification {
 
         when:
         params.token = notification1.unsubscribeToken
+        request.method = 'POST'
         controller.unsubscribe()
 
         then:
@@ -342,6 +348,7 @@ class UnsubscribeControllerSpec extends Specification {
 
         when: "the logged in user is user1 but the token belongs to user2"
         params.token = user2.unsubscribeToken
+        request.method = 'POST'
         controller.unsubscribe()
 
         then:
@@ -373,6 +380,7 @@ class UnsubscribeControllerSpec extends Specification {
 
         when: "the logged in user is user1 but the token belongs to user2"
         params.token = notification3.unsubscribeToken
+        request.method = 'POST'
         controller.unsubscribe()
 
         then:
