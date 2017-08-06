@@ -8,7 +8,7 @@
     <meta name="breadcrumb" content="Unsubscribe" />
     <meta name="breadcrumbParent" content="${request.contextPath?:'/'},Alerts" />
     <title>Unsubscribe</title>
-    <r:require modules="bootstrapSwitch,alerts"/>
+    <asset:stylesheet href="alerts.css"/>
 </head>
 
 <body>
@@ -46,5 +46,6 @@
         </g:if>
     </div>
 </div>
+<asset:javascript src="alerts.js"/>
 </body>
 </html>

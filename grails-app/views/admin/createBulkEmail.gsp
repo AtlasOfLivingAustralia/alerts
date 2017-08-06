@@ -3,18 +3,14 @@
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
   <meta name="layout" content="${grailsApplication.config.skin.layout}" />
+  <meta name="breadcrumb" content="Bulk email" />
+  <meta name="breadcrumbParent" content="${request.contextPath}/admin,Alerts admin" />
   <title>Send Bulk Email | ${grailsApplication.config.skin.orgNameLong}</title>
 </head>
 <body>
 <div id="content">
   <header id="page-header">
     <div class="inner">
-      <nav id="breadcrumb">
-        <ol>
-          <li><a href="http://www.ala.org.au">Home</a></li>
-          <li class="last">Send bulk email</li>
-        </ol>
-      </nav>
       <h1>My email alerts</h1>
     </div><!--inner-->
   </header>

@@ -51,11 +51,12 @@ grails.project.dependency.resolution = {
         build ":tomcat:7.0.70"
 
         runtime ":hibernate:3.6.10.18"
-        runtime ":resources:1.2.14"
+//        runtime ":resources:1.2.14"
         runtime ":pretty-time:0.3"
         runtime ":quartz:1.0.1"
         runtime ":quartz-monitor:1.0"
 
+        compile ":asset-pipeline:2.14.1"
         compile ":mail:1.0.7"
         compile ":scaffolding:2.1.2"
         compile ":markdown:1.1.1"

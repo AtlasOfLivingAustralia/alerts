@@ -9,7 +9,7 @@
         <meta name="breadcrumbParent" content="${grailsApplication.config.security.cas.casServerName}/userdetails/myprofile, My profile" />
         <g:set var="userPrefix" value="${adminUser ? user.email : 'My' }"/>
         <title>${userPrefix} email alerts | ${grailsApplication.config.skin.orgNameLong}</title>
-        <r:require modules="bootstrapSwitch,alerts"/>
+        <asset:stylesheet href="alerts.css"/>
     </head>
     <body>
       <div id="content">
@@ -111,7 +111,8 @@
             </div>
           </div>
       </div>
-      <script type="text/javascript">
+      <asset:javascript src="alerts.js"/>
+      <asset:script type="text/javascript">
 
           var addMyAlertUrl = 'addMyAlert/';
           var deleteMyAlertUrl = 'deleteMyAlert/';
@@ -146,6 +147,6 @@
                 });
               });
           });
-        </script>
+        </asset:script>
     </body>
 </html>

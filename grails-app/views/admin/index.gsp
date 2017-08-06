@@ -3,7 +3,7 @@
     <title>Notification service | ${grailsApplication.config.skin.orgNameLong}</title>
     <meta name="layout" content="${grailsApplication.config.skin.layout}"/>
     <meta name="breadcrumb" content="Admin functions" />
-    <meta name="breadcrumbParent" content="${request.contextPath?:'/'},Alerts" />
+    <meta name="breadcrumbParent" content="${grailsApplication.config.grails.serverURL?:'/'},Alerts" />
 </head>
 
 <body>
@@ -25,7 +25,7 @@
             Ad hoc bulk email to registered users</g:link></li>
         <li class="controller"><g:link controller="admin" action="notificationReport">
             Each query type with counts for users</g:link></li>
-        <li class="controller"><a href="${request.contextPath}/admin/user">Manage alerts for users</a></li>
+        <li class="controller"><a href="${request.contextPath}/admin/user">Manage alerts for users (find user)</a></li>
     </ul>
 </div>
 </body>
