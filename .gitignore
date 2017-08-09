@@ -1,5 +1,11 @@
-.slcache
-target/*
+Thumbs.db
+.DS_Store
+.gradle
+build/
+.idea
 *.iml
-.idea/*
-replay_*
+*.ipr
+*.iws
+.project
+.settings
+.classpath

@@ -28,13 +28,13 @@ class DiffService {
     if(last != null && previous != null){
 
       def ids1 = JsonPath.read(last, query.recordJsonPath + "." + query.idJsonPath)
-      if(!isCollectionOrArray(ids1)){
-          ids1 = [ids1]
+      if (!isCollectionOrArray(ids1)) {
+        ids1 = [ids1]
       }
 
       def ids2 = JsonPath.read(previous, query.recordJsonPath + "." + query.idJsonPath)
-      if(!isCollectionOrArray(ids2)){
-          ids2 = [ids2]
+      if (!isCollectionOrArray(ids2)) {
+        ids2 = [ids2]
       }
       List<String> diff = ids1.findAll { !ids2.contains(it) }
       !diff.empty

@@ -3,14 +3,12 @@ package au.org.ala.alerts
 import au.ala.org.ws.security.RequireApiKey
 import grails.converters.JSON
 import org.apache.http.HttpStatus
-import org.codehaus.groovy.grails.web.servlet.mvc.GrailsParameterMap
+import grails.web.servlet.mvc.GrailsParameterMap
 
 class WebserviceController {
 
   def queryService
   def userService
-  def grailsApplication
-  def authService
 
   def index = {}
 

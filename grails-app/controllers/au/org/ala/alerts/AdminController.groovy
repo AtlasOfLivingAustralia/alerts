@@ -12,16 +12,10 @@ class AdminController {
       }
   }
 
-  def grailsApplication
-
   def authService
-
   def notificationService
-
   def emailService
-
   def queryService
-
   def userService
 
   def findUser() {
