@@ -22,7 +22,7 @@
 			<g:if test="${flash.message}">
 			<div class="message" role="status">${flash.message}</div>
 			</g:if>
-			<table class="table">
+			<table class="table table-bordered table-striped">
 				<thead>
 					<tr>
 					    <g:sortableColumn property="id" title="${message(code: 'query.description.label', default: 'ID')}" />
@@ -37,7 +37,7 @@
 						<td>${fieldValue(bean: queryInstance, field: "id")}</td>
                         %{--<td>${fieldValue(bean: queryInstance, field: "resourceName")}</td>--}%
 						<td><g:link action="show" id="${queryInstance.id}">${fieldValue(bean: queryInstance, field: "description")}</g:link></td>
-                        <td><g:link class="btn btn-mini" action="debugAlert" controller="admin" id="${queryInstance.id}">Debug&nbsp;alert</g:link></td>
+                        <td><g:link class="btn btn-ala btn-xs" action="debugAlert" controller="admin" id="${queryInstance.id}">Debug&nbsp;alert</g:link></td>
 					</tr>
 				</g:each>
 				</tbody>

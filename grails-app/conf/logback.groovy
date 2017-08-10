@@ -33,4 +33,28 @@ if (Environment.isDevelopmentMode() && targetDir != null) {
     }
     logger("StackTrace", ERROR, ['FULL_STACKTRACE'], false)
 }
-root(ERROR, ['STDOUT'])
+root(WARN, ['STDOUT'])
+[
+        (OFF): [],
+        (ERROR): [
+                'grails.spring.BeanBuilder',
+                'grails.plugin.webxml',
+                'grails.plugin.cache.web.filter',
+                'grails.app.services.org.grails.plugin.resource',
+                'grails.app.taglib.org.grails.plugin.resource',
+                'grails.app.resourceMappers.org.grails.plugin.resource'
+        ],
+        (WARN): [
+                'au.org.ala.cas.client'
+        ],
+        (INFO): [
+                'grails.plugin.externalconfig.ExternalConfig'
+        ],
+        (DEBUG): [
+                'grails.app',
+                'au.org.ala.cas',
+                'au.org.ala.alerts'
+        ],
+        (TRACE): [
+        ]
+].each { level, names -> names.each { name -> logger(name, level) } }
