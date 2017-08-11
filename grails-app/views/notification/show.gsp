@@ -1,5 +1,5 @@
 
-<%@ page import="org.codehaus.groovy.grails.web.json.JSONObject;au.org.ala.alerts.Notification" %>
+<%@ page import="au.org.ala.alerts.Notification" %>
 <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
