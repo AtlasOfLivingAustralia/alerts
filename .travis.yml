@@ -7,16 +7,19 @@ branches:
     - master
     - hotfix
     - Grails3
-  before_cache:
-    - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
-    - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
-  cache:
-    directories:
+  
+before_cache:
+  - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+  - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+
+cache:
+  directories:
     - $HOME/.m2
     - $HOME/.gradle/caches/
     - $HOME/.gradle/wrapper/
-  after_success:
-    - '[ "${TRAVIS_PULL_REQUEST}" = "false" ] && travis_retry ./gradlew publish'
+  
+after_success:
+  - '[ "${TRAVIS_PULL_REQUEST}" = "false" ] && travis_retry ./gradlew publish'
 env:
   global:
     - secure: OqyYLYoeTw2ifeopsXEQnLDF8DA5j12iSH9mKGXjE6abkrhXCghWOtb+jGstRvJr/ZrpJfFK3VOkistgkf6y8/RYxB7a0MJsr+1GUXtdHhtPbUcShJDybj6AlbgPCI2J4VdIQSB+ey2XZKOMOO3+XwbsczrTHBh5KpBHdI7Tw8I=
