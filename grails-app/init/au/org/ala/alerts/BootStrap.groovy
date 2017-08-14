@@ -4,11 +4,9 @@ class BootStrap {
 
     javax.sql.DataSource dataSource
     def grailsApplication
-    def customObjectMarshallers
 
     def init = { servletContext ->
         log.info("Running bootstrap queries")
-        customObjectMarshallers.register()
         preloadQueries()
         log.info("Done bootstrap queries.")
     }
