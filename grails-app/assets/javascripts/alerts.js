@@ -12,7 +12,7 @@
  */
 
 //= require application
-//= require bootstrapSwitch
+//= require bootstrap-switch
 
 function alertsCallback(data){
   if(data.alertExists){

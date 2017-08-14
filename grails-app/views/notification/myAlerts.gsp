@@ -120,6 +120,8 @@
 
           $(document).ready( function(){
 
+              $(".switch input").bootstrapSwitch();
+
               $(".query-cb").change(function(e){
                   if($(this).is(':checked')){
                      $.get(addMyAlertUrl + $(this).attr('id') + '?userId=${userId}');
