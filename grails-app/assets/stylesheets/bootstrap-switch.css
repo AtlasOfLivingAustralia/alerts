@@ -78,6 +78,11 @@
   color: #fff;
   background: #d9534f;
 }
+.bootstrap-switch .bootstrap-switch-handle-on.bootstrap-switch-ala,
+.bootstrap-switch .bootstrap-switch-handle-off.bootstrap-switch-ala {
+  color: #fff;
+  background: #e16c4c;
+}
 .bootstrap-switch .bootstrap-switch-handle-on.bootstrap-switch-default,
 .bootstrap-switch .bootstrap-switch-handle-off.bootstrap-switch-default {
   color: #000;

@@ -120,7 +120,7 @@
 
           $(document).ready( function(){
 
-              $(".switch input").bootstrapSwitch();
+              $(".switch input").bootstrapSwitch({ onColor:'ala' });
 
               $(".query-cb").change(function(e){
                   if($(this).is(':checked')){
