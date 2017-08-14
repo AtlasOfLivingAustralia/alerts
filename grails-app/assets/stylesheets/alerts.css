@@ -46,6 +46,10 @@
     font-size: 18px;
 }
 
+a.btn-ala {
+    font-weight: 500;
+}
+
 /*Grails additions*/
 /* CREATE/EDIT FORMS AND SHOW PAGES */
 

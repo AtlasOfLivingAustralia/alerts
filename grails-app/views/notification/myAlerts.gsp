@@ -70,7 +70,7 @@
                                   ${query.description}
                                 </td>
                                 <td class="queryActions">
-                                    <a href="javascript:void(0);" class='btn btn-danger deleteButton' id='${query.id}'>Delete</a>
+                                    <a href="javascript:void(0);" class='btn btn-ala deleteButton' id='${query.id}'>Delete</a>
                                 </td>
                             </tr>
                         </g:each>
