@@ -104,7 +104,7 @@
                             </ul>
                         </p>
                         <p>
-                            Look for the <a class="btn btn-default" href="javascript:void(0);" disabled="true"><i class="icon icon-bell"></i> Alerts</a> button.
+                            Look for the <a class="btn btn-default" href="javascript:void(0);" disabled="true"><i class="glyphicon glyphicon-bell"></i> Alerts</a> button.
                         </p>
                     </div>
                 </div>
@@ -120,15 +120,6 @@
 
           $(document).ready( function(){
 
-              $(".switch input").bootstrapSwitch({ onColor:'ala' });
-
-              $(".query-cb").change(function(e){
-                  if($(this).is(':checked')){
-                     $.get(addMyAlertUrl + $(this).attr('id') + '?userId=${userId}');
-                  } else {
-                     $.get(deleteMyAlertUrl + $(this).attr('id')+ '?userId=${userId}');
-                  }
-              });
               $("#userFrequency").change(function(){
                   $.get('changeFrequency?frequency='+$('#userFrequency').val())
                       .success(function() {
@@ -138,6 +129,7 @@
                           alert("There was a problem updating your alert frequency. Please try again later.");
                       });
               });
+
               $('.deleteButton').click(function(data){
                 var id = $(this).attr('id');
                 $.get(deleteMyAlertWRUrl + id + '?userId=${userId}');
@@ -148,6 +140,22 @@
                     }
                 });
               });
+
+              $(".switch input").bootstrapSwitch(
+                  {   onColor:'ala',
+                      onSwitchChange: function (event, state) {
+                          event.preventDefault();
+                          $(this).attr('checked', state); // probably not needed
+
+                          if (state){
+                             $.get(addMyAlertUrl + $(this).attr('id') + '?userId=${userId}');
+                          } else {
+                             $.get(deleteMyAlertUrl + $(this).attr('id')+ '?userId=${userId}');
+                          }
+                          return true;
+                      }
+                  }
+              );
           });
         </asset:script>
     </body>
