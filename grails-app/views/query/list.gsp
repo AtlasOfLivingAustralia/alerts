@@ -8,6 +8,7 @@
 		<meta name="breadcrumbParent" content="${grailsApplication.config.grails.serverURL?:'/'},Alerts" />
 		<g:set var="entityName" value="${message(code: 'query.label', default: 'Query')}" />
 		<title><g:message code="default.list.label" args="[entityName]" /></title>
+		<asset:stylesheet href="alerts.css"/>
 	</head>
 	<body>
 		<a href="#list-query" class="skip" tabindex="-1"><g:message code="default.link.skip.label" default="Skip to content&hellip;"/></a>
