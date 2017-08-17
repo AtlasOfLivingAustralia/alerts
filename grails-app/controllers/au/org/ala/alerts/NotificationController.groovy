@@ -134,9 +134,9 @@ class NotificationController {
 
     def changeFrequency = {
         def user = userService.getUser()
-        log.debug("Changing frequency to: " + params.frequency)
+        log.debug("Changing frequency to: " + params.frequency + " for user ${user}")
         user.frequency = Frequency.findByName(params.frequency)
-        user.save(true)
+        user.save(flush: true)
         return null
     }
 
