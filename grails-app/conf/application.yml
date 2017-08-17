@@ -92,7 +92,7 @@ grails:
 endpoints:
     jmx:
         unique-names: true
-
+    enabled: true
 ---
 skin:
     layout: "ala-main"
@@ -113,7 +113,7 @@ postie:
 environments:
     development:
         grails:
-            serverURL: "http://dev.ala.org.au:8080/alerts"
+            serverURL: "http://dev.ala.org.au:8080"
             mail:
                 host: "localhost"
                 port: 1025
