@@ -101,7 +101,7 @@ switch (Environment.current) {
         break
     case Environment.DEVELOPMENT:
         appenderList.addAll(['FULL_STACKTRACE','STDOUT'])
-        root(INFO, appenderList)
+        root(WARN, appenderList)
     default:
         appender(TOMCAT_LOG, ConsoleAppender) {
             encoder(PatternLayoutEncoder) {
