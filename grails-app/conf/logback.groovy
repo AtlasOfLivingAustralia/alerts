@@ -50,10 +50,12 @@ if (Environment.isDevelopmentMode() && targetDir != null) {
 def loggingDir = (System.getProperty('catalina.base') ? System.getProperty('catalina.base') + '/logs' : './logs')
 def appName = 'alerts'
 final TOMCAT_LOG = 'TOMCAT_LOG'
+def appenderList = []
+
 switch (Environment.current) {
     case Environment.PRODUCTION:
         appender(TOMCAT_LOG, RollingFileAppender) {
-            file = "$loggingDir/$appName.log"
+            file = "${loggingDir}/${appName}.log"
             encoder(PatternLayoutEncoder) {
                 pattern =
                         '%d{yyyy-MM-dd HH:mm:ss.SSS} ' + // Date
@@ -63,7 +65,7 @@ switch (Environment.current) {
                                 '%m%n%wex' // Message
             }
             rollingPolicy(FixedWindowRollingPolicy) {
-                fileNamePattern = "$loggingDir/$appName.%i.log.gz"
+                fileNamePattern = "${loggingDir}/${appName}.%i.log.gz"
                 minIndex=1
                 maxIndex=4
             }
@@ -71,11 +73,12 @@ switch (Environment.current) {
                 maxFileSize = FileSize.valueOf('10MB')
             }
         }
-        root(WARN, ['TOMCAT_LOG'])
+        appenderList.add('TOMCAT_LOG')
+        root(WARN, appenderList)
         break
     case Environment.TEST:
         appender(TOMCAT_LOG, RollingFileAppender) {
-            file = "$loggingDir/$appName.log"
+            file = "${loggingDir}/${appName}.log"
             encoder(PatternLayoutEncoder) {
                 pattern =
                         '%d{yyyy-MM-dd HH:mm:ss.SSS} ' + // Date
@@ -85,7 +88,7 @@ switch (Environment.current) {
                                 '%m%n%wex' // Message
             }
             rollingPolicy(FixedWindowRollingPolicy) {
-                fileNamePattern = "$loggingDir/$appName.%i.log.gz"
+                fileNamePattern = "${loggingDir}/${appName}.%i.log.gz"
                 minIndex=1
                 maxIndex=4
             }
@@ -93,10 +96,12 @@ switch (Environment.current) {
                 maxFileSize = FileSize.valueOf('1MB')
             }
         }
-        root(WARN, ['TOMCAT_LOG'])
+        appenderList.add('TOMCAT_LOG')
+        root(WARN, appenderList)
         break
     case Environment.DEVELOPMENT:
-        root(INFO, ['FULL_STACKTRACE','STDOUT'])
+        appenderList.addAll(['FULL_STACKTRACE','STDOUT'])
+        root(INFO, appenderList)
     default:
         appender(TOMCAT_LOG, ConsoleAppender) {
             encoder(PatternLayoutEncoder) {
@@ -107,7 +112,8 @@ switch (Environment.current) {
                         '%m%n%wex' // Message
             }
         }
-        root(WARN, ['TOMCAT_LOG'])
+        appenderList.add('TOMCAT_LOG')
+        root(WARN, appenderList)
         break
 }
 
@@ -136,6 +142,6 @@ switch (Environment.current) {
         ]
 ].each { level, names ->
     names.each { name ->
-        logger(name, level)
+        logger(name, level, appenderList )
     }
 }
