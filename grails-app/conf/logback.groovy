@@ -73,8 +73,7 @@ switch (Environment.current) {
                 maxFileSize = FileSize.valueOf('10MB')
             }
         }
-        appenderList.add('TOMCAT_LOG')
-        root(WARN, appenderList)
+        root(WARN, ['TOMCAT_LOG'])
         break
     case Environment.TEST:
         appender(TOMCAT_LOG, RollingFileAppender) {
@@ -96,8 +95,7 @@ switch (Environment.current) {
                 maxFileSize = FileSize.valueOf('1MB')
             }
         }
-        appenderList.add('TOMCAT_LOG')
-        root(WARN, appenderList)
+        root(WARN, ['TOMCAT_LOG'])
         break
     case Environment.DEVELOPMENT:
         appenderList.addAll(['FULL_STACKTRACE','STDOUT'])
@@ -112,8 +110,7 @@ switch (Environment.current) {
                         '%m%n%wex' // Message
             }
         }
-        appenderList.add('TOMCAT_LOG')
-        root(WARN, appenderList)
+        root(WARN, ['TOMCAT_LOG'])
         break
 }
 
@@ -142,6 +139,9 @@ switch (Environment.current) {
         ]
 ].each { level, names ->
     names.each { name ->
-        logger(name, level, appenderList )
+        if (appenderList.size() > 0) {
+            logger(name, level, appenderList )
+        }
+
     }
 }
