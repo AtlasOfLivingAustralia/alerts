@@ -1,4 +1,4 @@
 rootProject.name = 'alerts'
 
-//include 'ala-admin-plugin'
+//include ':ala-admin-plugin'
 //project(':ala-admin-plugin').projectDir = new File('/Users/dos009/Documents/ALA-code/ala-admin-plugin')
