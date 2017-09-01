@@ -135,6 +135,8 @@ environments:
             cas:
                 appServerName: "http://dev.ala.org.au:8080"
     test:
+        grails:
+            serverURL: "http://dev.ala.org.au:8080"
         security:
             cas:
                 appServerName: "http://auth.ala.org.au"

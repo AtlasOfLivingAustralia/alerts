@@ -26,7 +26,7 @@ class UrlMappings {
         "/admin/user"(controller: 'admin', action: 'findUser')
         "/admin/debug/all"(controller: 'admin', action: 'debugAllAlerts')
 
-        "/$controller/$action?/$id?" {
+        "/$controller/$action?/$id?(.$format)?"{
             constraints {
                 // apply constraints here
             }
