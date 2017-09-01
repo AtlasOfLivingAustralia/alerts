@@ -35,18 +35,6 @@ appender('STDOUT', ConsoleAppender) {
     }
 }
 
-def targetDir = BuildSettings.TARGET_DIR
-if (Environment.isDevelopmentMode() && targetDir != null) {
-    appender("FULL_STACKTRACE", FileAppender) {
-        file = "${targetDir}/stacktrace.log"
-        append = true
-        encoder(PatternLayoutEncoder) {
-            pattern = "%level %logger - %msg%n"
-        }
-    }
-    logger("StackTrace", ERROR, ['FULL_STACKTRACE'], false)
-}
-
 def loggingDir = (System.getProperty('catalina.base') ? System.getProperty('catalina.base') + '/logs' : './logs')
 def appName = 'alerts'
 final TOMCAT_LOG = 'TOMCAT_LOG'
@@ -98,19 +86,21 @@ switch (Environment.current) {
         root(WARN, ['TOMCAT_LOG'])
         break
     case Environment.DEVELOPMENT:
+        def targetDir = BuildSettings.TARGET_DIR
+        if (Environment.isDevelopmentMode() && targetDir != null) {
+            appender("FULL_STACKTRACE", FileAppender) {
+                file = "${targetDir}/stacktrace.log"
+                append = true
+                encoder(PatternLayoutEncoder) {
+                    pattern = "%level %logger - %msg%n"
+                }
+            }
+            logger("StackTrace", ERROR, ['FULL_STACKTRACE'], false)
+        }
         appenderList.addAll(['FULL_STACKTRACE','STDOUT'])
         root(WARN, appenderList)
     default:
-        appender(TOMCAT_LOG, ConsoleAppender) {
-            encoder(PatternLayoutEncoder) {
-                pattern = '%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} ' + // Date
-                        '%clr(%5p) ' + // Log level
-                        '%clr(---){faint} %clr([%15.15t]){faint} ' + // Thread
-                        '%clr(%-40.40logger{39}){cyan} %clr(:){faint} ' + // Logger
-                        '%m%n%wex' // Message
-            }
-        }
-        root(WARN, ['TOMCAT_LOG'])
+        root(WARN, ['STDOUT'])
         break
 }
 
