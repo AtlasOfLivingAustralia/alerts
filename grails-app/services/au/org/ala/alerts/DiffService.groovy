@@ -54,7 +54,8 @@ class DiffService {
                 List<String> diff = ids1.findAll { !ids2.contains(it) }
                 !diff.empty
             } catch (Exception ex) {
-                log.warn "JSONPath exception: ${ex}", ex
+                log.warn "JSONPath exception: ${ex}"
+                log.info "JSONPath exceptionstacktrace: ", ex
                 false
             }
         } else {
@@ -107,7 +108,8 @@ class DiffService {
                 log.info "last = ${decompressZipped(queryResult.lastResult)}"
                 log.info "previousResult = ${decompressZipped(queryResult.previousResult)}"
                 log.info "JsonPath arg = ${queryResult.query.recordJsonPath + "." + queryResult.query.idJsonPath}"
-                log.error "JsonPath error: ${ex}", ex
+                log.error "JsonPath error: ${ex}"
+                log.info "JsonPath exception stacktrace.", ex
             }
         }
         records
