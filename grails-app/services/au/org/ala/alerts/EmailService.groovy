@@ -38,6 +38,7 @@ class EmailService {
         def emailModel = generateEmailModel(notification, queryResult)
 
         if (grailsApplication.config.postie.enableEmail) {
+            log.info "Sending email to ${notification.user.email} for ${notification.query.name}"
             sendMail {
                 from grailsApplication.config.postie.emailAlertAddressTitle + "<" + grailsApplication.config.postie.emailSender + ">"
                 subject "Update - " + notification.query.name
