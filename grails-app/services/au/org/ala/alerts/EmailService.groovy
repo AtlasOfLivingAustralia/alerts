@@ -49,8 +49,8 @@ class EmailService {
                 )
             }
         } else {
-            log.debug("Email would have been sent to: " + notification.user.email)
-            log.debug("message:" + notification.query.updateMessage)
+            log.info("Email would have been sent to: " + notification.user.email)
+            log.info("message:" + notification.query.updateMessage)
             log.debug("moreInfo:" + queryResult.queryUrlUIUsed)
             log.debug("stopNotification:" + grailsApplication.config.security.cas.appServerName + grailsApplication.config.security.cas.contextPath + '/notification/myAlerts')
             log.debug("records:" + emailModel.records)
