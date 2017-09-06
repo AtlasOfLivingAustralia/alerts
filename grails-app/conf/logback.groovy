@@ -130,7 +130,7 @@ switch (Environment.current) {
 ].each { level, names ->
     names.each { name ->
         if (appenderList.size() > 0) {
-            logger(name, level, appenderList )
+            logger(name, level, appenderList, false )
         }
 
     }
