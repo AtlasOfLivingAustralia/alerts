@@ -6,13 +6,13 @@ class BootStrap {
     def grailsApplication
 
     def init = { servletContext ->
-        log.info("Running bootstrap queries")
+        log.info("Running bootstrap queries.")
         preloadQueries()
         log.info("Done bootstrap queries.")
     }
 
-    private def preloadQueries() {
-
+    private void preloadQueries() {
+        log.info("start of preloadQueries")
         if(Frequency.findAll().isEmpty()){
             (new Frequency([name:'hourly', periodInSeconds:3600])).save()
             (new Frequency([name:'daily'])).save()
@@ -124,7 +124,7 @@ class BootStrap {
                     resourceName:  grailsApplication.config.postie.defaultResourceName,
                     updateMessage: 'more.spatial.update.message',
                     description: 'Notify me when new spatial layers are added.',
-                    queryPath: '/layers.json',
+                    queryPath: '/ws/layers.json',
                     queryPathForUI: '/layers',
                     emailTemplate: '/email/layers',
                     recordJsonPath: '\$.layerList',
@@ -150,6 +150,24 @@ class BootStrap {
             new PropertyPath([name: "dataset_count", jsonPath: "\$", query: newDatasets, fireWhenChanged: true]).save()
         }
 
+        if(Query.findAllByName('Species lists').isEmpty()){
+            log.info "Creating species list query"
+            Query newSpeciesLists = (new Query([
+                    baseUrl: grailsApplication.config.collectory.baseURL,
+                    baseUrlForUI: grailsApplication.config.collectory.baseURL,
+                    name: 'Species lists',
+                    resourceName:  grailsApplication.config.postie.defaultResourceName,
+                    updateMessage: 'more.specieslist.update.message',
+                    description: 'Notify me when new species lists are added.',
+                    queryPath: '/ws/dataResource?resourceType=species-list',
+                    queryPathForUI: '/datasets#filters=resourceType%3Aspecies-list',
+                    emailTemplate: '/email/datasets',
+                    recordJsonPath: '\$',
+                    idJsonPath: 'uid'
+            ])).save()
+            new PropertyPath([name: "species_list_count", jsonPath: "\$", query: newSpeciesLists, fireWhenChanged: true]).save()
+        }
+
         // get_category_posts.json
         if(Query.findAllByName('Blogs and News').isEmpty()){
             Query newBlogs = (new Query([
@@ -168,8 +186,8 @@ class BootStrap {
 
             new PropertyPath([name: "last_blog_id", jsonPath: "posts", query: newBlogs, fireWhenChanged: true]).save()
         }
+        log.info("end of preloadQueries")
     }
 
-    def destroy = {
-    }
+    def destroy = {}
 }
