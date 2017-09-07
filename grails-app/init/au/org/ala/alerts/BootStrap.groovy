@@ -71,7 +71,7 @@ class BootStrap {
                     dateFormat: """yyyy-MM-dd'T'HH:mm:ss'Z'""",
                     emailTemplate: '/email/biocache',
                     fireWhenNotZero: true,
-                    recordJsonPath: '\$.occurrences',
+                    recordJsonPath: '\$.occurrences', // jsonpath 2 syntax: '\$.occurrences[*]'
                     idJsonPath: 'uuid'
             ])).save()
             new PropertyPath([name: "totalRecords", jsonPath: "totalRecords", query: newRecordsWithImages, fireWhenNotZero: true]).save()
@@ -180,7 +180,7 @@ class BootStrap {
                     queryPath: '/api/get_category_posts/?slug=blogs-news&count=5',
                     queryPathForUI: '/blogs-news/',
                     emailTemplate: '/email/blogs',
-                    recordJsonPath: '\$.posts[0]',
+                    recordJsonPath: '\$.posts[*]',
                     idJsonPath: 'id'
             ])).save()
 
