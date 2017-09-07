@@ -110,7 +110,7 @@ postie:
     emailInfoAddressTitle: "Atlas of Living Australia"
     emailInfoSender: "atlas-alerts@ala.org.au"
     defaultResourceName: "Atlas of Living Australia"
-
+    enableEmail: false
 ala:
     baseURL: "https://www.ala.org.au"
     userDetailsURL: "https://auth.ala.org.au/userdetails/userDetails/getUserListFull"
