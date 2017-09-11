@@ -301,4 +301,30 @@ class AdminController {
   def unsubscribeUser(String id) {
 
   }
+
+    /**
+     * Used to check if server can send emails externally.
+     * Sends to email address of logged-in user
+     *
+     */
+    def sendTestEmail () {
+        def msg
+        if (authService.userInRole("ROLE_ADMIN")) {
+            User user = userService.getUser()
+            if (user) {
+                def query = Query.get(1)
+                def queryResult = QueryResult.findByQuery(query)
+                def frequency = Frequency.get(1)
+                emailService.sendGroupEmail(query, [user.email], queryResult, [], frequency, 0, "", "")
+                msg = "Email was sent to ${user.email} - check tomcat logs for ERROR message with value \"Error sending email to addresses:\""
+            } else {
+                msg = "User was not found or not logged in"
+            }
+        } else {
+            msg = "User does not have required ROLE"
+        }
+        log.debug "#sendTestEmail - msg = ${msg}"
+        flash.message = msg
+        redirect(action: "index")
+    }
 }

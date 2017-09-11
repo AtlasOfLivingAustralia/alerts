@@ -9,8 +9,8 @@
 <body>
 <h1>Admin functions - Alert service</h1>
 
-<g:if test="${message}">
-    <div class="alert alert-info">${message}</div>
+<g:if test="${message || flash.message}">
+    <div class="alert alert-info">${message}${flash.message}</div>
 </g:if>
 
 <div>
@@ -26,6 +26,7 @@
         <li class="controller"><g:link controller="admin" action="notificationReport">
             Each query type with counts for users</g:link></li>
         <li class="controller"><a href="${request.contextPath}/admin/user">Manage alerts for users (find user)</a></li>
+        <li><g:link controller="admin" action="sendTestEmail">Send test email to yourself (tests server can send emails)</g:link></li>
     </ul>
 </div>
 </body>
