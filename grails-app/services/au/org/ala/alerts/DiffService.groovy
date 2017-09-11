@@ -37,11 +37,11 @@ class DiffService {
         [Collection, Object[]].any { it.isAssignableFrom(object.getClass()) }
     }
 
-    Boolean hasChangedJsonDiff(String previous, String last, Query query) {
-        if (last != null && previous != null) {
+    Boolean hasChangedJsonDiff(String previous, String current, Query query, Boolean debugDiff = false) {
+        if (current != null && previous != null) {
 
             try {
-                def ids1 = JsonPath.read(last, query.recordJsonPath + "." + query.idJsonPath)
+                def ids1 = JsonPath.read(current, query.recordJsonPath + "." + query.idJsonPath)
                 if (!isCollectionOrArray(ids1)) {
                     ids1 = [ids1]
                 }
@@ -50,13 +50,20 @@ class DiffService {
                 if (!isCollectionOrArray(ids2)) {
                     ids2 = [ids2]
                 }
-
                 List<String> diff = ids1.findAll { !ids2.contains(it) }
+                if (debugDiff) {
+                    log.info "checking json diff for: ${query.name}"
+                    log.info "query URL: ${query.baseUrl}${query.queryPath}"
+                    log.info "jsonpath = ${query.recordJsonPath}.${query.idJsonPath}"
+                    log.info "ids1 = ${ids1}"
+                    log.info "ids2 = ${ids2}"
+                    log.info "diff = ${diff}"
+                }
                 !diff.empty
             } catch (Exception ex) {
                 log.warn "JSONPath exception: ${ex}"
                 log.info "JSONPath exception stacktrace: ", ex
-                log.debug "Diff values: previous = ${previous} || last = ${last} || json path = ${query.recordJsonPath}.${query.idJsonPath}"
+                log.debug "Diff values: previous = ${previous} || last = ${current} || json path = ${query.recordJsonPath}.${query.idJsonPath}"
                 false
             }
         } else {

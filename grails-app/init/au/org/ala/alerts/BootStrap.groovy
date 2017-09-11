@@ -32,7 +32,7 @@ class BootStrap {
                     queryPathForUI: '/occurrences/search?fq=user_assertions:true&q=last_assertion_date:[___DATEPARAM___%20TO%20*]&sort=last_assertion_date&dir=desc',
                     dateFormat: """yyyy-MM-dd'T'HH:mm:ss'Z'""",
                     emailTemplate: '/email/biocache',
-                    recordJsonPath: '\$.occurrences',
+                    recordJsonPath: '\$.occurrences[*]',
                     idJsonPath: 'uuid'
             ])).save()
             new PropertyPath([name: "totalRecords", jsonPath: "totalRecords", query: newAssertions, fireWhenNotZero: true]).save()
@@ -51,7 +51,7 @@ class BootStrap {
                     queryPathForUI: '/occurrences/search?q=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc',
                     dateFormat: """yyyy-MM-dd'T'HH:mm:ss'Z'""",
                     emailTemplate: '/email/biocache',
-                    recordJsonPath: '\$.occurrences',
+                    recordJsonPath: '\$.occurrences[*]',
                     idJsonPath: 'uuid'
             ])).save()
             new PropertyPath([name: "totalRecords", jsonPath: "totalRecords", query: newRecords, fireWhenNotZero: true]).save()
@@ -71,7 +71,7 @@ class BootStrap {
                     dateFormat: """yyyy-MM-dd'T'HH:mm:ss'Z'""",
                     emailTemplate: '/email/biocache',
                     fireWhenNotZero: true,
-                    recordJsonPath: '\$.occurrences', // jsonpath 2 syntax: '\$.occurrences[*]'
+                    recordJsonPath: '\$.occurrences[*]', // jsonpath 2 syntax: '\$.occurrences[*]'
                     idJsonPath: 'uuid'
             ])).save()
             new PropertyPath([name: "totalRecords", jsonPath: "totalRecords", query: newRecordsWithImages, fireWhenNotZero: true]).save()
@@ -90,7 +90,7 @@ class BootStrap {
                     dateFormat: """yyyy-MM-dd'T'HH:mm:ss'Z'""",
                     emailTemplate: '/email/biocache',
                     fireWhenNotZero: true,
-                    recordJsonPath: '\$.occurrences',
+                    recordJsonPath: '\$.occurrences[*]',
                     idJsonPath: 'uuid'
             ])).save()
             new PropertyPath([name: "totalRecords", jsonPath: "totalRecords", query: newCitizenScienceRecords, fireWhenNotZero: true]).save()
@@ -109,7 +109,7 @@ class BootStrap {
                     queryPathForUI: '/occurrences/search?q=first_loaded_date:[___DATEPARAM___%20TO%20*]&fq=data_resource_uid:dr364&sort=first_loaded_date&dir=desc&fq=multimedia:Image',
                     dateFormat: """yyyy-MM-dd'T'HH:mm:ss'Z'""",
                     emailTemplate: '/email/biocache',
-                    recordJsonPath: '\$.occurrences',
+                    recordJsonPath: '\$.occurrences[*]',
                     idJsonPath: 'uuid'
             ])).save()
             new PropertyPath([name: "totalRecords", jsonPath: "totalRecords", query: newCitizenScienceRecordsWithImages, fireWhenNotZero: true]).save()
@@ -127,7 +127,7 @@ class BootStrap {
                     queryPath: '/ws/layers.json',
                     queryPathForUI: '/layers',
                     emailTemplate: '/email/layers',
-                    recordJsonPath: '\$.layerList',
+                    recordJsonPath: '\$[*]',
                     idJsonPath: 'name'
             ])).save()
             new PropertyPath([name: "layer_count", jsonPath: "layerList", query: newSpatialLayers, fireWhenChanged: true]).save()
@@ -144,7 +144,7 @@ class BootStrap {
                     queryPath: '/ws/dataResource',
                     queryPathForUI: '/datasets',
                     emailTemplate: '/email/datasets',
-                    recordJsonPath: '\$',
+                    recordJsonPath: '\$[*]',
                     idJsonPath: 'uid'
             ])).save()
             new PropertyPath([name: "dataset_count", jsonPath: "\$", query: newDatasets, fireWhenChanged: true]).save()
@@ -162,7 +162,7 @@ class BootStrap {
                     queryPath: '/ws/dataResource?resourceType=species-list',
                     queryPathForUI: '/datasets#filters=resourceType%3Aspecies-list',
                     emailTemplate: '/email/datasets',
-                    recordJsonPath: '\$',
+                    recordJsonPath: '\$[*]',
                     idJsonPath: 'uid'
             ])).save()
             new PropertyPath([name: "species_list_count", jsonPath: "\$", query: newSpeciesLists, fireWhenChanged: true]).save()
