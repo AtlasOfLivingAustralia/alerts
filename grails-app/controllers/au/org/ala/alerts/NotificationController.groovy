@@ -22,14 +22,14 @@ class NotificationController {
 
     def getUserAlerts = {
         User user = userService.getUserById(params.userId)
-        log.debug('Viewing my alerts :  ' + user)
+        log.debug('#getUserAlerts - Viewing my alerts :  ' + user)
         def model = getUserAlertsConfig(user)
         render model as JSON
     }
 
     def getUserAlertsConfig(User user) {
 
-        log.debug('Viewing my alerts :  ' + user)
+        log.debug('#getUserAlertsConfig - Viewing my alerts :  ' + user)
 
         //enabled alerts
         def notificationInstanceList = Notification.findAllByUser(user)
