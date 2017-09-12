@@ -49,10 +49,6 @@ repositories {
     maven { url "https://repo.grails.org/grails/core" }
 }
 
-springBoot  {
-    buildInfo()
-}
-
 grails {
     exploded = true
     plugins {
