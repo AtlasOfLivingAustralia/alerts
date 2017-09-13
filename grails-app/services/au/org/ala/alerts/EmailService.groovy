@@ -119,7 +119,7 @@ class EmailService {
     }
 
     private void sendGroupEmail(Query query, subsetOfAddresses, QueryResult queryResult, records, Frequency frequency, int totalRecords, String userUnsubToken, String notificationUnsubToken) {
-        String urlPrefix = "${grailsApplication.config.security.cas.appServerName}${grailsApplication.config.security.cas.contextPath}"
+        String urlPrefix = "${grailsApplication.config.security.cas.appServerName}${grailsApplication.config.getProperty('security.cas.contextPath','')}"
         try {
             sendMail {
                 from grailsApplication.config.postie.emailAlertAddressTitle + "<" + grailsApplication.config.postie.emailSender + ">"
