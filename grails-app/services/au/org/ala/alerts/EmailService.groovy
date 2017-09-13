@@ -5,11 +5,8 @@ class EmailService {
     static transactional = true
 
     def diffService
-
     def queryService
-
     def grailsApplication
-
     def serviceMethod() {}
 
     /**
@@ -36,20 +33,23 @@ class EmailService {
         def queryResult = QueryResult.findByQueryAndFrequency(notification.query, notification.user.frequency)
 
         def emailModel = generateEmailModel(notification, queryResult)
+        def user = notification.user
 
-        if (grailsApplication.config.postie.enableEmail) {
-            log.info "Sending email to ${notification.user.email} for ${notification.query.name}"
+        if (grailsApplication.config.postie.enableEmail && !user.locked) {
+            log.info "Sending email to ${user.email} for ${notification.query.name}"
             sendMail {
                 from grailsApplication.config.postie.emailAlertAddressTitle + "<" + grailsApplication.config.postie.emailSender + ">"
                 subject "Update - " + notification.query.name
-                bcc notification.user.email
+                bcc user.email
                 body(view: notification.query.emailTemplate,
-                    plugin: "email-confirmation",
-                    model: emailModel
+                        plugin: "email-confirmation",
+                        model: emailModel
                 )
             }
+        } else if (grailsApplication.config.postie.enableEmail && user.locked) {
+            log.warn "Email not sent to locked user: ${user.email}"
         } else {
-            log.info("Email would have been sent to: " + notification.user.email)
+            log.info("Email would have been sent to: " + user.email)
             log.info("message:" + notification.query.updateMessage)
             log.debug("moreInfo:" + queryResult.queryUrlUIUsed)
             log.debug("stopNotification:" + grailsApplication.config.security.cas.appServerName + grailsApplication.config.security.cas.contextPath + '/notification/myAlerts')
@@ -101,10 +101,14 @@ class EmailService {
 
         if (grailsApplication.config.postie.enableEmail) {
             recipients.each { recipient ->
-                sendGroupEmail(query, [recipient.email], queryResult, records, frequency, totalRecords, recipient.userUnsubToken, recipient.notificationUnsubToken)
+                if (!recipient.locked) {
+                    sendGroupEmail(query, [recipient.email], queryResult, records, frequency, totalRecords, recipient.userUnsubToken, recipient.notificationUnsubToken)
+                } else {
+                    log.warn "Email not sent to locked user: ${recipient}"
+                }
             }
         } else {
-            log.debug("Email would have been sent to: " + recipients*.email.join(','))
+            log.info("Email would have been sent to: ${recipients*.email.join(',')} for ${query.name}")
             log.debug("message:" + query.updateMessage)
             log.debug("moreInfo:" + queryResult.queryUrlUIUsed)
             log.debug("stopNotification:" + grailsApplication.config.security.cas.appServerName + grailsApplication.config.security.cas.contextPath + '/notification/myAlerts')
