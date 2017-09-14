@@ -15,11 +15,15 @@
       <div id="content">
           <header id="page-header">
             <div class="inner row-fluid">
-              <hgroup>
-                <h1>${userPrefix} email alerts</h1>
-              </hgroup>
+              <h1>${userPrefix} email alert</h1>
             </div>
           </header>
+          <g:if test="${flash.message}">
+              <div class="alert alert-info">${flash.message}</div>
+          </g:if>
+          <g:if test="${flash.errorMessage}">
+              <div class="alert alert-danger">${flash.errorMessage}</div>
+          </g:if>
           <div id="page-body" role="main">
                 <g:set var="userId">${user.userId}</g:set>
                 <h3>
