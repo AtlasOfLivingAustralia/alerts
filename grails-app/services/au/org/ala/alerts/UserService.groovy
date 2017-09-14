@@ -22,7 +22,31 @@ class UserService {
 
     def authService
 
-    def serviceMethod() {}
+    def getUserAlertsConfig(User user) {
+
+        log.debug('#getUserAlertsConfig - Viewing my alerts :  ' + user)
+
+        //enabled alerts
+        def notificationInstanceList = Notification.findAllByUser(user)
+
+        //split into custom and non-custom...
+        def enabledQueries = notificationInstanceList.collect { it.query }
+        def enabledIds = enabledQueries.collect { it.id }
+
+        //all types
+        def allAlertTypes = Query.findAllByCustom(false)
+
+        allAlertTypes.removeAll { enabledIds.contains(it.id) }
+        def customQueries = enabledQueries.findAll { it.custom }
+        def standardQueries = enabledQueries.findAll { !it.custom }
+
+        [disabledQueries: allAlertTypes,
+         enabledQueries : standardQueries,
+         customQueries  : customQueries,
+         frequencies    : Frequency.listOrderByPeriodInSeconds(),
+         user           : user]
+    }
+
 
     int updateUserEmails(){
         def toUpdate = []

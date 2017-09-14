@@ -32,9 +32,10 @@ class UrlMappings {
             }
         }
 
-        "/ws/alerts/user/$userId"(controller: 'notification', action: 'getUserAlerts')
+        "/ws/alerts/user/$userId"(controller: 'webservice', action: 'getUserAlerts')
         "/ws/$action"(controller: 'webservice')
         "/ws/noauth/$action"(controller: 'webservice')
+
         "/"(controller: 'notification', action: 'index')
         "500"(view: '/error')
 

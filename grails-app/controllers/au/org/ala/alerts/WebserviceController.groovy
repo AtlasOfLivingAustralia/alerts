@@ -37,6 +37,14 @@ class WebserviceController {
     def listAlertsForUser = {
     }
 
+    def getUserAlerts = {
+        def model = [:]
+        User user = userService.getUserById(params.userId)
+        log.debug('#getUserAlerts - Viewing my alerts :  ' + user)
+        model = userService.getUserAlertsConfig(user)
+        render model as JSON
+    }
+
     /**
      * Service that returns a JSON callback response allowing consuming apps to create links
      * to create an alert or remove an alert
