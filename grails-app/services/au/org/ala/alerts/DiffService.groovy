@@ -61,7 +61,7 @@ class DiffService {
                 }
                 !diff.empty
             } catch (Exception ex) {
-                log.warn "JSONPath exception: ${ex}"
+                log.warn "JSONPath exception: ${ex} for query ${query.name} (id: ${query.id}) | URL: ${query.baseUrl}${query.queryPath}"
                 log.info "JSONPath exception stacktrace: ", ex
                 log.debug "Diff values: previous = ${previous} || last = ${current} || json path = ${query.recordJsonPath}.${query.idJsonPath}"
                 false
