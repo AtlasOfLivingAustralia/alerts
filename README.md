@@ -1,6 +1,6 @@
-# Alerts
+# ALA Alerts
 
-This is a small app responsible for sending email alerts when there are changes within the system.
+This is a small app responsible for sending email alerts when there are changes detected to endpoint web services (subscriptions).
 
 # Build status
 

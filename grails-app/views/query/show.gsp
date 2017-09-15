@@ -6,6 +6,7 @@
 		<meta name="layout" content="${grailsApplication.config.skin.layout}" />
 		<g:set var="entityName" value="${message(code: 'query.label', default: 'Query')}" />
 		<title><g:message code="default.show.label" args="[entityName]" /></title>
+		<asset:stylesheet href="alerts.css"/>
 	</head>
 	<body>
 		<a href="#show-query" class="skip" tabindex="-1"><g:message code="default.link.skip.label" default="Skip to content&hellip;"/></a>

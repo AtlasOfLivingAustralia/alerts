@@ -1,4 +1,12 @@
-.slcache
-target/*
+Thumbs.db
+.DS_Store
+.gradle
+build/
+.idea
 *.iml
-.idea/*
+*.ipr
+*.iws
+.project
+.settings
+.classpath
+out

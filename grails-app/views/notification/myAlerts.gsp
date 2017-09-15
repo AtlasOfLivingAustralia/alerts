@@ -9,17 +9,21 @@
         <meta name="breadcrumbParent" content="${grailsApplication.config.security.cas.casServerName}/userdetails/myprofile, My profile" />
         <g:set var="userPrefix" value="${adminUser ? user.email : 'My' }"/>
         <title>${userPrefix} email alerts | ${grailsApplication.config.skin.orgNameLong}</title>
-        <r:require modules="bootstrapSwitch,alerts"/>
+        <asset:stylesheet href="alerts.css"/>
     </head>
     <body>
       <div id="content">
           <header id="page-header">
             <div class="inner row-fluid">
-              <hgroup>
-                <h1>${userPrefix} email alerts</h1>
-              </hgroup>
+              <h1>${userPrefix} email alert</h1>
             </div>
           </header>
+          <g:if test="${flash.message}">
+              <div class="alert alert-info">${flash.message}</div>
+          </g:if>
+          <g:if test="${flash.errorMessage}">
+              <div class="alert alert-danger">${flash.errorMessage}</div>
+          </g:if>
           <div id="page-body" role="main">
                 <g:set var="userId">${user.userId}</g:set>
                 <h3>
@@ -70,7 +74,7 @@
                                   ${query.description}
                                 </td>
                                 <td class="queryActions">
-                                    <a href="javascript:void(0);" class='btn btn-danger deleteButton' id='${query.id}'>Delete</a>
+                                    <a href="javascript:void(0);" class='btn btn-ala deleteButton' id='${query.id}'>Delete</a>
                                 </td>
                             </tr>
                         </g:each>
@@ -104,14 +108,15 @@
                             </ul>
                         </p>
                         <p>
-                            Look for the <a class="btn btn-default" href="javascript:void(0);" disabled="true"><i class="icon icon-bell"></i> Alerts</a> button.
+                            Look for the <a class="btn btn-default" href="javascript:void(0);" disabled="true"><i class="glyphicon glyphicon-bell"></i> Alerts</a> button.
                         </p>
                     </div>
                 </div>
             </div>
           </div>
       </div>
-      <script type="text/javascript">
+      <asset:javascript src="alerts.js"/>
+      <asset:script type="text/javascript">
 
           var addMyAlertUrl = 'addMyAlert/';
           var deleteMyAlertUrl = 'deleteMyAlert/';
@@ -119,13 +124,6 @@
 
           $(document).ready( function(){
 
-              $(".query-cb").change(function(e){
-                  if($(this).is(':checked')){
-                     $.get(addMyAlertUrl + $(this).attr('id') + '?userId=${userId}');
-                  } else {
-                     $.get(deleteMyAlertUrl + $(this).attr('id')+ '?userId=${userId}');
-                  }
-              });
               $("#userFrequency").change(function(){
                   $.get('changeFrequency?frequency='+$('#userFrequency').val())
                       .success(function() {
@@ -135,6 +133,7 @@
                           alert("There was a problem updating your alert frequency. Please try again later.");
                       });
               });
+
               $('.deleteButton').click(function(data){
                 var id = $(this).attr('id');
                 $.get(deleteMyAlertWRUrl + id + '?userId=${userId}');
@@ -145,7 +144,23 @@
                     }
                 });
               });
+
+              $(".switch input").bootstrapSwitch(
+                  {   onColor:'ala',
+                      onSwitchChange: function (event, state) {
+                          event.preventDefault();
+                          $(this).attr('checked', state); // probably not needed
+
+                          if (state){
+                             $.get(addMyAlertUrl + $(this).attr('id') + '?userId=${userId}');
+                          } else {
+                             $.get(deleteMyAlertUrl + $(this).attr('id')+ '?userId=${userId}');
+                          }
+                          return true;
+                      }
+                  }
+              );
           });
-        </script>
+        </asset:script>
     </body>
 </html>

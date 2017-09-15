@@ -7,7 +7,7 @@
     <meta name="layout" content="${grailsApplication.config.skin.layout}"/>
 
     <title>Unsubscribe</title>
-    <r:require modules="bootstrapSwitch,alerts"/>
+    <asset:stylesheet href="alerts.css"/>
 </head>
 
 <body>
@@ -24,5 +24,6 @@
         Thank you. You have successfully unsubscribed.
     </div>
 </div>
+<asset:javascript src="alerts.js"/>
 </body>
 </html>

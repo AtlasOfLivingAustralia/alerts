@@ -27,7 +27,7 @@
             <li>Would send an email: ${qcr.queryResult.hasChanged}
             </li>
             <li>Errored: ${qcr.errored}</li>
-            <li><g:link controller="admin" action="debugAlertEmail" params="[id:qcr.query.id, frequency:key]" class="btn">View debug email - ${key}</g:link></li>
+            <li><g:link controller="admin" action="debugAlertEmail" params="[id:qcr.query.id, frequency:key]" class="btn btn-sm btn-ala">View debug email - ${key}</g:link></li>
         </ul>
         </div>
     </div>
