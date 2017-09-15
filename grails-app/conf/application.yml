@@ -123,6 +123,19 @@ spatial:
 collectory:
     baseURL: "http://collections.ala.org.au"
 
+speciesPages:
+    searchURL: "http://bie.ala.org.au/species/Tiliqua+rugosa"
+    searchTitle: Shingle-back
+collection:
+    searchURL: "http://collections.ala.org.au/public/show/co13"
+    searchTitle: ANIC
+regions:
+    searchURL: "http://regions.ala.org.au/states/Australian+Capital+Territory"
+    searchTitle: ACT
+occurrence:
+    searchURL: "https://biocache.ala.org.au/occurrences/search?q=passer"
+    searchTitle: occurrence search
+
 environments:
     development:
         grails:
