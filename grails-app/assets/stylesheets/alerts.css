@@ -50,3 +50,11 @@
 a.btn-ala {
     font-weight: 500;
 }
+
+#main ul {
+    list-style-type: disc;
+}
+
+#admin-functions li {
+    margin: 5px 0;
+}

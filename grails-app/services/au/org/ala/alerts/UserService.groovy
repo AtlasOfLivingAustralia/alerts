@@ -50,21 +50,32 @@ class UserService {
 
     int updateUserEmails(){
         def toUpdate = []
-        User.findAll().each {
-            UserDetails userDetails = authService.getUserForUserId(it.userId, true)
+        User.findAll().each { user ->
+            UserDetails userDetails = authService.getUserForUserId(user.userId, false)
+            Boolean userHasChanged = false
 
-            if (userDetails != null && it.email != userDetails.userName){
-                log.debug "userDetails = ${userDetails as JSON}"
-                it.email = userDetails.userName
+            // update email
+            if (userDetails != null && user.email != userDetails.userName){
+                user.email = userDetails.userName
+                userHasChanged = true
+            }
 
-                if (userDetails.hasProperty("locked")) {
-                    it.locked = userDetails.locked
+            // update locked property
+            if (userDetails?.hasProperty("locked") && userDetails.locked != null) {
+                if ((user.locked == null && userDetails.locked == true) ||
+                        (user.locked != null && user.locked != userDetails.locked)) {
+                    user.locked = userDetails.locked
+                    userHasChanged = true
                 }
+            }
 
-                toUpdate << it
+            if (userHasChanged) {
+                toUpdate << user
             }
         }
+
         toUpdate.each {
+            log.debug "Addding user to change list: ${it as JSON}"
             it.save(flush:true)
         }
         toUpdate.size()

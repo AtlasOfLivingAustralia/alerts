@@ -4,6 +4,7 @@
     <meta name="layout" content="${grailsApplication.config.skin.layout}"/>
     <meta name="breadcrumb" content="Admin functions" />
     <meta name="breadcrumbParent" content="${grailsApplication.config.grails.serverURL?:'/'},Alerts" />
+    <asset:stylesheet href="alerts.css"/>
 </head>
 
 <body>
@@ -13,7 +14,7 @@
     <div class="alert alert-info">${message}${flash.message}</div>
 </g:if>
 
-<div>
+<div id="admin-functions">
     <ul>
         <li><g:link controller="notification" action="myAlerts">View my alerts</g:link></li>
         <li><g:link controller="admin" action="debugAllAlerts">Debug all alerts</g:link></li>

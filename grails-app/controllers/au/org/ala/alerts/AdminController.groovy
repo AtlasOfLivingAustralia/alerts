@@ -39,7 +39,8 @@ class AdminController {
 
     def updateUserEmails() {
         def updated = userService.updateUserEmails()
-        render(view: 'index', model: [message: """Updated ${updated} email addresses in system"""])
+        flash.message = "Updated ${updated} email addresses in system"
+        redirect(action: 'index')
     }
 
     def createBulkEmail = {}
