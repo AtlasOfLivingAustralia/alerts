@@ -1,3 +1,4 @@
+<%@ page import="grails.converters.JSON" %>
 <html>
   <head>
 	  <title>Grails Runtime Exception</title>
@@ -25,8 +26,8 @@
   </head>
 
   <body>
-    <h1>Grails Runtime Exception</h1>
-    <h2>Error Details</h2>
+    <h1>An error occurred</h1>
+    <div>Please try again and if this error persists, please send an email to <a href="mailto:support@ala.org.au?subject=ALA Alerts%20error&body=Requested URL: ${request.scheme}://${request.serverName}${request.forwardURI}%0APlease describe the steps you took to trigger this error:">support@ala.org.au</a> describing the issue</div>
 
   	<div class="message">
 		<strong>Error ${request.'javax.servlet.error.status_code'}:</strong> ${request.'javax.servlet.error.message'.encodeAsHTML()}<br/>

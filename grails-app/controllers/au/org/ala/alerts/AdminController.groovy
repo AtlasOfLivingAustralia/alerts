@@ -199,6 +199,11 @@ class AdminController {
         null
     }
 
+    /**
+     * Appears to be deprecated for #updateUserEmails
+     *
+     * @return
+     */
     def refreshUserDetails() {
         try {
             def userListJson = doPost(grailsApplication.config.ala.userDetailsURL)

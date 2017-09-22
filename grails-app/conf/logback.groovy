@@ -61,7 +61,7 @@ switch (Environment.current) {
                 maxFileSize = FileSize.valueOf('10MB')
             }
         }
-        root(INFO, ['TOMCAT_LOG']) // TODO change this back to WARN
+        root(WARN, ['TOMCAT_LOG'])
         break
     case Environment.TEST:
         appender(TOMCAT_LOG, RollingFileAppender) {

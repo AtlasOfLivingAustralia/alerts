@@ -22,6 +22,8 @@
 
     <div id="page-body" role="main">
         Thank you. You have successfully unsubscribed.
+        <br><br>
+        <g:link uri="/">View your active email alerts</g:link>
     </div>
 </div>
 <asset:javascript src="alerts.js"/>

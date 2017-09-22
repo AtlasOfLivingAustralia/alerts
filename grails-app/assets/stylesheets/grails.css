@@ -207,14 +207,14 @@ fieldset.embedded legend {
 
 .errors,
 .message {
-    font-size: 0.8em;
+    /*font-size: 0.8em;*/
     line-height: 2;
     margin: 1em 2em;
     padding: 0.25em;
 }
 
 .message {
-    background: #f3f3ff;
+    background: #f3f3f3;
     border: 1px solid #b2d1ff;
     color: #006dba;
     -moz-box-shadow: 0 0 0.25em #b2d1ff;
@@ -238,12 +238,12 @@ fieldset.embedded legend {
 
 .errors li {
     list-style: none;
-    background: transparent url(../images/skin/exclamation.png) 0.5em 50% no-repeat;
+    background: transparent url(../images/skin/exclamation.png) 0.5em 11px no-repeat;
     text-indent: 2.2em;
 }
 
 .message {
-    background: transparent url(../images/skin/information.png) 0.5em 50% no-repeat;
+    background: transparent url(../images/skin/information.png) 0.5em 11px no-repeat;
     text-indent: 2.2em;
 }
 

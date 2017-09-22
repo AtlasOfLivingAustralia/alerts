@@ -47,27 +47,37 @@ class UserService {
          user           : user]
     }
 
-
+    /**
+     * Sync User table with UserDetails app via webservice
+     *
+     * @return
+     */
     int updateUserEmails(){
         def toUpdate = []
         User.findAll().each { user ->
             UserDetails userDetails = authService.getUserForUserId(user.userId, false)
             Boolean userHasChanged = false
 
-            // update email
-            if (userDetails != null && user.email != userDetails.userName){
-                user.email = userDetails.userName
-                userHasChanged = true
-            }
-
-            // update locked property
-            if (userDetails?.hasProperty("locked") && userDetails.locked != null) {
-                if ((user.locked == null && userDetails.locked == true) ||
-                        (user.locked != null && user.locked != userDetails.locked)) {
-                    user.locked = userDetails.locked
+            if (userDetails) {
+                // update email
+                if (userDetails != null && user.email != userDetails.userName){
+                    user.email = userDetails.userName
                     userHasChanged = true
                 }
+
+                // update locked property
+                if (userDetails?.hasProperty("locked") && userDetails.locked != null) {
+                    if ((user.locked == null && userDetails.locked == true) ||
+                            (user.locked != null && user.locked != userDetails.locked)) {
+                        user.locked = userDetails.locked
+                        userHasChanged = true
+                    }
+                }
+            } else {
+                // we can't find a user
+
             }
+
 
             if (userHasChanged) {
                 toUpdate << user
@@ -75,9 +85,10 @@ class UserService {
         }
 
         toUpdate.each {
-            log.debug "Addding user to change list: ${it as JSON}"
+            log.debug "Adding user to change list: ${it as JSON}"
             it.save(flush:true)
         }
+
         toUpdate.size()
     }
 

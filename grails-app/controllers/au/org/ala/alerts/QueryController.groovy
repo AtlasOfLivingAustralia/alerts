@@ -95,7 +95,7 @@ class QueryController {
         [queryInstance: queryInstance]
     }
 
-    @AlaSecured(value = 'ROLE_ADMIN', redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to view that page.")
+    @AlaSecured(value = 'ROLE_ADMIN', redirectController = 'admin', redirectAction = 'index', message = "You don't have permission to edit that record.")
     def edit() {
         def queryInstance = Query.get(params.id)
         if (!queryInstance) {
@@ -107,7 +107,7 @@ class QueryController {
         [queryInstance: queryInstance]
 }
 
-    @AlaSecured(value = 'ROLE_ADMIN', redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to view that page.")
+    @AlaSecured(value = 'ROLE_ADMIN', redirectController = 'admin', redirectAction = 'index', message = "You don't have permission to update that record.")
     def update() {
         def queryInstance = Query.get(params.id)
         if (!queryInstance) {
@@ -138,7 +138,7 @@ class QueryController {
         redirect(action: "show", id: queryInstance.id)
     }
 
-    @AlaSecured(value = 'ROLE_ADMIN', redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to view that page.")
+    @AlaSecured(value = 'ROLE_ADMIN', redirectController = 'admin', redirectAction = 'index', message = "You don't have permission to delete that record.")
     def delete() {
         def queryInstance = Query.get(params.id)
         if (!queryInstance) {
