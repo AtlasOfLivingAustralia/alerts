@@ -191,7 +191,7 @@
                                                             </table>
                                                             <div align="left" class="article-content">
                                                                 <multiline>
-                                                                    ${blog.excerpt}
+                                                                    ${raw(blog.excerpt)}
                                                                 </multiline>
                                                             </div>
                                                             <div align="left" class="article-content"> </div>
