@@ -164,7 +164,7 @@
                                                     <td class="w580" width="580">
                                                         <p align="left" class="article-title">
                                                             <singleline label="Title">
-                                                                Atlas Blogs and News
+                                                                ALA Blog
                                                             </singleline>
                                                         </p>
                                                     </td>
@@ -214,7 +214,7 @@
                     <td class="w640" width="640" height="15" bgcolor="#ffffff">
                         <div align="left" class="article-content" style="margin:10px 30px;">
                             <multiline>
-                                For all the latest blog posts, visit the <a href="http://www.ala.org.au/blogs-news/">Atlas Blog</a>
+                                For all the latest blog posts, visit the <a href="http://www.ala.org.au/blogs-news/">ALA Blog</a>
                                 <br/>
                                 Modify your preferences or unsubscribe via the <a href="http://alerts.ala.org.au/">&quot;My Email Alerts&quot;</a> page
                             </multiline>
