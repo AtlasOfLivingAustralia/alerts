@@ -169,21 +169,20 @@ class BootStrap {
         }
 
         // get_category_posts.json
-        if(Query.findAllByName('Blogs and News').isEmpty()){
+        if(Query.findAllByName('ALA Blog').isEmpty()){
             Query newBlogs = (new Query([
                     baseUrl: grailsApplication.config.ala.baseURL,
                     baseUrlForUI: grailsApplication.config.ala.baseURL,
                     name: 'Blogs and News',
                     resourceName:  grailsApplication.config.postie.defaultResourceName,
                     updateMessage: 'more.blogsnews.update.message',
-                    description: 'Notify me when blogs and news items are added.',
+                    description: 'Notify me when ALA Blog items are added.',
                     queryPath: '/api/get_category_posts/?slug=blogs-news&count=5',
                     queryPathForUI: '/blogs-news/',
                     emailTemplate: '/email/blogs',
                     recordJsonPath: '\$.posts[*]',
                     idJsonPath: 'id'
             ])).save()
-
             new PropertyPath([name: "last_blog_id", jsonPath: "posts", query: newBlogs, fireWhenChanged: true]).save()
         }
         log.info("end of preloadQueries")
