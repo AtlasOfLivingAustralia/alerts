@@ -74,8 +74,9 @@ class UserService {
                     }
                 }
             } else {
-                // we can't find a user
-
+                // we can't find a user in userdetails using userId - lock their account in local DB
+                user.locked = true
+                userHasChanged = true
             }
 
 
