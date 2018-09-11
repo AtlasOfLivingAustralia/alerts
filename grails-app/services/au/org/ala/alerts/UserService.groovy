@@ -55,8 +55,12 @@ class UserService {
      */
     int updateUserEmails(){
         def toUpdate = []
+        log.warn "Checking all ${User.count()} users in Alerts user table."
+        def count = 0
+
         User.findAll().each { user ->
-            UserDetails userDetails = authService.getUserForUserId(user.userId, false)
+            count++
+            UserDetails userDetails = authService.getUserForUserId(user.userId, false) // under @Cacheable
             Boolean userHasChanged = false
 
             if (userDetails) {
@@ -89,10 +93,14 @@ class UserService {
             if (userHasChanged) {
                 toUpdate << user
             }
+
+            if (count % 100 == 0) {
+                log.warn "Checked ${count} users with ${toUpdate.size()} changes, so far"
+            }
         }
 
         toUpdate.each {
-            log.debug "Adding user to change list: ${it as JSON}"
+            log.warn "Modifying user: ${it as JSON}"
             it.save(flush:true)
         }
 
