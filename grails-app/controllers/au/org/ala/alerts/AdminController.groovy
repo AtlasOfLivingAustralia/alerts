@@ -274,4 +274,24 @@ class AdminController {
         flash.message = msg
         redirect(action: "index")
     }
+
+    /**
+     * Utility method to fix broken unsubscribe links in email, where the unsubscribe link
+     * has '?token=NULL'. 
+     *
+     * @return
+     */
+    def repairNotificationsWithoutUnsubscribeToken() {
+        List notifications = Notification.findAllByUnsubscribeTokenIsNull()
+        def count = 0
+
+        notifications.each { Notification notification ->
+            notification.unsubscribeToken = UUID.randomUUID().toString()
+            notification.save(flush:true)
+            count++
+        }
+
+        flash.message = "Updated ${count} notification entries with new unsubscribeToken value (was NULL)."
+        redirect(action: 'index')
+    }
 }

@@ -22,6 +22,7 @@
         <li><g:link controller="notification" action="myAlerts">View my alerts</g:link></li>
         <li><g:link controller="admin" action="debugAllAlerts">Debug all alerts</g:link></li>
         <li><g:link controller="admin" action="updateUserEmails">Update user emails with CAS</g:link></li>
+        <li><g:link controller="admin" action="repairNotificationsWithoutUnsubscribeToken">Fix empty notification_token values in Notification table (unsubscribe links with '?token=NULL')</g:link></li>
         <li><g:link controller="query" action="list">View list of alert types</g:link></li>
         <li><g:link controller="admin" action="deleteOrphanAlerts">Delete orphaned queries</g:link></li>
         <li class="controller"><g:link controller="quartz">View scheduling</g:link></li>
