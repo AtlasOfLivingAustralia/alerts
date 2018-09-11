@@ -49,6 +49,7 @@ class UserService {
 
     /**
      * Sync User table with UserDetails app via webservice
+     * TODO batch requests to userDetails in 100 lots (see @AuthService.getUserDetailsById )
      *
      * @return
      */
@@ -62,20 +63,25 @@ class UserService {
                 // update email
                 if (userDetails != null && user.email != userDetails.userName){
                     user.email = userDetails.userName
+                    log.debug "Updating email address for user ${user.userId}: ${userDetails.userName}"
                     userHasChanged = true
                 }
 
                 // update locked property
                 if (userDetails?.hasProperty("locked") && userDetails.locked != null) {
+                    log.debug "Checking locked user: ${user.userId} -> ${userDetails.locked} vs ${user.locked}"
+
                     if ((user.locked == null && userDetails.locked == true) ||
                             (user.locked != null && user.locked != userDetails.locked)) {
                         user.locked = userDetails.locked
+                        log.debug "Updating locked status for user ${user.userId}: ${userDetails.locked}"
                         userHasChanged = true
                     }
                 }
             } else {
                 // we can't find a user in userdetails using userId - lock their account in local DB
                 user.locked = true
+                log.debug "Updating locked status for missing user ${user.userId}: true"
                 userHasChanged = true
             }
 
