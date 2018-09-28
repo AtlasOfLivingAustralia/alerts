@@ -84,9 +84,11 @@ class UserService {
                 }
             } else {
                 // we can't find a user in userdetails using userId - lock their account in local DB
-                user.locked = true
-                log.debug "Updating locked status for missing user ${user.userId}: true"
-                userHasChanged = true
+                if (user.locked == null || user.locked != true) {
+                    user.locked = true
+                    log.debug "Updating locked status for missing user ${user.userId}: true"
+                    userHasChanged = true
+                }
             }
 
 
