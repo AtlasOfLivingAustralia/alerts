@@ -7,7 +7,6 @@ class EmailService {
     def diffService
     def queryService
     def grailsApplication
-    def serviceMethod() {}
 
     /**
      * Returns a list of records
