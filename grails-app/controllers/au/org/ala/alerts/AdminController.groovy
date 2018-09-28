@@ -294,4 +294,24 @@ class AdminController {
         flash.message = "Updated ${count} notification entries with new unsubscribeToken value (was NULL)."
         redirect(action: 'index')
     }
+
+    /**
+     * Utility method to fix broken unsubscribe links in email, where the "unsubscribe all" link
+     * has '?token=NULL'.
+     *
+     * @return
+     */
+    def repairUsersWithoutUnsubscribeToken() {
+        List users = User.findAllByUnsubscribeTokenIsNull()
+        def count = 0
+
+        users.each { User user ->
+            user.unsubscribeToken = UUID.randomUUID().toString()
+            user.save(flush:true)
+            count++
+        }
+
+        flash.message = "Updated ${count} user entries with new unsubscribeToken value (was NULL)."
+        redirect(action: 'index')
+    }
 }
