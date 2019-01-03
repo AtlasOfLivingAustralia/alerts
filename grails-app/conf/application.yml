@@ -3,6 +3,9 @@ grails:
     profile: web
     cache:
         clearAtStartup: true
+        ehcache:
+            ehcacheXmlLocation: classpath:ehcache.xml
+            lockTimeout: 200
     codegen:
         defaultPackage: au.org.au.alerts
     config:
