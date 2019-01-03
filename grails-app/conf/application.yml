@@ -4,7 +4,7 @@ grails:
     cache:
         clearAtStartup: true
         ehcache:
-            ehcacheXmlLocation: classpath:ehcache.xml
+            ehcacheXmlLocation: classpath:ehcache3.xml
             lockTimeout: 200
     codegen:
         defaultPackage: au.org.au.alerts
