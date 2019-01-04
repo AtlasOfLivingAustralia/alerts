@@ -15,6 +15,7 @@ package au.org.ala.alerts
 
 import au.org.ala.web.UserDetails
 import grails.converters.JSON
+import grails.plugin.cache.Cacheable
 
 class UserService {
 
@@ -141,5 +142,13 @@ class UserService {
 
     List<User> findUsers(String term) {
         User.findAllByEmailIlike("%${term}%")
+    }
+
+    @Cacheable("testCache")
+    boolean testEhCache(String input = "not-set") {
+        log.warn "Inside the testEhCache() method with ${input}... sleeping for 5 seconds"
+        sleep(5000)
+        log.warn "Exiting testEhCache() method"
+        true
     }
 }
