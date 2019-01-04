@@ -81,6 +81,9 @@ dependencies {
     //compile "org.grails.plugins:grails-plugin-converters" // only needed for grails 3.3
     testCompile "org.grails:grails-plugin-testing"
     testCompile "org.grails.plugins:geb"
+    testCompile "org.grails:grails-test-mixins:3.3.0"
+    testCompile "org.grails:grails-gorm-testing-support"
+    testCompile "org.grails:grails-web-testing-support"
     testRuntime "org.seleniumhq.selenium:selenium-htmlunit-driver:2.47.1"
     testRuntime "net.sourceforge.htmlunit:htmlunit:2.18"
     
@@ -103,6 +106,8 @@ dependencies {
     // regular JAR dependencies
     runtime 'mysql:mysql-connector-java:5.1.42'
     testRuntime "com.h2database:h2"
+    testRuntime "org.seleniumhq.selenium:selenium-htmlunit-driver:2.47.1"
+    testRuntime "net.sourceforge.htmlunit:htmlunit:2.18"
     runtime 'commons-lang:commons-lang:2.6'
     compile 'commons-io:commons-io:2.5'
     runtime 'org.hamcrest:hamcrest-core:1.3'
