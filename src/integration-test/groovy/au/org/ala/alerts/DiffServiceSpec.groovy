@@ -14,7 +14,7 @@
 package au.org.ala.alerts
 
 import grails.test.mixin.integration.Integration
-import grails.transaction.*
+import grails.gorm.transactions.*
 import org.springframework.beans.factory.annotation.Autowired
 import spock.lang.*
 

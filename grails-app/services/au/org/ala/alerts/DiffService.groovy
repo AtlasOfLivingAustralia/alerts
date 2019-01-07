@@ -21,8 +21,6 @@ class DiffService {
 
     static transactional = true
 
-    def serviceMethod() {}
-
     Boolean hasChangedJsonDiff(QueryResult queryResult) {
         if (queryResult.lastResult != null && queryResult.previousResult != null) {
             String last = decompressZipped(queryResult.lastResult)
@@ -123,7 +121,7 @@ class DiffService {
         records
     }
 
-    def String decompressZipped(byte[] zipped) {
+    String decompressZipped(byte[] zipped) {
         if (zipped) {
             GZIPInputStream input = new GZIPInputStream(new ByteArrayInputStream(zipped))
             StringBuffer sb = new StringBuffer()
