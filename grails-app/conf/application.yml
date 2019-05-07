@@ -106,7 +106,7 @@ skin:
     layout: "ala-main"
     orgNameLong: "Atlas of Living Australia"
     orgNameShort: "ALA"
-privacyPolicy: "http://www.ala.org.au/about/terms-of-use/privacy-policy/"
+privacyPolicy: "https://www.ala.org.au/about/terms-of-use/privacy-policy/"
 
 security:
     cas:
@@ -128,18 +128,18 @@ biocacheService:
 biocache:
     baseURL: "https://biocache.ala.org.au"
 spatial:
-    baseURL: "http://spatial.ala.org.au"
+    baseURL: "https://spatial.ala.org.au"
 collectory:
-    baseURL: "http://collections.ala.org.au"
+    baseURL: "https://collections.ala.org.au"
 
 speciesPages:
-    searchURL: "http://bie.ala.org.au/species/Tiliqua+rugosa"
+    searchURL: "https://bie.ala.org.au/species/Tiliqua+rugosa"
     searchTitle: Shingle-back
 collection:
-    searchURL: "http://collections.ala.org.au/public/show/co13"
+    searchURL: "https://collections.ala.org.au/public/show/co13"
     searchTitle: ANIC
 regions:
-    searchURL: "http://regions.ala.org.au/states/Australian+Capital+Territory"
+    searchURL: "https://regions.ala.org.au/states/Australian+Capital+Territory"
     searchTitle: ACT
 occurrence:
     searchURL: "https://biocache.ala.org.au/occurrences/search?q=passer"
@@ -161,16 +161,16 @@ environments:
             serverURL: "http://dev.ala.org.au:8080"
         security:
             cas:
-                appServerName: "http://auth.ala.org.au"
+                appServerName: "https://auth.ala.org.au"
     production:
         grails:
-            serverURL: "http://auth.ala.org.au/alerts"
+            serverURL: "https://auth.ala.org.au/alerts"
             mail:
                 host: "localhost"
                 port: 25
         security:
             cas:
-                appServerName: "http://auth.ala.org.au"
+                appServerName: "https://auth.ala.org.au"
 
 ---
 hibernate:
