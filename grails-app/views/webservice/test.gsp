@@ -38,8 +38,8 @@
             webserviceQuery:'/ws/occurrences/search?q=*:*',
             uiQuery:'/occurrences/search?q=*:*',
             queryDisplayName:'AVH',
-            baseUrlForWS:'http://biocache.ala.org.au',
-            baseUrlForUI:'http://avh-demo.ala.org.au',
+            baseUrlForWS:'https://biocache.ala.org.au',
+            baseUrlForUI:'https://avh.ala.org.au',
             resourceName:'Australian Virtual Herbarium'
     ]}">Create an AdHoc biocache alerts for new records AVH records
     </g:link>
@@ -50,8 +50,8 @@
             webserviceQuery:'/ws/occurrences/search?q=*:*',
             uiQuery:'/occurrences/search?q=*:*',
             queryDisplayName:'Annotations in AVH',
-            baseUrlForWS:'http://biocache.ala.org.au',
-            baseUrlForUI:'http://avh-demo.ala.org.au',
+            baseUrlForWS:'https://biocache.ala.org.au',
+            baseUrlForUI:'https://avh.ala.org.au',
             resourceName:'Australian Virtual Herbarium'
     ]}">Create an AdHoc biocache alerts for new annotations AVH records
     </g:link>
@@ -63,25 +63,25 @@
   <li>
     <g:link controller="webservice" action="taxonAlerts"
             params="${[taxonGuid:'urn:lsid:biodiversity.org.au:afd.taxon:aa745ff0-c776-4d0e-851d-369ba0e6f537', taxonName:'Macropus rufus : Red Kangaroo',
-            redirect:'http://bie.ala.org.au/species/Macropus+rufus']}">
+            redirect:'https://bie.ala.org.au/species/Macropus+rufus']}">
       Create taxon alert for Red Kangaroo
     </g:link>
   </li>
   <li>
     <g:link controller="webservice" action="regionAlerts"
-            params="${[regionName:'New South Wales', layerId:'state', redirect:'http://regions.ala.org.au/states/New South Wales']}">
+            params="${[regionName:'New South Wales', layerId:'state', redirect:'https://regions.ala.org.au/states/New South Wales']}">
       Create region alert for NSW
     </g:link>
   </li>
   <li>
     <g:link controller="webservice" action="taxonRegionAlerts"
-            params="${[taxonGuid:'urn:lsid:biodiversity.org.au:afd.taxon:17c9fd64-3c07-4df5-a33d-eda1e065e99f', taxonName:'Insecta', regionName:'New South Wales', layerId:'state', redirect:'http://regions.ala.org.au/states/New South Wales']}">
+            params="${[taxonGuid:'urn:lsid:biodiversity.org.au:afd.taxon:17c9fd64-3c07-4df5-a33d-eda1e065e99f', taxonName:'Insecta', regionName:'New South Wales', layerId:'state', redirect:'https://regions.ala.org.au/states/New South Wales']}">
       Create taxon & region alert for Insects and NSW
     </g:link>
   </li>
   <li>
     <g:link controller="webservice" action="speciesGroupRegionAlerts"
-            params="${[speciesGroup:'Insects', regionName:'New South Wales', layerId:'state', redirect:'http://regions.ala.org.au/states/New South Wales']}">
+            params="${[speciesGroup:'Insects', regionName:'New South Wales', layerId:'state', redirect:'https://regions.ala.org.au/states/New South Wales']}">
       Create species group & region alert for Insects and NSW
     </g:link>
   </li>
