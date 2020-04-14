@@ -1,6 +1,6 @@
 <html>
     <head>
-        <title>Notification service | Atlas of Living Australia</title>
+        <title>Notification service | ${grailsApplication.config.skin.orgNameLong?: 'Atlas of Living Australia'}</title>
         <meta name="layout" content="${grailsApplication.config.skin.layout}" />
         <meta name="breadcrumb" content="Admin functions" />
         <meta name="breadcrumbParent" content="${request.contextPath?:'/'},Alerts" />
