@@ -147,6 +147,11 @@ occurrence:
     searchURL: "https://biocache.ala.org.au/occurrences/search?q=passer"
     searchTitle: occurrence search
 
+useSpeciesLists: true
+useSpatial: true
+useBlobsAlerts: true
+useCitizenScienceAlerts: true
+
 environments:
     development:
         grails:
