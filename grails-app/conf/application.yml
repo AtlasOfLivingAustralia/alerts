@@ -149,7 +149,7 @@ occurrence:
 
 useSpeciesLists: true
 useSpatial: true
-useBlobsAlerts: true
+useBlogsAlerts: true
 useCitizenScienceAlerts: true
 
 environments:
