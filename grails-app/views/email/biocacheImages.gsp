@@ -50,8 +50,8 @@
     <p>
       <g:message code="${message}" default="${message}" args="${[totalRecords]}"/>
     </p>
-    <p>To <b>view all</b> the records that have added/changed, <a href="${moreInfo}"><button>click here</button></a></p>
-    <p>To <b>disable this alert</b> or to manage your alerts, <a href="${stopNotification}"><button>click here</button></a>.
+    <p><a href="${moreInfo}"><b>View all</b> the added/changed records</a></p>
+    <p><a href="${stopNotification}"><b>Disable this alert</b> or manage your alerts</a>.
       Your current settings are to receive alerts ${frequency}.
     </p>
     <style type="text/css">

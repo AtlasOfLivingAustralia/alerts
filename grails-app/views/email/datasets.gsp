@@ -4,8 +4,8 @@
   <body>
     <h2>${title}</h2>
     <p><g:message code="${message}" default="${message}"/></p>
-    <p>To view details of the datasets that have been added/changed, <a href="${moreInfo}">click here</a></p>
-    <p>To disable this alert or to manage your alerts, <a href="${stopNotification}">click here</a></p>
+    <p><a href="${moreInfo}">View details of the added/changed datasets</a></p>
+    <p><a href="${stopNotification}">Disable this alert or manage your alerts</a></p>
     <style type="text/css">
     	body { font-family:Arial; }
     	table { border-collapse: collapse; border: 1px solid #CCC; padding:2px; }
@@ -24,7 +24,7 @@
       <tr>
         <td>${dataset.name}</td>
          <td>
-           <a href="${grailsApplication.config.collectory.baseURL}/public/show/${dataset.uid}">click to details</a>
+           <a href="${grailsApplication.config.collectory.baseURL}/public/show/${dataset.uid}">View details of ${dataset.name}</a>
          </td>
       </tr>
       </tbody>

@@ -4,7 +4,7 @@
   <body>
     <h2>${title}</h2>
     <p><g:message code="${message}" default="${message}"/></p>
-    <p>To view details, <a href="${moreInfo}">click here</a></p>
-    <p>To manage your alerts, <a href="${stopNotification}">click here</a></p>
+    <p><a href="${moreInfo}">View details</a></p>
+    <p><a href="${stopNotification}">Manage your alerts</a></p>
   </body>
 </html>

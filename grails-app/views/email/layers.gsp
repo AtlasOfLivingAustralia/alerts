@@ -4,8 +4,8 @@
   <body>
     <h2>${title}</h2>
     <p><g:message code="${message}" default="${message}"/></p>
-    <p>To view details of the layers that have been added/changed, <a href="${moreInfo}">click here</a></p>
-    <p>To disable this alert or to manage your alerts, <a href="${stopNotification}">click here</a></p>
+    <p><a href="${moreInfo}">View details of the added/changed layers</a></p>
+    <p><a href="${stopNotification}">Disable this alert or manage your alerts</a></p>
     <style type="text/css">
     	body { font-family:Arial; }
     	table { border-collapse: collapse; border: 1px solid #CCC; padding:2px; }
@@ -28,7 +28,7 @@
           ${layer.description}
         </td>
         <td>
-           <a href="${grailsApplication.config.spatial.baseURL}/layers/more/${layer.name}">click to layer details</a>
+           <a href="${grailsApplication.config.spatial.baseURL}/layers/more/${layer.name}">View details of ${layer.name}</a>
         </td>
       </tr>
       </tbody>
