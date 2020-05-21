@@ -124,7 +124,7 @@ ala:
     baseURL: "https://www.ala.org.au"
     userDetailsURL: "https://auth.ala.org.au/userdetails/userDetails/getUserListFull"
 biocacheService:
-    baseURL: "https://biocache.ala.org.au"
+    baseURL: "https://biocache-ws.ala.org.au/ws"
 biocache:
     baseURL: "https://biocache.ala.org.au"
 spatial:

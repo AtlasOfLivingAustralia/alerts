@@ -92,7 +92,7 @@ class QueryService {
    */
   Query createBioCacheChangeQuery(String biocacheWebserviceQueryPath, String biocacheUIQueryPath, String queryDisplayName, String baseUrlForWS, String baseUrlForUI, String resourceName){
     new Query([
-      baseUrl: baseUrlForWS?:grailsApplication.config.biocache.baseURL,
+      baseUrl: baseUrlForWS?:grailsApplication.config.biocacheService.baseURL,
       baseUrlForUI: baseUrlForUI?:grailsApplication.config.biocache.baseURL,
       resourceName:  resourceName,
       name: 'New records for ' + queryDisplayName,
@@ -111,7 +111,7 @@ class QueryService {
   Query createBioCacheAnnotationQuery(String biocacheWebserviceQueryPath, String biocacheUIQueryPath, String queryDisplayName, String baseUrlForWS, String baseUrlForUI, String resourceName){
     // Alert for Unconfirmed (50005), Verified (50002), Corrected (50003)
     new Query([
-      baseUrl: baseUrlForWS?:grailsApplication.config.biocache.baseURL,
+      baseUrl: baseUrlForWS?:grailsApplication.config.biocacheService.baseURL,
       baseUrlForUI: baseUrlForUI?:grailsApplication.config.biocache.baseURL,
       resourceName:  resourceName,
       name: 'New annotations on records for ' + queryDisplayName,
@@ -129,7 +129,7 @@ class QueryService {
 
   Query createBioCacheQuery(String biocacheWebserviceQueryPath, String biocacheUIQueryPath, String queryDisplayName, String baseUrlForWS, String baseUrlForUI, String resourceName){
     new Query([
-      baseUrl: baseUrlForWS?:grailsApplication.config.biocache.baseURL,
+      baseUrl: baseUrlForWS?:grailsApplication.config.biocacheService.baseURL,
       baseUrlForUI: baseUrlForUI?:grailsApplication.config.biocache.baseURL,
       resourceName:  resourceName,
       name: 'New records for ' + queryDisplayName,
@@ -147,13 +147,13 @@ class QueryService {
 
   Query createTaxonQuery(String taxonGuid, String taxonName){
     new Query([
-      baseUrl: grailsApplication.config.biocache.baseURL,
+      baseUrl: grailsApplication.config.biocacheService.baseURL,
       baseUrlForUI: grailsApplication.config.biocache.baseURL,
       name: 'New records for ' + taxonName,
       resourceName:  grailsApplication.config.postie.defaultResourceName,
       updateMessage: 'More occurrence records have been added for ' + taxonName,
       description: 'Notify me when new records are added for ' + taxonName,
-      queryPath: '/ws/occurrences/taxon/'+ taxonGuid + '?fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc&pageSize=20&facets=basis_of_record',
+      queryPath: '/occurrences/taxon/'+ taxonGuid + '?fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc&pageSize=20&facets=basis_of_record',
       queryPathForUI: '/occurrences/taxa/'+ taxonGuid + '?fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc',
       dateFormat: """yyyy-MM-dd'T'HH:mm:ss'Z'""",
       emailTemplate: '/email/biocache',
@@ -165,13 +165,13 @@ class QueryService {
 
   Query createTaxonRegionQuery(String taxonGuid, String taxonName, String layerId, String regionName){
     new Query([
-      baseUrl: grailsApplication.config.biocache.baseURL,
+      baseUrl: grailsApplication.config.biocacheService.baseURL,
       baseUrlForUI: grailsApplication.config.biocache.baseURL,
       name: 'New records for ' + taxonName + ' recorded in ' + regionName,
       resourceName:  grailsApplication.config.postie.defaultResourceName,
       updateMessage: 'More occurrence records have been added for ' + taxonName + ' recorded in ' + regionName,
       description: 'Notify me when new records are added for ' + taxonName + ' recorded in ' + regionName,
-      queryPath: '/ws/occurrences/taxon/'+ taxonGuid +'?' + layerId + ':%22'+regionName.encodeAsURL()+'%22&fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc&pageSize=20&facets=basis_of_record',
+      queryPath: '/occurrences/taxon/'+ taxonGuid +'?' + layerId + ':%22'+regionName.encodeAsURL()+'%22&fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc&pageSize=20&facets=basis_of_record',
       queryPathForUI: '/occurrences/taxa/'+ taxonGuid +'?' + layerId + ':%22'+regionName.encodeAsURL()+'%22&fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc',
       dateFormat: """yyyy-MM-dd'T'HH:mm:ss'Z'""",
       emailTemplate: '/email/biocache',
@@ -183,13 +183,13 @@ class QueryService {
 
   Query createSpeciesGroupRegionQuery(String speciesGroup, String layerId, String regionName){
     new Query([
-      baseUrl: grailsApplication.config.biocache.baseURL,
+      baseUrl: grailsApplication.config.biocacheService.baseURL,
       baseUrlForUI: grailsApplication.config.biocache.baseURL,
       name: 'New records for ' + speciesGroup + ' recorded in ' + regionName,
       resourceName:  grailsApplication.config.postie.defaultResourceName,
       updateMessage: 'More occurrence records have been added for ' + speciesGroup + ' recorded in ' + regionName,
       description: 'Notify me when new records are added for ' + speciesGroup + ' recorded in ' + regionName,
-      queryPath: '/ws/occurrences/search?q='+layerId+':%22'+regionName.encodeAsURL()+'%22&fq=species_group:'+speciesGroup+'&fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc&pageSize=20&facets=basis_of_record',
+      queryPath: '/occurrences/search?q='+layerId+':%22'+regionName.encodeAsURL()+'%22&fq=species_group:'+speciesGroup+'&fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc&pageSize=20&facets=basis_of_record',
       queryPathForUI: '/occurrences/search?q='+layerId+':"'+regionName.encodeAsURL()+'"&fq=species_group:'+speciesGroup+'&fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc',
       dateFormat: """yyyy-MM-dd'T'HH:mm:ss'Z'""",
       emailTemplate: '/email/biocache',
@@ -201,13 +201,13 @@ class QueryService {
 
   Query createRegionQuery(String layerId, String regionName){
     new Query([
-      baseUrl: grailsApplication.config.biocache.baseURL,
+      baseUrl: grailsApplication.config.biocacheService.baseURL,
       baseUrlForUI: grailsApplication.config.biocache.baseURL,
       name: 'New records for ' + regionName,
       resourceName:  grailsApplication.config.postie.defaultResourceName,
       updateMessage: 'More occurrence records have been added for ' + regionName,
       description: 'Notify me when new records are added for ' + regionName,
-      queryPath: '/ws/occurrences/search?q='+ layerId+':%22' + regionName.encodeAsURL() +'%22&fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc&pageSize=20&facets=basis_of_record',
+      queryPath: '/occurrences/search?q='+ layerId+':%22' + regionName.encodeAsURL() +'%22&fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc&pageSize=20&facets=basis_of_record',
       queryPathForUI: '/occurrences/search?q='+ layerId+':%22' + regionName.encodeAsURL() +'%22&fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc',
       dateFormat: """yyyy-MM-dd'T'HH:mm:ss'Z'""",
       emailTemplate: '/email/biocache',
