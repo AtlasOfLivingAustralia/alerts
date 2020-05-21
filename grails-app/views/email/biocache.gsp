@@ -6,8 +6,8 @@
     <p>
       <g:message code="${message}" default="${message}" args="${[totalRecords]}"/>
     </p>
-    <p>To view a list of all the records that have added/changed, <a href="${moreInfo}">click here</a></p>
-    <p>To disable this alert or to manage your alerts, <a href="${stopNotification}">click here</a>.
+    <p><a href="${moreInfo}">View a list of all the added/changed records</a></p>
+    <p><a href="${stopNotification}">Disable this alert or manage your alerts</a>.
       Your current settings are to receive alerts ${frequency}.
     </p>
     <style type="text/css">
@@ -55,7 +55,7 @@
           </g:else>
           </td>
          <td class="linkCell" nowrap="nowrap">
-           <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}">View</a>
+           <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}">View this ${oc.scientificName} record</a>
          </td>
       </tr>
       </tbody>
