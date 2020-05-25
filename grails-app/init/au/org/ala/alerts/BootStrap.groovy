@@ -44,10 +44,10 @@ class BootStrap {
                     description: descr,
                     queryPath: '/occurrences/search?fq=user_assertions:true&q=user_assertions:true AND last_assertion_date:[___DATEPARAM___%20TO%20*]&sort=last_assertion_date&dir=desc&pageSize=20&facets=basis_of_record',
                     queryPathForUI: '/occurrences/search?fq=user_assertions:true&q=last_assertion_date:[___DATEPARAM___%20TO%20*]&sort=last_assertion_date&dir=desc',
-                    dateFormat: """yyyy-MM-dd'T'HH:mm:ss'Z'""",
-                    emailTemplate: '/email/biocache',
+                    dateFormat    : """yyyy-MM-dd'T'HH:mm:ss'Z'""",
+                    emailTemplate : '/email/biocache',
                     recordJsonPath: '\$.occurrences[*]',
-                    idJsonPath: 'uuid'
+                    idJsonPath    : 'uuid'
             ])).save()
             new PropertyPath([name: "totalRecords", jsonPath: "totalRecords", query: newAssertions, fireWhenNotZero: true]).save()
             new PropertyPath([name: "last_assertion_record", jsonPath: "occurrences[0].rowKey", query: newAssertions]).save()
@@ -65,10 +65,10 @@ class BootStrap {
                     description: descr,
                     queryPath: '/occurrences/search?q=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc&pageSize=20&facets=basis_of_record',
                     queryPathForUI: '/occurrences/search?q=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc',
-                    dateFormat: """yyyy-MM-dd'T'HH:mm:ss'Z'""",
-                    emailTemplate: '/email/biocache',
+                    dateFormat    : """yyyy-MM-dd'T'HH:mm:ss'Z'""",
+                    emailTemplate : '/email/biocache',
                     recordJsonPath: '\$.occurrences[*]',
-                    idJsonPath: 'uuid'
+                    idJsonPath    : 'uuid'
             ])).save()
             new PropertyPath([name: "totalRecords", jsonPath: "totalRecords", query: newRecords, fireWhenNotZero: true]).save()
             new PropertyPath([name: "last_loaded_record", jsonPath: "occurrences[0].rowKey", query: newRecords]).save()
@@ -89,8 +89,8 @@ class BootStrap {
                     dateFormat: """yyyy-MM-dd'T'HH:mm:ss'Z'""",
                     emailTemplate: '/email/biocache',
                     fireWhenNotZero: true,
-                    recordJsonPath: '\$.occurrences[*]', // jsonpath 2 syntax: '\$.occurrences[*]'
-                    idJsonPath: 'uuid'
+                    recordJsonPath : '\$.occurrences[*]', // jsonpath 2 syntax: '\$.occurrences[*]'
+                    idJsonPath     : 'uuid'
             ])).save()
             new PropertyPath([name: "totalRecords", jsonPath: "totalRecords", query: newRecordsWithImages, fireWhenNotZero: true]).save()
             new PropertyPath([name: "last_loaded_record", jsonPath: "occurrences[0].rowKey", query: newRecordsWithImages]).save()
@@ -111,8 +111,8 @@ class BootStrap {
                     dateFormat: """yyyy-MM-dd'T'HH:mm:ss'Z'""",
                     emailTemplate: '/email/biocache',
                     fireWhenNotZero: true,
-                    recordJsonPath: '\$.occurrences[*]',
-                    idJsonPath: 'uuid'
+                    recordJsonPath : '\$.occurrences[*]',
+                    idJsonPath     : 'uuid'
             ])).save()
             new PropertyPath([name: "totalRecords", jsonPath: "totalRecords", query: newCitizenScienceRecords, fireWhenNotZero: true]).save()
             new PropertyPath([name: "last_loaded_record", jsonPath: "occurrences[0].rowKey", query: newCitizenScienceRecords]).save()
@@ -131,10 +131,10 @@ class BootStrap {
                     description: descr,
                     queryPath: '/occurrences/search?q=first_loaded_date:[___DATEPARAM___%20TO%20*]&fq=data_resource_uid:dr364&sort=first_loaded_date&dir=desc&pageSize=20&facets=basis_of_record&fq=multimedia:Image',
                     queryPathForUI: '/occurrences/search?q=first_loaded_date:[___DATEPARAM___%20TO%20*]&fq=data_resource_uid:dr364&sort=first_loaded_date&dir=desc&fq=multimedia:Image',
-                    dateFormat: """yyyy-MM-dd'T'HH:mm:ss'Z'""",
-                    emailTemplate: '/email/biocache',
+                    dateFormat    : """yyyy-MM-dd'T'HH:mm:ss'Z'""",
+                    emailTemplate : '/email/biocache',
                     recordJsonPath: '\$.occurrences[*]',
-                    idJsonPath: 'uuid'
+                    idJsonPath    : 'uuid'
             ])).save()
             new PropertyPath([name: "totalRecords", jsonPath: "totalRecords", query: newCitizenScienceRecordsWithImages, fireWhenNotZero: true]).save()
             new PropertyPath([name: "last_loaded_record", jsonPath: "occurrences[0].rowKey", query: newCitizenScienceRecordsWithImages]).save()
@@ -153,9 +153,9 @@ class BootStrap {
                     description: descr,
                     queryPath: '/ws/layers.json',
                     queryPathForUI: '/layers',
-                    emailTemplate: '/email/layers',
+                    emailTemplate : '/email/layers',
                     recordJsonPath: '\$[*]',
-                    idJsonPath: 'name'
+                    idJsonPath    : 'name'
             ])).save()
             new PropertyPath([name: "layer_count", jsonPath: "layerList", query: newSpatialLayers, fireWhenChanged: true]).save()
         }
@@ -172,9 +172,9 @@ class BootStrap {
                     description: descr,
                     queryPath: '/ws/dataResource',
                     queryPathForUI: '/datasets',
-                    emailTemplate: '/email/datasets',
+                    emailTemplate : '/email/datasets',
                     recordJsonPath: '\$[*]',
-                    idJsonPath: 'uid'
+                    idJsonPath    : 'uid'
             ])).save()
             new PropertyPath([name: "dataset_count", jsonPath: "\$", query: newDatasets, fireWhenChanged: true]).save()
         }
@@ -193,9 +193,9 @@ class BootStrap {
                     description: descr,
                     queryPath: '/ws/dataResource?resourceType=species-list',
                     queryPathForUI: '/datasets#filters=resourceType%3Aspecies-list',
-                    emailTemplate: '/email/datasets',
+                    emailTemplate : '/email/datasets',
                     recordJsonPath: '\$[*]',
-                    idJsonPath: 'uid'
+                    idJsonPath    : 'uid'
             ])).save()
             new PropertyPath([name: "species_list_count", jsonPath: "\$", query: newSpeciesLists, fireWhenChanged: true]).save()
         }
@@ -214,9 +214,9 @@ class BootStrap {
                     description: descr,
                     queryPath: '/api/get_category_posts/?slug=blogs-news&count=5',
                     queryPathForUI: '/blogs-news/',
-                    emailTemplate: '/email/blogs',
+                    emailTemplate : '/email/blogs',
                     recordJsonPath: '\$.posts[*]',
-                    idJsonPath: 'id'
+                    idJsonPath    : 'id'
             ])).save()
             new PropertyPath([name: "last_blog_id", jsonPath: "posts", query: newBlogs, fireWhenChanged: true]).save()
         }
