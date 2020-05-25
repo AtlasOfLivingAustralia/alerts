@@ -7,7 +7,7 @@
     <meta name="layout" content="${grailsApplication.config.skin.layout}"/>
     <meta name="breadcrumb" content="Unsubscribe" />
     <meta name="breadcrumbParent" content="${request.contextPath?:'/'},Alerts" />
-    <title>Unsubscribe</title>
+    <title><g:message code="unsubscribe.title" /></title>
     <asset:stylesheet href="alerts.css"/>
 </head>
 
@@ -16,20 +16,20 @@
     <header id="page-header">
         <div class="inner row">
             <hgroup>
-                <h1>Unsubscribe</h1>
+                <h1><g:message code="unsubscribe.title" /></h1>
             </hgroup>
         </div>
     </header>
 
     <div id="page-body" role="main">
         <g:if test="${!notifications}">
-            You have no alerts.
+            <g:message code="unsubscribe.no.alerts" />
         </g:if>
         <g:elseif test="${notifications.size() == 1}">
-            Are you sure you wish to stop receiving alerts for ${notifications[0].query.name}?
+            <g:message code="unsubscribe.stop.receiving" args="[notifications[0].query.name]" />
         </g:elseif>
         <g:else>
-            Are you sure you wish to stop receiving the following alerts?
+            <g:message code="unsubscribe.stop.receiving.sure" />
             <ul>
                 <g:each in="${notifications.sort { it.query.name }}" var="notification">
                     <li>${notification.query.name}</li>

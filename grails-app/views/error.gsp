@@ -26,19 +26,22 @@
   </head>
 
   <body>
-    <h1>An error occurred</h1>
-    <div>Please try again and if this error persists, please send an email to <a href="mailto:support@ala.org.au?subject=ALA Alerts%20error&body=Requested URL: ${request.scheme}://${request.serverName}${request.forwardURI}%0APlease describe the steps you took to trigger this error:">support@ala.org.au</a> describing the issue</div>
+    <h1><g:message code="error.title" /></h1>
+    <div><g:message code="error.email" args="[grailsApplication.config.skin.orgSupportEmail,
+											  grailsApplication.config.skin.orgNameShort,
+											  request.scheme, request.serverName, request.forwardURI,
+											  grailsApplication.config.skin.orgSupportEmail]" /></div>
 
   	<div class="message">
-		<strong>Error ${request.'javax.servlet.error.status_code'}:</strong> ${request.'javax.servlet.error.message'.encodeAsHTML()}<br/>
+		<strong><g:message code="error.status.code" args="[request.'javax.servlet.error.status_code']" />:</strong> ${request.'javax.servlet.error.message'.encodeAsHTML()}<br/>
 		<strong>Servlet:</strong> ${request.'javax.servlet.error.servlet_name'}<br/>
 		<strong>URI:</strong> ${request.'javax.servlet.error.request_uri'}<br/>
 		<g:if test="${exception}">
-	  		<strong>Exception Message:</strong> ${exception.message?.encodeAsHTML()} <br />
-	  		<strong>Caused by:</strong> ${exception.cause?.message?.encodeAsHTML()} <br />
-	  		<strong>Class:</strong> ${exception.className} <br />
-	  		<strong>At Line:</strong> [${exception.lineNumber}] <br />
-	  		<strong>Code Snippet:</strong><br />
+	  		<strong><g:message code="error.exception.message" /></strong> ${exception.message?.encodeAsHTML()} <br />
+	  		<strong><g:message code="error.exception.caused.by" /></strong> ${exception.cause?.message?.encodeAsHTML()} <br />
+	  		<strong><g:message code="error.exception.class" /></strong> ${exception.className} <br />
+	  		<strong><g:message code="error.exception.at.line" /></strong> [${exception.lineNumber}] <br />
+	  		<strong><g:message code="error.exception.code.snippet" /></strong><br />
 	  		<div class="snippet">
 	  			<g:each var="cs" in="${exception.codeSnippet}">
 	  				${cs?.encodeAsHTML()}<br />
@@ -47,7 +50,7 @@
 		</g:if>
   	</div>
 	<g:if test="${exception}">
-	    <h2>Stack Trace</h2>
+	    <h2><g:message code="error.exception.stack.trace" /></h2>
 	    <div class="stack">
 	      <pre><g:each in="${exception.stackTraceLines}">${it.encodeAsHTML()}<br/></g:each></pre>
 	    </div>
