@@ -6,7 +6,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <meta name="layout" content="${grailsApplication.config.skin.layout}"/>
 
-    <title>Unsubscribe</title>
+    <title><g:message code="unsubscribed.title" /></title>
     <asset:stylesheet href="alerts.css"/>
 </head>
 
@@ -15,15 +15,15 @@
     <header id="page-header">
         <div class="inner row-fluid">
             <hgroup>
-                <h1>Unsubscribe</h1>
+                <h1><g:message code="unsubscribed.title" /></h1>
             </hgroup>
         </div>
     </header>
 
     <div id="page-body" role="main">
-        Thank you. You have successfully unsubscribed.
+        <g:message code="unsubscribed.successfully.unsubscribed" />
         <br><br>
-        <g:link uri="/">View your active email alerts</g:link>
+        <g:link uri="/"><g:message code="unsubscribed.view.your.active.email.alerts" /></g:link>
     </div>
 </div>
 <asset:javascript src="alerts.js"/>

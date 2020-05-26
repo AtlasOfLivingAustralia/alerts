@@ -1,7 +1,7 @@
 <div style="padding-top: 20px; font-size: 12px">
     <div>
-        You can <a href="${unsubscribeOne}">stop receiving alerts for ${query.name}</a>.
+        <g:message code="email.unsubscribe.query" args="[unsubscribeOne, query.name]" />.
         <br>
-        You can <a href="${unsubscribeAll}">stop receiving all ${grailsApplication.config.skin.orgNameLong} alerts</a>.
+        <g:message code="email.unsubscribe.all" args="[unsubscribeAll, grailsApplication.config.skin.orgNameLong]" />
     </div>
 </div>

@@ -46,7 +46,7 @@
 
                             <td valign="top" class="value">
                               <g:link controller="notification" action="checkNow" id="${notificationInstance?.id}">
-                                Check now
+                                <g:message code="show.check.now" />
                               </g:link>
                             </td>
                         </tr>
