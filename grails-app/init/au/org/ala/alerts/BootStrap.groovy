@@ -142,7 +142,7 @@ class BootStrap {
 
         title = messageSource.getMessage("query.spatial.layers.title", null, siteLocale)
         descr = messageSource.getMessage("query.spatial.layers.descr", null, siteLocale)
-        if (grailsApplication.config.useSpatial.toBoolean() &&
+        if (grailsApplication.config.useSpatialAlerts.toBoolean() &&
                 Query.findAllByName(title).isEmpty()) {
             Query newSpatialLayers = (new Query([
                     baseUrl: grailsApplication.config.spatial.baseURL,
@@ -181,7 +181,7 @@ class BootStrap {
 
         title = messageSource.getMessage("query.species.lists.title", null, siteLocale)
         descr = messageSource.getMessage("query.species.lists.descr", null, siteLocale)
-        if (grailsApplication.config.useSpeciesLists.toBoolean() &&
+        if (grailsApplication.config.useSpeciesListsAlerts.toBoolean() &&
                 Query.findAllByName(title).isEmpty()) {
             log.info "Creating species list query"
             Query newSpeciesLists = (new Query([
