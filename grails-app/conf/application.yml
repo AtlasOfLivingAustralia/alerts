@@ -106,7 +106,9 @@ skin:
     layout: "ala-main"
     orgNameLong: "Atlas of Living Australia"
     orgNameShort: "ALA"
+    orgSupportEmail: support@ala.org.au
 privacyPolicy: "https://www.ala.org.au/terms-of-use/privacy-policy/"
+siteDefaultLanguage: "en"
 
 security:
     cas:
@@ -124,7 +126,7 @@ ala:
     baseURL: "https://www.ala.org.au"
     userDetailsURL: "https://auth.ala.org.au/userdetails/userDetails/getUserListFull"
 biocacheService:
-    baseURL: "https://biocache.ala.org.au"
+    baseURL: "https://biocache-ws.ala.org.au/ws"
 biocache:
     baseURL: "https://biocache.ala.org.au"
 spatial:
@@ -144,6 +146,11 @@ regions:
 occurrence:
     searchURL: "https://biocache.ala.org.au/occurrences/search?q=passer"
     searchTitle: occurrence search
+
+useSpeciesListsAlerts: true
+useSpatialAlerts: true
+useBlogsAlerts: true
+useCitizenScienceAlerts: true
 
 environments:
     development:

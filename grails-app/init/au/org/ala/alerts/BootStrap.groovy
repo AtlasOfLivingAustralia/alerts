@@ -4,9 +4,21 @@ class BootStrap {
 
     javax.sql.DataSource dataSource
     def grailsApplication
+    def messageSource
+    def siteLocale
 
     def init = { servletContext ->
         log.info("Running bootstrap queries.")
+
+        messageSource.setBasenames(
+                "file:///var/opt/atlas/i18n/alerts/messages",
+                "file:///opt/atlas/i18n/alerts/messages",
+                "WEB-INF/grails-app/alerts/messages",
+                "classpath:messages"
+        )
+
+        siteLocale = new Locale.Builder().setLanguageTag(grailsApplication.config.siteDefaultLanguage).build();
+
         preloadQueries()
         log.info("Done bootstrap queries.")
     }
@@ -14,22 +26,24 @@ class BootStrap {
     private void preloadQueries() {
         log.info("start of preloadQueries")
         if(Frequency.findAll().isEmpty()){
-            (new Frequency([name:'hourly', periodInSeconds:3600])).save()
-            (new Frequency([name:'daily'])).save()
-            (new Frequency([name:'weekly', periodInSeconds:604800])).save()
-            (new Frequency([name:'monthly', periodInSeconds:2419200])).save()
+            (new Frequency([name: messageSource.getMessage('frequency.hourly', null, siteLocale), periodInSeconds:3600])).save()
+            (new Frequency([name: messageSource.getMessage('frequency.daily', null, siteLocale)])).save()
+            (new Frequency([name: messageSource.getMessage('frequency.weekly', null, siteLocale), periodInSeconds:604800])).save()
+            (new Frequency([name: messageSource.getMessage('frequency.monthly', null, siteLocale), periodInSeconds:2419200])).save()
         }
 
-        if(Query.findAllByName('Annotations').isEmpty()){
+        def title = messageSource.getMessage("query.annotations.title", null, siteLocale)
+        def descr = messageSource.getMessage("query.annotations.descr", null, siteLocale)
+        if(Query.findAllByName(title).isEmpty()){
             Query newAssertions = (new Query([
                     baseUrl: grailsApplication.config.biocacheService.baseURL,
                     baseUrlForUI: grailsApplication.config.biocache.baseURL,
                     resourceName:  grailsApplication.config.postie.defaultResourceName,
-                    name: 'Annotations',
+                    name: title,
                     updateMessage: 'annotations.update.message',
-                    description: 'Notify me when annotations are made on any record.',
-                    queryPath: '/ws/occurrences/search?fq=user_assertions:true&q=user_assertions:true AND last_assertion_date:[___DATEPARAM___%20TO%20*]&sort=last_assertion_date&dir=desc&pageSize=20&facets=basis_of_record',
-                    queryPathForUI: '/occurrences/search?fq=user_assertions:true&q=last_assertion_date:[___DATEPARAM___%20TO%20*]&sort=last_assertion_date&dir=desc',
+                    description: descr,
+                    queryPath: '/occurrences/search?fq=user_assertions:*&q=user_assertions:true AND last_assertion_date:[___DATEPARAM___%20TO%20*]&sort=last_assertion_date&dir=desc&pageSize=20&facets=basis_of_record',
+                    queryPathForUI: '/occurrences/search?fq=user_assertions:*&q=last_assertion_date:[___DATEPARAM___%20TO%20*]&sort=last_assertion_date&dir=desc',
                     dateFormat: """yyyy-MM-dd'T'HH:mm:ss'Z'""",
                     emailTemplate: '/email/biocache',
                     recordJsonPath: '\$.occurrences[*]',
@@ -39,15 +53,17 @@ class BootStrap {
             new PropertyPath([name: "last_assertion_record", jsonPath: "occurrences[0].rowKey", query: newAssertions]).save()
         }
 
-        if(Query.findAllByName('New records').isEmpty()){
+        title = messageSource.getMessage("query.new.records.title", null, siteLocale)
+        descr = messageSource.getMessage("query.new.records.descr", null, siteLocale)
+        if(Query.findAllByName(title).isEmpty()){
             Query newRecords = (new Query([
                     baseUrl: grailsApplication.config.biocacheService.baseURL,
                     baseUrlForUI: grailsApplication.config.biocache.baseURL,
-                    name: 'New records',
+                    name: title,
                     resourceName:  grailsApplication.config.postie.defaultResourceName,
                     updateMessage: 'more.records.update.message',
-                    description: 'Notify me when new records are added.',
-                    queryPath: '/ws/occurrences/search?q=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc&pageSize=20&facets=basis_of_record',
+                    description: descr,
+                    queryPath: '/occurrences/search?q=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc&pageSize=20&facets=basis_of_record',
                     queryPathForUI: '/occurrences/search?q=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc',
                     dateFormat: """yyyy-MM-dd'T'HH:mm:ss'Z'""",
                     emailTemplate: '/email/biocache',
@@ -58,15 +74,17 @@ class BootStrap {
             new PropertyPath([name: "last_loaded_record", jsonPath: "occurrences[0].rowKey", query: newRecords]).save()
         }
 
-        if(Query.findAllByName('New images').isEmpty()){
+        title = messageSource.getMessage("query.new.images.title", null, siteLocale)
+        descr = messageSource.getMessage("query.new.images.descr", null, siteLocale)
+        if(Query.findAllByName(title).isEmpty()){
             Query newRecordsWithImages = (new Query([
                     baseUrl: grailsApplication.config.biocacheService.baseURL,
                     baseUrlForUI: grailsApplication.config.biocache.baseURL,
-                    name: 'New images',
+                    name: title,
                     resourceName:  grailsApplication.config.postie.defaultResourceName,
                     updateMessage: 'more.images.update.message',
-                    description: 'Notify me when new images are added.',
-                    queryPath: '/ws/occurrences/search?q=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc&fq=multimedia:Image&pageSize=20&facets=basis_of_record',
+                    description: descr,
+                    queryPath: '/occurrences/search?q=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc&fq=multimedia:Image&pageSize=20&facets=basis_of_record',
                     queryPathForUI: '/occurrences/search?q=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc&fq=multimedia:Image',
                     dateFormat: """yyyy-MM-dd'T'HH:mm:ss'Z'""",
                     emailTemplate: '/email/biocache',
@@ -78,14 +96,17 @@ class BootStrap {
             new PropertyPath([name: "last_loaded_record", jsonPath: "occurrences[0].rowKey", query: newRecordsWithImages]).save()
         }
 
-        if(Query.findAllByName('Citizen science records').isEmpty()){
+        title = messageSource.getMessage("query.citizen.records.title", null, siteLocale)
+        descr = messageSource.getMessage("query.citizen.records.descr", null, siteLocale)
+        if (grailsApplication.config.useCitizenScienceAlerts.toBoolean() &&
+                Query.findAllByName(title).isEmpty()) {
             Query newCitizenScienceRecords = (new Query([
                     baseUrl: grailsApplication.config.biocacheService.baseURL,
                     baseUrlForUI: grailsApplication.config.biocache.baseURL,
-                    name: 'Citizen science records',
+                    name: title,
                     updateMessage: 'more.cs.update.message',
-                    description: 'Notify me when new citizen science records are added.',
-                    queryPath: '/ws/occurrences/search?q=first_loaded_date:[___DATEPARAM___%20TO%20*]&fq=data_resource_uid:dr364&sort=first_loaded_date&dir=desc&pageSize=20&facets=basis_of_record',
+                    description: descr,
+                    queryPath: '/occurrences/search?q=first_loaded_date:[___DATEPARAM___%20TO%20*]&fq=data_resource_uid:dr364&sort=first_loaded_date&dir=desc&pageSize=20&facets=basis_of_record',
                     queryPathForUI: '/occurrences/search?q=first_loaded_date:[___DATEPARAM___%20TO%20*]&fq=data_resource_uid:dr364&sort=first_loaded_date&dir=desc',
                     dateFormat: """yyyy-MM-dd'T'HH:mm:ss'Z'""",
                     emailTemplate: '/email/biocache',
@@ -97,15 +118,18 @@ class BootStrap {
             new PropertyPath([name: "last_loaded_record", jsonPath: "occurrences[0].rowKey", query: newCitizenScienceRecords]).save()
         }
 
-        if(Query.findAllByName('Citizen science records with images').isEmpty()){
+        title = messageSource.getMessage("query.citizen.records.imgs.title", null, siteLocale)
+        descr = messageSource.getMessage("query.citizen.records.imgs.descr", null, siteLocale)
+        if (grailsApplication.config.useCitizenScienceAlerts.toBoolean() &&
+                Query.findAllByName(title).isEmpty()) {
             Query newCitizenScienceRecordsWithImages = (new Query([
                     baseUrl: grailsApplication.config.biocacheService.baseURL,
                     baseUrlForUI: grailsApplication.config.biocache.baseURL,
                     name: 'Citizen science records with images',
                     resourceName:  grailsApplication.config.postie.defaultResourceName,
                     updateMessage: 'more.cs.images.update.message',
-                    description: 'Notify me when new citizen science records with images are added.',
-                    queryPath: '/ws/occurrences/search?q=first_loaded_date:[___DATEPARAM___%20TO%20*]&fq=data_resource_uid:dr364&sort=first_loaded_date&dir=desc&pageSize=20&facets=basis_of_record&fq=multimedia:Image',
+                    description: descr,
+                    queryPath: '/occurrences/search?q=first_loaded_date:[___DATEPARAM___%20TO%20*]&fq=data_resource_uid:dr364&sort=first_loaded_date&dir=desc&pageSize=20&facets=basis_of_record&fq=multimedia:Image',
                     queryPathForUI: '/occurrences/search?q=first_loaded_date:[___DATEPARAM___%20TO%20*]&fq=data_resource_uid:dr364&sort=first_loaded_date&dir=desc&fq=multimedia:Image',
                     dateFormat: """yyyy-MM-dd'T'HH:mm:ss'Z'""",
                     emailTemplate: '/email/biocache',
@@ -116,14 +140,17 @@ class BootStrap {
             new PropertyPath([name: "last_loaded_record", jsonPath: "occurrences[0].rowKey", query: newCitizenScienceRecordsWithImages]).save()
         }
 
-        if(Query.findAllByName('Spatial layers').isEmpty()){
+        title = messageSource.getMessage("query.spatial.layers.title", null, siteLocale)
+        descr = messageSource.getMessage("query.spatial.layers.descr", null, siteLocale)
+        if (grailsApplication.config.useSpatialAlerts.toBoolean() &&
+                Query.findAllByName(title).isEmpty()) {
             Query newSpatialLayers = (new Query([
                     baseUrl: grailsApplication.config.spatial.baseURL,
                     baseUrlForUI: grailsApplication.config.spatial.baseURL,
-                    name: 'Spatial layers',
+                    name: title,
                     resourceName:  grailsApplication.config.postie.defaultResourceName,
                     updateMessage: 'more.spatial.update.message',
-                    description: 'Notify me when new spatial layers are added.',
+                    description: descr,
                     queryPath: '/ws/layers.json',
                     queryPathForUI: '/layers',
                     emailTemplate: '/email/layers',
@@ -133,14 +160,16 @@ class BootStrap {
             new PropertyPath([name: "layer_count", jsonPath: "layerList", query: newSpatialLayers, fireWhenChanged: true]).save()
         }
 
-        if(Query.findAllByName('Datasets').isEmpty()){
+        title = messageSource.getMessage("query.datasets.title", null, siteLocale)
+        descr = messageSource.getMessage("query.datasets.descr", null, siteLocale)
+        if(Query.findAllByName(title).isEmpty()){
             Query newDatasets = (new Query([
                     baseUrl: grailsApplication.config.collectory.baseURL,
                     baseUrlForUI: grailsApplication.config.collectory.baseURL,
-                    name: 'Datasets',
+                    name: title,
                     resourceName:  grailsApplication.config.postie.defaultResourceName,
                     updateMessage: 'more.datasets.update.message',
-                    description: 'Notify me when new datasets are added.',
+                    description: descr,
                     queryPath: '/ws/dataResource',
                     queryPathForUI: '/datasets',
                     emailTemplate: '/email/datasets',
@@ -150,15 +179,18 @@ class BootStrap {
             new PropertyPath([name: "dataset_count", jsonPath: "\$", query: newDatasets, fireWhenChanged: true]).save()
         }
 
-        if(Query.findAllByName('Species lists').isEmpty()){
+        title = messageSource.getMessage("query.species.lists.title", null, siteLocale)
+        descr = messageSource.getMessage("query.species.lists.descr", null, siteLocale)
+        if (grailsApplication.config.useSpeciesListsAlerts.toBoolean() &&
+                Query.findAllByName(title).isEmpty()) {
             log.info "Creating species list query"
             Query newSpeciesLists = (new Query([
                     baseUrl: grailsApplication.config.collectory.baseURL,
                     baseUrlForUI: grailsApplication.config.collectory.baseURL,
-                    name: 'Species lists',
+                    name: title,
                     resourceName:  grailsApplication.config.postie.defaultResourceName,
                     updateMessage: 'more.specieslist.update.message',
-                    description: 'Notify me when new species lists are added.',
+                    description: descr,
                     queryPath: '/ws/dataResource?resourceType=species-list',
                     queryPathForUI: '/datasets#filters=resourceType%3Aspecies-list',
                     emailTemplate: '/email/datasets',
@@ -168,15 +200,18 @@ class BootStrap {
             new PropertyPath([name: "species_list_count", jsonPath: "\$", query: newSpeciesLists, fireWhenChanged: true]).save()
         }
 
+        title = messageSource.getMessage("query.ala.blog.title", null, siteLocale)
+        descr = messageSource.getMessage("query.ala.blog.descr", null, siteLocale)
         // get_category_posts.json
-        if(Query.findAllByName('ALA Blog').isEmpty()){
+        if (grailsApplication.config.useBlogsAlerts.toBoolean() &&
+                Query.findAllByName(title).isEmpty()) {
             Query newBlogs = (new Query([
                     baseUrl: grailsApplication.config.ala.baseURL,
                     baseUrlForUI: grailsApplication.config.ala.baseURL,
-                    name: 'Blogs and News',
+                    name: title,
                     resourceName:  grailsApplication.config.postie.defaultResourceName,
                     updateMessage: 'more.blogsnews.update.message',
-                    description: 'Notify me when ALA Blog items are added.',
+                    description: descr,
                     queryPath: '/api/get_category_posts/?slug=blogs-news&count=5',
                     queryPathForUI: '/blogs-news/',
                     emailTemplate: '/email/blogs',

@@ -35,10 +35,10 @@
 
   <li>
     <g:link controller="webservice" action="createBiocacheNewRecordsAlert" params="${[
-            webserviceQuery:'/ws/occurrences/search?q=*:*',
+            webserviceQuery:'/occurrences/search?q=*:*',
             uiQuery:'/occurrences/search?q=*:*',
             queryDisplayName:'AVH',
-            baseUrlForWS:'https://biocache.ala.org.au',
+            baseUrlForWS:'https://biocache-ws.ala.org.au/ws',
             baseUrlForUI:'https://avh.ala.org.au',
             resourceName:'Australian Virtual Herbarium'
     ]}">Create an AdHoc biocache alerts for new records AVH records
@@ -47,10 +47,10 @@
 
   <li>
     <g:link controller="webservice" action="createBiocacheNewAnnotationsAlert" params="${[
-            webserviceQuery:'/ws/occurrences/search?q=*:*',
+            webserviceQuery:'/occurrences/search?q=*:*',
             uiQuery:'/occurrences/search?q=*:*',
             queryDisplayName:'Annotations in AVH',
-            baseUrlForWS:'https://biocache.ala.org.au',
+            baseUrlForWS:'https://biocache-ws.ala.org.au/ws',
             baseUrlForUI:'https://avh.ala.org.au',
             resourceName:'Australian Virtual Herbarium'
     ]}">Create an AdHoc biocache alerts for new annotations AVH records

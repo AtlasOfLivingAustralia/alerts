@@ -51,7 +51,9 @@
     <p>
       <g:message code="${message}" default="${message}" args="${[totalRecords]}"/>
     </p>
-    <p><a href="${moreInfo}"><b>View all</b> the added/changed records</a></p>
+
+    <p><a href="${moreInfo}"><g:message code="biocache.images.view.all" /></a></p>
+
     <style type="text/css">
     	body { font-family:Arial; }
     	table { border-collapse: collapse; border: 1px solid #CCC; padding:2px; }
@@ -65,7 +67,7 @@
     <div style="display: block;">
     <g:each in="${records}" var="oc">
       <div class="imgCon">
-        <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}"><img src="${oc.smallImageUrl}" alt="Image for record ${oc.scientificName}"/></a>
+        <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}"><img src="${oc.smallImageUrl}" alt="${message(code:"biocache.images.alt.image", args:[oc.scientificName])}"/></a>
         <div class="meta"><i>${oc.scientificName}</i><br/>${oc.vernacularName}</div>
       </div>
     </g:each>

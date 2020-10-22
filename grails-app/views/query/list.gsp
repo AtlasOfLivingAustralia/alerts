@@ -38,7 +38,7 @@
 						<td>${fieldValue(bean: queryInstance, field: "id")}</td>
                         %{--<td>${fieldValue(bean: queryInstance, field: "resourceName")}</td>--}%
 						<td><g:link action="show" id="${queryInstance.id}">${fieldValue(bean: queryInstance, field: "description")}</g:link></td>
-                        <td><g:link class="btn btn-ala btn-xs" action="debugAlert" controller="admin" id="${queryInstance.id}">Debug&nbsp;alert</g:link></td>
+                        <td><g:link class="btn btn-ala btn-xs" action="debugAlert" controller="admin" id="${queryInstance.id}"><g:message code="query.list.debug" /></g:link></td>
 					</tr>
 				</g:each>
 				</tbody>

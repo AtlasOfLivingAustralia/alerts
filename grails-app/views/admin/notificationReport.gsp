@@ -3,7 +3,7 @@
 	<head>
 		<meta name="layout" content="${grailsApplication.config.skin.layout}" />
 		<g:set var="entityName" value="${message(code: 'query.label', default: 'Query')}" />
-		<title>Notification report | Atlas of Living Australia</title>
+		<title>Notification report | ${grailsApplication.config.skin.orgNameLong?: 'Atlas of Living Australia'}</title>
 	</head>
 	<body>
 		<a href="#list-query" class="skip" tabindex="-1"><g:message code="default.link.skip.label" default="Skip to content&hellip;"/></a>

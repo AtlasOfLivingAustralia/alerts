@@ -5,17 +5,19 @@
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
         <meta name="layout" content="${grailsApplication.config.skin.layout}" />
-        <meta name="breadcrumb" content="My alerts" />
-        <meta name="breadcrumbParent" content="${grailsApplication.config.security.cas.casServerName}/userdetails/myprofile, My profile" />
-        <g:set var="userPrefix" value="${adminUser ? user.email : 'My' }"/>
-        <title>${userPrefix} email subscriptions | ${grailsApplication.config.skin.orgNameLong}</title>
+
+        <meta name="breadcrumb" content="${message(code:"my.alerts.breadcrumbs")}" />
+        <meta name="breadcrumbParent" content="${grailsApplication.config.security.cas.casServerName}/userdetails/myprofile, ${message(code:"my.alerts.breadcrumb.parent")}" />
+        <g:set var="userPrefix" value="${adminUser ? user.email : message(code:"my.alerts.my") }"/>
+        <title><g:message code="my.alerts.title" args="[userPrefix]" /> | ${grailsApplication.config.skin.orgNameLong}</title>
+
         <asset:stylesheet href="alerts.css"/>
     </head>
     <body>
       <div id="content">
           <header id="page-header">
             <div class="inner row-fluid">
-              <h1>${userPrefix} email alert</h1>
+              <h1><g:message code="my.alerts.h1" args="[userPrefix]" /></h1>
             </div>
           </header>
           <g:if test="${flash.message}">
@@ -27,7 +29,7 @@
           <div id="page-body" role="main">
                 <g:set var="userId">${user.userId}</g:set>
                 <h3>
-                  Send me alerts:
+                  <g:message code="my.alerts.send.me.alerts" />
                   <g:select name="userFrequency" from="${frequencies}" id="userFrequency" value="${user?.frequency?.name}" optionKey="name" />
                 </h3>
             <div class="row">
@@ -64,7 +66,7 @@
                     </table>
                     <g:if test="${customQueries}">
                     <hr>
-                    <h2 id="customQueriesHdr">My custom alerts</h2>
+                    <h2 id="customQueriesHdr"><g:message code="my.alerts.my.custom.alerts" /></h2>
                     <table>
                         <tbody id="customQueries">
                         <g:each in="${customQueries}" status="i" var="query">
@@ -74,7 +76,7 @@
                                   ${query.description}
                                 </td>
                                 <td class="queryActions">
-                                    <a href="javascript:void(0);" class='btn btn-ala deleteButton' id='${query.id}'>Delete</a>
+                                    <a href="javascript:void(0);" class='btn btn-ala deleteButton' id='${query.id}'><g:message code="my.alerts.delete.label" /></a>
                                 </td>
                             </tr>
                         </g:each>
@@ -84,31 +86,26 @@
                  </div>
                 <div class="col-md-6">
                     <div class="well">
-                        <p>Enable an alert to have emails sent to your email address <b>${user.email}</b></p>
+                        <p><g:message code="my.alerts.enable.to.email" args="[user.email]" /></p>
                         <p>
-                            Specific alerts can be created in a number of places in the Atlas.<br/>
-                            These include:
+                            <g:message code="my.alerts.sample.list.intro" args="[grailsApplication.config.skin.orgNameShort]" />
                             <ul>
                                 <li>
-                                    Data resource pages e.g. <a href="${grailsApplication.config.collection.searchURL}">${grailsApplication.config.collection.searchTitle}</a>
-                                    for alerts on new records or annotations.
+                                    <g:message code="my.alerts.data.resource.desc" args="[grailsApplication.config.collection.searchURL, grailsApplication.config.collection.searchTitle]" />
                                 </li>
                                 <li>
-                                    Species pages e.g. <a href="${grailsApplication.config.speciesPages.searchURL}">${grailsApplication.config.speciesPages.searchTitle}</a>
-                                    for alerts on new records or annotations.
+                                    <g:message code="my.alerts.species.desc" args="[grailsApplication.config.speciesPages.searchURL, grailsApplication.config.speciesPages.searchTitle]" />
                                 </li>
                                 <li>
-                                    Region pages e.g. <a href="${grailsApplication.config.regions.searchURL}">${grailsApplication.config.regions.searchTitle}</a>
-                                    for alerts on new records or annotations.
+                                    <g:message code="my.alerts.region.desc" args="[grailsApplication.config.regions.searchURL, grailsApplication.config.regions.searchTitle]" />
                                 </li>
                                 <li>
-                                    Any <a href="${grailsApplication.config.occurrence.searchURL}">${grailsApplication.config.occurrence.searchTitle}</a>
-                                    for alerts on new records or annotations.
+                                    <g:message code="my.alerts.new.record.desc" args="[grailsApplication.config.occurrence.searchURL, grailsApplication.config.occurrence.searchTitle]" />
                                 </li>
                             </ul>
                         </p>
                         <p>
-                            Look for the <a class="btn btn-default" href="javascript:void(0);" disabled="true"><i class="glyphicon glyphicon-bell"></i> Alerts</a> button.
+                            <g:message code="my.alerts.look.for.btn" />
                         </p>
                     </div>
                 </div>
@@ -130,7 +127,7 @@
                           //alert("Your alerts have been changed to : " + $('#userFrequency').val());
                       })
                       .error(function() {
-                          alert("There was a problem updating your alert frequency. Please try again later.");
+                          alert(<g:message code="my.alerts.problem.retry" />);
                       });
               });
 

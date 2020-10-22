@@ -1,13 +1,14 @@
 <%@ page contentType="text/html"%>
 <html>
-  <head><title>Email alert from ${query.resourceName}</title></head>
+  <head><title><g:message code="alert.title" args="[query.resourceName]" /></title></head>
   <body>
     <h3>Email alert from ${grailsApplication.config.skin.orgNameLong}</h3>
     <h2>${title}</h2>
     <p>
       <g:message code="${message}" default="${message}" args="${[totalRecords]}"/>
     </p>
-    <p><a href="${moreInfo}">View a list of all the added/changed records</a></p>
+    <p><a href="${moreInfo}"><g:message code="biocache.view.list" /></a></p>
+
     <style type="text/css">
     	body { font-family:Arial; }
     	table { border-collapse: collapse; border: 1px solid #CCC; padding:2px; }
@@ -18,12 +19,12 @@
         .linkCell { }
     </style>
     <g:if test="${records}">
-    <h3>Occurrence records update</h3>
+    <h3><g:message code="biocache.occurrences.record.update" /></h3>
     <table style="border-collapse: collapse; border: 1px solid #CCC; padding:2px;">
     	<thead>
-			<th>Record details</th>
-			<th class="imageCol">Image</th>
-			<th>Link</th>
+			<th><g:message code="biocache.record.details" /></th>
+			<th class="imageCol"><g:message code="biocache.record.image" /></th>
+			<th><g:message code="biocache.record.link" /></th>
     	</thead>
     <g:each in="${records}" var="oc">
       <tbody>
@@ -45,7 +46,7 @@
           </g:if>
           <g:elseif test="${oc.image}">
             <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}">
-             <img src="${oc.image}" alt="image for record"/>
+             <img src="${oc.image}" alt="${message(code:"biocache.alt.image.for.record")}"/>
             </a>
           </g:elseif>
           <g:else>
@@ -53,7 +54,7 @@
           </g:else>
           </td>
          <td class="linkCell" nowrap="nowrap">
-           <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}">View this ${oc.scientificName} record</a>
+           <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}"><g:message code="biocache.view.this.record" args="[oc.scientificName]" /></a>
          </td>
       </tr>
       </tbody>
