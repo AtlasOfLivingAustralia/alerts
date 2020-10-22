@@ -8,7 +8,7 @@
         <meta name="breadcrumb" content="My alerts" />
         <meta name="breadcrumbParent" content="${grailsApplication.config.security.cas.casServerName}/userdetails/myprofile, My profile" />
         <g:set var="userPrefix" value="${adminUser ? user.email : 'My' }"/>
-        <title>${userPrefix} email alerts | ${grailsApplication.config.skin.orgNameLong}</title>
+        <title>${userPrefix} email subscriptions | ${grailsApplication.config.skin.orgNameLong}</title>
         <asset:stylesheet href="alerts.css"/>
     </head>
     <body>

@@ -51,9 +51,6 @@
       <g:message code="${message}" default="${message}" args="${[totalRecords]}"/>
     </p>
     <p><a href="${moreInfo}"><b>View all</b> the added/changed records</a></p>
-    <p><a href="${stopNotification}"><b>Disable this alert</b> or manage your alerts</a>.
-      Your current settings are to receive alerts ${frequency}.
-    </p>
     <style type="text/css">
     	body { font-family:Arial; }
     	table { border-collapse: collapse; border: 1px solid #CCC; padding:2px; }

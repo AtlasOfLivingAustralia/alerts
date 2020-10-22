@@ -215,8 +215,6 @@
                         <div align="left" class="article-content" style="margin:10px 30px;">
                             <multiline>
                                 For all the latest blog posts, visit the <a href="http://www.ala.org.au/blogs-news/">ALA Blog</a>
-                                <br/>
-                                Modify your preferences or unsubscribe via the <a href="http://alerts.ala.org.au/">&quot;My Email Alerts&quot;</a> page
                             </multiline>
                         </div>
                     </td>

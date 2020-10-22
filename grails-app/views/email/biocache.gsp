@@ -7,9 +7,6 @@
       <g:message code="${message}" default="${message}" args="${[totalRecords]}"/>
     </p>
     <p><a href="${moreInfo}">View a list of all the added/changed records</a></p>
-    <p><a href="${stopNotification}">Disable this alert or manage your alerts</a>.
-      Your current settings are to receive alerts ${frequency}.
-    </p>
     <style type="text/css">
     	body { font-family:Arial; }
     	table { border-collapse: collapse; border: 1px solid #CCC; padding:2px; }
@@ -20,7 +17,7 @@
         .linkCell { }
     </style>
     <g:if test="${records}">
-    <h3>Occurrences record update</h3>
+    <h3>Occurrence records update</h3>
     <table style="border-collapse: collapse; border: 1px solid #CCC; padding:2px;">
     	<thead>
 			<th>Record details</th>

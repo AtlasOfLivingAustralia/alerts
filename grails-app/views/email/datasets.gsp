@@ -5,7 +5,6 @@
     <h2>${title}</h2>
     <p><g:message code="${message}" default="${message}"/></p>
     <p><a href="${moreInfo}">View details of the added/changed datasets</a></p>
-    <p><a href="${stopNotification}">Disable this alert or manage your alerts</a></p>
     <style type="text/css">
     	body { font-family:Arial; }
     	table { border-collapse: collapse; border: 1px solid #CCC; padding:2px; }
