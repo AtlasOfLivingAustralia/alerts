@@ -2,6 +2,7 @@
 <html>
   <head><title>Email alert from ${grailsApplication.config.skin.orgNameLong}</title></head>
   <body>
+    <h3>Email alert from ${grailsApplication.config.skin.orgNameLong}</h3>
     <h2>${title}</h2>
     <p><g:message code="${message}" default="${message}"/></p>
     <p><a href="${moreInfo}">View details of the added/changed datasets</a></p>
@@ -12,6 +13,7 @@
         img { max-width:150px; max-height:150px; }
     </style>
     <g:if test="${records}">
+    <h3>Email alert from ${grailsApplication.config.skin.orgNameLong}</title></h3>
     <h3>Datasets update</h3>
     <table style="border-collapse: collapse; border: 1px solid #CCC; padding:2px;">
     	<thead>

@@ -2,6 +2,7 @@
 <html>
   <head><title>Email alert from ${query.resourceName}</title></head>
   <body>
+    <h3>Email alert from ${grailsApplication.config.skin.orgNameLong}</h3>
     <h2>${title}</h2>
     <p>
       <g:message code="${message}" default="${message}" args="${[totalRecords]}"/>

@@ -46,6 +46,7 @@
   }
   </style>
   <body>
+    <h3>Email alert from ${query.resourceName}</title></h3>
     <h2>${title}</h2>
     <p>
       <g:message code="${message}" default="${message}" args="${[totalRecords]}"/>
