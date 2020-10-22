@@ -141,7 +141,7 @@
                 <tr>
                     <td id="header" class="w640" width="640" align="center" bgcolor="#3d464c" style="border-top:2px solid #c7c7c7;">
                         <div align="left" style="text-align:left;padding: 10px;">
-                            <a href="http://www.ala.org.au/" title="visit the ALA website"><img src="http://www.ala.org.au/wp-content/themes/ala2011/images/logo.png" alt="ALA logo" style="display: block; margin: 5px 15px;"></a>
+                            <a href="http://www.ala.org.au/" title="visit the ALA website"><img src="https://www.ala.org.au/app/uploads/2019/01/logo-300x45.png" alt="ALA logo" width="300" height="45" style="display: block; margin: 5px 15px;"></a>
                         </div>
                     </td>
                 </tr>
@@ -235,8 +235,8 @@
                                 <td class="w30" width="40" style="padding-left: 20px; padding-top: 10px;">
                                     <a href="http://creativecommons.org/licenses/by/3.0/au/"
                                        title="External link to Creative Commons"><img
-                                            src="http://www.ala.org.au/wp-content/themes/ala2011/images/creativecommons.png"
-                                            width="88" height="31" alt=""></a>
+                                            src="https://www.ala.org.au/app/themes/pvtl/images/cc-by.png"
+                                            width="80" height="15" alt=""></a>
                                 </td>
                                 <td class="w580" width="520" valign="top"  style="padding-left: 10px; padding-top: 10px;">
                                     <p style="font-size:11px;padding-left:5px;">This content is licensed under a <a
