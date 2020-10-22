@@ -98,7 +98,8 @@ class BootStrap {
 
         title = messageSource.getMessage("query.citizen.records.title", null, siteLocale)
         descr = messageSource.getMessage("query.citizen.records.descr", null, siteLocale)
-        if(Query.findAllByName(title).isEmpty()){
+        if (grailsApplication.config.useCitizenScienceAlerts.toBoolean() &&
+                Query.findAllByName(title).isEmpty()) {
             Query newCitizenScienceRecords = (new Query([
                     baseUrl: grailsApplication.config.biocacheService.baseURL,
                     baseUrlForUI: grailsApplication.config.biocache.baseURL,
@@ -119,7 +120,8 @@ class BootStrap {
 
         title = messageSource.getMessage("query.citizen.records.imgs.title", null, siteLocale)
         descr = messageSource.getMessage("query.citizen.records.imgs.descr", null, siteLocale)
-        if(Query.findAllByName(title).isEmpty()){
+        if (grailsApplication.config.useCitizenScienceAlerts.toBoolean() &&
+                Query.findAllByName(title).isEmpty()) {
             Query newCitizenScienceRecordsWithImages = (new Query([
                     baseUrl: grailsApplication.config.biocacheService.baseURL,
                     baseUrlForUI: grailsApplication.config.biocache.baseURL,
@@ -140,7 +142,8 @@ class BootStrap {
 
         title = messageSource.getMessage("query.spatial.layers.title", null, siteLocale)
         descr = messageSource.getMessage("query.spatial.layers.descr", null, siteLocale)
-        if(Query.findAllByName(title).isEmpty()){
+        if (grailsApplication.config.useSpatialAlerts.toBoolean() &&
+                Query.findAllByName(title).isEmpty()) {
             Query newSpatialLayers = (new Query([
                     baseUrl: grailsApplication.config.spatial.baseURL,
                     baseUrlForUI: grailsApplication.config.spatial.baseURL,
@@ -178,7 +181,8 @@ class BootStrap {
 
         title = messageSource.getMessage("query.species.lists.title", null, siteLocale)
         descr = messageSource.getMessage("query.species.lists.descr", null, siteLocale)
-        if(Query.findAllByName(title).isEmpty()){
+        if (grailsApplication.config.useSpeciesListsAlerts.toBoolean() &&
+                Query.findAllByName(title).isEmpty()) {
             log.info "Creating species list query"
             Query newSpeciesLists = (new Query([
                     baseUrl: grailsApplication.config.collectory.baseURL,
@@ -199,7 +203,8 @@ class BootStrap {
         title = messageSource.getMessage("query.ala.blog.title", null, siteLocale)
         descr = messageSource.getMessage("query.ala.blog.descr", null, siteLocale)
         // get_category_posts.json
-        if(Query.findAllByName(title).isEmpty()){
+        if (grailsApplication.config.useBlogsAlerts.toBoolean() &&
+                Query.findAllByName(title).isEmpty()) {
             Query newBlogs = (new Query([
                     baseUrl: grailsApplication.config.ala.baseURL,
                     baseUrlForUI: grailsApplication.config.ala.baseURL,
