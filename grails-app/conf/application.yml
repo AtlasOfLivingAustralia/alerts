@@ -107,7 +107,7 @@ skin:
     orgNameLong: "Atlas of Living Australia"
     orgNameShort: "ALA"
     orgSupportEmail: support@ala.org.au
-privacyPolicy: "https://www.ala.org.au/about/terms-of-use/privacy-policy/"
+privacyPolicy: "https://www.ala.org.au/terms-of-use/privacy-policy/"
 siteDefaultLanguage: "en"
 
 security:
@@ -230,12 +230,7 @@ environments:
     test:
         dataSource:
             dbCreate: update
-            pooled: true
-            jmxExport: true
-            driverClassName: org.h2.Driver
-            username: sa
-            password:
-            url: jdbc:h2:mem:testDb;MVCC=TRUE;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE
+            driverClassName: com.mysql.jdbc.Driver
     production:
         dataSource:
             dbCreate: none

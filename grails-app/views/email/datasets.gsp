@@ -2,10 +2,12 @@
 <html>
   <head><title><g:message code="alert.title" args="[grailsApplication.config.skin.orgNameLong]" /></title></head>
   <body>
+    <h3><g:message code="alert.title" args="${grailsApplication.config.skin.orgNameLong}"/></h3>
     <h2>${title}</h2>
     <p><g:message code="${message}" default="${message}"/></p>
+
     <p><a href="${moreInfo}"><g:message code="datasets.view.details.of.the.added" /></a></p>
-    <p><a href="${stopNotification}"><g:message code="biocache.disable.this" /></a></p>
+
     <style type="text/css">
     	body { font-family:Arial; }
     	table { border-collapse: collapse; border: 1px solid #CCC; padding:2px; }
@@ -13,7 +15,9 @@
         img { max-width:150px; max-height:150px; }
     </style>
     <g:if test="${records}">
+
     <h3><g:message code="datasets.update" /></h3>
+
     <table style="border-collapse: collapse; border: 1px solid #CCC; padding:2px;">
     	<thead>
 			<th><g:message code="datasets.name" /></th>

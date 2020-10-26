@@ -2,10 +2,11 @@
 <html>
   <head><title><g:message code="alert.title" args="[grailsApplication.config.skin.orgNameLong]" /></title></head>
   <body>
+    <h3><g:message code="alert.title" args="${grailsApplication.config.skin.orgNameLong}"/></h3>
     <h2>${title}</h2>
     <p><g:message code="${message}" default="${message}"/></p>
     <p><a href="${moreInfo}"><g:message code="layers.view.details" /></a></p>
-    <p><a href="${stopNotification}"><g:message code="layers.disable.this" /></a></p>
+
     <style type="text/css">
     	body { font-family:Arial; }
     	table { border-collapse: collapse; border: 1px solid #CCC; padding:2px; }

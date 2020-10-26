@@ -1,4 +1,4 @@
-<div style="padding-top: 20px; font-size: 12px">
+<div style="padding-top: 2em; font-size: 1em">
     <div>
         <g:message code="email.unsubscribe.query" args="[unsubscribeOne, query.name]" />.
         <br>
