@@ -1,6 +1,6 @@
 <%@ page contentType="text/html"%>
 <html>
-  <head><title>Email alert from ${query.resourceName}</title></head>
+  <head><title><g:message code="alert.title" args="${grailsApplication.config.skin.orgNameLong}"/></title></head>
   <style>
   /* Gallery styling */
   .imgCon {
@@ -46,7 +46,7 @@
   }
   </style>
   <body>
-    <h3>Email alert from ${query.resourceName}</title></h3>
+    <h3><g:message code="alert.title" args="${grailsApplication.config.skin.orgNameLong}"/></h3>
     <h2>${title}</h2>
     <p>
       <g:message code="${message}" default="${message}" args="${[totalRecords]}"/>

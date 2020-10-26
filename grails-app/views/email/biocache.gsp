@@ -19,7 +19,8 @@
         .linkCell { }
     </style>
     <g:if test="${records}">
-    <h3><g:message code="biocache.occurrences.record.update" /></h3>
+    <h3><g:message code="alert.title" args="${grailsApplication.config.skin.orgNameLong}"/></h3>
+    <h2><g:message code="biocache.occurrences.record.update" /></h2>
     <table style="border-collapse: collapse; border: 1px solid #CCC; padding:2px;">
     	<thead>
 			<th><g:message code="biocache.record.details" /></th>
