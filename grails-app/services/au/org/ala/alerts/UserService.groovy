@@ -25,7 +25,7 @@ class UserService {
 
     def getUserAlertsConfig(User user) {
 
-        log.debug('#getUserAlertsConfig - Viewing my alerts :  ' + user)
+        log.debug('getUserAlertsConfig - Viewing my alerts :  ' + user)
 
         //enabled alerts
         def notificationInstanceList = Notification.findAllByUser(user)
@@ -113,8 +113,7 @@ class UserService {
     User getUser(userDetailsParam = null) {
 
         def userDetails = !userDetailsParam? authService.userDetails(): userDetailsParam
-        log.debug "#getUser - userDetails = ${userDetails}"
-       // def userDetails = authService.userDetails()
+        log.debug "getUser - userDetails = ${userDetails}"
 
         if (!userDetails?.userId) {
             log.error "User isn't logged in - or there is a problem with CAS configuration"
@@ -122,10 +121,10 @@ class UserService {
         }
 
         User user = User.findByUserId(userDetails["userId"])
-        log.debug "#getUser - user = ${user} || userId = ${userDetails["userId"]}"
+        log.debug "getUser - user = ${user} || userId = ${userDetails["userId"]}"
         if (user == null) {
             log.debug "User is not in user table - creating new record for " + userDetails
-            user = new User([email: userDetails["email"], userId: userDetails["userId"], frequency: Frequency.findByName("weekly")])
+            user = new User([email: userDetails.email, userId: userDetails.userId, locked: userDetails.locked, frequency: Frequency.findByName("weekly")])
             user.save(flush:true, failOnError: true)
             // new user gets "Blogs and News" by default (opt out)
             def notificationInstance = new Notification()

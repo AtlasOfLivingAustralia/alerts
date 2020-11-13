@@ -212,7 +212,7 @@ class BootStrap {
                     resourceName:  grailsApplication.config.postie.defaultResourceName,
                     updateMessage: 'more.blogsnews.update.message',
                     description: descr,
-                    queryPath: '/api/get_category_posts/?slug=blogs-news&count=5',
+                    queryPath: '/recentposts.json',
                     queryPathForUI: '/blogs-news/',
                     emailTemplate: '/email/blogs',
                     recordJsonPath: '\$.posts[*]',
