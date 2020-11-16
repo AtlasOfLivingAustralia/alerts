@@ -215,7 +215,7 @@ class BootStrap {
                     queryPath: '/recentposts.json',
                     queryPathForUI: '/blogs-news/',
                     emailTemplate: '/email/blogs',
-                    recordJsonPath: '\$.posts[*]',
+                    recordJsonPath: '\$.[*]',
                     idJsonPath: 'id'
             ])).save()
             new PropertyPath([name: "last_blog_id", jsonPath: "posts", query: newBlogs, fireWhenChanged: true]).save()
