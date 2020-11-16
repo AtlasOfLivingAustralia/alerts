@@ -1,5 +1,6 @@
 package au.org.ala.alerts
 import com.jayway.jsonpath.JsonPath
+import grails.util.Holders
 import org.apache.commons.io.IOUtils
 
 import java.text.SimpleDateFormat
@@ -11,6 +12,8 @@ class NotificationService {
     def emailService
     def diffService
     def queryService
+    def messageSource
+    def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
 
     QueryResult getQueryResult(Query query, Frequency frequency){
         QueryResult qr = QueryResult.findByQueryAndFrequency(query, frequency)
@@ -320,10 +323,11 @@ class NotificationService {
 
         log.debug("[QUERY " + queryId +"] Running query...")
 
+        def localFrequencyName = getFrequencyLocaleName(freqStr)
         def checkedCount = 0
         def checkedAndUpdatedCount = 0
         def query = Query.get(queryId)
-        def frequency = Frequency.findByName(freqStr)
+        def frequency = Frequency.findByName(localFrequencyName)
 
         long start = System.currentTimeMillis()
         QueryCheckResult qcr = checkStatusDontUpdate(query, frequency)
@@ -391,16 +395,21 @@ class NotificationService {
     def checkQueryForFrequency(String frequencyName){
         log.debug("Checking frequency : " + frequencyName)
         Date now = new Date()
-        Frequency frequency = Frequency.findByName(frequencyName)
+        def localFrequencyName = getFrequencyLocaleName(frequencyName)
+        Frequency frequency = Frequency.findByName(localFrequencyName)
         checkQueryForFrequency(frequency, true)
-        //update the frequency last checked
-        frequency = Frequency.findByName(frequencyName)
+        //update the frequency last checked'frequency.
+        frequency = Frequency.findByName(localFrequencyName)
         if (frequency) {
             frequency.lastChecked = now
             frequency.save(flush:true)
         } else {
             log.warn "Frequency not found for ${frequencyName}"
         }
+    }
+
+    private String getFrequencyLocaleName(String frequencyName) {
+        messageSource.getMessage("frequency." + frequencyName, null, siteLocale)
     }
 
     //select q.id, u.frequency from query q inner join notification n on n.query_id=q.id inner join user u on n.user_id=u.id;

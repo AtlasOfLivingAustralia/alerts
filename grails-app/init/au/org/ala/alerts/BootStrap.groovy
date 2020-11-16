@@ -18,6 +18,7 @@ class BootStrap {
         )
 
         siteLocale = new Locale.Builder().setLanguageTag(grailsApplication.config.siteDefaultLanguage).build();
+        Locale.setDefault(siteLocale)
 
         preloadQueries()
         log.info("Done bootstrap queries.")
@@ -125,7 +126,7 @@ class BootStrap {
             Query newCitizenScienceRecordsWithImages = (new Query([
                     baseUrl: grailsApplication.config.biocacheService.baseURL,
                     baseUrlForUI: grailsApplication.config.biocache.baseURL,
-                    name: 'Citizen science records with images',
+                    name: title,
                     resourceName:  grailsApplication.config.postie.defaultResourceName,
                     updateMessage: 'more.cs.images.update.message',
                     description: descr,

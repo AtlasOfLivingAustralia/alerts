@@ -14,6 +14,7 @@
 package au.org.ala.alerts
 
 import au.org.ala.web.AlaSecured
+import grails.util.Holders
 import groovy.json.JsonSlurper
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.impl.client.DefaultHttpClient
@@ -26,6 +27,8 @@ class AdminController {
     def emailService
     def queryService
     def userService
+    def messageSource
+    def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
 
     def index() {}
 
@@ -151,7 +154,7 @@ class AdminController {
     def debugAlertEmail() {
         def frequency = params.frequency ?: 'weekly'
         def qcr = notificationService.checkQueryById(params.id, params.frequency ?: 'weekly')
-        def model = emailService.generateEmailModel(qcr.query, frequency, qcr.queryResult)
+        def model = emailService.generateEmailModel(qcr.query, messageSource.getMessage('frequency.' + frequency, null, siteLocale), qcr.queryResult)
         render(view: qcr.query.emailTemplate, model: model)
     }
 
@@ -264,7 +267,8 @@ class AdminController {
             def query = Query.get(1)
             def frequency = Frequency.get(1)
             def queryResult = QueryResult.findByQuery(query) ?: new QueryResult(query: query, frequency: frequency)
-            emailService.sendGroupEmail(query, [user.email], queryResult, [], frequency, 0, "", "")
+            emailService.sendGroupEmail(query, [user.email], queryResult, [],
+                    messageSource.getMessage('frequency.' + frequency, null, siteLanguage), 0, "", "")
             msg = "Email was sent to ${user.email} - check tomcat logs for ERROR message with value \"Error sending email to addresses:\""
         } else {
             msg = "User was not found or not logged in"

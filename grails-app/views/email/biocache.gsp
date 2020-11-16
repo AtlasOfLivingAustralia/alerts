@@ -49,7 +49,7 @@
             </a>
           </g:elseif>
           <g:else>
-            No image
+            <g:message code="biocache.no.image" />
           </g:else>
           </td>
          <td class="linkCell" nowrap="nowrap">
