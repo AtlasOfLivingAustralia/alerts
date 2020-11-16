@@ -49,6 +49,55 @@
                                 </td>
                             </tr>
                         </g:each>
+                        %{-- if any of 'My annotation' is enabled, display them all under 'My annotations' instead of using own query names--}%
+                        <g:if test="${enabledMyAnnotations.size() != 0}">
+                            <tr>
+                            <td class="queryDescription">
+                                <h3>My Annotations</h3>
+                            </td>
+                            <td></td>
+                            </tr>
+                            <g:each in="${allMyAnnotations}" status="i" var="query">
+                                <tr class="${(i % 2) == 0 ? 'odd' : 'even'}">
+                                    <td class="queryDescription">
+                                        ${query.description}
+                                    </td>
+                                    <td class="queryActions">
+                                        <g:set var="enabled" value="${enabledMyAnnotations.findAll{it.id == query.id}.size() > 0}"/>
+                                        <div class="switch" data-on="danger">
+                                            <g:if test="${enabled}">
+                                                <input id="${query.id}" class="query-cb" name="field2"  type="checkbox" checked />
+                                            </g:if>
+                                            <g:else>
+                                                <input id="${query.id}" class="query-cb" name="field2"  type="checkbox" />
+                                            </g:else>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </g:each>
+                        </g:if>
+
+                        <g:if test="${enabledMyAnnotations.size() == 0}">
+                            <tr>
+                                <td class="queryDescription">
+                                    <h3>My Annotations</h3>
+                                </td>
+                                <td></td>
+                            </tr>
+                            <g:each in="${allMyAnnotations}" status="i" var="query">
+                                <tr class="${(i % 2) == 0 ? 'odd' : 'even'}">
+                                    <td class="queryDescription">
+                                        ${query.description}
+                                    </td>
+                                    <td class="queryActions">
+                                        <div class="switch" data-on="danger">
+                                            <input id="${query.id}" class="query-cb" name="field2"  type="checkbox" />
+                                        </div>
+                                    </td>
+                                </tr>
+                            </g:each>
+                        </g:if>
+
                         <g:each in="${disabledQueries}" status="i" var="query">
                             <tr class="${(i % 2) == 0 ? 'odd' : 'even'}">
                                 <td class="queryDescription">

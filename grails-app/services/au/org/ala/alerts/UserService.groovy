@@ -34,16 +34,27 @@ class UserService {
         def enabledQueries = notificationInstanceList.collect { it.query }
         def enabledIds = enabledQueries.collect { it.id }
 
-        //all types
-        def allAlertTypes = Query.findAllByCustom(false)
+        //all queries
+        def allQueries = Query.findAllByCustom(false)
 
-        allAlertTypes.removeAll { enabledIds.contains(it.id) }
-        def customQueries = enabledQueries.findAll { it.custom }
-        def standardQueries = enabledQueries.findAll { !it.custom }
+        // all 'my annotation' queries
+        def myAnnotationsName = "My Annotations"
+        def allMyAnnotations = allQueries.findAll { it.name.startsWith(myAnnotationsName) }
 
-        [disabledQueries: allAlertTypes,
-         enabledQueries : standardQueries,
-         customQueries  : customQueries,
+        allQueries.removeAll { enabledIds.contains(it.id) }
+        def enabledCustomQueries = enabledQueries.findAll { it.custom }
+        def enabledStandardQueries = enabledQueries.findAll { !it.custom }
+
+        def enabledMyAnnotations = enabledStandardQueries.findAll{ it.name.startsWith(myAnnotationsName) }
+
+        allQueries = allQueries.findAll{ !it.name.startsWith(myAnnotationsName) }
+        enabledStandardQueries = enabledStandardQueries.findAll{ !it.name.startsWith(myAnnotationsName) }
+
+        [disabledQueries: allQueries,
+         enabledQueries : enabledStandardQueries,
+         allMyAnnotations : allMyAnnotations,
+         enabledMyAnnotations : enabledMyAnnotations,
+         customQueries  : enabledCustomQueries,
          frequencies    : Frequency.listOrderByPeriodInSeconds(),
          user           : user]
     }
