@@ -1,6 +1,6 @@
 <%@ page contentType="text/html"%>
 <html>
-  <head><title><g:message code="alert.title" args="${grailsApplication.config.skin.orgNameLong}"/></title></head>
+  <head><title><g:message code="alert.title" args="[grailsApplication.config.skin.orgNameLong]"/></title></head>
   <style>
   /* Gallery styling */
   .imgCon {
@@ -46,10 +46,10 @@
   }
   </style>
   <body>
-    <h3><g:message code="alert.title" args="${grailsApplication.config.skin.orgNameLong}"/></h3>
+    <h3><g:message code="alert.title" args="[grailsApplication.config.skin.orgNameLong]"/></h3>
     <h2>${title}</h2>
     <p>
-      <g:message code="${message}" default="${message}" args="${[totalRecords]}"/>
+      <g:message code="${message}" default="${message}" args="[totalRecords]"/>
     </p>
 
     <p><a href="${moreInfo}"><g:message code="biocache.images.view.all" /></a></p>
