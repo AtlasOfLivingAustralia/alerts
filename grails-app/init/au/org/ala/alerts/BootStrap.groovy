@@ -27,10 +27,10 @@ class BootStrap {
     private void preloadQueries() {
         log.info("start of preloadQueries")
         if(Frequency.findAll().isEmpty()){
-            (new Frequency([name: messageSource.getMessage('frequency.hourly', null, siteLocale), periodInSeconds:3600])).save()
-            (new Frequency([name: messageSource.getMessage('frequency.daily', null, siteLocale)])).save()
-            (new Frequency([name: messageSource.getMessage('frequency.weekly', null, siteLocale), periodInSeconds:604800])).save()
-            (new Frequency([name: messageSource.getMessage('frequency.monthly', null, siteLocale), periodInSeconds:2419200])).save()
+            (new Frequency([name: 'hourly', periodInSeconds:3600])).save()
+            (new Frequency([name: 'daily'])).save()
+            (new Frequency([name: 'weekly', periodInSeconds:604800])).save()
+            (new Frequency([name: 'monthly', periodInSeconds:2419200])).save()
         }
 
         def title = messageSource.getMessage("query.annotations.title", null, siteLocale)

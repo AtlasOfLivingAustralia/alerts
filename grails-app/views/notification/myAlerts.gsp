@@ -30,7 +30,9 @@
                 <g:set var="userId">${user.userId}</g:set>
                 <h3>
                   <g:message code="my.alerts.send.me.alerts" />
-                  <g:select name="userFrequency" from="${frequencies}" id="userFrequency" value="${user?.frequency?.name}" optionKey="name" />
+                  <g:select name="userFrequency" from="${frequencies}" id="userFrequency" value="${user?.frequency?.name}" optionKey="name"
+                            optionValue="${ { name->g.message(code: 'frequency.' + name) } }"
+                  />
                 </h3>
             <div class="row">
                 <div class="col-md-6">

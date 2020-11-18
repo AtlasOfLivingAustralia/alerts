@@ -138,7 +138,7 @@ class EmailService {
                         moreInfo: queryResult.queryUrlUIUsed,
                         stopNotification: urlPrefix + '/notification/myAlerts',
                         records: records,
-                        frequency: frequency,
+                        frequency: messageSource.getMessage('frequency.' + frequency, null, siteLocale),
                         totalRecords: totalRecords,
                         unsubscribeAll: urlPrefix + "/unsubscribe?token=" + userUnsubToken,
                         unsubscribeOne: urlPrefix + "/unsubscribe?token=" + notificationUnsubToken

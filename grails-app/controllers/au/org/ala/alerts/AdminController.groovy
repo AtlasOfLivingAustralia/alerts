@@ -154,7 +154,7 @@ class AdminController {
     def debugAlertEmail() {
         def frequency = params.frequency ?: 'weekly'
         def qcr = notificationService.checkQueryById(params.id, params.frequency ?: 'weekly')
-        def model = emailService.generateEmailModel(qcr.query, messageSource.getMessage('frequency.' + frequency, null, siteLocale), qcr.queryResult)
+        def model = emailService.generateEmailModel(qcr.query, frequency, qcr.queryResult)
         render(view: qcr.query.emailTemplate, model: model)
     }
 

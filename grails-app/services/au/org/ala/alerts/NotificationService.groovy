@@ -323,11 +323,10 @@ class NotificationService {
 
         log.debug("[QUERY " + queryId +"] Running query...")
 
-        def localFrequencyName = getFrequencyLocaleName(freqStr)
         def checkedCount = 0
         def checkedAndUpdatedCount = 0
         def query = Query.get(queryId)
-        def frequency = Frequency.findByName(localFrequencyName)
+        def frequency = Frequency.findByName(freqStr)
 
         long start = System.currentTimeMillis()
         QueryCheckResult qcr = checkStatusDontUpdate(query, frequency)
@@ -395,21 +394,16 @@ class NotificationService {
     def checkQueryForFrequency(String frequencyName){
         log.debug("Checking frequency : " + frequencyName)
         Date now = new Date()
-        def localFrequencyName = getFrequencyLocaleName(frequencyName)
-        Frequency frequency = Frequency.findByName(localFrequencyName)
+        Frequency frequency = Frequency.findByName(frequencyName)
         checkQueryForFrequency(frequency, true)
         //update the frequency last checked'frequency.
-        frequency = Frequency.findByName(localFrequencyName)
+        frequency = Frequency.findByName(frequencyName)
         if (frequency) {
             frequency.lastChecked = now
             frequency.save(flush:true)
         } else {
             log.warn "Frequency not found for ${frequencyName}"
         }
-    }
-
-    private String getFrequencyLocaleName(String frequencyName) {
-        messageSource.getMessage("frequency." + frequencyName, null, siteLocale)
     }
 
     //select q.id, u.frequency from query q inner join notification n on n.query_id=q.id inner join user u on n.user_id=u.id;
