@@ -1,5 +1,6 @@
 package au.org.ala.alerts
 import com.jayway.jsonpath.JsonPath
+import grails.util.Holders
 import org.apache.commons.io.IOUtils
 
 import java.text.SimpleDateFormat

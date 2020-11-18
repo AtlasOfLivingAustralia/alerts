@@ -1,5 +1,7 @@
 package au.org.ala.alerts
 
+import grails.util.Holders
+
 class EmailService {
 
     static transactional = true
@@ -7,6 +9,8 @@ class EmailService {
     def diffService
     def queryService
     def grailsApplication
+    def messageSource
+    def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
 
     /**
      * Returns a list of records
@@ -33,12 +37,12 @@ class EmailService {
 
         def emailModel = generateEmailModel(notification, queryResult)
         def user = notification.user
-
+        def localeSubject = messageSource.getMessage("emailservice.update.subject", [notification.query.name] as Object[], siteLocale)
         if (grailsApplication.config.postie.enableEmail && !user.locked) {
             log.info "Sending email to ${user.email} for ${notification.query.name}"
             sendMail {
                 from grailsApplication.config.postie.emailAlertAddressTitle + "<" + grailsApplication.config.postie.emailSender + ">"
-                subject "Update - " + notification.query.name
+                subject localeSubject
                 bcc user.email
                 body(view: notification.query.emailTemplate,
                         plugin: "email-confirmation",
@@ -49,7 +53,7 @@ class EmailService {
             log.warn "Email not sent to locked user: ${user.email}"
         } else {
             log.info("Email would have been sent to: " + user.email)
-            log.info("message:" + notification.query.updateMessage)
+            log.info("message:" + messageSource.getMessage(notification.query.updateMessage, null, siteLocale))
             log.debug("moreInfo:" + queryResult.queryUrlUIUsed)
             log.debug("stopNotification:" + grailsApplication.config.security.cas.appServerName + grailsApplication.config.security.cas.contextPath + '/notification/myAlerts')
             log.debug("records:" + emailModel.records)
@@ -109,7 +113,7 @@ class EmailService {
             }
         } else {
             log.info("Email would have been sent to: ${recipients*.email.join(',')} for ${query.name}")
-            log.debug("message:" + query.updateMessage)
+            log.debug("message:" + messageSource.getMessage(query.updateMessage, null, siteLocale))
             log.debug("moreInfo:" + queryResult.queryUrlUIUsed)
             log.debug("stopNotification:" + grailsApplication.config.security.cas.appServerName + grailsApplication.config.security.cas.contextPath + '/notification/myAlerts')
             log.debug("records:" + records)
@@ -120,6 +124,7 @@ class EmailService {
 
     private void sendGroupEmail(Query query, subsetOfAddresses, QueryResult queryResult, records, Frequency frequency, int totalRecords, String userUnsubToken, String notificationUnsubToken) {
         String urlPrefix = "${grailsApplication.config.security.cas.appServerName}${grailsApplication.config.getProperty('security.cas.contextPath','')}"
+        def localeSubject = messageSource.getMessage("emailservice.update.subject", [query.name] as Object[], siteLocale)
         try {
             sendMail {
                 from grailsApplication.config.postie.emailAlertAddressTitle + "<" + grailsApplication.config.postie.emailSender + ">"
@@ -127,13 +132,13 @@ class EmailService {
                 bcc subsetOfAddresses
                 body(view: query.emailTemplate,
                     plugin: "email-confirmation",
-                    model: [title: "Update - " + query.name,
+                    model: [title: localeSubject,
                         message: query.updateMessage,
                         query: query,
                         moreInfo: queryResult.queryUrlUIUsed,
                         stopNotification: urlPrefix + '/notification/myAlerts',
                         records: records,
-                        frequency: frequency,
+                        frequency: messageSource.getMessage('frequency.' + frequency, null, siteLocale),
                         totalRecords: totalRecords,
                         unsubscribeAll: urlPrefix + "/unsubscribe?token=" + userUnsubToken,
                         unsubscribeOne: urlPrefix + "/unsubscribe?token=" + notificationUnsubToken

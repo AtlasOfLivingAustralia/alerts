@@ -2,7 +2,7 @@
 <html>
   <head><title><g:message code="alert.title" args="[query.resourceName]" /></title></head>
   <body>
-    <h3><g:message code="alert.title" args="${grailsApplication.config.skin.orgNameLong}"/></h3>
+    <h3><g:message code="alert.title" args="[grailsApplication.config.skin.orgNameLong]"/></h3>
     <h2>${title}</h2>
     <p>
       <g:message code="${message}" default="${message}" args="${[totalRecords]}"/>
@@ -49,7 +49,7 @@
             </a>
           </g:elseif>
           <g:else>
-            No image
+            <g:message code="biocache.no.image" />
           </g:else>
           </td>
          <td class="linkCell" nowrap="nowrap">
