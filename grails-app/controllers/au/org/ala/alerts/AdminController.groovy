@@ -27,8 +27,6 @@ class AdminController {
     def emailService
     def queryService
     def userService
-    def messageSource
-    def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
 
     def index() {}
 

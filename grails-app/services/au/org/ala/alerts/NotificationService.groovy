@@ -12,8 +12,6 @@ class NotificationService {
     def emailService
     def diffService
     def queryService
-    def messageSource
-    def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
 
     QueryResult getQueryResult(Query query, Frequency frequency){
         QueryResult qr = QueryResult.findByQueryAndFrequency(query, frequency)
