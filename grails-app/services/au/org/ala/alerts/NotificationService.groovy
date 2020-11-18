@@ -396,7 +396,7 @@ class NotificationService {
         Date now = new Date()
         Frequency frequency = Frequency.findByName(frequencyName)
         checkQueryForFrequency(frequency, true)
-        //update the frequency last checked'frequency.
+        //update the frequency last checked
         frequency = Frequency.findByName(frequencyName)
         if (frequency) {
             frequency.lastChecked = now
