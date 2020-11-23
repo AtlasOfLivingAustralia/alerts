@@ -68,10 +68,14 @@ class QueryService {
   def createQueryForUserIfNotExists(Query newQuery, User user){
     //find the query
     Query retrievedQuery = Query.findByBaseUrlAndQueryPath(newQuery.baseUrl, newQuery.queryPath)
-    if(retrievedQuery == null){
-      newQuery = newQuery.save(true)
-      new PropertyPath([name: "totalRecords", jsonPath: "totalRecords", query: newQuery, fireWhenNotZero: true]).save(true)
-      new PropertyPath([name: "last_loaded_record", jsonPath: "occurrences[0].rowKey", query: newQuery]).save(true)
+    if (retrievedQuery == null) {
+      try {
+        newQuery = newQuery.save(true)
+        new PropertyPath([name: "totalRecords", jsonPath: "totalRecords", query: newQuery, fireWhenNotZero: true]).save(true)
+        new PropertyPath([name: "last_loaded_record", jsonPath: "occurrences[0].rowKey", query: newQuery]).save(true)
+      } catch (Exception ex) {
+        log.error("Error occurred when saving Query: " + ex.toString())
+      }
     } else {
       newQuery = retrievedQuery
     }
@@ -95,7 +99,12 @@ class QueryService {
    * @param biocacheWebserviceQueryPath
    * @return
    */
-  Query createBioCacheChangeQuery(String biocacheWebserviceQueryPath, String biocacheUIQueryPath, String queryDisplayName, String baseUrlForWS, String baseUrlForUI, String resourceName){
+  Query createBioCacheChangeQuery(String biocacheWebserviceQueryPath, String biocacheUIQueryPath, String queryDisplayName, String baseUrlForWS, String baseUrlForUI, String resourceName) {
+    // truncate long name to avoid SQL error
+    if (queryDisplayName.length() >= 250){
+      queryDisplayName = queryDisplayName.substring(0, 149) + "..."
+    }
+
     new Query([
       baseUrl: baseUrlForWS?:grailsApplication.config.biocacheService.baseURL,
       baseUrlForUI: baseUrlForUI?:grailsApplication.config.biocache.baseURL,
