@@ -50,6 +50,13 @@ class UserService {
         allQueries = allQueries.findAll{ !it.name.startsWith(myAnnotationsName) }
         enabledStandardQueries = enabledStandardQueries.findAll{ !it.name.startsWith(myAnnotationsName) }
 
+        // allMyAnnotations: all the 'my annotations' alerts which need to be displayed, no matter is subscribed to or not
+        // enabledMyAnnotations: all the 'my annotations' alerts the user subscribes to
+        // enabledQueries: all the enabled alerts ('my annotations' not included)
+        // disabledQueries: all the disabled alerts ('my annotations' not included)
+        //
+        // we do this because 3 'my annotations' need to be displayed together, so we show all in allMyAnnotations one by one.
+
         [disabledQueries: allQueries,
          enabledQueries : enabledStandardQueries,
          allMyAnnotations : allMyAnnotations,
