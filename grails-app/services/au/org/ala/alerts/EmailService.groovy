@@ -29,7 +29,7 @@ class EmailService {
 
         log.debug("Using email template: " + notification.query.emailTemplate)
 
-        def queryResult = QueryResult.findByQueryAndFrequency(notification.query, notification.user.frequency)
+        def queryResult = QueryResult.findByQueryAndFrequencyAndUser(notification.query, notification.user.frequency, queryService.ifUserSpecific(notification.query) ? notification.user : null)
 
         def emailModel = generateEmailModel(notification, queryResult)
         def user = notification.user
@@ -77,6 +77,8 @@ class EmailService {
      * @return
      */
     def Map generateEmailModel(Query query, String frequency, QueryResult queryResult) {
+        def records = retrieveRecordForQuery(query, queryResult)
+        def totalRecords = queryService.fireWhenNotZeroProperty(queryResult)
         [
             title           : query.name,
             message         : query.updateMessage,
@@ -84,37 +86,45 @@ class EmailService {
             query           : query,
             stopNotification: grailsApplication.config.security.cas.appServerName + grailsApplication.config.security.cas.contextPath + '/notification/myAlerts',
             frequency       : frequency,
-            records         : retrieveRecordForQuery(query, queryResult),
-            totalRecords    : queryService.fireWhenNotZeroProperty(queryResult)
+            records         : records,
+            totalRecords    : totalRecords >= 0 ? totalRecords : records.size()
         ]
     }
 
     def sendGroupNotification(Query query, Frequency frequency, List<Map> recipients) {
-
         log.debug("Using email template: " + query.emailTemplate)
-        QueryResult queryResult = QueryResult.findByQueryAndFrequency(query, frequency)
-
-        def records = retrieveRecordForQuery(query, queryResult)
-
-        Integer totalRecords = queryService.fireWhenNotZeroProperty(queryResult)
 
         if (grailsApplication.config.postie.enableEmail) {
             log.info "Sending group email for ${query.name} to ${recipients.collect{it.email}}"
+
             recipients.each { recipient ->
-                if (!recipient.locked) {
-                    sendGroupEmail(query, [recipient.email], queryResult, records, frequency, totalRecords, recipient.userUnsubToken, recipient.notificationUnsubToken)
-                } else {
-                    log.warn "Email not sent to locked user: ${recipient}"
-                }
+                def (queryResult, records, totalRecords) = getResultForAUser(query, frequency, recipient.uid as Long)
+                sendSingleEmail(query, frequency, recipient, queryResult, records, totalRecords)
             }
         } else {
             log.info("Email would have been sent to: ${recipients*.email.join(',')} for ${query.name}")
             log.debug("message:" + query.updateMessage)
-            log.debug("moreInfo:" + queryResult.queryUrlUIUsed)
-            log.debug("stopNotification:" + grailsApplication.config.security.cas.appServerName + grailsApplication.config.security.cas.contextPath + '/notification/myAlerts')
-            log.debug("records:" + records)
-            log.debug("frequency:" + frequency)
-            log.debug("totalRecords:" + totalRecords)
+        }
+    }
+
+    def getResultForAUser(Query query, Frequency frequency, Long uid) {
+        // get the user by uid, if uid == null means it's not user specific
+        User user = (uid == null) ? null : User.findById(uid)
+
+        QueryResult queryResult = QueryResult.findByQueryAndFrequencyAndUser(query, frequency, user)
+        def records = retrieveRecordForQuery(query, queryResult)
+        Integer totalRecords = queryService.fireWhenNotZeroProperty(queryResult)
+        if (totalRecords == -1) {
+            totalRecords = records.size()
+        }
+        return [queryResult, records, totalRecords]
+    }
+
+    def sendSingleEmail(Query query, Frequency frequency, Map recipient, QueryResult queryResult, records, int totalRecords) {
+        if (!recipient.locked) {
+            sendGroupEmail(query, [recipient.email], queryResult, records, frequency, totalRecords, recipient.userUnsubToken, recipient.notificationUnsubToken)
+        } else {
+            log.warn "Email not sent to locked user: ${recipient}"
         }
     }
 

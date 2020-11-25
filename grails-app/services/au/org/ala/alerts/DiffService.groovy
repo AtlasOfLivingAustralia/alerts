@@ -20,6 +20,7 @@ import java.util.zip.GZIPInputStream
 class DiffService {
 
     static transactional = true
+    def queryService
 
     Boolean hasChangedJsonDiff(QueryResult queryResult) {
         if (queryResult.lastResult != null && queryResult.previousResult != null) {
@@ -39,25 +40,54 @@ class DiffService {
         if (current != null && previous != null) {
 
             try {
-                def ids1 = JsonPath.read(current, query.recordJsonPath + "." + query.idJsonPath)
-                if (!isCollectionOrArray(ids1)) {
-                    ids1 = [ids1]
-                }
+                if (!queryService.ifUserSpecific(query)) {
+                    def ids1 = JsonPath.read(current, query.recordJsonPath + "." + query.idJsonPath)
+                    if (!isCollectionOrArray(ids1)) {
+                        ids1 = [ids1]
+                    }
 
-                def ids2 = JsonPath.read(previous, query.recordJsonPath + "." + query.idJsonPath)
-                if (!isCollectionOrArray(ids2)) {
-                    ids2 = [ids2]
+                    def ids2 = JsonPath.read(previous, query.recordJsonPath + "." + query.idJsonPath)
+                    if (!isCollectionOrArray(ids2)) {
+                        ids2 = [ids2]
+                    }
+                    List<String> diff = ids1.findAll { !ids2.contains(it) }
+                    if (debugDiff) {
+                        log.info "checking json diff for: ${query.name}"
+                        log.info "query URL: ${query.baseUrl}${query.queryPath}"
+                        log.info "jsonpath = ${query.recordJsonPath}.${query.idJsonPath}"
+                        log.info "ids1 = ${ids1}"
+                        log.info "ids2 = ${ids2}"
+                        log.info "diff = ${diff}"
+                    }
+                    !diff.empty
+                } else {
+                    // 'occurrences' field in json has been processed in NotificationService.processMyAnnotations
+                    // so that it only contains records that have at least 1 verified user assertions and the user assertions
+                    // uuids have been concatenated to 'user_assertions' filed.
+                    //
+                    // we compare previous and current records.
+                    // 1. if records number different that means records (which has verified user assertions) been added or deleted
+                    // 2. if same records number, we compare them one by one. If 2 records at same position have different uuid,
+                    //    there's a change. If 2 have same uuid but different 'user_assertions' means different verifications done
+                    //    on this record so there's a change.
+
+                    def oldRecords = JsonPath.read(previous, query.recordJsonPath)
+                    def curRecords = JsonPath.read(current, query.recordJsonPath)
+
+                    // if not same number of records, there's a diff
+                    if (oldRecords.size() != curRecords.size()) return true
+
+                    oldRecords.sort { it.uuid }
+                    curRecords.sort { it.uuid }
+
+                    // compare records one by one, if not same 'uuid' and same 'user_assertions' field, there's a diff
+                    oldRecords.eachWithIndex { oldRecord, index ->
+                        def curRecord = curRecords.get(index)
+                        if (oldRecord.uuid != curRecord.uuid || oldRecord.user_assertions != curRecord.user_assertions) return true
+                    }
+
+                    false
                 }
-                List<String> diff = ids1.findAll { !ids2.contains(it) }
-                if (debugDiff) {
-                    log.info "checking json diff for: ${query.name}"
-                    log.info "query URL: ${query.baseUrl}${query.queryPath}"
-                    log.info "jsonpath = ${query.recordJsonPath}.${query.idJsonPath}"
-                    log.info "ids1 = ${ids1}"
-                    log.info "ids2 = ${ids2}"
-                    log.info "diff = ${diff}"
-                }
-                !diff.empty
             } catch (Exception ex) {
                 log.warn "JSONPath exception: ${ex} for query ${query.name} (id: ${query.id}) | URL: ${query.baseUrl}${query.queryPath}"
                 log.info "JSONPath exception stacktrace: ", ex
@@ -96,16 +126,31 @@ class DiffService {
 
                 if(!last.startsWith("<") && !previous.startsWith("<")) {
                     // Don't try and process 401, 301, 500, etc., responses that contain HTML
-                    List<String> ids1 = JsonPath.read(last, queryResult.query.recordJsonPath + "." + queryResult.query.idJsonPath)
-                    List<String> ids2 = JsonPath.read(previous, queryResult.query.recordJsonPath + "." + queryResult.query.idJsonPath)
-                    List<String> diff = ids1.findAll { !ids2.contains(it) }
-                    //pull together the records that have been added
+                    if (!queryService.ifUserSpecific(queryResult.query)) {
+                        List<String> ids1 = JsonPath.read(last, queryResult.query.recordJsonPath + "." + queryResult.query.idJsonPath)
+                        List<String> ids2 = JsonPath.read(previous, queryResult.query.recordJsonPath + "." + queryResult.query.idJsonPath)
+                        List<String> diff = ids1.findAll { !ids2.contains(it) }
+                        //pull together the records that have been added
 
-                    def allRecords = JsonPath.read(last, queryResult.query.recordJsonPath)
-                    allRecords.each { record ->
-                        if (diff.contains(record.get(queryResult.query.idJsonPath))) {
-                            records.add(record)
+                        def allRecords = JsonPath.read(last, queryResult.query.recordJsonPath)
+                        allRecords.each { record ->
+                            if (diff.contains(record.get(queryResult.query.idJsonPath))) {
+                                records.add(record)
+                            }
                         }
+                    } else {
+                        // for normal alerts, comparing occurrence uuid is enough to show the difference.
+                        // for my annotation alerts, same occurrence record could exist in both result but have different verified user assertions.
+                        // so comparing occurrence uuid is not enough, we need to compare verified user assertions inside each occurrence record
+
+                        // uuid -> occurrence record map
+                        def oldRecordsMap = JsonPath.read(previous, queryResult.query.recordJsonPath).collectEntries{ [(it.uuid): it] }
+                        def curRecordsMap = JsonPath.read(last, queryResult.query.recordJsonPath).collectEntries{ [(it.uuid): it] }
+
+                        // if an occurrence record doesn't exist in previous result (added) or has different user_assertions than previous (changed).
+                        records = curRecordsMap.values().findAll { !oldRecordsMap.containsKey(it.uuid) || it.user_assertions != oldRecordsMap.get(it.uuid).user_assertions }
+                        // if an occurrence record exists in previous result but not in current (deleted).
+                        records.addAll(oldRecordsMap.findAll{ !curRecordsMap.containsKey(it.value.uuid) }.values())
                     }
                 } else {
                     log.warn "queryResult last or previous objects contains HTML and not JSON - ${last} || ${previous}"

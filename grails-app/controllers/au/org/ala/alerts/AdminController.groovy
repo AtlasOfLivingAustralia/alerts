@@ -130,6 +130,7 @@ class AdminController {
         null
     }
 
+    // via admin/user/debug/{userId}
     def debugAlertsForUser() {
         User user = User.findByUserId(params.userId)
         if (user) {
@@ -150,9 +151,11 @@ class AdminController {
 
     def debugAlertEmail() {
         def frequency = params.frequency ?: 'weekly'
-        def qcr = notificationService.checkQueryById(params.id, params.frequency ?: 'weekly')
-        def model = emailService.generateEmailModel(qcr.query, frequency, qcr.queryResult)
-        render(view: qcr.query.emailTemplate, model: model)
+
+        // debug email is per query or per query + user so returned qcs will only have 1 element
+        def qcrs = notificationService.checkQueryById(params.id, params.frequency ?: 'weekly', params.uid)
+        def model = emailService.generateEmailModel(qcrs[0].query, frequency, qcrs[0].queryResult)
+        render(view: qcrs[0].query.emailTemplate, model: model)
     }
 
     def debugAlert() {
@@ -160,9 +163,9 @@ class AdminController {
                 hourly : notificationService.checkQueryById(params.id, params.frequency ?: 'hourly'),
                 daily  : notificationService.checkQueryById(params.id, params.frequency ?: 'daily'),
                 weekly : notificationService.checkQueryById(params.id, params.frequency ?: 'weekly'),
-                monthly: notificationService.checkQueryById(params.id, params.frequency ?: 'monthly')
-        ]
-        ]
+                monthly: notificationService.checkQueryById(params.id, params.frequency ?: 'monthly')],
+
+        query: Query.get(params.id)]
     }
 
     def deleteOrphanAlerts() {
@@ -173,24 +176,10 @@ class AdminController {
     def showUsersAlerts() {
         User user = User.findByUserId(params.userId)
         if (user) {
-            def notificationInstanceList = Notification.findAllByUser(user)
-            //split into custom and non-custom...
-            def enabledQueries = notificationInstanceList.collect { it.query }
-            def enabledIds = enabledQueries.collect { it.id }
+            def userConfig = userService.getUserAlertsConfig(user)
+            userConfig.put('adminUser', authService.userDetails())
 
-            //all types
-            def allAlertTypes = Query.findAllByCustom(false)
-
-            allAlertTypes.removeAll { enabledIds.contains(it.id) }
-            def customQueries = enabledQueries.findAll { it.custom }
-            def standardQueries = enabledQueries.findAll { !it.custom }
-
-            render(view: "../notification/myAlerts", model: [disabledQueries: allAlertTypes,
-                                                             enabledQueries : standardQueries, customQueries: customQueries,
-                                                             frequencies    : Frequency.listOrderByPeriodInSeconds(),
-                                                             user           : user,
-                                                             adminUser      : authService.userDetails()
-            ])
+            render(view: "../notification/myAlerts", model: userConfig)
         } else {
             log.info "user with id " + params.userId + " not found."
             response.sendError(404)

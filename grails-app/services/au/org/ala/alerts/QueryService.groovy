@@ -26,18 +26,22 @@ class QueryService {
     n
   }
 
-  Boolean hasAFireProperty(Query query){
-    Boolean hasFireProperty = false
-    query.propertyPaths.each { pp ->
-      if(pp.fireWhenChange || pp.fireWhenNotZero) hasFireProperty = true
-    }
-    hasFireProperty
+  static Boolean checkChangeByDiff(Query query) {
+    !hasAFireProperty(query) && (query.idJsonPath || ifUserSpecific(query))
+  }
+
+  static Boolean hasAFireProperty(Query query){
+    query.propertyPaths.any {it.fireWhenChange || it.fireWhenNotZero}
+  }
+
+  static Boolean ifUserSpecific(Query query) {
+    query.name.startsWith('My Annotations')
   }
 
   Integer fireWhenNotZeroProperty(QueryResult queryResult){
     Integer fireWhenNotZeroValue = -1
     queryResult.propertyValues.each { pv ->
-      if( pv.propertyPath.fireWhenNotZero) {
+      if (pv.propertyPath.fireWhenNotZero) {
           fireWhenNotZeroValue = pv.currentValue.toInteger()
       }
     }

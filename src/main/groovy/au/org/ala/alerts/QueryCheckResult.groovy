@@ -12,10 +12,11 @@ class QueryCheckResult {
     boolean errored = false
     long timeTaken = 0
 
-    public String toString(){
-        "Query ID:" + queryId +
+    @Override
+    String toString() {
+        "Query ID:" + query?.id +
                 "\nURL: " + urlChecked +
-                "\nfireAlert: " + fireAlert +
+//                "\nfireAlert: " + fireAlert +
                 "\nerrored: " + errored
     }
 }
