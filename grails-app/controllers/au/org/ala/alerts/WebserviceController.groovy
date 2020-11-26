@@ -387,12 +387,17 @@ class WebserviceController {
         }
     }
 
-
     private User retrieveUser(params) {
         User user = userService.getUser()
         if (user == null && params.userName) {
             user = userService.getUserByUserName(params.userName)
         }
         user
+    }
+
+    @RequireApiKey
+    def getUserAlertsWS() {
+        User user = userService.getUserById(params.userId)
+        render userService.getUserAlertsConfig(user) as JSON
     }
 }

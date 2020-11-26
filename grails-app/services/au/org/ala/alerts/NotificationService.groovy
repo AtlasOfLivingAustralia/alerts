@@ -621,4 +621,32 @@ class NotificationService {
             }
         }
     }
+
+    def addAlertForUser(User user, Long queryId) {
+        log.debug('add my alert :  ' + queryId + ' for user : ' + user)
+        def notificationInstance = new Notification()
+        notificationInstance.query = Query.findById(queryId)
+        notificationInstance.user = user
+        //does this already exist?
+        def exists = Notification.findByQueryAndUser(notificationInstance.query, notificationInstance.user)
+        if (!exists) {
+            log.info("Adding alert for user: " + notificationInstance.user + ", query id: " + queryId)
+            notificationInstance.save(flush: true)
+        } else {
+            log.info("NOT Adding alert for user: " + notificationInstance.user + ", query id: " + queryId + ", already exists...")
+        }
+    }
+
+    def deleteAlertForUser(User user, Long queryId) {
+        log.debug('Deleting my alert :  ' + queryId + ' for user : ' + user)
+        def query = Query.findById(queryId)
+
+        def notificationInstance = Notification.findByUserAndQuery(user, query)
+        if (notificationInstance) {
+            log.debug('Deleting my notification :  ' + queryId)
+            notificationInstance.each { it.delete(flush: true) }
+        } else {
+            log.error('*** Unable to find  my notification - no delete :  ' + queryId)
+        }
+    }
 }

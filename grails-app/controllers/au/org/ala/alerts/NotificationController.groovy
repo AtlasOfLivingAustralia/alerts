@@ -1,6 +1,6 @@
 package au.org.ala.alerts
 
-import au.org.ala.web.AlaSecured
+import au.ala.org.ws.security.RequireApiKey
 import grails.converters.JSON
 import org.apache.http.HttpStatus
 
@@ -33,18 +33,7 @@ class NotificationController {
             response.status = HttpStatus.SC_NOT_FOUND
             response.sendError(HttpStatus.SC_NOT_FOUND, "Unrecognised user")
         } else {
-            log.debug('add my alert ' + params.id)
-            def notificationInstance = new Notification()
-            notificationInstance.query = Query.findById(params.id)
-            notificationInstance.user = user
-            //does this already exist?
-            def exists = Notification.findByQueryAndUser(notificationInstance.query, notificationInstance.user)
-            if (!exists) {
-                log.info("Adding alert for user: " + notificationInstance.user + ", query id: " + params.id)
-                notificationInstance.save(flush: true)
-            } else {
-                log.info("NOT Adding alert for user: " + notificationInstance.user + ", query id: " + params.id + ", already exists...")
-            }
+            notificationService.addAlertForUser(user, params.id)
             return null
         }
     }
@@ -61,16 +50,7 @@ class NotificationController {
             response.status = HttpStatus.SC_NOT_FOUND
             response.sendError(HttpStatus.SC_NOT_FOUND, "Unrecognised user")
         } else {
-            def query = Query.get(params.id)
-            log.debug('Deleting my alert :  ' + params.id + ' for user : ' + authService.getDisplayName())
-
-            def notificationInstance = Notification.findByUserAndQuery(user, query)
-            if (notificationInstance) {
-                log.debug('Deleting my notification :  ' + params.id)
-                notificationInstance.each { it.delete(flush: true) }
-            } else {
-                log.error('*** Unable to find  my notification - no delete :  ' + params.id)
-            }
+            notificationService.deleteAlertForUser(user, params.id)
             return null
         }
     }
@@ -130,5 +110,19 @@ class NotificationController {
 
     def admin = {
 
+    }
+
+    @RequireApiKey
+    def addMyAlertWS() {
+        User user = userService.getUserById(params.userId)
+        notificationService.addAlertForUser(user, Long.valueOf(params.queryId))
+        render([success: true] as JSON)
+    }
+
+    @RequireApiKey
+    def deleteMyAlertWS() {
+        User user = userService.getUserById(params.userId)
+        notificationService.deleteAlertForUser(user, Long.valueOf(params.queryId))
+        render([success: true] as JSON)
     }
 }
