@@ -81,8 +81,10 @@ class DiffService {
                     curRecords.sort { it.uuid }
 
                     // compare records one by one, if not same 'uuid' and same 'user_assertions' field, there's a diff
-                    oldRecords.eachWithIndex { oldRecord, index ->
-                        def curRecord = curRecords.get(index)
+                    for (int i = 0; i < oldRecords.size(); i++) {
+                        def oldRecord = oldRecords.get(i)
+                        def curRecord = curRecords.get(i)
+
                         if (oldRecord.uuid != curRecord.uuid || oldRecord.user_assertions != curRecord.user_assertions) return true
                     }
 
