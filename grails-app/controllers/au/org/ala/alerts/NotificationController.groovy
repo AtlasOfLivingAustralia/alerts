@@ -33,7 +33,7 @@ class NotificationController {
             response.status = HttpStatus.SC_NOT_FOUND
             response.sendError(HttpStatus.SC_NOT_FOUND, "Unrecognised user")
         } else {
-            notificationService.addAlertForUser(user, params.id)
+            notificationService.addAlertForUser(user, Long.valueOf(params.id))
             return null
         }
     }
@@ -50,7 +50,7 @@ class NotificationController {
             response.status = HttpStatus.SC_NOT_FOUND
             response.sendError(HttpStatus.SC_NOT_FOUND, "Unrecognised user")
         } else {
-            notificationService.deleteAlertForUser(user, params.id)
+            notificationService.deleteAlertForUser(user, Long.valueOf(params.id))
             return null
         }
     }
