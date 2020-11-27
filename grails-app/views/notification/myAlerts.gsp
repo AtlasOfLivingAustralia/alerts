@@ -51,7 +51,6 @@
                                 </td>
                             </tr>
                         </g:each>
-
                         <g:each in="${disabledQueries}" status="i" var="query">
                             <tr class="${(i % 2) == 0 ? 'odd' : 'even'}">
                                 <td class="queryDescription">
