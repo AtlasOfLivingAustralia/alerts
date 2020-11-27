@@ -1,5 +1,7 @@
 package au.org.ala.alerts
 
+import grails.util.Holders
+
 class QueryService {
 
   static transactional = true
@@ -7,6 +9,9 @@ class QueryService {
   def serviceMethod() {}
 
   def grailsApplication
+
+  def messageSource
+  def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
 
   Notification getNotificationForUser(Query query, User user) {
     Notification n = null
@@ -67,10 +72,14 @@ class QueryService {
   def createQueryForUserIfNotExists(Query newQuery, User user){
     //find the query
     Query retrievedQuery = Query.findByBaseUrlAndQueryPath(newQuery.baseUrl, newQuery.queryPath)
-    if(retrievedQuery == null){
-      newQuery = newQuery.save(true)
-      new PropertyPath([name: "totalRecords", jsonPath: "totalRecords", query: newQuery, fireWhenNotZero: true]).save(true)
-      new PropertyPath([name: "last_loaded_record", jsonPath: "occurrences[0].rowKey", query: newQuery]).save(true)
+    if (retrievedQuery == null) {
+      try {
+        newQuery = newQuery.save(true)
+        new PropertyPath([name: "totalRecords", jsonPath: "totalRecords", query: newQuery, fireWhenNotZero: true]).save(true)
+        new PropertyPath([name: "last_loaded_record", jsonPath: "occurrences[0].rowKey", query: newQuery]).save(true)
+      } catch (Exception ex) {
+        log.error("Error occurred when saving Query: " + ex.toString())
+      }
     } else {
       newQuery = retrievedQuery
     }
@@ -94,14 +103,19 @@ class QueryService {
    * @param biocacheWebserviceQueryPath
    * @return
    */
-  Query createBioCacheChangeQuery(String biocacheWebserviceQueryPath, String biocacheUIQueryPath, String queryDisplayName, String baseUrlForWS, String baseUrlForUI, String resourceName){
+  Query createBioCacheChangeQuery(String biocacheWebserviceQueryPath, String biocacheUIQueryPath, String queryDisplayName, String baseUrlForWS, String baseUrlForUI, String resourceName) {
+    // truncate long name to avoid SQL error
+    if (queryDisplayName.length() >= 250){
+      queryDisplayName = queryDisplayName.substring(0, 149) + "..."
+    }
+
     new Query([
       baseUrl: baseUrlForWS?:grailsApplication.config.biocacheService.baseURL,
       baseUrlForUI: baseUrlForUI?:grailsApplication.config.biocache.baseURL,
       resourceName:  resourceName,
-      name: 'New records for ' + queryDisplayName,
-      updateMessage: 'More occurrence records have been added for ' + queryDisplayName,
-      description: 'Notify me when new records are added for ' + queryDisplayName,
+      name: messageSource.getMessage("query.service.occurrences.name", [queryDisplayName] as Object[], siteLocale),
+      updateMessage: messageSource.getMessage("query.service.occurrences.update.msg", [queryDisplayName] as Object[], siteLocale),
+      description: messageSource.getMessage("query.service.occurrences.desc", [queryDisplayName] as Object[], siteLocale),
       queryPath: biocacheWebserviceQueryPath + '&fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc&pageSize=20&facets=basis_of_record',
       queryPathForUI: biocacheUIQueryPath + '&fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc',
       dateFormat: """yyyy-MM-dd'T'HH:mm:ss'Z'""",
@@ -118,9 +132,9 @@ class QueryService {
       baseUrl: baseUrlForWS?:grailsApplication.config.biocacheService.baseURL,
       baseUrlForUI: baseUrlForUI?:grailsApplication.config.biocache.baseURL,
       resourceName:  resourceName,
-      name: 'New annotations on records for ' + queryDisplayName,
-      updateMessage: 'Annotations have been added for ' + queryDisplayName,
-      description: 'Notify me when new annotations are added for ' + queryDisplayName,
+      name: messageSource.getMessage("query.service.annotations.name", [queryDisplayName] as Object[], siteLocale),
+      updateMessage: messageSource.getMessage("query.service.annotations.update.msg", [queryDisplayName] as Object[], siteLocale),
+      description: messageSource.getMessage("query.service.annotations.desc", [queryDisplayName] as Object[], siteLocale),
       queryPath: biocacheWebserviceQueryPath + '&fq=(user_assertions:50005%20OR%20user_assertions:50003%20OR%20user_assertions:50002)&fq=last_assertion_date:[___DATEPARAM___%20TO%20*]&sort=last_assertion_date&dir=desc&pageSize=20&facets=basis_of_record',
       queryPathForUI: biocacheUIQueryPath + '&fq=(user_assertions:50005%20OR%20user_assertions:50003%20OR%20user_assertions:50002)&fq=last_assertion_date:[___DATEPARAM___%20TO%20*]&sort=last_assertion_date&dir=desc',
       dateFormat: """yyyy-MM-dd'T'HH:mm:ss'Z'""",
@@ -136,9 +150,9 @@ class QueryService {
       baseUrl: baseUrlForWS?:grailsApplication.config.biocacheService.baseURL,
       baseUrlForUI: baseUrlForUI?:grailsApplication.config.biocache.baseURL,
       resourceName:  resourceName,
-      name: 'New records for ' + queryDisplayName,
-      updateMessage: 'More occurrence records have been added for ' + queryDisplayName + ' - '+resourceName,
-      description: 'Notify me when new records are added for ' + queryDisplayName + ' - '+resourceName,
+      name: messageSource.getMessage("query.service.occurrences.name", [queryDisplayName] as Object[], siteLocale),
+      updateMessage: messageSource.getMessage("query.service.occurrences.resource.update.msg", [queryDisplayName, resourceName] as Object[], siteLocale),
+      description: messageSource.getMessage("query.service.occurrences.resource.desc", [queryDisplayName, resourceName] as Object[], siteLocale),
       queryPath: biocacheWebserviceQueryPath + '&dir=desc&pageSize=20&facets=basis_of_record',
       queryPathForUI: biocacheUIQueryPath + '&dir=desc',
       dateFormat: """yyyy-MM-dd'T'HH:mm:ss'Z'""",
@@ -154,9 +168,10 @@ class QueryService {
       baseUrl: grailsApplication.config.biocacheService.baseURL,
       baseUrlForUI: grailsApplication.config.biocache.baseURL,
       name: 'New records for ' + taxonName,
+      name: messageSource.getMessage("query.service.occurrences.name", [taxonName] as Object[], siteLocale),
       resourceName:  grailsApplication.config.postie.defaultResourceName,
-      updateMessage: 'More occurrence records have been added for ' + taxonName,
-      description: 'Notify me when new records are added for ' + taxonName,
+      updateMessage: messageSource.getMessage("query.service.occurrences.update.msg", [taxonName] as Object[], siteLocale),
+      description: messageSource.getMessage("query.service.occurrences.desc", [taxonName] as Object[], siteLocale),
       queryPath: '/occurrences/taxon/'+ taxonGuid + '?fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc&pageSize=20&facets=basis_of_record',
       queryPathForUI: '/occurrences/taxa/'+ taxonGuid + '?fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc',
       dateFormat: """yyyy-MM-dd'T'HH:mm:ss'Z'""",
@@ -171,10 +186,10 @@ class QueryService {
     new Query([
       baseUrl: grailsApplication.config.biocacheService.baseURL,
       baseUrlForUI: grailsApplication.config.biocache.baseURL,
-      name: 'New records for ' + taxonName + ' recorded in ' + regionName,
+      name: messageSource.getMessage("query.service.occurrences.recorded.name", [taxonName, regionName] as Object[], siteLocale),
       resourceName:  grailsApplication.config.postie.defaultResourceName,
-      updateMessage: 'More occurrence records have been added for ' + taxonName + ' recorded in ' + regionName,
-      description: 'Notify me when new records are added for ' + taxonName + ' recorded in ' + regionName,
+      updateMessage: messageSource.getMessage("query.service.occurrences.recorded.update.msg", [taxonName, regionName] as Object[], siteLocale),
+      description: messageSource.getMessage("query.service.occurrences.recorded.desc", [taxonName, regionName] as Object[], siteLocale),
       queryPath: '/occurrences/taxon/'+ taxonGuid +'?' + layerId + ':%22'+regionName.encodeAsURL()+'%22&fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc&pageSize=20&facets=basis_of_record',
       queryPathForUI: '/occurrences/taxa/'+ taxonGuid +'?' + layerId + ':%22'+regionName.encodeAsURL()+'%22&fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc',
       dateFormat: """yyyy-MM-dd'T'HH:mm:ss'Z'""",
@@ -189,10 +204,10 @@ class QueryService {
     new Query([
       baseUrl: grailsApplication.config.biocacheService.baseURL,
       baseUrlForUI: grailsApplication.config.biocache.baseURL,
-      name: 'New records for ' + speciesGroup + ' recorded in ' + regionName,
+      name: messageSource.getMessage("query.service.occurrences.recorded.name", [speciesGroup, regionName] as Object[], siteLocale),
       resourceName:  grailsApplication.config.postie.defaultResourceName,
-      updateMessage: 'More occurrence records have been added for ' + speciesGroup + ' recorded in ' + regionName,
-      description: 'Notify me when new records are added for ' + speciesGroup + ' recorded in ' + regionName,
+      updateMessage: messageSource.getMessage("query.service.occurrences.recorded.update.msg", [speciesGroup, regionName] as Object[], siteLocale),
+      description: messageSource.getMessage("query.service.occurrences.recorded.desc", [speciesGroup, regionName] as Object[], siteLocale),
       queryPath: '/occurrences/search?q='+layerId+':%22'+regionName.encodeAsURL()+'%22&fq=species_group:'+speciesGroup+'&fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc&pageSize=20&facets=basis_of_record',
       queryPathForUI: '/occurrences/search?q='+layerId+':"'+regionName.encodeAsURL()+'"&fq=species_group:'+speciesGroup+'&fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc',
       dateFormat: """yyyy-MM-dd'T'HH:mm:ss'Z'""",
@@ -207,10 +222,10 @@ class QueryService {
     new Query([
       baseUrl: grailsApplication.config.biocacheService.baseURL,
       baseUrlForUI: grailsApplication.config.biocache.baseURL,
-      name: 'New records for ' + regionName,
+      name: messageSource.getMessage("query.service.occurrences.name", [regionName] as Object[], siteLocale),
       resourceName:  grailsApplication.config.postie.defaultResourceName,
-      updateMessage: 'More occurrence records have been added for ' + regionName,
-      description: 'Notify me when new records are added for ' + regionName,
+      updateMessage: messageSource.getMessage("query.service.occurrences.update.msg", [regionName] as Object[], siteLocale),
+      description: messageSource.getMessage("query.service.occurrences.desc", [regionName] as Object[], siteLocale),
       queryPath: '/occurrences/search?q='+ layerId+':%22' + regionName.encodeAsURL() +'%22&fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc&pageSize=20&facets=basis_of_record',
       queryPathForUI: '/occurrences/search?q='+ layerId+':%22' + regionName.encodeAsURL() +'%22&fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc',
       dateFormat: """yyyy-MM-dd'T'HH:mm:ss'Z'""",

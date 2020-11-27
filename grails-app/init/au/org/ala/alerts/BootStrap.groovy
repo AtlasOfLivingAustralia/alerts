@@ -18,6 +18,7 @@ class BootStrap {
         )
 
         siteLocale = new Locale.Builder().setLanguageTag(grailsApplication.config.siteDefaultLanguage).build();
+        Locale.setDefault(siteLocale)
 
         preloadQueries()
         log.info("Done bootstrap queries.")
@@ -26,10 +27,10 @@ class BootStrap {
     private void preloadQueries() {
         log.info("start of preloadQueries")
         if(Frequency.findAll().isEmpty()){
-            (new Frequency([name: messageSource.getMessage('frequency.hourly', null, siteLocale), periodInSeconds:3600])).save()
-            (new Frequency([name: messageSource.getMessage('frequency.daily', null, siteLocale)])).save()
-            (new Frequency([name: messageSource.getMessage('frequency.weekly', null, siteLocale), periodInSeconds:604800])).save()
-            (new Frequency([name: messageSource.getMessage('frequency.monthly', null, siteLocale), periodInSeconds:2419200])).save()
+            (new Frequency([name: 'hourly', periodInSeconds:3600])).save()
+            (new Frequency([name: 'daily'])).save()
+            (new Frequency([name: 'weekly', periodInSeconds:604800])).save()
+            (new Frequency([name: 'monthly', periodInSeconds:2419200])).save()
         }
 
         def title = messageSource.getMessage("query.annotations.title", null, siteLocale)
@@ -176,7 +177,7 @@ class BootStrap {
             Query newCitizenScienceRecordsWithImages = (new Query([
                     baseUrl: grailsApplication.config.biocacheService.baseURL,
                     baseUrlForUI: grailsApplication.config.biocache.baseURL,
-                    name: 'Citizen science records with images',
+                    name: title,
                     resourceName:  grailsApplication.config.postie.defaultResourceName,
                     updateMessage: 'more.cs.images.update.message',
                     description: descr,
@@ -263,10 +264,10 @@ class BootStrap {
                     resourceName:  grailsApplication.config.postie.defaultResourceName,
                     updateMessage: 'more.blogsnews.update.message',
                     description: descr,
-                    queryPath: '/api/get_category_posts/?slug=blogs-news&count=5',
+                    queryPath: '/recentposts.json',
                     queryPathForUI: '/blogs-news/',
                     emailTemplate: '/email/blogs',
-                    recordJsonPath: '\$.posts[*]',
+                    recordJsonPath: '\$.[*]',
                     idJsonPath: 'id'
             ])).save()
             new PropertyPath([name: "last_blog_id", jsonPath: "posts", query: newBlogs, fireWhenChanged: true]).save()

@@ -1,6 +1,6 @@
 package au.org.ala.alerts
 import com.jayway.jsonpath.JsonPath
-import grails.converters.JSON
+import grails.util.Holders
 import org.apache.commons.io.IOUtils
 import org.grails.web.json.JSONArray
 import org.grails.web.json.JSONElement
