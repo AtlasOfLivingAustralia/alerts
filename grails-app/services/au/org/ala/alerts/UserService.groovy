@@ -25,7 +25,7 @@ class UserService {
 
     def getUserAlertsConfig(User user) {
 
-        log.debug('#getUserAlertsConfig - Viewing my alerts :  ' + user)
+        log.debug('getUserAlertsConfig - Viewing my alerts :  ' + user)
 
         //enabled alerts
         def notificationInstanceList = Notification.findAllByUser(user)
