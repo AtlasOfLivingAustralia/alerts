@@ -332,13 +332,18 @@ class NotificationService {
             for (JSONObject occurrence : rslt.occurrences) {
                 if (occurrence.uuid) {
                     // all the verified assertions of this occurrence record
-                    def verifedAssertions = filterAssertionsForAQuery(getAssertionsOfARecord(query.baseUrl, occurrence.uuid), query, userId)
+                    def (openAssertions, verifiedAssertions, correctedAssertions) = filterAssertionsForAQuery(getAssertionsOfARecord(query.baseUrl, occurrence.uuid), userId)
 
-                    // if verified
-                    if (verifedAssertions.size() != 0) {
-                        verifedAssertions.sort { it.uuid }
-                        // user_assertions fields contain the id of the assertions that have been verified
-                        occurrence.put('user_assertions', verifedAssertions.collect { it.uuid }.join(','))
+                    // only include record has at least 1 (50001/50002/50003) assertion
+                    if (!openAssertions.isEmpty() || !verifiedAssertions.isEmpty() || !correctedAssertions.isEmpty()) {
+
+                        openAssertions.sort { it.uuid }
+                        verifiedAssertions.sort { it.uuid }
+                        correctedAssertions.sort { it.uuid }
+
+                        occurrence.put('open_assertions', openAssertions.collect { it.uuid }.join(','))
+                        occurrence.put('verified_assertions', verifiedAssertions.collect { it.uuid }.join(','))
+                        occurrence.put('corrected_assertions', correctedAssertions.collect { it.uuid }.join(','))
                         reconstructedOccurrences.push(occurrence)
                     }
                 }
@@ -371,33 +376,29 @@ class NotificationService {
         return getJsonElements(url) as JSONArray
     }
 
-    private def desiredQAStatus(Query query) {
-        if (queryService.ifUserSpecific(query)) {
-            if (query.name.toLowerCase().indexOf('open issue') != -1) {
-                return 50001
-            } else if (query.name.toLowerCase().indexOf('verified') != -1) {
-                return 50002
-            } else if (query.name.toLowerCase().indexOf('corrected') != -1) {
-                return 50003
-            }
-        }
-
-        return ""
-    }
-
-    // of all the assertions user has made return those have been verified (to 50001/50002/50003)
-    private def filterAssertionsForAQuery(JSONArray assertions, Query query, String userId) {
+    // of all the assertions user has made return those have been open-issued, verified or corrected
+    private static def filterAssertionsForAQuery(JSONArray assertions, String userId) {
+        def openAssertions = []
         def verifiedAssertions = []
+        def correctedAssertions = []
         if (assertions) {
             // all the original user assertions (issues users flagged)
             def origUserAssertions = assertions.findAll { it.uuid && !it.relatedUuid && it.userId == userId}
 
-            // all the original user assertions that have been verified
-            def verifiedIds = assertions.findAll { it.uuid && it.relatedUuid && it.code == 50000 && it.qaStatus == desiredQAStatus(query) }.collect { it.relatedUuid }
+            // all the 50001 (open issue) assertions (could belong to userId or other users)
+            def openIssueIds = assertions.findAll { it.uuid && it.relatedUuid && it.code == 50000 && it.qaStatus == 50001 }.collect { it.relatedUuid }
 
+            // all the 50002 (verified) assertions (could belong to userId or other users)
+            def verifiedIds = assertions.findAll { it.uuid && it.relatedUuid && it.code == 50000 && it.qaStatus == 50002 }.collect { it.relatedUuid }
+
+            // all the 50003 (corrected) assertions (could belong to userId or other users)
+            def correctedIds = assertions.findAll { it.uuid && it.relatedUuid && it.code == 50000 && it.qaStatus == 50003 }.collect { it.relatedUuid }
+
+            openAssertions = origUserAssertions.findAll { openIssueIds.contains(it.uuid) }
             verifiedAssertions = origUserAssertions.findAll { verifiedIds.contains(it.uuid) }
+            correctedAssertions = origUserAssertions.findAll { correctedIds.contains(it.uuid) }
         }
-        verifiedAssertions
+        [openAssertions, verifiedAssertions, correctedAssertions]
     }
 
     private def refreshProperties(QueryResult queryResult, json) {

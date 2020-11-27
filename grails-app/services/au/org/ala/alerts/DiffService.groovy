@@ -61,15 +61,19 @@ class DiffService {
                     }
                     !diff.empty
                 } else {
-                    // 'occurrences' field in json has been processed in NotificationService.processMyAnnotations
-                    // so that it only contains records that have at least 1 verified user assertions and the user assertions
-                    // uuids have been concatenated to 'user_assertions' filed.
+                    // 'occurrences' field in json has been processed in NotificationService.processQueryReturnedJson
+                    // so that it only contains records that have at least 1 50001/50002/50003 assertion
+                    // and
+                    // 1. the open assertion ids have been put into 'open_assertions'
+                    // 2. the verified assertion ids have been put into 'verified_assertions'
+                    // 3. the corrected assertion ids have been put into 'corrected_assertions'
                     //
-                    // we compare previous and current records.
-                    // 1. if records number different that means records (which has verified user assertions) been added or deleted
+                    //
+                    // we compare previous and current record list.
+                    // 1. if records number different that means records been added or deleted
                     // 2. if same records number, we compare them one by one. If 2 records at same position have different uuid,
-                    //    there's a change. If 2 have same uuid but different 'user_assertions' means different verifications done
-                    //    on this record so there's a change.
+                    //    there's a change. If 2 have same uuid but different 'open_assertions' or 'verified_assertions' or 'corrected_assertions'
+                    //    that means assertions state have changed and should trigger an alert
 
                     def oldRecords = JsonPath.read(previous, query.recordJsonPath)
                     def curRecords = JsonPath.read(current, query.recordJsonPath)
@@ -80,12 +84,15 @@ class DiffService {
                     oldRecords.sort { it.uuid }
                     curRecords.sort { it.uuid }
 
-                    // compare records one by one, if not same 'uuid' and same 'user_assertions' field, there's a diff
+                    // compare records one by one
                     for (int i = 0; i < oldRecords.size(); i++) {
                         def oldRecord = oldRecords.get(i)
                         def curRecord = curRecords.get(i)
 
-                        if (oldRecord.uuid != curRecord.uuid || oldRecord.user_assertions != curRecord.user_assertions) return true
+                        if (oldRecord.uuid != curRecord.uuid || oldRecord.open_assertions != curRecord.open_assertions ||
+                        oldRecord.verified_assertions != curRecord.verified_assertions || oldRecord.corrected_assertions != curRecord.corrected_assertions) {
+                            return true
+                        }
                     }
 
                     false
@@ -142,15 +149,20 @@ class DiffService {
                         }
                     } else {
                         // for normal alerts, comparing occurrence uuid is enough to show the difference.
-                        // for my annotation alerts, same occurrence record could exist in both result but have different verified user assertions.
-                        // so comparing occurrence uuid is not enough, we need to compare verified user assertions inside each occurrence record
+                        // for my annotation alerts, same occurrence record could exist in both result but have different assertions.
+                        // so comparing occurrence uuid is not enough, we need to compare 50001/50002/50003 sections inside each occurrence record
 
                         // uuid -> occurrence record map
                         def oldRecordsMap = JsonPath.read(previous, queryResult.query.recordJsonPath).collectEntries{ [(it.uuid): it] }
                         def curRecordsMap = JsonPath.read(last, queryResult.query.recordJsonPath).collectEntries{ [(it.uuid): it] }
 
-                        // if an occurrence record doesn't exist in previous result (added) or has different user_assertions than previous (changed).
-                        records = curRecordsMap.values().findAll { !oldRecordsMap.containsKey(it.uuid) || it.user_assertions != oldRecordsMap.get(it.uuid).user_assertions }
+                        // if an occurrence record doesn't exist in previous result (added) or has different open_assertions or verified_assertions or corrected_assertions than previous (changed).
+                        records = curRecordsMap.values().findAll { !oldRecordsMap.containsKey(it.uuid)
+                                || it.open_assertions != oldRecordsMap.get(it.uuid).open_assertions
+                                || it.verified_assertions != oldRecordsMap.get(it.uuid).verified_assertions
+                                || it.corrected_assertions != oldRecordsMap.get(it.uuid).corrected_assertions
+                        }
+
                         // if an occurrence record exists in previous result but not in current (deleted).
                         records.addAll(oldRecordsMap.findAll{ !curRecordsMap.containsKey(it.value.uuid) }.values())
                     }
