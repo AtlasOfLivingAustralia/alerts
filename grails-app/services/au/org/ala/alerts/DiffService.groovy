@@ -157,11 +157,10 @@ class DiffService {
                         def curRecordsMap = JsonPath.read(last, queryResult.query.recordJsonPath).collectEntries{ [(it.uuid): it] }
 
                         // if an occurrence record doesn't exist in previous result (added) or has different open_assertions or verified_assertions or corrected_assertions than previous (changed).
-                        records = curRecordsMap.values().findAll { !oldRecordsMap.containsKey(it.uuid)
-                                || it.open_assertions != oldRecordsMap.get(it.uuid).open_assertions
-                                || it.verified_assertions != oldRecordsMap.get(it.uuid).verified_assertions
-                                || it.corrected_assertions != oldRecordsMap.get(it.uuid).corrected_assertions
-                        }
+                        records = curRecordsMap.values().findAll { !oldRecordsMap.containsKey(it.uuid) ||
+                                it.open_assertions != oldRecordsMap.get(it.uuid).open_assertions ||
+                                it.verified_assertions != oldRecordsMap.get(it.uuid).verified_assertions ||
+                                it.corrected_assertions != oldRecordsMap.get(it.uuid).corrected_assertions }
 
                         // if an occurrence record exists in previous result but not in current (deleted).
                         records.addAll(oldRecordsMap.findAll{ !curRecordsMap.containsKey(it.value.uuid) }.values())
