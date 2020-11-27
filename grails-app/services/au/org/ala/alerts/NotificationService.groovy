@@ -583,14 +583,14 @@ class NotificationService {
 
     // get ids of all the users who subscribe to query + frequency
     def getAllUsersForAQuery(Query query, Frequency frequency) {
-        def users = Query.executeQuery(
-                """select u
-                  from User u
-                  inner join u.notifications n
-                  where n.query = :query
-                  and u.frequency = :frequency
-                  and u.locked is null
-                  group by u""", [query: query, frequency: frequency])
+        Query.executeQuery(
+            """select u
+            from User u
+            inner join u.notifications n
+            where n.query = :query
+            and u.frequency = :frequency
+            and (u.locked is null or u.locked != 1)
+            group by u""", [query: query, frequency: frequency])
     }
 
     /**
