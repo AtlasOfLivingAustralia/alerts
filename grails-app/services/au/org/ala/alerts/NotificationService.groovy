@@ -1,5 +1,6 @@
 package au.org.ala.alerts
 import com.jayway.jsonpath.JsonPath
+import grails.converters.JSON
 import grails.util.Holders
 import org.apache.commons.io.IOUtils
 import org.grails.web.json.JSONArray
@@ -65,7 +66,7 @@ class NotificationService {
         log.debug("[QUERY " + query.id + "] Querying URL: " + urlString)
 
         try {
-            def processedJson = processQueryReturnedJson(query, IOUtils.toString(new URL(urlString).newReader()))
+            def processedJson = processQueryReturnedJson(query, user?.userId, IOUtils.toString(new URL(urlString).newReader()))
             //update the stored properties
             refreshProperties(qr, processedJson)
 
@@ -134,7 +135,7 @@ class NotificationService {
         log.debug("[QUERY " + query.id + "] Querying URL: " + urlString)
 
         try {
-            def processedJson = processQueryReturnedJson(query, IOUtils.toString(new URL(urlString).newReader()))
+            def processedJson = processQueryReturnedJson(query, user?.userId, IOUtils.toString(new URL(urlString).newReader()))
 
             qcr.response = processedJson
 
@@ -319,7 +320,7 @@ class NotificationService {
     }
     
 
-    private def processQueryReturnedJson(Query query, String json) {
+    private def processQueryReturnedJson(Query query, String userId, String json) {
         if (!queryService.ifUserSpecific(query)) return json
 
         JSONObject rslt = JSON.parse(json) as JSONObject
@@ -331,7 +332,7 @@ class NotificationService {
             for (JSONObject occurrence : rslt.occurrences) {
                 if (occurrence.uuid) {
                     // all the verified assertions of this occurrence record
-                    def verifedAssertions = filterAssertionsForAQuery(getAssertionsOfARecord(query.baseUrl, occurrence.uuid), query)
+                    def verifedAssertions = filterAssertionsForAQuery(getAssertionsOfARecord(query.baseUrl, occurrence.uuid), query, userId)
 
                     // if verified
                     if (verifedAssertions.size() != 0) {
@@ -384,11 +385,12 @@ class NotificationService {
         return ""
     }
 
-    private def filterAssertionsForAQuery(JSONArray assertions, Query query) {
+    // of all the assertions user has made return those have been verified (to 50001/50002/50003)
+    private def filterAssertionsForAQuery(JSONArray assertions, Query query, String userId) {
         def verifiedAssertions = []
         if (assertions) {
             // all the original user assertions (issues users flagged)
-            def origUserAssertions = assertions.findAll { it.uuid && !it.relatedUuid }
+            def origUserAssertions = assertions.findAll { it.uuid && !it.relatedUuid && it.userId == userId}
 
             // all the original user assertions that have been verified
             def verifiedIds = assertions.findAll { it.uuid && it.relatedUuid && it.code == 50000 && it.qaStatus == desiredQAStatus(query) }.collect { it.relatedUuid }
@@ -559,7 +561,7 @@ class NotificationService {
                       inner join u.notifications n
                       where n.query = :query
                       and u.frequency = :frequency
-                      and u.locked is null
+                      and (u.locked is null or u.locked != 1)
                       group by u""", [query: query, frequency: frequency])
 
                     recipients = users.collect { user ->
