@@ -25,7 +25,7 @@ class UserService {
 
     def getUserAlertsConfig(User user) {
 
-        log.debug('getUserAlertsConfig - Viewing my alerts :  ' + user)
+        log.debug('#getUserAlertsConfig - Viewing my alerts :  ' + user)
 
         //enabled alerts
         def notificationInstanceList = Notification.findAllByUser(user)
@@ -34,16 +34,16 @@ class UserService {
         def enabledQueries = notificationInstanceList.collect { it.query }
         def enabledIds = enabledQueries.collect { it.id }
 
-        //all queries
-        def allQueries = Query.findAllByCustom(false)
+        //all types
+        def allAlertTypes = Query.findAllByCustom(false)
 
-        // all 'my annotation' queries
-        def myAnnotationsName = "My Annotations"
-        def allMyAnnotations = allQueries.findAll { it.name.startsWith(myAnnotationsName) }
+        allAlertTypes.removeAll { enabledIds.contains(it.id) }
+        def customQueries = enabledQueries.findAll { it.custom }
+        def standardQueries = enabledQueries.findAll { !it.custom }
 
-        allQueries.removeAll { enabledIds.contains(it.id) }
-        def enabledCustomQueries = enabledQueries.findAll { it.custom }
-        def enabledStandardQueries = enabledQueries.findAll { !it.custom }
+        [disabledQueries: allAlertTypes,
+         enabledQueries : standardQueries,
+         customQueries  : customQueries,
 
         def enabledMyAnnotations = enabledStandardQueries.findAll{ it.name.startsWith(myAnnotationsName) }
 

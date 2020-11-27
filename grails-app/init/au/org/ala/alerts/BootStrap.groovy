@@ -54,8 +54,8 @@ class BootStrap {
             new PropertyPath([name: "last_assertion_record", jsonPath: "occurrences[0].rowKey", query: newAssertions]).save()
         }
 
-        title = messageSource.getMessage("query.myannotations-openissue.title", null, siteLocale)
-        descr = messageSource.getMessage("query.myannotations-openissue.descr", null, siteLocale)
+        title = messageSource.getMessage("query.myannotations.title", null, siteLocale)
+        descr = messageSource.getMessage("query.myannotations.descr", null, siteLocale)
         if (Query.findAllByName(title).isEmpty()) {
             (new Query([
                     baseUrl: grailsApplication.config.biocacheService.baseURL,
@@ -63,40 +63,6 @@ class BootStrap {
                     resourceName:  grailsApplication.config.postie.defaultResourceName,
                     name: title,
                     updateMessage: 'myannotations-openissue.update.message',
-                    description: descr,
-                    queryPath: '/occurrences/search?fq=assertion_user_id:___UIDPARAM___&dir=desc&facets=basis_of_record',
-                    queryPathForUI: '/occurrences/search?fq=assertion_user_id:___UIDPARAM___&dir=desc&facets=basis_of_record',
-                    emailTemplate: '/email/biocache',
-                    recordJsonPath: '\$.occurrences[*]',
-            ])).save()
-        }
-
-        title = messageSource.getMessage("query.myannotations-verified.title", null, siteLocale)
-        descr = messageSource.getMessage("query.myannotations-verified.descr", null, siteLocale)
-        if (Query.findAllByName(title).isEmpty()) {
-            (new Query([
-                    baseUrl: grailsApplication.config.biocacheService.baseURL,
-                    baseUrlForUI: grailsApplication.config.biocache.baseURL,
-                    resourceName:  grailsApplication.config.postie.defaultResourceName,
-                    name: title,
-                    updateMessage: 'myannotations-verified.update.message',
-                    description: descr,
-                    queryPath: '/occurrences/search?fq=assertion_user_id:___UIDPARAM___&dir=desc&facets=basis_of_record',
-                    queryPathForUI: '/occurrences/search?fq=assertion_user_id:___UIDPARAM___&dir=desc&facets=basis_of_record',
-                    emailTemplate: '/email/biocache',
-                    recordJsonPath: '\$.occurrences[*]',
-            ])).save()
-        }
-
-        title = messageSource.getMessage("query.myannotations-corrected.title", null, siteLocale)
-        descr = messageSource.getMessage("query.myannotations-corrected.descr", null, siteLocale)
-        if (Query.findAllByName(title).isEmpty()) {
-            (new Query([
-                    baseUrl: grailsApplication.config.biocacheService.baseURL,
-                    baseUrlForUI: grailsApplication.config.biocache.baseURL,
-                    resourceName:  grailsApplication.config.postie.defaultResourceName,
-                    name: title,
-                    updateMessage: 'myannotations-corrected.update.message',
                     description: descr,
                     queryPath: '/occurrences/search?fq=assertion_user_id:___UIDPARAM___&dir=desc&facets=basis_of_record',
                     queryPathForUI: '/occurrences/search?fq=assertion_user_id:___UIDPARAM___&dir=desc&facets=basis_of_record',
