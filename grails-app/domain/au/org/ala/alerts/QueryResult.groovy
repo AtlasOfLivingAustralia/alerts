@@ -26,6 +26,7 @@ class QueryResult {
   }
 
   static mapping = {
+    propertyValues cascade: 'all'
     lastResult sqlType: 'longblob' //,  minSize:0, maxSize: 200000
     previousResult sqlType: 'longblob' //,  minSize:0, maxSize: 200000
     queryUrlUsed  sqlType: 'text'

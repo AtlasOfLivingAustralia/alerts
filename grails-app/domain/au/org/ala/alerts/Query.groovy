@@ -21,7 +21,13 @@ class Query {
   String idJsonPath   //the json path for producing a list of IDs for change detection
   String recordJsonPath
 
-  static hasMany = [ notifications : Notification, queryResults:QueryResult, propertyPaths:PropertyPath ]
+  static hasMany = [notifications: Notification, queryResults: QueryResult, propertyPaths: PropertyPath]
+
+  static mapping = {
+    propertyPaths cascade: 'all'
+    queryResults cascade: 'all'
+
+  }
 
   static constraints = {
     description nullable: true, maxSize: 400, widget:'textarea'
