@@ -23,12 +23,6 @@ class Query {
 
   static hasMany = [notifications: Notification, queryResults: QueryResult, propertyPaths: PropertyPath]
 
-//  static mapping = {
-//    propertyPaths cascade: 'delete'
-//    queryResults cascade: 'delete'
-//
-//  }
-
   static constraints = {
     description nullable: true, maxSize: 400, widget:'textarea'
     dateFormat nullable: true
