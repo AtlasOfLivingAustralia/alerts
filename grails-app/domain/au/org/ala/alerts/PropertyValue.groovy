@@ -7,9 +7,7 @@ class PropertyValue {
   String currentValue
   String previousValue
 
-//  static belongsTo = [ propertyPath: PropertyPath, queryResult:  QueryResult]
   static constraints = {
-//    propertyPath nullable:true
     currentValue nullable:true
     previousValue nullable:true
   }
