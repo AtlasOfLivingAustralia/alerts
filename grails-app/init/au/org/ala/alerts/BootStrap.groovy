@@ -62,7 +62,7 @@ class BootStrap {
                     baseUrlForUI: grailsApplication.config.biocache.baseURL,
                     resourceName:  grailsApplication.config.postie.defaultResourceName,
                     name: title,
-                    updateMessage: 'myannotations-openissue.update.message',
+                    updateMessage: 'myannotations.update.message',
                     description: descr,
                     queryPath: '/occurrences/search?fq=assertion_user_id:___UIDPARAM___&dir=desc&facets=basis_of_record',
                     queryPathForUI: '/occurrences/search?fq=assertion_user_id:___UIDPARAM___&dir=desc&facets=basis_of_record',
