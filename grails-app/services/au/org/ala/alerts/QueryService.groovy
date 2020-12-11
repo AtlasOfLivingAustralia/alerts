@@ -53,9 +53,10 @@ class QueryService {
   def deleteQuery(Query queryInstance) throws DataIntegrityViolationException {
     def propertyPaths = PropertyPath.findAllByQuery(queryInstance)
     def queryResults = QueryResult.findAllByQuery(queryInstance)
-    def propetyValues = PropertyValue.findAllByQueryResultInList(queryResults)
-
-    PropertyValue.deleteAll(propetyValues)
+    if (queryResults.size() > 0) {
+      def propetyValues = PropertyValue.findAllByQueryResultInList(queryResults)
+      PropertyValue.deleteAll(propetyValues)
+    }
     QueryResult.deleteAll(queryResults)
     PropertyPath.deleteAll(propertyPaths)
     queryInstance.delete(flush: true)
