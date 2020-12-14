@@ -398,6 +398,11 @@ class WebserviceController {
     @RequireApiKey
     def getUserAlertsWS() {
         User user = userService.getUserById(params.userId)
-        render userService.getUserAlertsConfig(user) as JSON
+        if (user == null) {
+            response.status = 404
+            render ([error : "can't find a user with userId " + params.userId] as JSON)
+        } else {
+            render (userService.getUserAlertsConfig(user) as JSON)
+        }
     }
 }
