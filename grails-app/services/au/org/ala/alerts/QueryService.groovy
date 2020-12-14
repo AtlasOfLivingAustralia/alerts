@@ -62,16 +62,16 @@ class QueryService {
     queryInstance.delete(flush: true)
   }
 
-  int deleteOrphanedQueries(){
+  int deleteOrphanedQueries() {
     def toBeRemoved = []
     Query.findAll().each {
-        if(it.notifications.size() == 0){
-            toBeRemoved << it
-        }
+      if (it.notifications.size() == 0 && it.custom == true) {
+        toBeRemoved << it
+      }
     }
 
     toBeRemoved.each {
-        Query.deleteAll(toBeRemoved)
+      deleteQuery(it)
     }
 
     toBeRemoved.size()
