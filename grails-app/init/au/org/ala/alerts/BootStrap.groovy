@@ -105,6 +105,7 @@ class BootStrap {
                     baseUrl: grailsApplication.config.biocacheService.baseURL,
                     baseUrlForUI: grailsApplication.config.biocache.baseURL,
                     name: title,
+                    resourceName:  grailsApplication.config.postie.defaultResourceName,
                     updateMessage: 'more.cs.update.message',
                     description: descr,
                     queryPath: '/occurrences/search?q=first_loaded_date:[___DATEPARAM___%20TO%20*]&fq=data_resource_uid:dr364&sort=first_loaded_date&dir=desc&pageSize=20&facets=basis_of_record',

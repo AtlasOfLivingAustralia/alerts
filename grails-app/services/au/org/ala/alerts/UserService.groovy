@@ -22,6 +22,7 @@ class UserService {
     static transactional = true
 
     def authService
+    def messageSource
 
     def getUserAlertsConfig(User user) {
 
@@ -126,9 +127,9 @@ class UserService {
             log.debug "User is not in user table - creating new record for " + userDetails
             user = new User([email: userDetails.email, userId: userDetails.userId, locked: userDetails.locked, frequency: Frequency.findByName("weekly")])
             user.save(flush:true, failOnError: true)
-            // new user gets "Blogs and News" by default (opt out)
+            // new user gets "Blogs and News" weekly by default (opt out)
             def notificationInstance = new Notification()
-            notificationInstance.query = Query.findByName("Blogs and News") //Query.findById(params.id)
+            notificationInstance.query = Query.findByName(messageSource.getMessage("query.ala.blog.title", null, siteLocale))
             notificationInstance.user = user
             notificationInstance.save(flush: true)
         }
