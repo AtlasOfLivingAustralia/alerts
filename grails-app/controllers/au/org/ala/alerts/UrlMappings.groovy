@@ -45,8 +45,8 @@ class UrlMappings {
         "/api/alerts/user/createAlerts"(controller: 'webservice', action: [POST: 'createUserAlerts'])
 
         "/api/alerts/user/$userId"(controller: 'webservice', action: 'getUserAlertsWS')
-        "/api/alerts/user/$userId/unsubscribe/$queryId"(controller: 'notification', action: 'deleteMyAlertWS')
-        "/api/alerts/user/$userId/subscribe/$queryId"(controller: 'notification', action: 'addMyAlertWS')
+        "/api/alerts/user/$userId/unsubscribe/$queryId"(controller: 'notification', action: [POST: 'deleteMyAlertWS'])
+        "/api/alerts/user/$userId/subscribe/$queryId"(controller: 'notification', action: [POST: 'addMyAlertWS'])
 
         "/robots.txt"(view:'/notFound')
         "400"(view:'/error')
