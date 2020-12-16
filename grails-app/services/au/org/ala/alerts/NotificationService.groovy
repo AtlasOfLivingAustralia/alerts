@@ -1,7 +1,6 @@
 package au.org.ala.alerts
 import com.jayway.jsonpath.JsonPath
 import grails.converters.JSON
-import grails.util.Holders
 import org.apache.commons.io.IOUtils
 import org.grails.web.json.JSONArray
 import org.grails.web.json.JSONElement
@@ -38,7 +37,7 @@ class NotificationService {
      */
     def checkStatus(Query query, Frequency frequency, User user = null) {
         // if query not user specific
-        if (!queryService.ifUserSpecific(query)) {
+        if (!queryService.isUserSpecific(query)) {
             return [processSingleQuery(query, frequency)]
         } else { // if query is user specific
             // each user stores its own result so we need to run one by one
@@ -102,7 +101,7 @@ class NotificationService {
         def qcrList = []
 
         // if not user specific
-        if (!queryService.ifUserSpecific(query)) {
+        if (!queryService.isUserSpecific(query)) {
             qcrList.push(processSingleQueryNoUpdate(query, frequency))
         } else if (user != null) { // if user specific and user specified
             qcrList.push(processSingleQueryNoUpdate(query, frequency, user))
@@ -191,7 +190,7 @@ class NotificationService {
             queryPathForUI = queryPathForUI.replaceAll("___DATEPARAM___", dateValue)
         }
 
-        if (queryService.ifUserSpecific(query) && user != null) {
+        if (queryService.isUserSpecific(query) && user != null) {
             queryPath = queryPath.replaceAll("___UIDPARAM___", user.getUserId())
             queryPathForUI = queryPathForUI.replaceAll("___UIDPARAM___", user.getUserId())
         }
@@ -321,7 +320,7 @@ class NotificationService {
     
 
     private def processQueryReturnedJson(Query query, String userId, String json) {
-        if (!queryService.ifUserSpecific(query)) return json
+        if (!queryService.isUserSpecific(query)) return json
 
         JSONObject rslt = JSON.parse(json) as JSONObject
 

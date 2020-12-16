@@ -32,14 +32,14 @@ class QueryService {
   }
 
   static Boolean checkChangeByDiff(Query query) {
-    !hasAFireProperty(query) && (query.idJsonPath || ifUserSpecific(query))
+    !hasAFireProperty(query) && (query.idJsonPath || isUserSpecific(query))
   }
 
   static Boolean hasAFireProperty(Query query){
     query.propertyPaths.any {it.fireWhenChange || it.fireWhenNotZero}
   }
 
-  static Boolean ifUserSpecific(Query query) {
+  static Boolean isUserSpecific(Query query) {
     query.name.startsWith('My Annotations')
   }
 

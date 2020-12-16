@@ -33,7 +33,7 @@ class EmailService {
 
         log.debug("Using email template: " + notification.query.emailTemplate)
 
-        def queryResult = QueryResult.findByQueryAndFrequencyAndUser(notification.query, notification.user.frequency, queryService.ifUserSpecific(notification.query) ? notification.user : null)
+        def queryResult = QueryResult.findByQueryAndFrequencyAndUser(notification.query, notification.user.frequency, queryService.isUserSpecific(notification.query) ? notification.user : null)
 
         def emailModel = generateEmailModel(notification, queryResult)
         def user = notification.user

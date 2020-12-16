@@ -40,7 +40,7 @@ class DiffService {
         if (current != null && previous != null) {
 
             try {
-                if (!queryService.ifUserSpecific(query)) {
+                if (!queryService.isUserSpecific(query)) {
                     def ids1 = JsonPath.read(current, query.recordJsonPath + "." + query.idJsonPath)
                     if (!isCollectionOrArray(ids1)) {
                         ids1 = [ids1]
@@ -135,7 +135,7 @@ class DiffService {
 
                 if(!last.startsWith("<") && !previous.startsWith("<")) {
                     // Don't try and process 401, 301, 500, etc., responses that contain HTML
-                    if (!queryService.ifUserSpecific(queryResult.query)) {
+                    if (!queryService.isUserSpecific(queryResult.query)) {
                         List<String> ids1 = JsonPath.read(last, queryResult.query.recordJsonPath + "." + queryResult.query.idJsonPath)
                         List<String> ids2 = JsonPath.read(previous, queryResult.query.recordJsonPath + "." + queryResult.query.idJsonPath)
                         List<String> diff = ids1.findAll { !ids2.contains(it) }
