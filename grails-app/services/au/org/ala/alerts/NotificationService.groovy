@@ -303,7 +303,9 @@ class NotificationService {
                 }
 
                 propertyValue.save(true)
+                queryResult.addToPropertyValues(propertyValue)
             }
+            queryResult.save(true)
         } catch (Exception e){
             log.error("[QUERY " + queryResult?.query?.id?:'NULL' + "] There was a problem reading the supplied JSON.",e)
         }
@@ -405,8 +407,8 @@ class NotificationService {
     }
 
     //select q.id, u.frequency from query q inner join notification n on n.query_id=q.id inner join user u on n.user_id=u.id;
-    def checkQueryForFrequency(Frequency frequency, Boolean sendEmails){
-
+    List<Map> checkQueryForFrequency(Frequency frequency, Boolean sendEmails){
+        List<Map> recipients = []
         def queries = Query.executeQuery(
                 """select q from Query q
                   inner join q.notifications n
@@ -432,7 +434,7 @@ class NotificationService {
                   and (u.locked is null or u.locked != 1)
                   group by u""", [query: query, frequency: frequency])
 
-                List<Map> recipients = users.collect { user ->
+                recipients = users.collect { user ->
                     [email: user[0], userUnsubToken: user[1], notificationUnsubToken: user[2]]
                 }
                 log.debug("Sending emails to...." + recipients*.email.join(","))
@@ -441,6 +443,7 @@ class NotificationService {
                 }
             }
         }
+        recipients
     }
 
     /**
