@@ -22,6 +22,7 @@ class WebserviceController {
 
     def queryService
     def userService
+    def notificationService
 
     def index = {}
     def test = {}
@@ -403,6 +404,30 @@ class WebserviceController {
             render ([error : "can't find a user with userId " + params.userId] as JSON)
         } else {
             render (userService.getUserAlertsConfig(user) as JSON)
+        }
+    }
+
+    @RequireApiKey
+    def addMyAlertWS() {
+        User user = userService.getUserById(params.userId)
+        if (user == null) {
+            response.status = 404
+            render ([error : "can't find a user with userId " + params.userId] as JSON)
+        } else {
+            notificationService.addAlertForUser(user, Long.valueOf(params.queryId))
+            render ([success: true] as JSON)
+        }
+    }
+
+    @RequireApiKey
+    def deleteMyAlertWS() {
+        User user = userService.getUserById(params.userId)
+        if (user == null) {
+            response.status = 404
+            render ([error : "can't find a user with userId " + params.userId] as JSON)
+        } else {
+            notificationService.deleteAlertForUser(user, Long.valueOf(params.queryId))
+            render ([success: true] as JSON)
         }
     }
 }
