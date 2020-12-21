@@ -98,7 +98,7 @@ class NotificationServiceSpec extends Specification {
                 new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()))
 
         // update Query queryPath to search annotations of past 60 days, increase it if no annotations found
-        def dateToUse = org.apache.commons.lang.time.DateUtils.addSeconds(new Date(), -60 * hourly.periodInSeconds)
+        def dateToUse = org.apache.commons.lang.time.DateUtils.addDays(new Date(), -60)
         SimpleDateFormat sdf = new SimpleDateFormat(annotations.dateFormat)
         def updatedQP = annotations.queryPath.replaceAll("___DATEPARAM___", sdf.format(dateToUse))
         annotations.queryPath = updatedQP
@@ -128,7 +128,7 @@ class NotificationServiceSpec extends Specification {
         then: recipients.size() > 0
     }
 
-    void "test sending email for newRecords hourly"() {
+    void "test sending email for new records hourly"() {
         // checkQueryForFrequency(String frequencyName)
         given:
         // preconditions: 1. hourly Queries exist; 2. User(s) subscribed to hourly Annotations; 3. User is not locked.
@@ -137,7 +137,7 @@ class NotificationServiceSpec extends Specification {
                 new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()))
 
         // update Query queryPath to search annotations of past 60 days, increase it if no annotations found
-        def dateToUse = org.apache.commons.lang.time.DateUtils.addSeconds(new Date(), -60 * hourly.periodInSeconds)
+        def dateToUse = org.apache.commons.lang.time.DateUtils.addDays(new Date(), -60)
         SimpleDateFormat sdf = new SimpleDateFormat(newRecords.dateFormat)
         def updatedQP = newRecords.queryPath.replaceAll("___DATEPARAM___", sdf.format(dateToUse))
         newRecords.queryPath = updatedQP
@@ -167,7 +167,7 @@ class NotificationServiceSpec extends Specification {
         then: recipients.size() > 0
     }
 
-    void "test sending email for newImages hourly"() {
+    void "test sending email for new images hourly"() {
         // checkQueryForFrequency(String frequencyName)
         given:
         // preconditions: 1. hourly Queries exist; 2. User(s) subscribed to hourly Annotations; 3. User is not locked.
@@ -176,7 +176,7 @@ class NotificationServiceSpec extends Specification {
                 new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()))
 
         // update Query queryPath to search annotations of past 60 days, increase it if no annotations found
-        def dateToUse = org.apache.commons.lang.time.DateUtils.addSeconds(new Date(), -60 * hourly.periodInSeconds)
+        def dateToUse = org.apache.commons.lang.time.DateUtils.addDays(new Date(), -60)
         SimpleDateFormat sdf = new SimpleDateFormat(newImages.dateFormat)
         def updatedQP = newImages.queryPath.replaceAll("___DATEPARAM___", sdf.format(dateToUse))
         newImages.queryPath = updatedQP
@@ -200,6 +200,201 @@ class NotificationServiceSpec extends Specification {
         assert hourly != null
         assert notification != null
         assert users.size() > 0
+
+        when:
+        def recipients = service.checkQueryForFrequency(hourly, true)
+        then: recipients.size() > 0
+    }
+
+    void "test sending email for citizen science records hourly"() {
+        // checkQueryForFrequency(String frequencyName)
+        given:
+        // preconditions: 1. hourly Queries exist; 2. User(s) subscribed to hourly Annotations; 3. User is not locked.
+        Frequency hourly = Frequency.findByName("hourly")
+        Query citizen = Query.findByName(messageSource.getMessage("query.citizen.records.title", null,
+                new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()))
+
+        // update Query queryPath to search annotations of past 60 days, increase it if no annotations found
+        def dateToUse = org.apache.commons.lang.time.DateUtils.addDays(new Date(), -30*7)
+        SimpleDateFormat sdf = new SimpleDateFormat(citizen.dateFormat)
+        def updatedQP = citizen.queryPath.replaceAll("___DATEPARAM___", sdf.format(dateToUse))
+        citizen.queryPath = updatedQP
+        citizen.save(flush: true)
+
+        Notification notification = new Notification()
+        notification.query = citizen
+        notification.user = User.findById(1)
+        notification.save(flush: true)
+
+        def users = Query.executeQuery(
+                """select u.email, max(u.unsubscribeToken), max(n.unsubscribeToken)
+                  from User u
+                  inner join u.notifications n
+                  where n.query = :query
+                  and u.frequency = :frequency
+                  and (u.locked is null or u.locked != 1)
+                  group by u""", [query: citizen, frequency: hourly])
+
+        assert citizen != null
+        assert hourly != null
+        assert notification != null
+        assert users.size() > 0
+
+        when:
+        def recipients = service.checkQueryForFrequency(hourly, true)
+        then: recipients.size() > 0
+    }
+
+    void "test sending email for citizen science records with images hourly"() {
+        // checkQueryForFrequency(String frequencyName)
+        given:
+        // preconditions: 1. hourly Queries exist; 2. User(s) subscribed to hourly Annotations; 3. User is not locked.
+        Frequency hourly = Frequency.findByName("hourly")
+        Query newCitizenImages = Query.findByName(messageSource.getMessage("query.citizen.records.imgs.title", null,
+                new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()))
+
+        // update Query queryPath to search annotations of past 60 days, increase it if no annotations found
+        def dateToUse = org.apache.commons.lang.time.DateUtils.addDays(new Date(), -30*7)
+        SimpleDateFormat sdf = new SimpleDateFormat(newCitizenImages.dateFormat)
+        def updatedQP = newCitizenImages.queryPath.replaceAll("___DATEPARAM___", sdf.format(dateToUse))
+        newCitizenImages.queryPath = updatedQP
+        newCitizenImages.save(flush: true)
+
+        Notification notification = new Notification()
+        notification.query = newCitizenImages
+        notification.user = User.findById(1)
+        notification.save(flush: true)
+
+        def users = Query.executeQuery(
+                """select u.email, max(u.unsubscribeToken), max(n.unsubscribeToken)
+                  from User u
+                  inner join u.notifications n
+                  where n.query = :query
+                  and u.frequency = :frequency
+                  and (u.locked is null or u.locked != 1)
+                  group by u""", [query: newCitizenImages, frequency: hourly])
+
+        assert newCitizenImages != null
+        assert hourly != null
+        assert notification != null
+        assert users.size() > 0
+
+        when:
+        def recipients = service.checkQueryForFrequency(hourly, true)
+        then: recipients.size() > 0
+    }
+
+    void "test sending email for datasets hourly"() {
+        given:
+        // preconditions: 1. hourly Queries exist; 2. User(s) subscribed to hourly Annotations; 3. User is not locked.
+        Frequency hourly = Frequency.findByName("hourly")
+        Query datasets = Query.findByName(messageSource.getMessage("query.datasets.title", null,
+                new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()))
+
+        Notification notification = new Notification()
+        notification.query = datasets
+        notification.user = User.findById(1)
+        notification.save(flush: true)
+
+        def users = Query.executeQuery(
+                """select u.email, max(u.unsubscribeToken), max(n.unsubscribeToken)
+                  from User u
+                  inner join u.notifications n
+                  where n.query = :query
+                  and u.frequency = :frequency
+                  and (u.locked is null or u.locked != 1)
+                  group by u""", [query: datasets, frequency: hourly])
+
+        assert datasets != null
+        assert hourly != null
+        assert notification != null
+        assert users.size() > 0
+
+        def layersJson = IOUtils.toString(new URL("https://collections.ala.org.au/ws/dataResource").newReader())
+//         previousResult is null the very first time, so run checkStatus to populate it
+        service.checkStatus(datasets, hourly)
+        QueryResult queryResult = service.getQueryResult(datasets, hourly)
+        // manually change saved Json to trigger email sending
+        queryResult.lastResult = service.gzipResult(layersJson)
+        queryResult.save(flush: true)
+
+        when:
+        def recipients = service.checkQueryForFrequency(hourly, true)
+        then: recipients.size() > 0
+    }
+
+    void "test sending email for species lists"() {
+        given:
+        // preconditions: 1. hourly Queries exist; 2. User(s) subscribed to hourly Annotations; 3. User is not locked.
+        Frequency hourly = Frequency.findByName("hourly")
+        Query lists = Query.findByName(messageSource.getMessage("query.species.lists.title", null,
+                new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()))
+
+        Notification notification = new Notification()
+        notification.query = lists
+        notification.user = User.findById(1)
+        notification.save(flush: true)
+
+        def users = Query.executeQuery(
+                """select u.email, max(u.unsubscribeToken), max(n.unsubscribeToken)
+                  from User u
+                  inner join u.notifications n
+                  where n.query = :query
+                  and u.frequency = :frequency
+                  and (u.locked is null or u.locked != 1)
+                  group by u""", [query: lists, frequency: hourly])
+
+        assert lists != null
+        assert hourly != null
+        assert notification != null
+        assert users.size() > 0
+
+        def layersJson = IOUtils.toString(new URL("https://collections.ala.org.au/ws/dataResource?resourceType=species-list").newReader())
+        // previousResult is null the very first time, so run checkStatus to populate it
+        service.checkStatus(lists, hourly)
+        QueryResult queryResult = service.getQueryResult(lists, hourly)
+        // manually change saved Json to trigger email sending
+        queryResult.lastResult = service.gzipResult(layersJson)
+        queryResult.save(flush: true)
+
+        when:
+        def recipients = service.checkQueryForFrequency(hourly, true)
+        then: recipients.size() > 0
+    }
+
+    void "test sending email for spatial layers"() {
+        given:
+        // preconditions: 1. hourly Queries exist; 2. User(s) subscribed to hourly Annotations; 3. User is not locked.
+        Frequency hourly = Frequency.findByName("hourly")
+        Query layers = Query.findByName(messageSource.getMessage("query.spatial.layers.title", null,
+                new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()))
+
+        Notification notification = new Notification()
+        notification.query = layers
+        notification.user = User.findById(1)
+        notification.save(flush: true)
+
+        def users = Query.executeQuery(
+                """select u.email, max(u.unsubscribeToken), max(n.unsubscribeToken)
+                  from User u
+                  inner join u.notifications n
+                  where n.query = :query
+                  and u.frequency = :frequency
+                  and (u.locked is null or u.locked != 1)
+                  group by u""", [query: layers, frequency: hourly])
+
+        assert layers != null
+        assert hourly != null
+        assert notification != null
+        assert users.size() > 0
+
+        def layersJson = IOUtils.toString(new URL("https://spatial-test.ala.org.au/ws/layers.json").newReader())
+        // previousResult is null the very first time, so run checkStatus to populate it
+        service.checkStatus(layers, hourly)
+        QueryResult queryResult = service.getQueryResult(layers, hourly)
+        // manually change saved Json to trigger email sending
+        queryResult.lastResult = service.gzipResult(layersJson)
+        queryResult.save(flush: true)
 
         when:
         def recipients = service.checkQueryForFrequency(hourly, true)
@@ -247,11 +442,4 @@ class NotificationServiceSpec extends Specification {
         def recipients = service.checkQueryForFrequency(hourly, true)
         then: recipients.size() > 0
     }
-
-//    void "test something"() {
-//        given:
-//        def userNbr = User.count()
-//        expect:"fix me"
-//        userNbr == 1
-//    }
 }
