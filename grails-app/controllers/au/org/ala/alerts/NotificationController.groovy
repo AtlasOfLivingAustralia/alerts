@@ -1,6 +1,5 @@
 package au.org.ala.alerts
 
-import au.ala.org.ws.security.RequireApiKey
 import grails.converters.JSON
 import org.apache.http.HttpStatus
 
@@ -22,12 +21,7 @@ class NotificationController {
     }
 
     def addMyAlert = {
-        def user
-        if (authService.userInRole("ROLE_ADMIN")) {
-            user = userService.getUserById(params.userId)
-        } else {
-            user = userService.getUser()
-        }
+        def user = getUser()
 
         if (!user) {
             response.status = HttpStatus.SC_NOT_FOUND
@@ -39,29 +33,30 @@ class NotificationController {
     }
 
     def deleteMyAlert = {
-        def user
-        if (authService.userInRole("ROLE_ADMIN")) {
-            user = userService.getUserById(params.userId)
-        } else {
-            user = userService.getUser()
-        }
+        def user = getUser()
 
         if (!user) {
             response.status = HttpStatus.SC_NOT_FOUND
             response.sendError(HttpStatus.SC_NOT_FOUND, "Unrecognised user")
         } else {
             notificationService.deleteAlertForUser(user, Long.valueOf(params.id))
-            return null
         }
     }
 
+    def addMyAnnotation = {
+        def user = getUser()
+        notificationService.addMyAnnotation(user)
+        render ([success: true] as JSON)
+    }
+
+    def deleteMyAnnotation = {
+        def user = getUser()
+        notificationService.deleteMyAnnotation(user)
+        render ([success: true] as JSON)
+    }
+
     def deleteMyAlertWR = {
-        def user
-        if (authService.userInRole("ROLE_ADMIN")) {
-            user = userService.getUserById(params.userId)
-        } else {
-            user = userService.getUser()
-        }
+        def user = getUser()
 
         //this is a hack to get around a CAS issue
         if (user == null) {
@@ -79,6 +74,14 @@ class NotificationController {
             log.error('*** Unable to find  my notification - no delete :  ' + params.id)
         }
         redirect(action: 'myAlerts')
+    }
+
+    private User getUser() {
+        if (authService.userInRole("ROLE_ADMIN")) {
+            return userService.getUserById(params.userId)
+        } else {
+            return userService.getUser()
+        }
     }
 
     def changeFrequency = {

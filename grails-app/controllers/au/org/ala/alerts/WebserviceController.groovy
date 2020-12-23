@@ -388,6 +388,7 @@ class WebserviceController {
         }
     }
 
+
     private User retrieveUser(params) {
         User user = userService.getUser()
         if (user == null && params.userName) {
@@ -408,25 +409,25 @@ class WebserviceController {
     }
 
     @RequireApiKey
-    def addMyAlertWS() {
+    def addMyAnnotationAlertWS() {
         User user = userService.getUserById(params.userId)
         if (user == null) {
             response.status = 404
             render ([error : "can't find a user with userId " + params.userId] as JSON)
         } else {
-            notificationService.addAlertForUser(user, Long.valueOf(params.queryId))
+            notificationService.addMyAnnotation(user)
             render ([success: true] as JSON)
         }
     }
 
     @RequireApiKey
-    def deleteMyAlertWS() {
+    def deleteMyAnnotationAlertWS() {
         User user = userService.getUserById(params.userId)
         if (user == null) {
             response.status = 404
             render ([error : "can't find a user with userId " + params.userId] as JSON)
         } else {
-            notificationService.deleteAlertForUser(user, Long.valueOf(params.queryId))
+            notificationService.deleteMyAnnotation(user)
             render ([success: true] as JSON)
         }
     }

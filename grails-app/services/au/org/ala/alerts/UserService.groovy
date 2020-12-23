@@ -16,12 +16,15 @@ package au.org.ala.alerts
 import au.org.ala.web.UserDetails
 import grails.converters.JSON
 import grails.plugin.cache.Cacheable
+import grails.util.Holders
 
 class UserService {
 
     static transactional = true
 
-    def authService
+    def authService, messageSource
+
+    def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
 
     def getUserAlertsConfig(User user) {
 
@@ -34,16 +37,21 @@ class UserService {
         def enabledQueries = notificationInstanceList.collect { it.query }
         def enabledIds = enabledQueries.collect { it.id }
 
-        //all types
+        // all standard queries
         def allAlertTypes = Query.findAllByCustom(false)
 
         allAlertTypes.removeAll { enabledIds.contains(it.id) }
         def customQueries = enabledQueries.findAll { it.custom }
         def standardQueries = enabledQueries.findAll { !it.custom }
 
+        def myannotationName = messageSource.getMessage("query.myannotations.title", null, siteLocale)
+        def myannotation = standardQueries.findAll {it.name == myannotationName}
+        standardQueries.removeAll {it.name == myannotationName}
+
         [disabledQueries: allAlertTypes,
          enabledQueries : standardQueries,
          customQueries  : customQueries,
+         myannotation   : myannotation,
          frequencies    : Frequency.listOrderByPeriodInSeconds(),
          user           : user]
     }

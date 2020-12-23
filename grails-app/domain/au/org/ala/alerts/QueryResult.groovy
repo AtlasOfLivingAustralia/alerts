@@ -4,7 +4,6 @@ class QueryResult {
 
   Query query
   Frequency frequency
-  User user                 // query result can be user specific, for example my annotations alerts
   Date lastChecked          // timestamp of last check
   Date previousCheck        // timestamp of previous check
   String queryUrlUsed       //query URL used
@@ -17,7 +16,6 @@ class QueryResult {
   static hasMany = [propertyValues : PropertyValue]
 
   static constraints = {
-    user nullable:true
     lastResult nullable: true //, minSize:0, maxSize:200000
     previousResult nullable: true //, minSize:0, maxSize:200000
     previousCheck nullable: true

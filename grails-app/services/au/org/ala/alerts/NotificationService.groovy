@@ -16,12 +16,10 @@ class NotificationService {
     def diffService
     def queryService
 
-    // find query result, which may be user specific
-    QueryResult getQueryResult(Query query, Frequency frequency, User user = null) {
-        QueryResult qr = QueryResult.findByQueryAndFrequencyAndUser(query, frequency, user)
-
-        if (qr == null) {
-            qr = new QueryResult([query:query, frequency:frequency, user:user])
+    QueryResult getQueryResult(Query query, Frequency frequency){
+        QueryResult qr = QueryResult.findByQueryAndFrequency(query, frequency)
+        if(qr == null){
+            qr = new QueryResult([query:query, frequency:frequency])
             qr.save(flush:true)
         }
         qr
@@ -32,32 +30,14 @@ class NotificationService {
      *
      * @param query
      * @param frequency
-     * @return if query is not user specific returns [true]/[false] indicating there's a change or not
-     *         otherwise return [true, [uid1 ... uidn]] or [false]
+     * @return
      */
-    def checkStatus(Query query, Frequency frequency, User user = null) {
-        // if query not user specific
-        if (!queryService.isUserSpecific(query)) {
-            return [processSingleQuery(query, frequency)]
-        } else { // if query is user specific
-            // each user stores its own result so we need to run one by one
-            def users = (user != null) ? [user] : getAllUsersForAQuery(query, frequency)
-            def changedList = []
-            for (u in users) {
-                if (processSingleQuery(query, frequency, u)) {
-                    changedList.push(u)
-                }
-            }
+    boolean checkStatus(Query query, Frequency frequency) {
 
-            return changedList.size() > 0 ? [true, changedList] : [false]
-        }
-    }
-
-    def processSingleQuery(Query query, Frequency frequency, User user = null) {
-        QueryResult qr = getQueryResult(query, frequency, user)
+        QueryResult qr = getQueryResult(query, frequency)
 
         //def url = new URL("http://biocache.ala.org.au/ws/occurrences/search?q=*:*&pageSize=1")
-        def urls = getQueryUrl(query, frequency, user)
+        def urls = getQueryUrl(query, frequency)
 
         def urlString = urls.first()
         def urlStringForUI = urls.last()
@@ -65,7 +45,7 @@ class NotificationService {
         log.debug("[QUERY " + query.id + "] Querying URL: " + urlString)
 
         try {
-            def processedJson = processQueryReturnedJson(query, user?.userId, IOUtils.toString(new URL(urlString).newReader()))
+            def processedJson = processQueryReturnedJson(query, IOUtils.toString(new URL(urlString).newReader()))
             //update the stored properties
             refreshProperties(qr, processedJson)
 
@@ -73,68 +53,47 @@ class NotificationService {
 
             // set check time
             qr.previousCheck = qr.lastChecked
-            qr.lastChecked = new Date()
+            
 
             // store the last result from the webservice call
             qr.previousResult = qr.lastResult
             qr.lastResult = gzipResult(processedJson)
-
+            qr.lastChecked = new Date()
             qr.hasChanged = hasChanged(qr)
-
-            // set query url
             qr.queryUrlUsed = urlString
             qr.queryUrlUIUsed = urlStringForUI
 
             log.debug("[QUERY " + query.id + "] Has changed?: " + qr.hasChanged)
-            if (qr.hasChanged) {
+            if(qr.hasChanged){
                 qr.lastChanged = new Date()
             }
 
             qr.save(true)
             qr.hasChanged
-        } catch (Exception e) {
+        } catch (Exception e){
             log.error("[QUERY " + query.id + "] There was a problem checking the URL: " + urlString, e)
         }
     }
 
-    List<QueryCheckResult> checkStatusDontUpdate(Query query, Frequency frequency, User user = null) {
-        def qcrList = []
-
-        // if not user specific
-        if (!queryService.isUserSpecific(query)) {
-            qcrList.push(processSingleQueryNoUpdate(query, frequency))
-        } else if (user != null) { // if user specific and user specified
-            qcrList.push(processSingleQueryNoUpdate(query, frequency, user))
-        } else { // else get all users subscribe to this query
-            // each user stores its own result so we need to run one by one
-            def users = getAllUsersForAQuery(query, frequency)
-            for (u in users) {
-                qcrList.push(processSingleQueryNoUpdate(query, frequency, u))
-            }
-        }
-
-        qcrList
-    }
-
-    def processSingleQueryNoUpdate(Query query, Frequency frequency, User user = null) {
+    QueryCheckResult checkStatusDontUpdate(Query query, Frequency frequency) {
 
         //get the previous result
         long start = System.currentTimeMillis()
-        QueryResult lastQueryResult = getQueryResult(query, frequency, user)
+        QueryResult lastQueryResult = getQueryResult(query, frequency)
         QueryCheckResult qcr = new QueryCheckResult()
 
         //get the urls to query
-        def urls = getQueryUrl(query, frequency, user)
+        def urls = getQueryUrl(query, frequency)
         def urlString = urls.first()
         qcr.frequency = frequency
         qcr.urlChecked = urlString
         qcr.query = query
-        qcr.queryResult = QueryResult.findByQueryAndFrequencyAndUser(query, frequency, user)
+        qcr.queryResult = QueryResult.findByQueryAndFrequency(query, frequency)
 
         log.debug("[QUERY " + query.id + "] Querying URL: " + urlString)
 
         try {
-            def processedJson = processQueryReturnedJson(query, user?.userId, IOUtils.toString(new URL(urlString).newReader()))
+            def processedJson = processQueryReturnedJson(query, IOUtils.toString(new URL(urlString).newReader()))
 
             qcr.response = processedJson
 
@@ -176,7 +135,7 @@ class NotificationService {
         bout.toByteArray()
     }
 
-    private String[] getQueryUrl(Query query, Frequency frequency, User user = null){
+    private String[] getQueryUrl(Query query, Frequency frequency) {
         def queryPath = query.queryPath
         def queryPathForUI = query.queryPathForUI
 
@@ -188,11 +147,6 @@ class NotificationService {
             def dateValue = sdf.format(dateToUse)
             queryPath = queryPath.replaceAll("___DATEPARAM___", dateValue)
             queryPathForUI = queryPathForUI.replaceAll("___DATEPARAM___", dateValue)
-        }
-
-        if (queryService.isUserSpecific(query) && user != null) {
-            queryPath = queryPath.replaceAll("___UIDPARAM___", user.getUserId())
-            queryPathForUI = queryPathForUI.replaceAll("___UIDPARAM___", user.getUserId())
         }
 
         [cleanUpUrl(query.baseUrl + queryPath), cleanUpUrl(query.baseUrlForUI + queryPathForUI)]
@@ -317,10 +271,11 @@ class NotificationService {
 
         propertyPaths
     }
-    
 
-    private def processQueryReturnedJson(Query query, String userId, String json) {
-        if (!queryService.isUserSpecific(query)) return json
+    private def processQueryReturnedJson(Query query, String json) {
+        if (!queryService.isUserSpecific(query) || !queryService.getUserId(query)) {
+            return json
+        }
 
         JSONObject rslt = JSON.parse(json) as JSONObject
 
@@ -331,7 +286,7 @@ class NotificationService {
             for (JSONObject occurrence : rslt.occurrences) {
                 if (occurrence.uuid) {
                     // all the verified assertions of this occurrence record
-                    def (openAssertions, verifiedAssertions, correctedAssertions) = filterAssertionsForAQuery(getAssertionsOfARecord(query.baseUrl, occurrence.uuid), userId)
+                    def (openAssertions, verifiedAssertions, correctedAssertions) = filterAssertionsForAQuery(getAssertionsOfARecord(query.baseUrl, occurrence.uuid), queryService.getUserId(query))
 
                     // only include record has at least 1 (50001/50002/50003) assertion
                     if (!openAssertions.isEmpty() || !verifiedAssertions.isEmpty() || !correctedAssertions.isEmpty()) {
@@ -416,6 +371,7 @@ class NotificationService {
                     //expected behaviour if JSON doesnt contain the element
                 }
 
+
                 //get property value for this property path
                 PropertyValue propertyValue = getPropertyValue(propertyPath, queryResult)
 
@@ -442,23 +398,23 @@ class NotificationService {
         pv
     }
 
-    def checkQueryById(queryId, freqStr, uid = null) {
+    def checkQueryById(queryId, freqStr) {
+
         log.debug("[QUERY " + queryId +"] Running query...")
 
         def checkedCount = 0
         def checkedAndUpdatedCount = 0
         def query = Query.get(queryId)
         def frequency = Frequency.findByName(freqStr)
-        def user = (uid == null) ? null : User.findById(uid)
 
-        // return a list of result. 'My Annotations' query is user specific
-        List<QueryCheckResult> qcrs = checkStatusDontUpdate(query, frequency, user)
+        QueryCheckResult qcr = checkStatusDontUpdate(query, frequency)
 
-        checkedCount += qcrs.size()
-        checkedAndUpdatedCount += qcrs.findAll {it.queryResult.hasChanged}.size()
-
+        checkedCount++
+        if (qcr.queryResult.hasChanged) {
+            checkedAndUpdatedCount++
+        }
         log.debug("Query checked: " + checkedCount + ", updated: " + checkedAndUpdatedCount)
-        qcrs
+        qcr
     }
 
     // used in debug all alerts
@@ -469,25 +425,16 @@ class NotificationService {
         def frequency =  Frequency.findAll().first()
         log.debug("Starting the running of all queries.....")
         Query.list().each { query ->
-            List<QueryCheckResult> qcrs = checkStatusDontUpdate(query, frequency)
-            checkedCount += qcrs.size()
-            checkedAndUpdatedCount += qcrs.findAll {it.queryResult.hasChanged}.size()
-
-            if (!qcrs.isEmpty()) {
-                writer.write(query.id + ": " + query.toString())
-                // there could be multiple results for one user specific query
-                for (QueryCheckResult qcr : qcrs) {
-                    writer.write("\nUpdated (" + frequency.name + "):" + qcr.queryResult.hasChanged + (qcr.queryResult?.user != null ? (" for user " + qcr.queryResult?.user?.email + " id(" + qcr.queryResult?.user?.userId +")") : ""))
-                    writer.write("\nTime taken: " + qcr.timeTaken / 1000 + ' secs \n')
-                }
-                writer.write(("-" * 80) + "\n")
-                writer.flush()
-            } else {
-                writer.write(query.id + ": " + query.toString() + '\n')
-                writer.write('No user subscribed to this query' + '\n')
-                writer.write(("-" * 80) + "\n")
-                writer.flush()
+            QueryCheckResult qcr = checkStatusDontUpdate(query, Frequency.findAll().first())
+            checkedCount++
+            if (qcr.queryResult.hasChanged) {
+                checkedAndUpdatedCount++
             }
+            writer.write(query.id +": " + query.toString())
+            writer.write("\nUpdated (" + frequency.name+ "):" + qcr.queryResult.hasChanged)
+            writer.write("\nTime taken: " + qcr.timeTaken/1000 +' secs \n')
+            writer.write(("-" * 80) + "\n")
+            writer.flush()
         }
         log.debug("Queries checked: " + checkedCount + ", updated: " + checkedAndUpdatedCount)
     }
@@ -496,7 +443,6 @@ class NotificationService {
         log.debug("Checking queries for user: " + user)
         def checkedCount = 0
         def checkedAndUpdatedCount = 0
-        // queries for this user
         def queries = (List<Query>)Query.executeQuery(
                 """select q from Query q
                   inner join q.notifications n
@@ -505,15 +451,14 @@ class NotificationService {
                   group by q""", [user: user])
 
         queries.each { query ->
-            // since it's for a specific user, qcrs will only contain 1 element
-            List<QueryCheckResult> qcrs = checkStatusDontUpdate(query, user.frequency, user)
-            checkedCount += qcrs.size()
-            checkedAndUpdatedCount += qcrs.findAll {it.queryResult.hasChanged}.size()
-
-            // since it's for a specific user, we don't need to show user id, name, etc.
+            QueryCheckResult qcr = checkStatusDontUpdate(query, user.frequency)
+            checkedCount++
+            if (qcr.queryResult.hasChanged) {
+                checkedAndUpdatedCount++
+            }
             writer.write(query.id +": " + query.toString())
-            writer.write("\nUpdated (" + user.frequency.name+ "):" + qcrs[0].queryResult.hasChanged)
-            writer.write("\nTime taken: " +  qcrs[0].timeTaken/1000 +' secs \n')
+            writer.write("\nUpdated (" + user.frequency.name+ "):" + qcr.queryResult.hasChanged)
+            writer.write("\nTime taken: " + qcr.timeTaken/1000 +' secs \n')
             writer.write(("-" * 80) + "\n")
             writer.flush()
         }
@@ -547,50 +492,31 @@ class NotificationService {
 
         queries.each { query ->
             log.debug("Running query: " + query.name)
-            def (changed, users) = checkStatus(query, frequency)
-            if (changed && sendEmails) {
+            boolean hasUpdated = checkStatus(query,frequency)
+            if (hasUpdated && sendEmails) {
                 log.debug("Query has been updated. Sending emails....")
-                List<Map> recipients = []
                 //send separate emails for now
                 //if there is a change, generate an email list
                 //send an email
-                if (users == null) {
-                    users = Query.executeQuery(
-                            """select u.email, max(u.unsubscribeToken), max(n.unsubscribeToken)
-                      from User u
-                      inner join u.notifications n
-                      where n.query = :query
-                      and u.frequency = :frequency
-                      and (u.locked is null or u.locked != 1)
-                      group by u""", [query: query, frequency: frequency])
 
-                    recipients = users.collect { user ->
-                        [email: user[0], userUnsubToken: user[1], notificationUnsubToken: user[2]]
-                    }
-                } else {
-                    recipients = users.collect { user ->
-                        def notification = Notification.findByUserAndQuery(user, query)
-                        [uid: user.id, email: user.email, userUnsubToken: user.unsubscribeToken, notificationUnsubToken: notification.unsubscribeToken]
-                    }
+                def users = Query.executeQuery(
+                        """select u.email, max(u.unsubscribeToken), max(n.unsubscribeToken)
+                  from User u
+                  inner join u.notifications n
+                  where n.query = :query
+                  and u.frequency = :frequency
+                  and u.locked is null
+                  group by u""", [query: query, frequency: frequency])
+
+                List<Map> recipients = users.collect { user ->
+                    [email: user[0], userUnsubToken: user[1], notificationUnsubToken: user[2]]
                 }
                 log.debug("Sending emails to...." + recipients*.email.join(","))
-                if(!recipients.isEmpty()){
+                if(!users.isEmpty()){
                     emailService.sendGroupNotification(query, frequency, recipients)
                 }
             }
         }
-    }
-
-    // get ids of all the users who subscribe to query + frequency
-    def getAllUsersForAQuery(Query query, Frequency frequency) {
-        Query.executeQuery(
-            """select u
-            from User u
-            inner join u.notifications n
-            where n.query = :query
-            and u.frequency = :frequency
-            and (u.locked is null or u.locked != 1)
-            group by u""", [query: query, frequency: frequency])
     }
 
     /**
@@ -600,7 +526,7 @@ class NotificationService {
      * @param sendEmails
      * @return
      */
-    def checkQueriesForUser(User user, Boolean sendEmails) {
+    def checkQueriesForUser(User user, Boolean sendEmails){
 
         log.debug("Checking queries for user: " + user)
 
@@ -613,7 +539,7 @@ class NotificationService {
 
         queries.each { query ->
             log.debug("Running query: " + query.name)
-            def (hasUpdated) = checkStatus(query, user.frequency, user)
+            boolean hasUpdated = checkStatus(query, user.frequency)
             if (hasUpdated && sendEmails) {
                 log.debug("Query has been updated. Sending emails to...." + user)
                 //send separate emails for now
@@ -649,6 +575,33 @@ class NotificationService {
             notificationInstance.each { it.delete(flush: true) }
         } else {
             log.error('*** Unable to find  my notification - no delete :  ' + queryId)
+        }
+    }
+
+    def addMyAnnotation(User user) {
+        Query myAnnotationQuery = queryService.createMyAnnotationQuery(user?.userId)
+        queryService.createQueryForUserIfNotExists(myAnnotationQuery, user, false)
+    }
+
+    def deleteMyAnnotation(User user) {
+        Query myAnnotationQuery = queryService.createMyAnnotationQuery(user?.userId)
+        Query retrievedQuery = Query.findByBaseUrlAndQueryPath(myAnnotationQuery.baseUrl, myAnnotationQuery.queryPath)
+
+        if (retrievedQuery != null) {
+            // delete the notification
+            def notification = Notification.findByQueryAndUser(retrievedQuery, user)
+            if (notification) {
+                notification.delete(flush: true)
+            }
+
+            // delete the query result
+            QueryResult qr = QueryResult.findByQueryAndFrequency(retrievedQuery, user?.frequency)
+            if (qr) {
+                qr.delete(flush: true)
+            }
+
+            // delete query
+            retrievedQuery.delete(flush: true)
         }
     }
 }

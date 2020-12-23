@@ -31,22 +31,29 @@ class QueryService {
     n
   }
 
-  static Boolean checkChangeByDiff(Query query) {
+  Boolean checkChangeByDiff(Query query) {
     !hasAFireProperty(query) && (query.idJsonPath || isUserSpecific(query))
   }
 
-  static Boolean hasAFireProperty(Query query){
+  Boolean hasAFireProperty(Query query){
     query.propertyPaths.any {it.fireWhenChange || it.fireWhenNotZero}
   }
 
-  static Boolean isUserSpecific(Query query) {
-    query.name.startsWith('My Annotations')
+  Boolean isUserSpecific(Query query) {
+    // Currently only 'my annotation' alert is user specific (among all non-custom queries)
+    query.name.startsWith(messageSource.getMessage("query.myannotations.title", null, siteLocale))
+  }
+
+  String getUserId(Query query) {
+    if (!isUserSpecific(query)) return null
+    String queryPath = query.queryPath
+    queryPath.substring(queryPath.indexOf('assertion_user_id:') + 'assertion_user_id:'.length(), queryPath.indexOf('&dir=desc'))
   }
 
   Integer fireWhenNotZeroProperty(QueryResult queryResult){
     Integer fireWhenNotZeroValue = -1
     queryResult.propertyValues.each { pv ->
-      if (pv.propertyPath.fireWhenNotZero) {
+      if( pv.propertyPath.fireWhenNotZero) {
           fireWhenNotZeroValue = pv.currentValue.toInteger()
       }
     }
@@ -69,14 +76,16 @@ class QueryService {
     toBeRemoved.size()
   }
 
-  def createQueryForUserIfNotExists(Query newQuery, User user){
+  def createQueryForUserIfNotExists(Query newQuery, User user, boolean setPropertyPath = true){
     //find the query
     Query retrievedQuery = Query.findByBaseUrlAndQueryPath(newQuery.baseUrl, newQuery.queryPath)
     if (retrievedQuery == null) {
       try {
         newQuery = newQuery.save(true)
-        new PropertyPath([name: "totalRecords", jsonPath: "totalRecords", query: newQuery, fireWhenNotZero: true]).save(true)
-        new PropertyPath([name: "last_loaded_record", jsonPath: "occurrences[0].rowKey", query: newQuery]).save(true)
+        if (setPropertyPath) {
+          new PropertyPath([name: "totalRecords", jsonPath: "totalRecords", query: newQuery, fireWhenNotZero: true]).save(true)
+          new PropertyPath([name: "last_loaded_record", jsonPath: "occurrences[0].rowKey", query: newQuery]).save(true)
+        }
       } catch (Exception ex) {
         log.error("Error occurred when saving Query: " + ex.toString())
       }
@@ -233,6 +242,21 @@ class QueryService {
       recordJsonPath: '\$.occurrences',
       idJsonPath: 'uuid',
       custom:true
+    ])
+  }
+
+  Query createMyAnnotationQuery(String userId){
+    new Query([
+      baseUrl: grailsApplication.config.biocacheService.baseURL,
+      baseUrlForUI: grailsApplication.config.biocache.baseURL,
+      resourceName: grailsApplication.config.postie.defaultResourceName,
+      name: messageSource.getMessage("query.myannotations.title", null, siteLocale),
+      updateMessage: messageSource.getMessage("myannotations.update.message", null, siteLocale),
+      description: messageSource.getMessage("query.myannotations.descr", null, siteLocale),
+      queryPath: '/occurrences/search?fq=assertion_user_id:' + userId + '&dir=desc&facets=basis_of_record',
+      queryPathForUI: '/occurrences/search?fq=assertion_user_id:' + userId + '&dir=desc&facets=basis_of_record',
+      emailTemplate: '/email/biocache',
+      recordJsonPath: '\$.occurrences[*]',
     ])
   }
 }

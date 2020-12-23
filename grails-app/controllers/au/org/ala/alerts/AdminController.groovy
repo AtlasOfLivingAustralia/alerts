@@ -14,7 +14,6 @@
 package au.org.ala.alerts
 
 import au.org.ala.web.AlaSecured
-import grails.util.Holders
 import groovy.json.JsonSlurper
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.impl.client.DefaultHttpClient
@@ -131,7 +130,6 @@ class AdminController {
         null
     }
 
-    // via admin/user/debug/{userId}
     def debugAlertsForUser() {
         User user = User.findByUserId(params.userId)
         if (user) {
@@ -152,11 +150,9 @@ class AdminController {
 
     def debugAlertEmail() {
         def frequency = params.frequency ?: 'weekly'
-
-        // debug email is per query or per query + user so returned qcs will only have 1 element
-        def qcrs = notificationService.checkQueryById(params.id, params.frequency ?: 'weekly', params.uid)
-        def model = emailService.generateEmailModel(qcrs[0].query, frequency, qcrs[0].queryResult)
-        render(view: qcrs[0].query.emailTemplate, model: model)
+        def qcr = notificationService.checkQueryById(params.id, params.frequency ?: 'weekly')
+        def model = emailService.generateEmailModel(qcr.query, frequency, qcr.queryResult)
+        render(view: qcr.query.emailTemplate, model: model)
     }
 
     def debugAlert() {
@@ -164,9 +160,9 @@ class AdminController {
                 hourly : notificationService.checkQueryById(params.id, params.frequency ?: 'hourly'),
                 daily  : notificationService.checkQueryById(params.id, params.frequency ?: 'daily'),
                 weekly : notificationService.checkQueryById(params.id, params.frequency ?: 'weekly'),
-                monthly: notificationService.checkQueryById(params.id, params.frequency ?: 'monthly')],
-
-        query: Query.get(params.id)]
+                monthly: notificationService.checkQueryById(params.id, params.frequency ?: 'monthly')
+        ]
+        ]
     }
 
     def deleteOrphanAlerts() {
