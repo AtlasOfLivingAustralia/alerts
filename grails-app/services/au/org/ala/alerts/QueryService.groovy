@@ -1,6 +1,7 @@
 package au.org.ala.alerts
 
 import grails.util.Holders
+import org.springframework.dao.DataIntegrityViolationException
 
 class QueryService {
 
@@ -60,17 +61,28 @@ class QueryService {
     fireWhenNotZeroValue
   }
 
-  int deleteOrphanedQueries(){
+  def deleteQuery(Query queryInstance) throws DataIntegrityViolationException {
+    def propertyPaths = PropertyPath.findAllByQuery(queryInstance)
+    def queryResults = QueryResult.findAllByQuery(queryInstance)
+    if (queryResults.size() > 0) {
+      def propetyValues = PropertyValue.findAllByQueryResultInList(queryResults)
+      PropertyValue.deleteAll(propetyValues)
+    }
+    QueryResult.deleteAll(queryResults)
+    PropertyPath.deleteAll(propertyPaths)
+    queryInstance.delete(flush: true)
+  }
 
+  int deleteOrphanedQueries() {
     def toBeRemoved = []
     Query.findAll().each {
-        if(it.notifications.size() == 0){
-            toBeRemoved << it
-        }
+      if (it.notifications.size() == 0 && it.custom == true) {
+        toBeRemoved << it
+      }
     }
 
     toBeRemoved.each {
-        Query.deleteAll(toBeRemoved)
+      deleteQuery(it)
     }
 
     toBeRemoved.size()

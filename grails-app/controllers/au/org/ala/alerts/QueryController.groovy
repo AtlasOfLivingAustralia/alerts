@@ -8,6 +8,7 @@ class QueryController {
 
     static allowedMethods = [save: "POST", update: "POST", update: "PUT", delete: "POST"]
     def authService
+    def queryService
 
     def index() {
         redirect(action: "list", params: params)
@@ -148,9 +149,14 @@ class QueryController {
         }
 
         try {
-            queryInstance.delete(flush: true)
-            flash.message = message(code: 'default.deleted.message', args: [message(code: 'query.label', default: 'Query'), params.id])
-            redirect(action: "list")
+            if (queryInstance.notifications?.size() == 0){
+                queryService.deleteQuery(queryInstance)
+                flash.message = message(code: 'default.deleted.message', args: [message(code: 'query.label', default: 'Query'), params.id])
+                redirect(action: "list")
+            } else {
+                flash.message = message(code: 'default.not.deleted.message', args: [message(code: 'query.label', default: 'Query'), params.id])
+                redirect(action: "show", id: params.id)
+            }
         }
         catch (DataIntegrityViolationException e) {
             flash.message = message(code: 'default.not.deleted.message', args: [message(code: 'query.label', default: 'Query'), params.id])
