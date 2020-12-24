@@ -173,7 +173,6 @@
                           $(this).attr('checked', state); // probably not needed
 
                           if ($(this).attr('data-type') === 'myannotation') {
-                              console.log('myannotation ' + (state ? 'on' : 'off'))
                               if (state) {
                                   $.get(addMyAnnotationUrl + '?userId=${userId}');
                               } else {
