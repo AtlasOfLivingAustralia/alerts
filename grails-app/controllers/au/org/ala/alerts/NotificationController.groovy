@@ -45,14 +45,23 @@ class NotificationController {
 
     def addMyAnnotation = {
         def user = getUser()
-        notificationService.addMyAnnotation(user)
-        render ([success: true] as JSON)
+        try {
+            notificationService.addMyAnnotation(user)
+            render ([success: true] as JSON)
+        } catch (ignored) {
+            response.sendError(HttpStatus.SC_INTERNAL_SERVER_ERROR, "failed to add 'my annotation' alert for user " + user?.getUserId())
+        }
+
     }
 
     def deleteMyAnnotation = {
         def user = getUser()
-        notificationService.deleteMyAnnotation(user)
-        render ([success: true] as JSON)
+        try {
+            notificationService.deleteMyAnnotation(user)
+            render ([success: true] as JSON)
+        } catch (ignored) {
+            response.sendError(HttpStatus.SC_INTERNAL_SERVER_ERROR, "failed to delete 'my annotation' alert for user " + user?.getUserId())
+        }
     }
 
     def deleteMyAlertWR = {

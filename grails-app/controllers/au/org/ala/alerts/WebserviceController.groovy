@@ -415,8 +415,12 @@ class WebserviceController {
             response.status = 404
             render ([error : "can't find a user with userId " + params.userId] as JSON)
         } else {
-            notificationService.addMyAnnotation(user)
-            render ([success: true] as JSON)
+            try {
+                notificationService.addMyAnnotation(user)
+                render([success: true] as JSON)
+            } catch (ignored) {
+                render "failed to add my annotation for user " + params.userId, contentType: 'text/plain', status: 500
+            }
         }
     }
 
@@ -427,8 +431,12 @@ class WebserviceController {
             response.status = 404
             render ([error : "can't find a user with userId " + params.userId] as JSON)
         } else {
-            notificationService.deleteMyAnnotation(user)
-            render ([success: true] as JSON)
+            try {
+                notificationService.deleteMyAnnotation(user)
+                render([success: true] as JSON)
+            } catch (ignored) {
+                render "failed to delete my annotation for user " + params.userId, contentType: 'text/plain', status: 500
+            }
         }
     }
 }

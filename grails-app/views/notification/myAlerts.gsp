@@ -172,15 +172,14 @@
                           event.preventDefault();
                           $(this).attr('checked', state); // probably not needed
 
+                          var url = '';
                           if ($(this).attr('data-type') === 'myannotation') {
-                              if (state) {
-                                  $.get(addMyAnnotationUrl + '?userId=${userId}');
-                              } else {
-                                  $.get(deleteMyAnnotationUrl + '?userId=${userId}');
-                              }
+                              url = (state ? addMyAnnotationUrl : deleteMyAnnotationUrl) + '?userId=${userId}';
                           } else {
-                              $.get((state ? addMyAlertUrl : deleteMyAlertUrl) + $(this).attr('id') + '?userId=${userId}');
+                              url = (state ? addMyAlertUrl : deleteMyAlertUrl) + $(this).attr('id') + '?userId=${userId}';
                           }
+
+                          $.get(url);
                           return true;
                       }
                   }
