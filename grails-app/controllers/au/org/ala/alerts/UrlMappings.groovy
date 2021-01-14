@@ -23,6 +23,8 @@ class UrlMappings {
         "/admin/user/deleteMyAlert/$id?"(controller: 'notification', action: 'deleteMyAlert')
         "/admin/user/deleteMyAlertWR/$id?"(controller: 'notification', action: 'deleteMyAlertWR')
         "/admin/user/addMyAlert/$id?"(controller: 'notification', action: 'addMyAlert')
+        "/admin/user/addMyAnnotation/"(controller: 'notification', action: 'addMyAnnotation')
+        "/admin/user/deleteMyAnnotation/"(controller: 'notification', action: 'deleteMyAnnotation')
         "/admin/user"(controller: 'admin', action: 'findUser')
         "/admin/debug/all"(controller: 'admin', action: 'debugAllAlerts')
 
@@ -43,6 +45,11 @@ class UrlMappings {
         // /api/* will not be protected by CAS, but all operations should be protected with @RequireApiKey
         "/api/alerts/user/$userId/unsubscribe"(controller: 'webservice', action: [POST: 'deleteAllAlertsForUser'])
         "/api/alerts/user/createAlerts"(controller: 'webservice', action: [POST: 'createUserAlerts'])
+
+        "/api/alerts/user/$userId"(controller: 'webservice', action: [GET: 'getUserAlertsWS'])
+        "/api/alerts/user/$userId/addMyAnnotationAlert"(controller: 'webservice', action: [POST: 'addMyAnnotationAlertWS'])
+        "/api/alerts/user/$userId/deleteMyAnnotationAlert"(controller: 'webservice', action: [POST: 'deleteMyAnnotationAlertWS'])
+
         "/robots.txt"(view:'/notFound')
         "400"(view:'/error')
         "403"(view:'/error')

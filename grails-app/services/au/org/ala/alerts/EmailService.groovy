@@ -25,7 +25,7 @@ class EmailService {
         } else if (query.recordJsonPath) {
             diffService.getNewRecordsFromDiff(queryResult)
         } else {
-            null
+            []
         }
     }
 
@@ -81,6 +81,8 @@ class EmailService {
      * @return
      */
     def Map generateEmailModel(Query query, String frequency, QueryResult queryResult) {
+        def records = retrieveRecordForQuery(query, queryResult)
+        def totalRecords = queryService.fireWhenNotZeroProperty(queryResult)
         [
             title           : query.name,
             message         : query.updateMessage,
@@ -88,8 +90,8 @@ class EmailService {
             query           : query,
             stopNotification: grailsApplication.config.security.cas.appServerName + grailsApplication.config.security.cas.contextPath + '/notification/myAlerts',
             frequency       : frequency,
-            records         : retrieveRecordForQuery(query, queryResult),
-            totalRecords    : queryService.fireWhenNotZeroProperty(queryResult)
+            records         : records,
+            totalRecords    : totalRecords >= 0 ? totalRecords : records.size()
         ]
     }
 
@@ -113,12 +115,12 @@ class EmailService {
             }
         } else {
             log.info("Email would have been sent to: ${recipients*.email.join(',')} for ${query.name}")
-            log.debug("message:" + messageSource.getMessage(query.updateMessage, null, siteLocale))
+            log.debug("message:" + query.updateMessage)
             log.debug("moreInfo:" + queryResult.queryUrlUIUsed)
             log.debug("stopNotification:" + grailsApplication.config.security.cas.appServerName + grailsApplication.config.security.cas.contextPath + '/notification/myAlerts')
             log.debug("records:" + records)
             log.debug("frequency:" + frequency)
-            log.debug("totalRecords:" + totalRecords)
+            log.debug("totalRecords:" + (totalRecords >= 0 ? totalRecords : records.size()))
         }
     }
 

@@ -22,6 +22,7 @@ class WebserviceController {
 
     def queryService
     def userService
+    def notificationService
 
     def index = {}
     def test = {}
@@ -394,5 +395,48 @@ class WebserviceController {
             user = userService.getUserByUserName(params.userName)
         }
         user
+    }
+
+    @RequireApiKey
+    def getUserAlertsWS() {
+        User user = userService.getUserById(params.userId)
+        if (user == null) {
+            response.status = 404
+            render ([error : "can't find a user with userId " + params.userId] as JSON)
+        } else {
+            render (userService.getUserAlertsConfig(user) as JSON)
+        }
+    }
+
+    @RequireApiKey
+    def addMyAnnotationAlertWS() {
+        User user = userService.getUserById(params.userId)
+        if (user == null) {
+            response.status = 404
+            render ([error : "can't find a user with userId " + params.userId] as JSON)
+        } else {
+            try {
+                notificationService.addMyAnnotation(user)
+                render([success: true] as JSON)
+            } catch (ignored) {
+                render "failed to add my annotation for user " + params.userId, contentType: 'text/plain', status: 500
+            }
+        }
+    }
+
+    @RequireApiKey
+    def deleteMyAnnotationAlertWS() {
+        User user = userService.getUserById(params.userId)
+        if (user == null) {
+            response.status = 404
+            render ([error : "can't find a user with userId " + params.userId] as JSON)
+        } else {
+            try {
+                notificationService.deleteMyAnnotation(user)
+                render([success: true] as JSON)
+            } catch (ignored) {
+                render "failed to delete my annotation for user " + params.userId, contentType: 'text/plain', status: 500
+            }
+        }
     }
 }

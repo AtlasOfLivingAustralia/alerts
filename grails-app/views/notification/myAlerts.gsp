@@ -64,6 +64,25 @@
                                 </td>
                             </tr>
                         </g:each>
+
+                        <g:set var="myannotationChecked" value="${myannotation.size() != 0}" />
+                        <tr>
+                            <td class="queryDescription">
+                                <h3>My Annotations</h3>
+                                Notify me when records I have flagged are updated.
+                            </td>
+                            <td class="queryActions">
+                                <div class="switch" data-on="danger" >
+                                    <g:if test="${myannotationChecked}">
+                                        <input data-type='myannotation' class="query-cb" name="field2"  type="checkbox" checked/>
+                                    </g:if>
+                                    <g:else>
+                                        <input data-type='myannotation' class="query-cb" name="field2"  type="checkbox" />
+                                    </g:else>
+                                </div>
+                            </td>
+                        </tr>
+
                         </tbody>
                     </table>
                     <g:if test="${customQueries}">
@@ -121,6 +140,9 @@
           var deleteMyAlertUrl = 'deleteMyAlert/';
           var deleteMyAlertWRUrl ='deleteMyAlertWR/';
 
+          var addMyAnnotationUrl = 'addMyAnnotation/'
+          var deleteMyAnnotationUrl = 'deleteMyAnnotation/'
+
           $(document).ready( function(){
 
               $("#userFrequency").change(function(){
@@ -150,11 +172,14 @@
                           event.preventDefault();
                           $(this).attr('checked', state); // probably not needed
 
-                          if (state){
-                             $.get(addMyAlertUrl + $(this).attr('id') + '?userId=${userId}');
+                          var url = '';
+                          if ($(this).attr('data-type') === 'myannotation') {
+                              url = (state ? addMyAnnotationUrl : deleteMyAnnotationUrl) + '?userId=${userId}';
                           } else {
-                             $.get(deleteMyAlertUrl + $(this).attr('id')+ '?userId=${userId}');
+                              url = (state ? addMyAlertUrl : deleteMyAlertUrl) + $(this).attr('id') + '?userId=${userId}';
                           }
+
+                          $.get(url);
                           return true;
                       }
                   }
