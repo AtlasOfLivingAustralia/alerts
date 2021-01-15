@@ -505,7 +505,7 @@ class NotificationService {
                   inner join u.notifications n
                   where n.query = :query
                   and u.frequency = :frequency
-                  and u.locked is null
+                  and (u.locked is null or u.locked != 1)
                   group by u""", [query: query, frequency: frequency])
 
                 List<Map> recipients = users.collect { user ->
