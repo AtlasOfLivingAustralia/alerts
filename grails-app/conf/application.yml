@@ -243,3 +243,6 @@ environments:
     production:
         dataSource:
             dbCreate: none
+
+myannotation:
+    enabled: false
