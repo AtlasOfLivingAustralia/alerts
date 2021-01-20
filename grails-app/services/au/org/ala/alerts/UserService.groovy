@@ -22,7 +22,7 @@ class UserService {
 
     static transactional = true
 
-    def authService, messageSource
+    def authService, messageSource, grailsApplication
 
     def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
 
@@ -44,16 +44,20 @@ class UserService {
         def customQueries = enabledQueries.findAll { it.custom }
         def standardQueries = enabledQueries.findAll { !it.custom }
 
-        def myannotationName = messageSource.getMessage("query.myannotations.title", null, siteLocale)
-        def myannotation = standardQueries.findAll {it.name == myannotationName}
-        standardQueries.removeAll {it.name == myannotationName}
+        def userConfig = [disabledQueries: allAlertTypes,   // all disabled standard queries
+                          enabledQueries : standardQueries, // all enabled standard queries
+                          customQueries  : customQueries,   // all enabled custom queries
+                          frequencies    : Frequency.listOrderByPeriodInSeconds(),
+                          user           : user]
 
-        [disabledQueries: allAlertTypes,
-         enabledQueries : standardQueries,
-         customQueries  : customQueries,
-         myannotation   : myannotation,
-         frequencies    : Frequency.listOrderByPeriodInSeconds(),
-         user           : user]
+        if (grailsApplication.config.myannotation.enabled) {
+            def myannotationName = messageSource.getMessage("query.myannotations.title", null, siteLocale)
+            def myannotation = userConfig.enabledQueries.findAll { it.name == myannotationName }
+            userConfig.enabledQueries.removeAll { it.name == myannotationName }
+            userConfig.myannotation = myannotation
+        }
+
+        userConfig
     }
 
     /**

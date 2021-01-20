@@ -65,23 +65,26 @@
                             </tr>
                         </g:each>
 
-                        <g:set var="myannotationChecked" value="${myannotation.size() != 0}" />
-                        <tr>
-                            <td class="queryDescription">
-                                <h3>My Annotations</h3>
-                                Notify me when records I have flagged are updated.
-                            </td>
-                            <td class="queryActions">
-                                <div class="switch" data-on="danger" >
-                                    <g:if test="${myannotationChecked}">
-                                        <input data-type='myannotation' class="query-cb" name="field2"  type="checkbox" checked/>
-                                    </g:if>
-                                    <g:else>
-                                        <input data-type='myannotation' class="query-cb" name="field2"  type="checkbox" />
-                                    </g:else>
-                                </div>
-                            </td>
-                        </tr>
+                        %{--test if my annotation feature is turned on--}%
+                        <g:if test="${myannotation != null}">
+                            <g:set var="myannotationChecked" value="${myannotation.size() != 0}" />
+                            <tr>
+                                <td class="queryDescription">
+                                    <h3>My Annotations</h3>
+                                    Notify me when records I have flagged are updated.
+                                </td>
+                                <td class="queryActions">
+                                    <div class="switch" data-on="danger" >
+                                        <g:if test="${myannotationChecked}">
+                                            <input data-type='myannotation' class="query-cb" name="field2"  type="checkbox" checked/>
+                                        </g:if>
+                                        <g:else>
+                                            <input data-type='myannotation' class="query-cb" name="field2"  type="checkbox" />
+                                        </g:else>
+                                    </div>
+                                </td>
+                            </tr>
+                        </g:if>
 
                         </tbody>
                     </table>
