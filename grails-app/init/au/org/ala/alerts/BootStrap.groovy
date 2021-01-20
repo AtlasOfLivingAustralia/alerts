@@ -12,7 +12,7 @@ class BootStrap {
         log.info("Running bootstrap queries.")
 
         // if my annotation feature turned on, add url mapping to handle add/remove alert requests
-        if (grailsApplication.config.myannotation.enabled) {
+        if (grailsApplication.config.getProperty('myannotation.enabled', Boolean, false)) {
             grailsUrlMappingsHolder.addMappings({
                 "/admin/user/addMyAnnotation/"(controller: 'notification', action: 'addMyAnnotation')
                 "/admin/user/deleteMyAnnotation/"(controller: 'notification', action: 'deleteMyAnnotation')

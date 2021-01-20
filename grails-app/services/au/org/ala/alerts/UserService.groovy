@@ -50,7 +50,7 @@ class UserService {
                           frequencies    : Frequency.listOrderByPeriodInSeconds(),
                           user           : user]
 
-        if (grailsApplication.config.myannotation.enabled) {
+        if (grailsApplication.config.getProperty('myannotation.enabled', Boolean, false)) {
             def myannotationName = messageSource.getMessage("query.myannotations.title", null, siteLocale)
             def myannotation = userConfig.enabledQueries.findAll { it.name == myannotationName }
             userConfig.enabledQueries.removeAll { it.name == myannotationName }
