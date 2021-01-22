@@ -16,13 +16,15 @@ package au.org.ala.alerts
 import au.org.ala.web.UserDetails
 import grails.converters.JSON
 import grails.plugin.cache.Cacheable
+import grails.util.Holders
 
 class UserService {
 
     static transactional = true
 
-    def authService
-    def messageSource
+    def authService, messageSource, grailsApplication
+
+    def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
 
     def getUserAlertsConfig(User user) {
 
@@ -35,18 +37,27 @@ class UserService {
         def enabledQueries = notificationInstanceList.collect { it.query }
         def enabledIds = enabledQueries.collect { it.id }
 
-        //all types
+        // all standard queries
         def allAlertTypes = Query.findAllByCustom(false)
 
         allAlertTypes.removeAll { enabledIds.contains(it.id) }
         def customQueries = enabledQueries.findAll { it.custom }
         def standardQueries = enabledQueries.findAll { !it.custom }
 
-        [disabledQueries: allAlertTypes,
-         enabledQueries : standardQueries,
-         customQueries  : customQueries,
-         frequencies    : Frequency.listOrderByPeriodInSeconds(),
-         user           : user]
+        def userConfig = [disabledQueries: allAlertTypes,   // all disabled standard queries
+                          enabledQueries : standardQueries, // all enabled standard queries
+                          customQueries  : customQueries,   // all enabled custom queries
+                          frequencies    : Frequency.listOrderByPeriodInSeconds(),
+                          user           : user]
+
+        if (grailsApplication.config.getProperty('myannotation.enabled', Boolean, false)) {
+            def myannotationName = messageSource.getMessage("query.myannotations.title", null, siteLocale)
+            def myannotation = userConfig.enabledQueries.findAll { it.name == myannotationName }
+            userConfig.enabledQueries.removeAll { it.name == myannotationName }
+            userConfig.myannotation = myannotation
+        }
+
+        userConfig
     }
 
     /**

@@ -6,9 +6,21 @@ class BootStrap {
     def grailsApplication
     def messageSource
     def siteLocale
+    def grailsUrlMappingsHolder
 
     def init = { servletContext ->
         log.info("Running bootstrap queries.")
+
+        // if my annotation feature turned on, add url mapping to handle add/remove alert requests
+        if (grailsApplication.config.getProperty('myannotation.enabled', Boolean, false)) {
+            grailsUrlMappingsHolder.addMappings({
+                "/admin/user/addMyAnnotation/"(controller: 'notification', action: 'addMyAnnotation')
+                "/admin/user/deleteMyAnnotation/"(controller: 'notification', action: 'deleteMyAnnotation')
+
+                "/api/alerts/user/$userId/addMyAnnotationAlert"(controller: 'webservice', action: [POST: 'addMyAnnotationAlertWS'])
+                "/api/alerts/user/$userId/deleteMyAnnotationAlert"(controller: 'webservice', action: [POST: 'deleteMyAnnotationAlertWS'])
+            })
+        }
 
         messageSource.setBasenames(
                 "file:///var/opt/atlas/i18n/alerts/messages",

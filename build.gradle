@@ -98,7 +98,7 @@ dependencies {
     testCompile "org.grails:grails-test-mixins:3.3.0"
 
     // Grails plugin dependencies
-    runtime "org.grails.plugins:ala-bootstrap3:3.2.0", noCache
+    runtime "org.grails.plugins:ala-bootstrap3:3.2.3", noCache
     compile "org.grails.plugins:ala-ws-security-plugin:2.0", noCache
     compile "org.grails.plugins:ala-ws-plugin:2.0", noCache
     compile "org.grails.plugins:ala-auth:3.1.0", noCache
