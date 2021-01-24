@@ -103,8 +103,7 @@ class EmailService {
         def records = retrieveRecordForQuery(query, queryResult)
 
         Integer totalRecords = queryService.fireWhenNotZeroProperty(queryResult)
-
-        if (grailsApplication.config.postie.enableEmail) {
+        if (grailsApplication.config.getProperty("postie.enableEmail", Boolean, false)) {
             log.info "Sending group email for ${query.name} to ${recipients.collect{it.email}}"
             recipients.each { recipient ->
                 if (!recipient.locked) {
