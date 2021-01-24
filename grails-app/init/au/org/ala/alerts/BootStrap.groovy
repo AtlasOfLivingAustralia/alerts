@@ -174,6 +174,25 @@ class BootStrap {
             new PropertyPath([name: "layer_count", jsonPath: "layerList", query: newSpatialLayers, fireWhenChanged: true]).save()
         }
 
+        title = messageSource.getMessage("query.occurrence.datasets.title", null, siteLocale)
+        descr = messageSource.getMessage("query.occurrence.datasets.descr", null, siteLocale)
+        if(Query.findAllByName(title).isEmpty()){
+            Query newOccurrenceDatasets = (new Query([
+                    baseUrl: grailsApplication.config.collectory.baseURL,
+                    baseUrlForUI: grailsApplication.config.collectory.baseURL,
+                    name: title,
+                    resourceName:  grailsApplication.config.postie.defaultResourceName,
+                    updateMessage: 'more.cs.images.update.message',
+                    description: descr,
+                    queryPath: '/ws/dataResource?resourceType=records',
+                    queryPathForUI: '/datasets',
+                    emailTemplate: '/email/datasets',
+                    recordJsonPath: '\$[*]',
+                    idJsonPath: 'uid'
+            ])).save()
+            new PropertyPath([name: "dataset_count", jsonPath: "\$", query: newOccurrenceDatasets, fireWhenChanged: true]).save()
+        }
+
         title = messageSource.getMessage("query.datasets.title", null, siteLocale)
         descr = messageSource.getMessage("query.datasets.descr", null, siteLocale)
         if(Query.findAllByName(title).isEmpty()){
