@@ -53,7 +53,7 @@
           </g:else>
           </td>
          <td class="linkCell" nowrap="nowrap">
-         <g:if test="${oc.scientificName}">
+         <g:if test="${oc.scientificName != null}">
            <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}"><g:message code="biocache.view.this.record" args="[oc.scientificName]" /></a>
          </g:if>
          <g:else>
