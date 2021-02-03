@@ -22,7 +22,7 @@ class UserService {
 
     static transactional = true
 
-    def authService, messageSource, grailsApplication
+    def authService, queryService, messageSource, grailsApplication
 
     def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
 
@@ -37,8 +37,14 @@ class UserService {
         def enabledQueries = notificationInstanceList.collect { it.query }
         def enabledIds = enabledQueries.collect { it.id }
 
-        // all standard queries
+        // all standard queries + 'my annotations' queries
+        // this might include 'my annotations' that belongs to others
+        // we need to filter those out
         def allAlertTypes = Query.findAllByCustom(false)
+
+        def myAnnotationQuery = queryService.createMyAnnotationQuery(user.getUserId())
+        // collect standard queries + 'my annotations' belongs to current user
+        allAlertTypes = allAlertTypes.findAll { it.name != myAnnotationQuery.name || it.queryPath == myAnnotationQuery.queryPath }
 
         allAlertTypes.removeAll { enabledIds.contains(it.id) }
         def customQueries = enabledQueries.findAll { it.custom }
@@ -51,10 +57,8 @@ class UserService {
                           user           : user]
 
         if (grailsApplication.config.getProperty('myannotation.enabled', Boolean, false)) {
-            def myannotationName = messageSource.getMessage("query.myannotations.title", null, siteLocale)
-            def myannotation = userConfig.enabledQueries.findAll { it.name == myannotationName }
-            userConfig.enabledQueries.removeAll { it.name == myannotationName }
-            userConfig.myannotation = myannotation
+            userConfig.myannotation = userConfig.enabledQueries.findAll { it.name == myAnnotationQuery.name }
+            userConfig.enabledQueries.removeAll { it.name == myAnnotationQuery.name }
         }
 
         userConfig
