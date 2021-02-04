@@ -103,8 +103,7 @@ endpoints:
     enabled: true
 ---
 headerAndFooter:
-    baseURL: "https://www.ala.org.au/commonui-bs3-2019"
-    version: "2"
+    baseURL: "https://www.ala.org.au/commonui-bs3"
 
 skin:
     layout: "ala-main"
