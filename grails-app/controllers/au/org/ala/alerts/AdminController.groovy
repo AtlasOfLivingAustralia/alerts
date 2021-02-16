@@ -173,24 +173,10 @@ class AdminController {
     def showUsersAlerts() {
         User user = User.findByUserId(params.userId)
         if (user) {
-            def notificationInstanceList = Notification.findAllByUser(user)
-            //split into custom and non-custom...
-            def enabledQueries = notificationInstanceList.collect { it.query }
-            def enabledIds = enabledQueries.collect { it.id }
+            def userConfig = userService.getUserAlertsConfig(user)
+            userConfig.put('adminUser', authService.userDetails())
 
-            //all types
-            def allAlertTypes = Query.findAllByCustom(false)
-
-            allAlertTypes.removeAll { enabledIds.contains(it.id) }
-            def customQueries = enabledQueries.findAll { it.custom }
-            def standardQueries = enabledQueries.findAll { !it.custom }
-
-            render(view: "../notification/myAlerts", model: [disabledQueries: allAlertTypes,
-                                                             enabledQueries : standardQueries, customQueries: customQueries,
-                                                             frequencies    : Frequency.listOrderByPeriodInSeconds(),
-                                                             user           : user,
-                                                             adminUser      : authService.userDetails()
-            ])
+            render(view: "../notification/myAlerts", model: userConfig)
         } else {
             log.info "user with id " + params.userId + " not found."
             response.sendError(404)

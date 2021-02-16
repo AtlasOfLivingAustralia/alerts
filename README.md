@@ -4,7 +4,7 @@ This is a small app responsible for sending email alerts when there are changes 
 
 # Build status
 
-[![Build Status](https://travis-ci.org/AtlasOfLivingAustralia/alerts.svg?branch=master)](https://travis-ci.org/AtlasOfLivingAustralia/alerts)
+[![Build Status](https://travis-ci.com/AtlasOfLivingAustralia/alerts.svg?branch=master)](https://travis-ci.com/AtlasOfLivingAustralia/alerts)
 
 # Dev environment set up
 

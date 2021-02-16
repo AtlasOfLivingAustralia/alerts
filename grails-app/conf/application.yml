@@ -102,6 +102,10 @@ endpoints:
         unique-names: true
     enabled: true
 ---
+headerAndFooter:
+    baseURL: "https://www.ala.org.au/commonui-bs3-2019"
+    version: "2"
+
 skin:
     layout: "ala-main"
     orgNameLong: "Atlas of Living Australia"
@@ -239,3 +243,6 @@ environments:
     production:
         dataSource:
             dbCreate: none
+
+myannotation:
+    enabled: false

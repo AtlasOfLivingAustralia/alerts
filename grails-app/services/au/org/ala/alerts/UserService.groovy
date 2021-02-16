@@ -16,16 +16,19 @@ package au.org.ala.alerts
 import au.org.ala.web.UserDetails
 import grails.converters.JSON
 import grails.plugin.cache.Cacheable
+import grails.util.Holders
 
 class UserService {
 
     static transactional = true
 
-    def authService
+    def authService, queryService, messageSource, grailsApplication
+
+    def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
 
     def getUserAlertsConfig(User user) {
 
-        log.debug('#getUserAlertsConfig - Viewing my alerts :  ' + user)
+        log.debug('getUserAlertsConfig - Viewing my alerts :  ' + user)
 
         //enabled alerts
         def notificationInstanceList = Notification.findAllByUser(user)
@@ -34,18 +37,31 @@ class UserService {
         def enabledQueries = notificationInstanceList.collect { it.query }
         def enabledIds = enabledQueries.collect { it.id }
 
-        //all types
+        // all standard queries + 'my annotations' queries
+        // this might include 'my annotations' that belongs to others
+        // we need to filter those out
         def allAlertTypes = Query.findAllByCustom(false)
+
+        def myAnnotationQuery = queryService.createMyAnnotationQuery(user.getUserId())
+        // collect standard queries + 'my annotations' belongs to current user
+        allAlertTypes = allAlertTypes.findAll { it.name != myAnnotationQuery.name || it.queryPath == myAnnotationQuery.queryPath }
 
         allAlertTypes.removeAll { enabledIds.contains(it.id) }
         def customQueries = enabledQueries.findAll { it.custom }
         def standardQueries = enabledQueries.findAll { !it.custom }
 
-        [disabledQueries: allAlertTypes,
-         enabledQueries : standardQueries,
-         customQueries  : customQueries,
-         frequencies    : Frequency.listOrderByPeriodInSeconds(),
-         user           : user]
+        def userConfig = [disabledQueries: allAlertTypes,   // all disabled standard queries
+                          enabledQueries : standardQueries, // all enabled standard queries
+                          customQueries  : customQueries,   // all enabled custom queries
+                          frequencies    : Frequency.listOrderByPeriodInSeconds(),
+                          user           : user]
+
+        if (grailsApplication.config.getProperty('myannotation.enabled', Boolean, false)) {
+            userConfig.myannotation = userConfig.enabledQueries.findAll { it.name == myAnnotationQuery.name }
+            userConfig.enabledQueries.removeAll { it.name == myAnnotationQuery.name }
+        }
+
+        userConfig
     }
 
     /**
@@ -113,8 +129,7 @@ class UserService {
     User getUser(userDetailsParam = null) {
 
         def userDetails = !userDetailsParam? authService.userDetails(): userDetailsParam
-        log.debug "#getUser - userDetails = ${userDetails}"
-       // def userDetails = authService.userDetails()
+        log.debug "getUser - userDetails = ${userDetails}"
 
         if (!userDetails?.userId) {
             log.error "User isn't logged in - or there is a problem with CAS configuration"
@@ -122,14 +137,14 @@ class UserService {
         }
 
         User user = User.findByUserId(userDetails["userId"])
-        log.debug "#getUser - user = ${user} || userId = ${userDetails["userId"]}"
+        log.debug "getUser - user = ${user} || userId = ${userDetails["userId"]}"
         if (user == null) {
             log.debug "User is not in user table - creating new record for " + userDetails
-            user = new User([email: userDetails["email"], userId: userDetails["userId"], frequency: Frequency.findByName("weekly")])
+            user = new User([email: userDetails.email, userId: userDetails.userId, locked: userDetails.locked, frequency: Frequency.findByName("weekly")])
             user.save(flush:true, failOnError: true)
-            // new user gets "Blogs and News" by default (opt out)
+            // new user gets "Blogs and News" weekly by default (opt out)
             def notificationInstance = new Notification()
-            notificationInstance.query = Query.findByName("Blogs and News") //Query.findById(params.id)
+            notificationInstance.query = Query.findByName(messageSource.getMessage("query.ala.blog.title", null, siteLocale))
             notificationInstance.user = user
             notificationInstance.save(flush: true)
         }

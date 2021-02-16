@@ -170,10 +170,12 @@
                 </li>
 
 			</ol>
-			<g:form url="[resource:queryInstance, action:'delete']" method="DELETE">
+			<g:form url="[resource:queryInstance, action:'delete']" method="POST">
 				<fieldset class="buttons">
 					<g:link class="edit" action="edit" resource="${queryInstance}"><g:message code="default.button.edit.label" default="Edit" /></g:link>
-					<g:actionSubmit class="delete" action="delete" value="${message(code: 'default.button.delete.label', default: 'Delete')}" onclick="return confirm('${message(code: 'default.button.delete.confirm.message', default: 'Are you sure?')}');" />
+					<g:if test="${queryInstance?.notifications?.size() == 0}">
+						<g:actionSubmit class="delete" action="delete" value="${message(code: 'default.button.delete.label', default: 'Delete')}" onclick="return confirm('${message(code: 'default.button.delete.confirm.message', default: 'Are you sure?')}');" />
+					</g:if>
                     <g:link class="btn" controller="admin" action="debugAlert" id="${queryInstance.id}">Debug this query</g:link>
 				</fieldset>
 			</g:form>

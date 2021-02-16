@@ -27,6 +27,7 @@
             <ul>
               <li><g:link controller="admin" action="runChecksNow" params="${[frequency:'hourly']}"><g:message code="admin.run.hourly" /></g:link></li>
               <li><g:link controller="admin" action="runChecksNow" params="${[frequency:'daily']}"><g:message code="admin.run.daily" /></g:link></li>
+              <li><g:link controller="admin" action="runChecksNow" params="${[frequency:'weekly']}"><g:message code="admin.run.weekly" /></g:link></li>
               <li><g:link controller="admin" action="runChecksNow" params="${[frequency:'monthly']}"><g:message code="admin.run.monthly" /></g:link></li>
             </ul>
             

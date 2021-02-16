@@ -1,6 +1,5 @@
 package au.org.ala.alerts
 
-import au.org.ala.web.AlaSecured
 import grails.converters.JSON
 import org.apache.http.HttpStatus
 
@@ -22,66 +21,51 @@ class NotificationController {
     }
 
     def addMyAlert = {
-        def user
-        if (authService.userInRole("ROLE_ADMIN")) {
-            user = userService.getUserById(params.userId)
-        } else {
-            user = userService.getUser()
-        }
+        def user = getUser()
 
         if (!user) {
             response.status = HttpStatus.SC_NOT_FOUND
             response.sendError(HttpStatus.SC_NOT_FOUND, "Unrecognised user")
         } else {
-            log.debug('add my alert ' + params.id)
-            def notificationInstance = new Notification()
-            notificationInstance.query = Query.findById(params.id)
-            notificationInstance.user = user
-            //does this already exist?
-            def exists = Notification.findByQueryAndUser(notificationInstance.query, notificationInstance.user)
-            if (!exists) {
-                log.info("Adding alert for user: " + notificationInstance.user + ", query id: " + params.id)
-                notificationInstance.save(flush: true)
-            } else {
-                log.info("NOT Adding alert for user: " + notificationInstance.user + ", query id: " + params.id + ", already exists...")
-            }
+            notificationService.addAlertForUser(user, Long.valueOf(params.id))
             return null
         }
     }
 
     def deleteMyAlert = {
-        def user
-        if (authService.userInRole("ROLE_ADMIN")) {
-            user = userService.getUserById(params.userId)
-        } else {
-            user = userService.getUser()
-        }
+        def user = getUser()
 
         if (!user) {
             response.status = HttpStatus.SC_NOT_FOUND
             response.sendError(HttpStatus.SC_NOT_FOUND, "Unrecognised user")
         } else {
-            def query = Query.get(params.id)
-            log.debug('Deleting my alert :  ' + params.id + ' for user : ' + authService.getDisplayName())
+            notificationService.deleteAlertForUser(user, Long.valueOf(params.id))
+        }
+    }
 
-            def notificationInstance = Notification.findByUserAndQuery(user, query)
-            if (notificationInstance) {
-                log.debug('Deleting my notification :  ' + params.id)
-                notificationInstance.each { it.delete(flush: true) }
-            } else {
-                log.error('*** Unable to find  my notification - no delete :  ' + params.id)
-            }
-            return null
+    def addMyAnnotation = {
+        def user = getUser()
+        try {
+            notificationService.addMyAnnotation(user)
+            render ([success: true] as JSON)
+        } catch (ignored) {
+            response.sendError(HttpStatus.SC_INTERNAL_SERVER_ERROR, "failed to add 'my annotation' alert for user " + user?.getUserId())
+        }
+
+    }
+
+    def deleteMyAnnotation = {
+        def user = getUser()
+        try {
+            notificationService.deleteMyAnnotation(user)
+            render ([success: true] as JSON)
+        } catch (ignored) {
+            response.sendError(HttpStatus.SC_INTERNAL_SERVER_ERROR, "failed to delete 'my annotation' alert for user " + user?.getUserId())
         }
     }
 
     def deleteMyAlertWR = {
-        def user
-        if (authService.userInRole("ROLE_ADMIN")) {
-            user = userService.getUserById(params.userId)
-        } else {
-            user = userService.getUser()
-        }
+        def user = getUser()
 
         //this is a hack to get around a CAS issue
         if (user == null) {
@@ -99,6 +83,14 @@ class NotificationController {
             log.error('*** Unable to find  my notification - no delete :  ' + params.id)
         }
         redirect(action: 'myAlerts')
+    }
+
+    private User getUser() {
+        if (authService.userInRole("ROLE_ADMIN")) {
+            return userService.getUserById(params.userId)
+        } else {
+            return userService.getUser()
+        }
     }
 
     def changeFrequency = {

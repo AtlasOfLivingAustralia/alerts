@@ -6,9 +6,21 @@ class BootStrap {
     def grailsApplication
     def messageSource
     def siteLocale
+    def grailsUrlMappingsHolder
 
     def init = { servletContext ->
         log.info("Running bootstrap queries.")
+
+        // if my annotation feature turned on, add url mapping to handle add/remove alert requests
+        if (grailsApplication.config.getProperty('myannotation.enabled', Boolean, false)) {
+            grailsUrlMappingsHolder.addMappings({
+                "/admin/user/addMyAnnotation/"(controller: 'notification', action: 'addMyAnnotation')
+                "/admin/user/deleteMyAnnotation/"(controller: 'notification', action: 'deleteMyAnnotation')
+
+                "/api/alerts/user/$userId/addMyAnnotationAlert"(controller: 'webservice', action: [POST: 'addMyAnnotationAlertWS'])
+                "/api/alerts/user/$userId/deleteMyAnnotationAlert"(controller: 'webservice', action: [POST: 'deleteMyAnnotationAlertWS'])
+            })
+        }
 
         messageSource.setBasenames(
                 "file:///var/opt/atlas/i18n/alerts/messages",
@@ -18,6 +30,7 @@ class BootStrap {
         )
 
         siteLocale = new Locale.Builder().setLanguageTag(grailsApplication.config.siteDefaultLanguage).build();
+        Locale.setDefault(siteLocale)
 
         preloadQueries()
         log.info("Done bootstrap queries.")
@@ -26,10 +39,10 @@ class BootStrap {
     private void preloadQueries() {
         log.info("start of preloadQueries")
         if(Frequency.findAll().isEmpty()){
-            (new Frequency([name: messageSource.getMessage('frequency.hourly', null, siteLocale), periodInSeconds:3600])).save()
-            (new Frequency([name: messageSource.getMessage('frequency.daily', null, siteLocale)])).save()
-            (new Frequency([name: messageSource.getMessage('frequency.weekly', null, siteLocale), periodInSeconds:604800])).save()
-            (new Frequency([name: messageSource.getMessage('frequency.monthly', null, siteLocale), periodInSeconds:2419200])).save()
+            (new Frequency([name: 'hourly', periodInSeconds:3600])).save()
+            (new Frequency([name: 'daily'])).save()
+            (new Frequency([name: 'weekly', periodInSeconds:604800])).save()
+            (new Frequency([name: 'monthly', periodInSeconds:2419200])).save()
         }
 
         def title = messageSource.getMessage("query.annotations.title", null, siteLocale)
@@ -42,7 +55,7 @@ class BootStrap {
                     name: title,
                     updateMessage: 'annotations.update.message',
                     description: descr,
-                    queryPath: '/occurrences/search?fq=user_assertions:*&q=user_assertions:true AND last_assertion_date:[___DATEPARAM___%20TO%20*]&sort=last_assertion_date&dir=desc&pageSize=20&facets=basis_of_record',
+                    queryPath: '/occurrences/search?fq=user_assertions:*&q=last_assertion_date:[___DATEPARAM___%20TO%20*]&sort=last_assertion_date&dir=desc&pageSize=20&facets=basis_of_record',
                     queryPathForUI: '/occurrences/search?fq=user_assertions:*&q=last_assertion_date:[___DATEPARAM___%20TO%20*]&sort=last_assertion_date&dir=desc',
                     dateFormat: """yyyy-MM-dd'T'HH:mm:ss'Z'""",
                     emailTemplate: '/email/biocache',
@@ -104,6 +117,7 @@ class BootStrap {
                     baseUrl: grailsApplication.config.biocacheService.baseURL,
                     baseUrlForUI: grailsApplication.config.biocache.baseURL,
                     name: title,
+                    resourceName:  grailsApplication.config.postie.defaultResourceName,
                     updateMessage: 'more.cs.update.message',
                     description: descr,
                     queryPath: '/occurrences/search?q=first_loaded_date:[___DATEPARAM___%20TO%20*]&fq=data_resource_uid:dr364&sort=first_loaded_date&dir=desc&pageSize=20&facets=basis_of_record',
@@ -125,7 +139,7 @@ class BootStrap {
             Query newCitizenScienceRecordsWithImages = (new Query([
                     baseUrl: grailsApplication.config.biocacheService.baseURL,
                     baseUrlForUI: grailsApplication.config.biocache.baseURL,
-                    name: 'Citizen science records with images',
+                    name: title,
                     resourceName:  grailsApplication.config.postie.defaultResourceName,
                     updateMessage: 'more.cs.images.update.message',
                     description: descr,
@@ -158,6 +172,25 @@ class BootStrap {
                     idJsonPath: 'name'
             ])).save()
             new PropertyPath([name: "layer_count", jsonPath: "layerList", query: newSpatialLayers, fireWhenChanged: true]).save()
+        }
+
+        title = messageSource.getMessage("query.occurrence.datasets.title", null, siteLocale)
+        descr = messageSource.getMessage("query.occurrence.datasets.descr", null, siteLocale)
+        if(Query.findAllByName(title).isEmpty()){
+            Query newOccurrenceDatasets = (new Query([
+                    baseUrl: grailsApplication.config.collectory.baseURL,
+                    baseUrlForUI: grailsApplication.config.collectory.baseURL,
+                    name: title,
+                    resourceName:  grailsApplication.config.postie.defaultResourceName,
+                    updateMessage: 'more.cs.images.update.message',
+                    description: descr,
+                    queryPath: '/ws/dataResource?resourceType=records',
+                    queryPathForUI: '/datasets',
+                    emailTemplate: '/email/datasets',
+                    recordJsonPath: '\$[*]',
+                    idJsonPath: 'uid'
+            ])).save()
+            new PropertyPath([name: "dataset_count", jsonPath: "\$", query: newOccurrenceDatasets, fireWhenChanged: true]).save()
         }
 
         title = messageSource.getMessage("query.datasets.title", null, siteLocale)
@@ -212,10 +245,10 @@ class BootStrap {
                     resourceName:  grailsApplication.config.postie.defaultResourceName,
                     updateMessage: 'more.blogsnews.update.message',
                     description: descr,
-                    queryPath: '/api/get_category_posts/?slug=blogs-news&count=5',
+                    queryPath: '/recentposts.json',
                     queryPathForUI: '/blogs-news/',
                     emailTemplate: '/email/blogs',
-                    recordJsonPath: '\$.posts[*]',
+                    recordJsonPath: '\$.[*]',
                     idJsonPath: 'id'
             ])).save()
             new PropertyPath([name: "last_blog_id", jsonPath: "posts", query: newBlogs, fireWhenChanged: true]).save()
