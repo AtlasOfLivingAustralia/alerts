@@ -174,14 +174,14 @@
                                                         <td class="w580" width="580">
                                                             <p align="left" class="article-heading">
                                                                 <singleline label="Title">
-                                                                    <a href="${blog.link}">${blog.title.rendered}</a>
+                                                                    <a href="${blog.link}">${raw(blog.title.rendered)}</a>
                                                                 </singleline>
                                                             </p>
                                                             <table cellpadding="0" cellspacing="0" border="0" align="right">
                                                                 <tbody>
                                                                 <tr>
                                                                     <td class="w30" width="15"></td>
-                                                                    <td><g:if test="${blog.thumbnail}"><img src="${blog.thumbnail}" alt="${blog.title.rendered}"></g:if></td>
+                                                                    <td><g:if test="${blog.thumbnail}"><img src="${blog.thumbnail}" alt="${raw(blog.title.rendered)}"></g:if></td>
                                                                 </tr>
                                                                 <tr>
                                                                     <td class="w30" width="15" height="5"></td>
