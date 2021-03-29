@@ -7,6 +7,8 @@ class UnsubscribeController {
     static allowedMethods = [index: "GET", unsubscribe: "POST"]
 
     UserService userService
+    NotificationService notificationService
+    QueryService queryService
 
     def index() {
         User loggedInUser = userService.getUser()
@@ -37,10 +39,17 @@ class UnsubscribeController {
             response.sendError(HttpStatus.SC_FORBIDDEN)
         } else {
             if (userAndNotifications.notifications) {
+                // delete notifications and update user
                 Notification.deleteAll(userAndNotifications.notifications)
                 userAndNotifications.user.notifications?.removeAll(userAndNotifications.notifications)
                 userAndNotifications.user.save(flush: true)
 
+                // for my annotation, we also need to delete the query and query result
+                def myAnnotationQuery = queryService.createMyAnnotationQuery(loggedInUser.userId)
+                if (userAndNotifications.notifications.any { it.query.queryPath == myAnnotationQuery.queryPath }) {
+                    notificationService.deleteMyAnnotation(loggedInUser)
+                }
+                
                 render view: "unsubscribed"
             }
         }
