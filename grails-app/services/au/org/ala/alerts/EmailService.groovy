@@ -140,7 +140,7 @@ class EmailService {
                         stopNotification: urlPrefix + '/notification/myAlerts',
                         records: records,
                         frequency: messageSource.getMessage('frequency.' + frequency, null, siteLocale),
-                        totalRecords: totalRecords,
+                        totalRecords: (totalRecords >= 0 ? totalRecords : records.size()),
                         unsubscribeAll: urlPrefix + "/unsubscribe?token=" + userUnsubToken,
                         unsubscribeOne: urlPrefix + "/unsubscribe?token=" + notificationUnsubToken
                     ])
