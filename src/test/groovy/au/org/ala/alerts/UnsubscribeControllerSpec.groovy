@@ -6,11 +6,13 @@ import org.apache.http.HttpStatus
 import spock.lang.Specification
 
 @TestFor(UnsubscribeController)
-@Mock([Notification, User, Query])
+@Mock([Notification, User, Query, QueryResult])
 class UnsubscribeControllerSpec extends Specification {
 
     def setup() {
         controller.userService = Mock(UserService)
+        controller.queryService = Mock(QueryService)
+        controller.notificationService = Mock(NotificationService)
     }
 
     def "index() should return a HTTP 400 (BAD_REQUEST) if there is no logged in user and no token"() {
@@ -249,6 +251,7 @@ class UnsubscribeControllerSpec extends Specification {
     def "unsubscribe() should delete all the user's notifications if the token matches the token for a user with notifications"() {
         setup:
         controller.userService.getUser() >> null
+        controller.queryService.createMyAnnotationQuery(_ as String) >> new Query([name: 'emptyquery'])
         Query query1 = newQuery("query1")
         Query query2 = newQuery("query2")
         User user1 = new User(userId: "user1", email: "fred@bla.com")
@@ -282,9 +285,44 @@ class UnsubscribeControllerSpec extends Specification {
         Notification.count() == 1
     }
 
+    def "unsubscribe() should delete my annotaions alert if the token matches the token for a user with notifications"() {
+        setup:
+        User user = new User(userId: "userid", email: "fred@bla.com", frequency: new Frequency([name: 'hourly']))
+        Query query = new Query([
+                name: 'testquery',
+                queryPath: '/occurrences/search?fq=assertion_user_id:' + 'userid' + '&dir=desc&facets=basis_of_record',
+                updateMessage: 'updateMessage',
+                baseUrl: 'baseUrl',
+                baseUrlForUI: 'baseUrlForUI',
+                resourceName: 'resourceName',
+                queryPathForUI: 'queryPathForUI'
+        ])
+
+        controller.userService.getUser() >> null
+        controller.queryService.constructMyAnnotationQueryPath(_ as String) >> '/occurrences/search?fq=assertion_user_id:' + user.userId + '&dir=desc&facets=basis_of_record'
+
+        user.save(failOnError: true, flush: true)
+        query.save(failOnError: true, flush: true)
+        Notification notification = new Notification(user: user, query: query)
+        notification.save(failOnError: true, flush: true)
+        QueryResult queryResult = new QueryResult([query: query, frequency: user.frequency])
+        queryResult.save(failOnError: true, flush: true)
+
+        when:
+        params.token = notification.unsubscribeToken
+        request.method = 'POST'
+        controller.unsubscribe()
+
+        then:
+        log.info "token = ${params.token}"
+        1 * controller.notificationService.deleteMyAnnotation(user)
+        response.status == HttpStatus.SC_OK
+    }
+
     def "unsubscribe() should delete only 1 notification if the token matches the token for a notification"() {
         setup:
         controller.userService.getUser() >> null
+        controller.queryService.createMyAnnotationQuery(_ as String) >> new Query([name: 'emptyquery'])
         Query query1 = newQuery("query1")
         Query query2 = newQuery("query2")
         User user = new User(userId: "user1", email: "fred@bla.com")
@@ -323,6 +361,7 @@ class UnsubscribeControllerSpec extends Specification {
         user.addToNotifications(notification2)
         user.save(failOnError: true, flush: true)
         controller.userService.getUser() >> user
+        controller.queryService.createMyAnnotationQuery(_ as String) >> new Query([name: 'emptyquery'])
 
         when:
         params.token = notification1.unsubscribeToken

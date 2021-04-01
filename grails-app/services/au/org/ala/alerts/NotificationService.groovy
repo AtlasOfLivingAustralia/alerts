@@ -587,8 +587,8 @@ class NotificationService {
     }
 
     def deleteMyAnnotation(User user) {
-        Query myAnnotationQuery = queryService.createMyAnnotationQuery(user?.userId)
-        Query retrievedQuery = Query.findByBaseUrlAndQueryPath(myAnnotationQuery.baseUrl, myAnnotationQuery.queryPath)
+        String myAnnotationQueryPath = queryService.constructMyAnnotationQueryPath(user?.userId)
+        Query retrievedQuery = Query.findByQueryPath(myAnnotationQueryPath)
 
         if (retrievedQuery != null) {
             // delete the notification
