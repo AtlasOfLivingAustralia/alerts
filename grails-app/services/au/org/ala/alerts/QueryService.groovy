@@ -265,10 +265,14 @@ class QueryService {
       name: messageSource.getMessage("query.myannotations.title", null, siteLocale),
       updateMessage: messageSource.getMessage("myannotations.update.message", null, siteLocale),
       description: messageSource.getMessage("query.myannotations.descr", null, siteLocale),
-      queryPath: '/occurrences/search?fq=assertion_user_id:' + userId + '&dir=desc&facets=basis_of_record',
-      queryPathForUI: '/occurrences/search?fq=assertion_user_id:' + userId + '&dir=desc&facets=basis_of_record',
+      queryPath: constructMyAnnotationQueryPath(userId),
+      queryPathForUI: constructMyAnnotationQueryPath(userId),
       emailTemplate: '/email/biocache',
       recordJsonPath: '\$.occurrences[*]',
     ])
+  }
+
+  String constructMyAnnotationQueryPath(String userId) {
+    '/occurrences/search?fq=assertion_user_id:' + userId + '&dir=desc&facets=basis_of_record'
   }
 }
