@@ -7,10 +7,8 @@
     <p>
       <g:message code="${message}" default="${message}" args="${[totalRecords]}"/>
     </p>
-    <g:set var="myAnnotationName" value="${g.message(code:"query.myannotations.title", default:"My Annotations")}"/>
-    <g:if test="${query.name != myAnnotationName}">
-        <p><a href="${moreInfo}"><g:message code="biocache.view.list" /></a></p>
-    </g:if>
+    <g:set var="listcode" value="${(g.message(code:"query.myannotations.title", default:"My Annotations") == query.name) ? "biocache.view.myannotation.list" : "biocache.view.list"}"/>
+    <p><a href="${moreInfo}"><g:message code="${listcode}"/></a></p>
     <style type="text/css">
     	body { font-family:Arial; }
     	table { border-collapse: collapse; border: 1px solid #CCC; padding:2px; }
