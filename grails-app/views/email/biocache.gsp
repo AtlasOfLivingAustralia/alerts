@@ -7,8 +7,7 @@
     <p>
       <g:message code="${message}" default="${message}" args="${[totalRecords]}"/>
     </p>
-    <g:set var="listcode" value="${(g.message(code:"query.myannotations.title", default:"My Annotations") == query.name) ? "biocache.view.myannotation.list" : "biocache.view.list"}"/>
-    <p><a href="${moreInfo}"><g:message code="${listcode}"/></a></p>
+    <p><a href="${moreInfo}"><g:message code="${listcode ? listcode : "biocache.view.list"}"/></a></p>
     <style type="text/css">
     	body { font-family:Arial; }
     	table { border-collapse: collapse; border: 1px solid #CCC; padding:2px; }

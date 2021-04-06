@@ -273,7 +273,7 @@ class NotificationService {
     }
 
     private def processQueryReturnedJson(Query query, String json) {
-        if (!queryService.isUserSpecific(query) || !queryService.getUserId(query)) {
+        if (!queryService.isMyAnnotation(query) || !queryService.getUserId(query)) {
             return json
         }
 

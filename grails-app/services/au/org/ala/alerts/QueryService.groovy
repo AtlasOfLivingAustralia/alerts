@@ -33,20 +33,20 @@ class QueryService {
   }
 
   Boolean checkChangeByDiff(Query query) {
-    !hasAFireProperty(query) && (query.idJsonPath || isUserSpecific(query))
+    !hasAFireProperty(query) && (query.idJsonPath || isMyAnnotation(query))
   }
 
   Boolean hasAFireProperty(Query query){
     query.propertyPaths.any {it.fireWhenChange || it.fireWhenNotZero}
   }
 
-  Boolean isUserSpecific(Query query) {
+  Boolean isMyAnnotation(Query query) {
     // Currently only 'my annotation' alert is user specific (among all non-custom queries)
     query.name.startsWith(messageSource.getMessage("query.myannotations.title", null, siteLocale))
   }
 
   String getUserId(Query query) {
-    if (!isUserSpecific(query)) return null
+    if (!isMyAnnotation(query)) return null
     String queryPath = query.queryPath
     queryPath.substring(queryPath.indexOf('assertion_user_id:') + 'assertion_user_id:'.length(), queryPath.indexOf('&dir=desc'))
   }
