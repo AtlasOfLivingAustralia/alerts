@@ -273,7 +273,7 @@ class NotificationService {
     }
 
     private def processQueryReturnedJson(Query query, String json) {
-        if (!queryService.isUserSpecific(query) || !queryService.getUserId(query)) {
+        if (!queryService.isMyAnnotation(query) || !queryService.getUserId(query)) {
             return json
         }
 
@@ -587,8 +587,8 @@ class NotificationService {
     }
 
     def deleteMyAnnotation(User user) {
-        Query myAnnotationQuery = queryService.createMyAnnotationQuery(user?.userId)
-        Query retrievedQuery = Query.findByBaseUrlAndQueryPath(myAnnotationQuery.baseUrl, myAnnotationQuery.queryPath)
+        String myAnnotationQueryPath = queryService.constructMyAnnotationQueryPath(user?.userId)
+        Query retrievedQuery = Query.findByQueryPath(myAnnotationQueryPath)
 
         if (retrievedQuery != null) {
             // delete the notification

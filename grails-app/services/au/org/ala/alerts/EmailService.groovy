@@ -87,6 +87,7 @@ class EmailService {
             title           : query.name,
             message         : query.updateMessage,
             moreInfo        : queryResult.queryUrlUIUsed,
+            listcode        : queryService.isMyAnnotation(query) ? "biocache.view.myannotation.list" : "biocache.view.list",
             query           : query,
             stopNotification: grailsApplication.config.security.cas.appServerName + grailsApplication.config.security.cas.contextPath + '/notification/myAlerts',
             frequency       : frequency,
@@ -137,10 +138,11 @@ class EmailService {
                         message: query.updateMessage,
                         query: query,
                         moreInfo: queryResult.queryUrlUIUsed,
+                        listcode: queryService.isMyAnnotation(query) ? "biocache.view.myannotation.list" : "biocache.view.list",
                         stopNotification: urlPrefix + '/notification/myAlerts',
                         records: records,
                         frequency: messageSource.getMessage('frequency.' + frequency, null, siteLocale),
-                        totalRecords: totalRecords,
+                        totalRecords: (totalRecords >= 0 ? totalRecords : records.size()),
                         unsubscribeAll: urlPrefix + "/unsubscribe?token=" + userUnsubToken,
                         unsubscribeOne: urlPrefix + "/unsubscribe?token=" + notificationUnsubToken
                     ])

@@ -7,8 +7,7 @@
     <p>
       <g:message code="${message}" default="${message}" args="${[totalRecords]}"/>
     </p>
-    <p><a href="${moreInfo}"><g:message code="biocache.view.list" /></a></p>
-
+    <p><a href="${moreInfo}"><g:message code="${listcode ? listcode : "biocache.view.list"}"/></a></p>
     <style type="text/css">
     	body { font-family:Arial; }
     	table { border-collapse: collapse; border: 1px solid #CCC; padding:2px; }
