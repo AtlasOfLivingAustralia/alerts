@@ -33,20 +33,20 @@ class QueryService {
   }
 
   Boolean checkChangeByDiff(Query query) {
-    !hasAFireProperty(query) && (query.idJsonPath || isUserSpecific(query))
+    !hasAFireProperty(query) && (query.idJsonPath || isMyAnnotation(query))
   }
 
   Boolean hasAFireProperty(Query query){
     query.propertyPaths.any {it.fireWhenChange || it.fireWhenNotZero}
   }
 
-  Boolean isUserSpecific(Query query) {
+  Boolean isMyAnnotation(Query query) {
     // Currently only 'my annotation' alert is user specific (among all non-custom queries)
     query.name.startsWith(messageSource.getMessage("query.myannotations.title", null, siteLocale))
   }
 
   String getUserId(Query query) {
-    if (!isUserSpecific(query)) return null
+    if (!isMyAnnotation(query)) return null
     String queryPath = query.queryPath
     queryPath.substring(queryPath.indexOf('assertion_user_id:') + 'assertion_user_id:'.length(), queryPath.indexOf('&dir=desc'))
   }
@@ -266,13 +266,13 @@ class QueryService {
       updateMessage: messageSource.getMessage("myannotations.update.message", null, siteLocale),
       description: messageSource.getMessage("query.myannotations.descr", null, siteLocale),
       queryPath: constructMyAnnotationQueryPath(userId),
-      queryPathForUI: constructMyAnnotationQueryPath(userId),
+      queryPathForUI: '/occurrences/search?fq=assertion_user_id:' + userId + '&dir=desc',
       emailTemplate: '/email/biocache',
       recordJsonPath: '\$.occurrences[*]',
     ])
   }
 
   String constructMyAnnotationQueryPath(String userId) {
-    '/occurrences/search?fq=assertion_user_id:' + userId + '&dir=desc&facets=basis_of_record'
+    '/occurrences/search?fq=assertion_user_id:' + userId + '&dir=desc&pageSize=300'
   }
 }
