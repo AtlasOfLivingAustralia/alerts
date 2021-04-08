@@ -14,6 +14,7 @@
 package au.org.ala.alerts
 
 import au.ala.org.ws.security.RequireApiKey
+import au.org.ala.web.UserDetails
 import grails.converters.JSON
 import org.apache.http.HttpStatus
 import grails.web.servlet.mvc.GrailsParameterMap
@@ -410,32 +411,33 @@ class WebserviceController {
 
     @RequireApiKey
     def addMyAnnotationAlertWS() {
-        User user = userService.getUserById(params.userId)
+        User user = userService.getUser((String)params.userId)
+
         if (user == null) {
-            response.status = 404
-            render ([error : "can't find a user with userId " + params.userId] as JSON)
+            response.status = HttpStatus.SC_BAD_REQUEST
+            response.sendError(HttpStatus.SC_BAD_REQUEST, "user with id " + params.userId + " doesn't exist")
         } else {
             try {
                 notificationService.addMyAnnotation(user)
                 render([success: true] as JSON)
             } catch (ignored) {
-                render "failed to add my annotation for user " + params.userId, contentType: 'text/plain', status: 500
+                render text: "failed to add my annotation for user " + params.userId, contentType: 'text/plain', status: 500
             }
         }
     }
 
     @RequireApiKey
     def deleteMyAnnotationAlertWS() {
-        User user = userService.getUserById(params.userId)
+        User user = User.findByUserId(params.userId)
         if (user == null) {
-            response.status = 404
+            response.status = HttpStatus.SC_NOT_FOUND
             render ([error : "can't find a user with userId " + params.userId] as JSON)
         } else {
             try {
                 notificationService.deleteMyAnnotation(user)
                 render([success: true] as JSON)
             } catch (ignored) {
-                render "failed to delete my annotation for user " + params.userId, contentType: 'text/plain', status: 500
+                render text: "failed to delete my annotation for user " + params.userId, contentType: 'text/plain', status: 500
             }
         }
     }
