@@ -374,7 +374,7 @@ class WebserviceController {
             response.status = HttpStatus.SC_BAD_REQUEST
             response.sendError(HttpStatus.SC_BAD_REQUEST, "userId is a required parameter")
         } else {
-            def user = User.findByUserId(params.userId)
+            def user = userService.getUserById(params.userId)
             if (!user) {
                 Map userDetails = ["userId": params.userId, "email": params.email, "userDisplayName": params.firstName + " " + params.lastName]
                 user = userService.getUser(userDetails)
@@ -402,7 +402,7 @@ class WebserviceController {
     def getUserAlertsWS() {
         User user = userService.getUserById(params.userId)
         if (user == null) {
-            response.status = 404
+            response.status = HttpStatus.SC_NOT_FOUND
             render ([error : "can't find a user with userId " + params.userId] as JSON)
         } else {
             render (userService.getUserAlertsConfig(user) as JSON)
@@ -412,10 +412,9 @@ class WebserviceController {
     @RequireApiKey
     def addMyAnnotationAlertWS() {
         User user = userService.getUser((String)params.userId)
-
         if (user == null) {
-            response.status = HttpStatus.SC_BAD_REQUEST
-            response.sendError(HttpStatus.SC_BAD_REQUEST, "user with id " + params.userId + " doesn't exist")
+            response.status = HttpStatus.SC_NOT_FOUND
+            render ([error : "can't find a user with userId " + params.userId] as JSON)
         } else {
             try {
                 notificationService.addMyAnnotation(user)
@@ -428,7 +427,7 @@ class WebserviceController {
 
     @RequireApiKey
     def deleteMyAnnotationAlertWS() {
-        User user = User.findByUserId(params.userId)
+        User user = userService.getUserById(params.userId)
         if (user == null) {
             response.status = HttpStatus.SC_NOT_FOUND
             render ([error : "can't find a user with userId " + params.userId] as JSON)
