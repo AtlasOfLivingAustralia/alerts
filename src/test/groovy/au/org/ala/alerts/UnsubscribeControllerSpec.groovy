@@ -315,7 +315,7 @@ class UnsubscribeControllerSpec extends Specification {
 
         then:
         log.info "token = ${params.token}"
-        1 * controller.notificationService.deleteMyAnnotation(user)
+        1 * controller.notificationService.unsubscribeMyAnnotation(user)
         response.status == HttpStatus.SC_OK
     }
 

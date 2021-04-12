@@ -143,8 +143,8 @@
           var deleteMyAlertUrl = 'deleteMyAlert/';
           var deleteMyAlertWRUrl ='deleteMyAlertWR/';
 
-          var addMyAnnotationUrl = 'addMyAnnotation/'
-          var deleteMyAnnotationUrl = 'deleteMyAnnotation/'
+          var subscribeMyAnnotationUrl = 'subscribeMyAnnotation/'
+          var unsubscribeMyAnnotationUrl = 'unsubscribeMyAnnotation/'
 
           $(document).ready( function(){
 
@@ -177,7 +177,7 @@
 
                           var url = '';
                           if ($(this).attr('data-type') === 'myannotation') {
-                              url = (state ? addMyAnnotationUrl : deleteMyAnnotationUrl) + '?userId=${userId}';
+                              url = (state ? subscribeMyAnnotationUrl : unsubscribeMyAnnotationUrl) + '?userId=${userId}';
                           } else {
                               url = (state ? addMyAlertUrl : deleteMyAlertUrl) + $(this).attr('id') + '?userId=${userId}';
                           }

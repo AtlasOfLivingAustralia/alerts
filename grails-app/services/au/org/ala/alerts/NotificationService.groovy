@@ -581,12 +581,12 @@ class NotificationService {
         }
     }
 
-    def addMyAnnotation(User user) {
+    def subscribeMyAnnotation(User user) {
         Query myAnnotationQuery = queryService.createMyAnnotationQuery(user?.userId)
         queryService.createQueryForUserIfNotExists(myAnnotationQuery, user, false)
     }
 
-    def deleteMyAnnotation(User user) {
+    def unsubscribeMyAnnotation(User user) {
         String myAnnotationQueryPath = queryService.constructMyAnnotationQueryPath(user?.userId)
         Query retrievedQuery = Query.findByQueryPath(myAnnotationQueryPath)
 
