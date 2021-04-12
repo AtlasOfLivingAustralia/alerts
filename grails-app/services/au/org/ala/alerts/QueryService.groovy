@@ -88,12 +88,15 @@ class QueryService {
     toBeRemoved.size()
   }
 
-  def createQueryForUserIfNotExists(Query newQuery, User user, boolean setPropertyPath = true){
+  // return true if a new query is created, otherwise return false
+  boolean createQueryForUserIfNotExists(Query newQuery, User user, boolean setPropertyPath = true) {
+    boolean newQueryCreated = false
     //find the query
     Query retrievedQuery = Query.findByBaseUrlAndQueryPath(newQuery.baseUrl, newQuery.queryPath)
     if (retrievedQuery == null) {
       try {
         newQuery = newQuery.save(true)
+        newQueryCreated = true
         if (setPropertyPath) {
           new PropertyPath([name: "totalRecords", jsonPath: "totalRecords", query: newQuery, fireWhenNotZero: true]).save(true)
           new PropertyPath([name: "last_loaded_record", jsonPath: "occurrences[0].rowKey", query: newQuery]).save(true)
@@ -116,6 +119,8 @@ class QueryService {
         n.errors.allErrors.each { e -> println(e)}
       }
     }
+
+    newQueryCreated
   }
 
   /**
