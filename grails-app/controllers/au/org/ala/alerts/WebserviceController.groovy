@@ -14,6 +14,7 @@
 package au.org.ala.alerts
 
 import au.ala.org.ws.security.RequireApiKey
+import au.org.ala.web.UserDetails
 import grails.converters.JSON
 import org.apache.http.HttpStatus
 import grails.web.servlet.mvc.GrailsParameterMap
@@ -373,7 +374,7 @@ class WebserviceController {
             response.status = HttpStatus.SC_BAD_REQUEST
             response.sendError(HttpStatus.SC_BAD_REQUEST, "userId is a required parameter")
         } else {
-            def user = User.findByUserId(params.userId)
+            def user = userService.getUserById(params.userId)
             if (!user) {
                 Map userDetails = ["userId": params.userId, "email": params.email, "userDisplayName": params.firstName + " " + params.lastName]
                 user = userService.getUser(userDetails)
@@ -401,7 +402,7 @@ class WebserviceController {
     def getUserAlertsWS() {
         User user = userService.getUserById(params.userId)
         if (user == null) {
-            response.status = 404
+            response.status = HttpStatus.SC_NOT_FOUND
             render ([error : "can't find a user with userId " + params.userId] as JSON)
         } else {
             render (userService.getUserAlertsConfig(user) as JSON)
@@ -410,16 +411,16 @@ class WebserviceController {
 
     @RequireApiKey
     def addMyAnnotationAlertWS() {
-        User user = userService.getUserById(params.userId)
+        User user = userService.getUser((String)params.userId)
         if (user == null) {
-            response.status = 404
+            response.status = HttpStatus.SC_NOT_FOUND
             render ([error : "can't find a user with userId " + params.userId] as JSON)
         } else {
             try {
                 notificationService.addMyAnnotation(user)
                 render([success: true] as JSON)
             } catch (ignored) {
-                render "failed to add my annotation for user " + params.userId, contentType: 'text/plain', status: 500
+                render text: "failed to add my annotation for user " + params.userId, contentType: 'text/plain', status: 500
             }
         }
     }
@@ -428,14 +429,14 @@ class WebserviceController {
     def deleteMyAnnotationAlertWS() {
         User user = userService.getUserById(params.userId)
         if (user == null) {
-            response.status = 404
+            response.status = HttpStatus.SC_NOT_FOUND
             render ([error : "can't find a user with userId " + params.userId] as JSON)
         } else {
             try {
                 notificationService.deleteMyAnnotation(user)
                 render([success: true] as JSON)
             } catch (ignored) {
-                render "failed to delete my annotation for user " + params.userId, contentType: 'text/plain', status: 500
+                render text: "failed to delete my annotation for user " + params.userId, contentType: 'text/plain', status: 500
             }
         }
     }
