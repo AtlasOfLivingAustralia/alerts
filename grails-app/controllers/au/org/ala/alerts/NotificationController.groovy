@@ -43,24 +43,24 @@ class NotificationController {
         }
     }
 
-    def addMyAnnotation = {
+    def subscribeMyAnnotation = {
         def user = getUser()
         try {
-            notificationService.addMyAnnotation(user)
+            notificationService.subscribeMyAnnotation(user)
             render ([success: true] as JSON)
         } catch (ignored) {
-            response.sendError(HttpStatus.SC_INTERNAL_SERVER_ERROR, "failed to add 'my annotation' alert for user " + user?.getUserId())
+            response.sendError(HttpStatus.SC_INTERNAL_SERVER_ERROR, "failed to subscribe to 'my annotation' alert for user " + user?.getUserId())
         }
 
     }
 
-    def deleteMyAnnotation = {
+    def unsubscribeMyAnnotation = {
         def user = getUser()
         try {
-            notificationService.deleteMyAnnotation(user)
+            notificationService.unsubscribeMyAnnotation(user)
             render ([success: true] as JSON)
         } catch (ignored) {
-            response.sendError(HttpStatus.SC_INTERNAL_SERVER_ERROR, "failed to delete 'my annotation' alert for user " + user?.getUserId())
+            response.sendError(HttpStatus.SC_INTERNAL_SERVER_ERROR, "failed to unsubscribe 'my annotation' alert for user " + user?.getUserId())
         }
     }
 

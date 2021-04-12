@@ -14,7 +14,6 @@
 package au.org.ala.alerts
 
 import au.ala.org.ws.security.RequireApiKey
-import au.org.ala.web.UserDetails
 import grails.converters.JSON
 import org.apache.http.HttpStatus
 import grails.web.servlet.mvc.GrailsParameterMap
@@ -410,33 +409,33 @@ class WebserviceController {
     }
 
     @RequireApiKey
-    def addMyAnnotationAlertWS() {
+    def subscribeMyAnnotationWS() {
         User user = userService.getUser((String)params.userId)
         if (user == null) {
             response.status = HttpStatus.SC_NOT_FOUND
             render ([error : "can't find a user with userId " + params.userId] as JSON)
         } else {
             try {
-                notificationService.addMyAnnotation(user)
+                notificationService.subscribeMyAnnotation(user)
                 render([success: true] as JSON)
             } catch (ignored) {
-                render text: "failed to add my annotation for user " + params.userId, contentType: 'text/plain', status: 500
+                render text: "failed to subscribe to my annotation for user " + params.userId, contentType: 'text/plain', status: 500
             }
         }
     }
 
     @RequireApiKey
-    def deleteMyAnnotationAlertWS() {
+    def unsubscribeMyAnnotationWS() {
         User user = userService.getUserById(params.userId)
         if (user == null) {
             response.status = HttpStatus.SC_NOT_FOUND
             render ([error : "can't find a user with userId " + params.userId] as JSON)
         } else {
             try {
-                notificationService.deleteMyAnnotation(user)
+                notificationService.unsubscribeMyAnnotation(user)
                 render([success: true] as JSON)
             } catch (ignored) {
-                render text: "failed to delete my annotation for user " + params.userId, contentType: 'text/plain', status: 500
+                render text: "failed to unsubscribe my annotation for user " + params.userId, contentType: 'text/plain', status: 500
             }
         }
     }
