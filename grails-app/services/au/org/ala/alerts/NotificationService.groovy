@@ -32,7 +32,7 @@ class NotificationService {
      * @param frequency
      * @return
      */
-    boolean checkStatus(Query query, Frequency frequency) {
+    boolean checkStatus(Query query, Frequency frequency, boolean flushResult = false) {
 
         QueryResult qr = getQueryResult(query, frequency)
 
@@ -68,7 +68,7 @@ class NotificationService {
                 qr.lastChanged = new Date()
             }
 
-            qr.save(true)
+            qr.save(validate: true, flush: flushResult)
             qr.hasChanged
         } catch (Exception e){
             log.error("[QUERY " + query.id + "] There was a problem checking the URL: " + urlString, e)
@@ -583,7 +583,14 @@ class NotificationService {
 
     def subscribeMyAnnotation(User user) {
         Query myAnnotationQuery = queryService.createMyAnnotationQuery(user?.userId)
-        queryService.createQueryForUserIfNotExists(myAnnotationQuery, user, false)
+        boolean newQueryCreated = queryService.createQueryForUserIfNotExists(myAnnotationQuery, user, false)
+        // trigger a check for this query to generate query result
+        // user could call multiple subscribeMyAnnotation, only the first one will create a new query so it's
+        // triggered only once.
+        if (newQueryCreated) {
+            Query savedQuery = Query.findByBaseUrlAndQueryPath(myAnnotationQuery.baseUrl, myAnnotationQuery.queryPath)
+            checkStatus(savedQuery, user.frequency, true)
+        }
     }
 
     def unsubscribeMyAnnotation(User user) {
