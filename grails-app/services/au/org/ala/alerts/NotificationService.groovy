@@ -614,4 +614,26 @@ class NotificationService {
             retrievedQuery.delete(flush: true)
         }
     }
+
+    // update user to new frequency
+    // there are some special work if user is subscribed to 'My Annotation' alert
+    def updateFrequency(User user, String newFrequency) {
+        def oldFrequency = user.frequency
+        user.frequency = Frequency.findByName(newFrequency)
+
+        String myAnnotationQueryPath = queryService.constructMyAnnotationQueryPath(user?.userId)
+        Query query = Query.findByQueryPath(myAnnotationQueryPath)
+
+        // if user is now subscribed to 'my annotation', the query result need to be removed
+        // because query result is frequency specific and now user is changing frequency, so the existing query result no longer used/needed
+        if (query) {
+            QueryResult qr = QueryResult.findByQueryAndFrequency(query, oldFrequency)
+            qr.delete(flush: true)
+
+            // we need this to generate 1st my annotation check result
+            checkStatus(query, user.frequency, true)
+        }
+
+        user.save(flush: true)
+    }
 }
