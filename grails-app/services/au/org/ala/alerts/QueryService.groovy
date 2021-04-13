@@ -115,8 +115,8 @@ class QueryService {
       Notification n = new Notification([query: newQuery, user: user])
       n.save(true)
       
-      if(n.hasErrors()){
-        n.errors.allErrors.each { e -> println(e)}
+      if (n.hasErrors()) {
+        n.errors.allErrors.each { e -> log.error(e) }
       }
     }
 
