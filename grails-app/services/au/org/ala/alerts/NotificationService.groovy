@@ -624,14 +624,23 @@ class NotificationService {
         String myAnnotationQueryPath = queryService.constructMyAnnotationQueryPath(user?.userId)
         Query query = Query.findByQueryPath(myAnnotationQueryPath)
 
-        // if user is now subscribed to 'my annotation', the query result need to be removed
-        // because query result is frequency specific and now user is changing frequency, so the existing query result no longer used/needed
+        // my annotation generates alert(diff) by comparing QueryResult at 2 time points.
+        // first QueryResult will be inserted when user subscribes to my annotation
+        // every time user changes the frequency, we also need to create a new QueryResult
+        // here we update the frequency of existing QueryResult instead of delete old + create new for below reason
+        // suppose
+        // 1. we have an hourly QueryResult
+        // 2. some changes happened
+        // 3. user changes frequency to daily
+        // 4. if now we create a daily QueryResult which reflects current verifications status (at time position 4)
+        //  and is used to do diff, then changes in 2 will be lost. So we directly update existing hourly QueryResult to be daily
+        //  so next time scheduled daily task runs, it compares with status at time 1 so changes at time 2 will be captured
         if (query) {
             QueryResult qr = QueryResult.findByQueryAndFrequency(query, oldFrequency)
-            qr.delete(flush: true)
-
-            // we need this to generate 1st my annotation check result
-            checkStatus(query, user.frequency, true)
+            if (qr) {
+                qr.frequency = user.frequency
+                qr.save(flush: true)
+            }
         }
 
         user.save(flush: true)
