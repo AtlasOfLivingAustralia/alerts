@@ -32,7 +32,7 @@ class NotificationService {
      * @param frequency
      * @return
      */
-    boolean checkStatus(Query query, Frequency frequency) {
+    boolean checkStatus(Query query, Frequency frequency, boolean flushResult = false) {
 
         QueryResult qr = getQueryResult(query, frequency)
 
@@ -68,7 +68,7 @@ class NotificationService {
                 qr.lastChanged = new Date()
             }
 
-            qr.save(true)
+            qr.save(validate: true, flush: flushResult)
             qr.hasChanged
         } catch (Exception e){
             log.error("[QUERY " + query.id + "] There was a problem checking the URL: " + urlString, e)
@@ -581,12 +581,19 @@ class NotificationService {
         }
     }
 
-    def addMyAnnotation(User user) {
+    def subscribeMyAnnotation(User user) {
         Query myAnnotationQuery = queryService.createMyAnnotationQuery(user?.userId)
-        queryService.createQueryForUserIfNotExists(myAnnotationQuery, user, false)
+        boolean newQueryCreated = queryService.createQueryForUserIfNotExists(myAnnotationQuery, user, false)
+        // trigger a check for this query to generate query result
+        // user could call multiple subscribeMyAnnotation, only the first one will create a new query so it's
+        // triggered only once.
+        if (newQueryCreated) {
+            Query savedQuery = Query.findByBaseUrlAndQueryPath(myAnnotationQuery.baseUrl, myAnnotationQuery.queryPath)
+            checkStatus(savedQuery, user.frequency, true)
+        }
     }
 
-    def deleteMyAnnotation(User user) {
+    def unsubscribeMyAnnotation(User user) {
         String myAnnotationQueryPath = queryService.constructMyAnnotationQueryPath(user?.userId)
         Query retrievedQuery = Query.findByQueryPath(myAnnotationQueryPath)
 
@@ -606,5 +613,36 @@ class NotificationService {
             // delete query
             retrievedQuery.delete(flush: true)
         }
+    }
+
+    // update user to new frequency
+    // there are some special work if user is subscribed to 'My Annotation' alert
+    def updateFrequency(User user, String newFrequency) {
+        def oldFrequency = user.frequency
+        user.frequency = Frequency.findByName(newFrequency)
+
+        String myAnnotationQueryPath = queryService.constructMyAnnotationQueryPath(user?.userId)
+        Query query = Query.findByQueryPath(myAnnotationQueryPath)
+
+        // my annotation generates alert(diff) by comparing QueryResult at 2 time points.
+        // first QueryResult will be inserted when user subscribes to my annotation
+        // every time user changes the frequency, we also need to create a new QueryResult
+        // here we update the frequency of existing QueryResult instead of delete old + create new for below reason
+        // suppose
+        // 1. we have an hourly QueryResult
+        // 2. some changes happened
+        // 3. user changes frequency to daily
+        // 4. if now we create a daily QueryResult which reflects current verifications status (at time position 4)
+        //  and is used to do diff, then changes in 2 will be lost. So we directly update existing hourly QueryResult to be daily
+        //  so next time scheduled daily task runs, it compares with status at time 1 so changes at time 2 will be captured
+        if (query) {
+            QueryResult qr = QueryResult.findByQueryAndFrequency(query, oldFrequency)
+            if (qr) {
+                qr.frequency = user.frequency
+                qr.save(flush: true)
+            }
+        }
+
+        user.save(flush: true)
     }
 }

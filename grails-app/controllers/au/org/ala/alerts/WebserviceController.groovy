@@ -373,7 +373,7 @@ class WebserviceController {
             response.status = HttpStatus.SC_BAD_REQUEST
             response.sendError(HttpStatus.SC_BAD_REQUEST, "userId is a required parameter")
         } else {
-            def user = User.findByUserId(params.userId)
+            def user = userService.getUserById(params.userId)
             if (!user) {
                 Map userDetails = ["userId": params.userId, "email": params.email, "userDisplayName": params.firstName + " " + params.lastName]
                 user = userService.getUser(userDetails)
@@ -401,7 +401,7 @@ class WebserviceController {
     def getUserAlertsWS() {
         User user = userService.getUserById(params.userId)
         if (user == null) {
-            response.status = 404
+            response.status = HttpStatus.SC_NOT_FOUND
             render ([error : "can't find a user with userId " + params.userId] as JSON)
         } else {
             render (userService.getUserAlertsConfig(user) as JSON)
@@ -409,33 +409,33 @@ class WebserviceController {
     }
 
     @RequireApiKey
-    def addMyAnnotationAlertWS() {
-        User user = userService.getUserById(params.userId)
+    def subscribeMyAnnotationWS() {
+        User user = userService.getUser((String)params.userId)
         if (user == null) {
-            response.status = 404
+            response.status = HttpStatus.SC_NOT_FOUND
             render ([error : "can't find a user with userId " + params.userId] as JSON)
         } else {
             try {
-                notificationService.addMyAnnotation(user)
+                notificationService.subscribeMyAnnotation(user)
                 render([success: true] as JSON)
             } catch (ignored) {
-                render "failed to add my annotation for user " + params.userId, contentType: 'text/plain', status: 500
+                render text: "failed to subscribe to my annotation for user " + params.userId, contentType: 'text/plain', status: 500
             }
         }
     }
 
     @RequireApiKey
-    def deleteMyAnnotationAlertWS() {
+    def unsubscribeMyAnnotationWS() {
         User user = userService.getUserById(params.userId)
         if (user == null) {
-            response.status = 404
+            response.status = HttpStatus.SC_NOT_FOUND
             render ([error : "can't find a user with userId " + params.userId] as JSON)
         } else {
             try {
-                notificationService.deleteMyAnnotation(user)
+                notificationService.unsubscribeMyAnnotation(user)
                 render([success: true] as JSON)
             } catch (ignored) {
-                render "failed to delete my annotation for user " + params.userId, contentType: 'text/plain', status: 500
+                render text: "failed to unsubscribe my annotation for user " + params.userId, contentType: 'text/plain', status: 500
             }
         }
     }
