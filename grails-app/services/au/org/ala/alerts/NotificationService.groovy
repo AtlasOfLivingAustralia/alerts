@@ -144,6 +144,7 @@ class NotificationService {
             def dateToUse = org.apache.commons.lang.time.DateUtils.addSeconds(new Date(), -1 * frequency.periodInSeconds)
             //insert the date to query with
             SimpleDateFormat sdf = new SimpleDateFormat(query.dateFormat)
+            sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
             def dateValue = sdf.format(dateToUse)
             queryPath = queryPath.replaceAll("___DATEPARAM___", dateValue)
             queryPathForUI = queryPathForUI.replaceAll("___DATEPARAM___", dateValue)
