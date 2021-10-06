@@ -22,42 +22,6 @@
     <table style="border-collapse: collapse; border: 1px solid #CCC; padding:2px;">
     <tbody>
     <g:each in="${records}" var="oc">
-%{--      <tr>--}%
-%{--        <td class="detail">--}%
-%{--          ${oc.vernacularName}<br/>--}%
-%{--          <g:if test="${oc.taxonRankID > 5000}"><i></g:if>--}%
-%{--          ${oc.scientificName}--}%
-%{--          <g:if test="${oc.taxonRankID > 5000}"></i></g:if>--}%
-%{--          <br/>--}%
-%{--          ${oc.family}<br/>--}%
-%{--          ${oc.stateProvince}<br/>--}%
-%{--        </td>--}%
-%{--        <td class="imageCol">--}%
-%{--          <g:if test="${oc.image != null}">--}%
-%{--            <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}">--}%
-%{--              <img src="${oc.smallImageUrl}" alt="image for record"/>--}%
-%{--            </a>--}%
-%{--          </g:if>--}%
-%{--          <g:elseif test="${oc.image}">--}%
-%{--            <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}">--}%
-%{--              <img src="${oc.image}" alt="${message(code:"biocache.alt.image.for.record")}"/>--}%
-%{--            </a>--}%
-%{--          </g:elseif>--}%
-%{--          <g:else>--}%
-%{--            <g:message code="biocache.no.image" />--}%
-%{--          </g:else>--}%
-%{--        </td>--}%
-%{--        <td class="linkCell" nowrap="nowrap">--}%
-%{--          <g:if test="${oc.scientificName != null}">--}%
-%{--            <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}"><g:message code="biocache.view.this.record" args="[oc.scientificName]" /></a>--}%
-%{--          </g:if>--}%
-%{--          <g:else>--}%
-%{--            <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}"><g:message code="biocache.record.details" /></a>--}%
-%{--          </g:else>--}%
-%{--        </td>--}%
-%{--      </tr>--}%
-
-
       <tr><td>Species name</td><td>Stub species name</td></tr>
       <g:if test="${oc.vernacularName}">
         <tr><td>Vernacular name</td><td>${oc.vernacularName}</td></tr>
@@ -123,45 +87,6 @@
         </tr>
       </g:if>
       <tr><td colspan="2"><br/></td></tr>
-
-
-%{--      <tr class="thickborder"><td>fake data</td></tr>--}%
-%{--      <br/>--}%
-%{--      <tr>--}%
-%{--        <td class="detail">--}%
-%{--            ${oc.vernacularName}<br/>--}%
-%{--            <g:if test="${oc.taxonRankID > 5000}"><i></g:if>--}%
-%{--              ${oc.scientificName}--}%
-%{--            <g:if test="${oc.taxonRankID > 5000}"></i></g:if>--}%
-%{--            <br/>--}%
-%{--            ${oc.family}<br/>--}%
-%{--            ${oc.stateProvince}<br/>--}%
-%{--        </td>--}%
-%{--        <td class="imageCol">--}%
-%{--          <g:if test="${oc.image != null}">--}%
-%{--            <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}">--}%
-%{--            <img src="${oc.smallImageUrl}" alt="image for record"/>--}%
-%{--            </a>--}%
-%{--          </g:if>--}%
-%{--          <g:elseif test="${oc.image}">--}%
-%{--            <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}">--}%
-%{--             <img src="${oc.image}" alt="${message(code:"biocache.alt.image.for.record")}"/>--}%
-%{--            </a>--}%
-%{--          </g:elseif>--}%
-%{--          <g:else>--}%
-%{--            <g:message code="biocache.no.image" />--}%
-%{--          </g:else>--}%
-%{--          </td>--}%
-%{--         <td class="linkCell" nowrap="nowrap">--}%
-%{--         <g:if test="${oc.scientificName != null}">--}%
-%{--           <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}"><g:message code="biocache.view.this.record" args="[oc.scientificName]" /></a>--}%
-%{--         </g:if>--}%
-%{--         <g:else>--}%
-%{--           <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}"><g:message code="biocache.record.details" /></a>--}%
-%{--         </g:else>--}%
-%{--         </td>--}%
-%{--      </tr>--}%
-
     </g:each>
     </tbody>
     </table>
