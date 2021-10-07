@@ -4,7 +4,8 @@
     <title>aa<g:message code="alert.title" args="[query.resourceName]" /></title>
     <style type="text/css">
     body { font-family:Arial; }
-    table.container { width: 640px; border-collapse: collapse; }
+    table.container { width: 640px; border-collapse: collapse;}
+    table.container td { padding:5px; }
     table.content { border-collapse: collapse; border: 1px solid #CCC; padding:2px; }
     table.content td { border: 1px solid #CCC; padding:4px; }
     img { max-width:140px; max-height:160px; }
@@ -94,13 +95,10 @@
         </table>
       </td></tr>
     </g:if>
+    <tr><td>Please check with the relevant team before forwarding this email outside of the department.</td></tr>
+    <tr><td>This email has been generated as part of ALA's national biosecurity alert system. To find out more about this program click <a
+            href="http://www.google.com">here</a></td></tr>
+    <tr><td><g:render template="/email/unsubscribe"><p><a href="http://www.google.com">manage your alerts</a></p></g:render></td></tr>
   </table>
-
-  <p>Please check with the relevant team before forwarding this email outside of the department.</p>
-
-  <p>This email has been generated as part of ALA's national biosecurity alert system. To find out more about this program click <a
-          href="http://www.google.com">here</a></p>
-
-  <g:render template="/email/unsubscribe"><p><a href="http://www.google.com">manage your alerts</a></p></g:render>
   </body>
 </html>
