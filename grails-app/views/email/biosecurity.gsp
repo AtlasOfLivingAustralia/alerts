@@ -4,17 +4,44 @@
     <title>aa<g:message code="alert.title" args="[query.resourceName]" /></title>
     <style type="text/css">
     body { font-family:Arial; }
-    table { border-collapse: collapse; border: 1px solid #CCC; padding:2px; }
-    td { border: 1px solid #CCC; padding:4px; }
+    table.container { width: 640px; border-collapse: collapse; }
+    table.content { border-collapse: collapse; border: 1px solid #CCC; padding:2px; }
+    table.content td { border: 1px solid #CCC; padding:4px; }
     img { max-width:140px; max-height:160px; }
     td.imageCol { padding:0; margin:0; }
     </style>
   </head>
   <body>
-    <h3><g:message code="alert.title" args="[grailsApplication.config.skin.orgNameLong]"/></h3>
-    <p><g:message code="${message}" default="${message}" args="${[totalRecords, moreInfo, query.name]}"/></p>
+%{--  <tr>--}%
+%{--    <td id="header" class="w640" width="640" align="center" bgcolor="#3d464c" style="border-top:2px solid #c7c7c7;">--}%
+%{--      <div class="w640" width="640" align="center" bgcolor="#3d464c" style="border-top:2px solid #c7c7c7;">--}%
+%{--        <a href="http://www.ala.org.au/" title="visit the ALA website">--}%
+
+%{--          <img src="https://www.ala.org.au/app/uploads/2019/01/logo.png" class="custom-logo" alt="Atlas of Living Australia"--}%
+%{--               srcset="https://www.ala.org.au/app/uploads/2019/01/logo.png 1005w,--}%
+%{--               https://www.ala.org.au/app/uploads/2019/01/logo-300x45.png 300w,--}%
+%{--               https://www.ala.org.au/app/uploads/2019/01/logo-768x115.png 768w"--}%
+
+%{--               sizes="(max-width: 1005px) 100vw, 1005px"/>--}%
+
+%{--        </a>--}%
+%{--      </div>--}%
+<table class="container" style="width: 640px; border-collapse: collapse;">
+    <tr><td><div style="background-color:black; padding:10px">
+      <a href="http://www.ala.org.au/" title="visit the ALA website"><img src="https://www.ala.org.au/app/uploads/2019/01/logo-300x45.png" alt="ALA logo"/>
+  %{--                                                                        width="300" height="45" style="display: block; margin: 5px 15px;">--}%
+      </a>
+    </div>
+    </td></tr>
+%{--  </nav>--}%
+
+%{--    </td>--}%
+%{--  </tr>--}%
+    <tr><td><h3><g:message code="alert.title" args="[grailsApplication.config.skin.orgNameLong]"/></h3></td></tr>
+    <tr><td><p><g:message code="${message}" default="${message}" args="${[totalRecords, moreInfo, query.name]}"/></p></td></tr>
     <g:if test="${records}">
-    <table>
+    <tr><td>
+    <table class="content">
       <tbody>
       <g:each in="${records}" var="oc">
         <tr><td>Species name</td><td>Stub species name</td></tr>
@@ -83,12 +110,14 @@
       </g:each>
       </tbody>
     </table>
-
+    </td></tr>
+    </g:if>
+</table>
       <p>Please check with the relevant team before forwarding this email outside of the department.</p>
 
       <p>This email has been generated as part of ALA's national biosecurity alert system. To find out more about this program click <a
               href="http://www.google.com">here</a></p>
-    </g:if>
+
   <g:render template="/email/unsubscribe"><p><a href="http://www.google.com">manage your alerts</a></p></g:render>
   </body>
 </html>
