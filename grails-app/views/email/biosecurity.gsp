@@ -1,14 +1,14 @@
 <%@ page contentType="text/html"%>
 <html>
   <head>
-    <title>aa<g:message code="alert.title" args="[query.resourceName]" /></title>
+    <title><g:message code="alert.title" args="[query.resourceName]" /></title>
     <style type="text/css">
     body { font-family:Arial; }
     table.container { width: 640px; border-collapse: collapse;}
     table.container td { padding:5px; }
     table.content { border-collapse: collapse; border: 1px solid #CCC; padding:2px; }
     table.content td { border: 1px solid #CCC; padding:4px; }
-    img { max-width:140px; max-height:160px; }
+    table.content img { max-width:140px; max-height:160px; }
     td.imageCol { padding:0; margin:0; }
     </style>
   </head>
@@ -27,7 +27,6 @@
         <table class="content">
           <tbody>
           <g:each in="${records}" var="oc">
-            <tr><td>Species name</td><td>Stub species name</td></tr>
             <g:if test="${oc.vernacularName}">
               <tr><td>Vernacular name</td><td>${oc.vernacularName}</td></tr>
             </g:if>
@@ -47,8 +46,15 @@
                 <g:elseif test="${oc.month}">
                   <td>${oc.year}-${oc.month}</td>
                 </g:elseif>
+                <g:else>
+                  <td>${oc.year}</td>
+                </g:else>
               </g:elseif>
+              <g:else>
+                <td></td>
+              </g:else>
             </tr>
+
             <tr>
               <td>Locality of observation</td>
               <g:if test="${oc.locality}">
@@ -62,12 +68,17 @@
                   <td>${oc.country}</td>
                 </g:else>
               </g:elseif>
+              <g:else>
+                <td></td>
+              </g:else>
             </tr>
+
             <tr>
               <td>ALA record</td>
               <g:set var="link" value="${query.baseUrlForUI}/occurrences/${oc.uuid}"/>
               <td><a href="${link}">${link}</a></td>
             </tr>
+
             <g:if test="${oc.recordNumber}">
               <tr>
                 <td>Original source record</td>
@@ -79,6 +90,7 @@
                 </g:else>
               </tr>
             </g:if>
+
             <g:if test="${oc.imageUrl}">
               <tr>
                 <td>Location map & image (if supplied)</td>
@@ -89,16 +101,29 @@
                 </td>
               </tr>
             </g:if>
+
             <tr><td colspan="2"><br/></td></tr>
           </g:each>
           </tbody>
         </table>
       </td></tr>
     </g:if>
-    <tr><td>Please check with the relevant team before forwarding this email outside of the department.</td></tr>
+    <tr><td><h4>Please check with the relevant team before forwarding this email outside of the department.</h4></td></tr>
     <tr><td>This email has been generated as part of ALA's national biosecurity alert system. To find out more about this program click <a
             href="http://www.google.com">here</a></td></tr>
     <tr><td><g:render template="/email/unsubscribe"><p><a href="http://www.google.com">manage your alerts</a></p></g:render></td></tr>
+    <tr><td>
+        <h4>The ALA is made possible by contributions from its partners, is supported by <a href="https://www.education.gov.au/national-collaborative-research-infrastructure-strategy-ncris">NCRIS</a>, is hosted by <a href="https://csiro.au/">CSIRO</a>, and is the Australian node of <a href="https://www.gbif.org/en/">GBIF</a>.</h4>
+        <p>
+          <a href="https://www.education.gov.au/national-collaborative-research-infrastructure-strategy-ncris"><img src="https://www.ala.org.au/app/uploads/2019/06/NCRIS_150px-150x109.jpg" alt="NCRIS logo" width="150" height="109" /></a>
+          <a href="https://csiro.au/"><img src="https://www.ala.org.au/app/uploads/2019/07/CSIRO_Solid_RGB-150x150.png" alt="CSIRO logo" width="109" height="109" /></a>
+          <a href="https://www.gbif.org/en/"><img src="https://www.ala.org.au/app/uploads/2019/06/GBIF_109px.png" alt="GBIF logo" width="207" height="109" /></a>
+        </p>
+    </td></tr>
+    <tr><td>
+      <h4>Acknowledgement of Traditional Owners and Country</h4>
+      <p>The Atlas of Living Australia acknowledges Australia’s Traditional Owners and pays respect to the past and present Elders of the nation’s Aboriginal and Torres Strait Islander communities. We honour and celebrate the spiritual, cultural and customary connections of Traditional Owners to country and the biodiversity that forms part of that country.</p>
+    </td></tr>
   </table>
   </body>
 </html>
