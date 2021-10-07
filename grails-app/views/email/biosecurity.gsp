@@ -1,28 +1,20 @@
 <%@ page contentType="text/html"%>
 <html>
-  <head><title>aa<g:message code="alert.title" args="[query.resourceName]" /></title></head>
+  <head>
+    <title>aa<g:message code="alert.title" args="[query.resourceName]" /></title>
+    <style type="text/css">
+    body { font-family:Arial; }
+    table { border-collapse: collapse; border: 1px solid #CCC; padding:2px; }
+    td { border: 1px solid #CCC; padding:4px; }
+    img { max-width:140px; max-height:160px; }
+    td.imageCol { padding:0; margin:0; }
+    </style>
+  </head>
   <body>
     <h3><g:message code="alert.title" args="[grailsApplication.config.skin.orgNameLong]"/></h3>
     <p><g:message code="${message}" default="${message}" args="${[totalRecords, moreInfo, query.name]}"/></p>
-    <style type="text/css">
-    	body { font-family:Arial; }
-    	table { border-collapse: collapse; border: 1px solid #CCC; padding:2px; }
-		td, th { border: 1px solid #CCC; padding:4px; }
-        img { max-width:140px; max-height:160px; }
-        .detail { font-size: 11px;}
-        .imageCol { padding:0; margin:0; }
-        .linkCell { }
-
-        /*tr.noBorder td {*/
-        /*  border: 0;*/
-        /*}*/
-        /*.thickborder {*/
-        /*    border-bottom: 5px solid black;*/
-        /*    !*border-top: 5px solid black;*!*/
-        /*}*/
-    </style>
     <g:if test="${records}">
-    <table style="border-collapse: collapse; border: 1px solid #CCC; padding:2px;">
+    <table>
       <tbody>
       <g:each in="${records}" var="oc">
         <tr><td>Species name</td><td>Stub species name</td></tr>
@@ -80,10 +72,9 @@
         <g:if test="${oc.imageUrl}">
           <tr>
             <td>Location map & image (if supplied)</td>
-            <td>
+            <td class="imageCol">
               <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}">
-                <img src="${oc.imageUrl}" alt="${message(code: "biocache.alt.image.for.record")}" width="100"
-                     height="100"/>
+                <img src="${oc.imageUrl}" alt="${message(code: "biocache.alt.image.for.record")}"/>
               </a>
             </td>
           </tr>
