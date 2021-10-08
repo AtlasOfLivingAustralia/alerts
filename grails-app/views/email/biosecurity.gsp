@@ -3,7 +3,7 @@
   <head>
     <title><g:message code="alert.title" args="[query.resourceName]" /></title>
     <style type="text/css">
-    body { font-family:Arial; }
+    body { font-family:Arial,serif; }
     table.container { width: 640px; border-collapse: collapse;}
     table.container td { padding:5px; }
     table.content { border-collapse: collapse; border: 1px solid #CCC; padding:2px; }
@@ -28,14 +28,14 @@
           <tbody>
           <g:each in="${records}" var="oc">
             <g:if test="${oc.vernacularName}">
-              <tr><td>Vernacular name</td><td>${oc.vernacularName}</td></tr>
+              <tr><td><g:message code="email.biosecurity.label.vernacularname" default="Vernacular name"/></td><td>${oc.vernacularName}</td></tr>
             </g:if>
             <g:elseif test="${oc.scientificName}">
-              <tr><td>Scientific name</td><td>${oc.scientificName}</td></tr>
+              <tr><td><g:message code="email.biosecurity.label.scientificname" default="Scientific name"/></td><td>${oc.scientificName}</td></tr>
             </g:elseif>
 
             <tr>
-              <td>Date of observation</td>
+              <td><g:message code="email.biosecurity.label.dateofobservation" default="Date of observation"/></td>
               <g:if test="${oc.eventDate}">
                 <td>${g.formatDate(date: new Date(oc.eventDate), format: "yyyy-MM-dd")}</td>
               </g:if>
@@ -56,7 +56,7 @@
             </tr>
 
             <tr>
-              <td>Locality of observation</td>
+              <td><g:message code="email.biosecurity.label.locality" default="Locality of observation"/></td>
               <g:if test="${oc.locality}">
                 <td>${oc.locality}</td>
               </g:if>
@@ -74,14 +74,14 @@
             </tr>
 
             <tr>
-              <td>ALA record</td>
+              <td><g:message code="email.biosecurity.label.record" default="ALA record"/></td>
               <g:set var="link" value="${query.baseUrlForUI}/occurrences/${oc.uuid}"/>
               <td><a href="${link}">${link}</a></td>
             </tr>
 
             <g:if test="${oc.recordNumber}">
               <tr>
-                <td>Original source record</td>
+                <td><g:message code="email.biosecurity.label.originalRecord" default="Original source record"/></td>
                 <g:if test="${oc.recordNumber.startsWith("http://")}">
                   <td><a href="${oc.recordNumber}">${oc.recordNumber}</a></td>
                 </g:if>
@@ -93,7 +93,7 @@
 
             <g:if test="${oc.imageUrl}">
               <tr>
-                <td>Location map & image (if supplied)</td>
+                <td><g:message code="email.biosecurity.label.recordimages" default="Record images"/></td>
                 <td class="imageCol">
                   <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}">
                     <img src="${oc.imageUrl}" alt="${message(code: "biocache.alt.image.for.record")}"/>
