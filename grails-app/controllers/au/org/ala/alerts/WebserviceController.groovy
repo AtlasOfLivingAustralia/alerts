@@ -439,4 +439,26 @@ class WebserviceController {
             }
         }
     }
+
+    def subscribeBioSecurityAlert() {
+        User user = userService.getUserByEmail(params.useremail)
+        if (user == null) {
+            response.status = HttpStatus.SC_NOT_FOUND
+            render ([error : "can't find a user with email " + params.useremail] as JSON)
+        } else {
+            queryService.subscribeBioSecurity(user, params.lisid)
+            render([status: 'all good'] as JSON)
+        }
+    }
+
+    def unsubscribeBioSecurityAlert() {
+        User user = userService.getUserByEmail(params.useremail)
+        if (user == null) {
+            response.status = HttpStatus.SC_NOT_FOUND
+            render ([error : "can't find a user with email " + params.useremail] as JSON)
+        } else {
+            queryService.unsubscribeBioSecurity(user, params.lisid)
+            render([status: 'all good'] as JSON)
+        }
+    }
 }

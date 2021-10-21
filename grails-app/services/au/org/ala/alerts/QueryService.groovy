@@ -277,7 +277,44 @@ class QueryService {
         ])
     }
 
-    String constructMyAnnotationQueryPath(String userId) {
-        '/occurrences/search?fq=assertion_user_id:' + userId + '&dir=desc&pageSize=300'
+  String constructMyAnnotationQueryPath(String userId) {
+    '/occurrences/search?fq=assertion_user_id:' + userId + '&dir=desc&pageSize=300'
+  }
+
+//  title = messageSource.getMessage("query.biosecurity.title", null, siteLocale)
+//  descr = messageSource.getMessage("query.biosecurity.descr", null, siteLocale)
+
+    Query createBioSecurityQuery(String listid) {
+        new Query([
+                baseUrl       : grailsApplication.config.biocacheService.baseURL,
+                baseUrlForUI  : grailsApplication.config.biocache.baseURL,
+                name          : messageSource.getMessage("query.biosecurity.title", null, siteLocale) + ' for ' + listid,
+                resourceName  : grailsApplication.config.postie.defaultResourceName,
+                updateMessage : 'more.biosecurity.update.message',
+                description   : messageSource.getMessage("query.biosecurity.descr", null, siteLocale),
+                queryPath     : '/occurrences/search?q=species_list_uid:' + listid + '&fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc&pageSize=20&facets=basis_of_record',
+                queryPathForUI: '/occurrences/search?q=species_list_uid:' + listid + '&fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc',
+                dateFormat    : """yyyy-MM-dd'T'HH:mm:ss'Z'""",
+                emailTemplate : '/email/biosecurity',
+                recordJsonPath: '\$.occurrences',
+                idJsonPath    : 'uuid',
+                custom        : true
+        ])
+    }
+
+    def subscribeBioSecurity(User user, String listid) {
+        Query query = createBioSecurityQuery(listid)
+        createQueryForUserIfNotExists(query, user, true)
+    }
+
+    def unsubscribeBioSecurity(User user, String listid) {
+        Query query = createBioSecurityQuery(listid)
+        if (query) {
+            // delete the notification
+            def notification = Notification.findByQueryAndUser(query, user)
+            if (notification) {
+                notification.delete(flush: true)
+            }
+        }
     }
 }

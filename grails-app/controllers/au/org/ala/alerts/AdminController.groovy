@@ -300,4 +300,12 @@ class AdminController {
         flash.message = "Updated ${count} user entries with new unsubscribeToken value (was NULL)."
         redirect(action: 'index')
     }
+
+    def createBioSecurityAlert() {
+        List users = []
+        if (params.term) {
+            users = userService.findUsers(params.term)
+        }
+        render view: "/admin/biosecurity", model: [users: users]
+    }
 }
