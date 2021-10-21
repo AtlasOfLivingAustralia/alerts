@@ -273,7 +273,7 @@ class AdminController {
 
         notifications.each { Notification notification ->
             notification.unsubscribeToken = UUID.randomUUID().toString()
-            notification.save(flush:true)
+            notification.save(flush: true)
             count++
         }
 
@@ -293,7 +293,7 @@ class AdminController {
 
         users.each { User user ->
             user.unsubscribeToken = UUID.randomUUID().toString()
-            user.save(flush:true)
+            user.save(flush: true)
             count++
         }
 

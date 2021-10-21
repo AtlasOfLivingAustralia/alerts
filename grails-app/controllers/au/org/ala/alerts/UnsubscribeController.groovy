@@ -49,14 +49,14 @@ class UnsubscribeController {
                 if (userAndNotifications.notifications.any { it.query.queryPath == myAnnotationQueryPath }) {
                     notificationService.unsubscribeMyAnnotation(userAndNotifications.user)
                 }
-                
+
                 render view: "unsubscribed"
             }
         }
     }
 
     def cancel() {
-        redirect(controller: "notification", action:'myAlerts')
+        redirect(controller: "notification", action: 'myAlerts')
     }
 
     private Map findUserAndNotificationsForToken(String token) {

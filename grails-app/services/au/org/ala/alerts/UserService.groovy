@@ -70,7 +70,7 @@ class UserService {
      *
      * @return
      */
-    int updateUserEmails(){
+    int updateUserEmails() {
         def toUpdate = []
         log.warn "Checking all ${User.count()} users in Alerts user table."
         def count = 0
@@ -82,7 +82,7 @@ class UserService {
 
             if (userDetails) {
                 // update email
-                if (userDetails != null && user.email != userDetails.userName){
+                if (userDetails != null && user.email != userDetails.userName) {
                     user.email = userDetails.userName
                     log.debug "Updating email address for user ${user.userId}: ${userDetails.userName}"
                     userHasChanged = true
@@ -120,7 +120,7 @@ class UserService {
 
         toUpdate.each {
             log.warn "Modifying user: ${it as JSON}"
-            it.save(flush:true)
+            it.save(flush: true)
         }
 
         toUpdate.size()
@@ -128,7 +128,7 @@ class UserService {
 
     User getUser(userDetailsParam = null) {
 
-        def userDetails = !userDetailsParam? authService.userDetails(): userDetailsParam
+        def userDetails = !userDetailsParam ? authService.userDetails() : userDetailsParam
         log.debug "getUser - userDetails = ${userDetails}"
 
         if (!userDetails?.userId) {
@@ -141,7 +141,7 @@ class UserService {
         if (user == null) {
             log.debug "User is not in user table - creating new record for " + userDetails
             user = new User([email: userDetails.email, userId: userDetails.userId, locked: userDetails.locked, frequency: Frequency.findByName("weekly")])
-            user.save(flush:true, failOnError: true)
+            user.save(flush: true, failOnError: true)
             // new user gets "Blogs and News" weekly by default (opt out)
             def notificationInstance = new Notification()
             notificationInstance.query = Query.findByName(messageSource.getMessage("query.ala.blog.title", null, siteLocale))
@@ -165,7 +165,7 @@ class UserService {
             if (userDetails?.userId && userDetails?.email) {
                 log.debug "User is not in user table - creating new record for " + userDetails
                 user = new User([email: userDetails.email, userId: userDetails.userId, locked: userDetails.locked, frequency: Frequency.findByName("weekly")])
-                user.save(flush:true, failOnError: true)
+                user.save(flush: true, failOnError: true)
             }
         }
 

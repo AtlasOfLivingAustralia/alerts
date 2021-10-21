@@ -18,7 +18,7 @@ class EmailService {
      * @param queryResult
      * @return
      */
-    def retrieveRecordForQuery(query, queryResult){
+    def retrieveRecordForQuery(query, queryResult) {
         //if there's a fire on property, then don't do a diff
         if (queryService.hasAFireProperty(query) && query.recordJsonPath) {
             diffService.getNewRecords(queryResult)
@@ -84,15 +84,15 @@ class EmailService {
         def records = retrieveRecordForQuery(query, queryResult)
         def totalRecords = queryService.fireWhenNotZeroProperty(queryResult)
         [
-            title           : query.name,
-            message         : query.updateMessage,
-            moreInfo        : queryResult.queryUrlUIUsed,
-            listcode        : queryService.isMyAnnotation(query) ? "biocache.view.myannotation.list" : "biocache.view.list",
-            query           : query,
-            stopNotification: grailsApplication.config.security.cas.appServerName + grailsApplication.config.security.cas.contextPath + '/notification/myAlerts',
-            frequency       : frequency,
-            records         : records,
-            totalRecords    : totalRecords >= 0 ? totalRecords : records.size()
+                title           : query.name,
+                message         : query.updateMessage,
+                moreInfo        : queryResult.queryUrlUIUsed,
+                listcode        : queryService.isMyAnnotation(query) ? "biocache.view.myannotation.list" : "biocache.view.list",
+                query           : query,
+                stopNotification: grailsApplication.config.security.cas.appServerName + grailsApplication.config.security.cas.contextPath + '/notification/myAlerts',
+                frequency       : frequency,
+                records         : records,
+                totalRecords    : totalRecords >= 0 ? totalRecords : records.size()
         ]
     }
 
@@ -105,7 +105,7 @@ class EmailService {
 
         Integer totalRecords = queryService.fireWhenNotZeroProperty(queryResult)
         if (grailsApplication.config.getProperty("postie.enableEmail", Boolean, false)) {
-            log.info "Sending group email for ${query.name} to ${recipients.collect{it.email}}"
+            log.info "Sending group email for ${query.name} to ${recipients.collect { it.email }}"
             recipients.each { recipient ->
                 if (!recipient.locked) {
                     sendGroupEmail(query, [recipient.email], queryResult, records, frequency, totalRecords, recipient.userUnsubToken, recipient.notificationUnsubToken)
@@ -125,7 +125,7 @@ class EmailService {
     }
 
     private void sendGroupEmail(Query query, subsetOfAddresses, QueryResult queryResult, records, Frequency frequency, int totalRecords, String userUnsubToken, String notificationUnsubToken) {
-        String urlPrefix = "${grailsApplication.config.security.cas.appServerName}${grailsApplication.config.getProperty('security.cas.contextPath','')}"
+        String urlPrefix = "${grailsApplication.config.security.cas.appServerName}${grailsApplication.config.getProperty('security.cas.contextPath', '')}"
         def localeSubject = messageSource.getMessage("emailservice.update.subject", [query.name] as Object[], siteLocale)
         try {
             sendMail {
@@ -133,21 +133,21 @@ class EmailService {
                 subject query.name
                 bcc subsetOfAddresses
                 body(view: query.emailTemplate,
-                    plugin: "email-confirmation",
-                    model: [title: localeSubject,
-                        message: query.updateMessage,
-                        query: query,
-                        moreInfo: queryResult.queryUrlUIUsed,
-                        listcode: queryService.isMyAnnotation(query) ? "biocache.view.myannotation.list" : "biocache.view.list",
-                        stopNotification: urlPrefix + '/notification/myAlerts',
-                        records: records,
-                        frequency: messageSource.getMessage('frequency.' + frequency, null, siteLocale),
-                        totalRecords: (totalRecords >= 0 ? totalRecords : records.size()),
-                        unsubscribeAll: urlPrefix + "/unsubscribe?token=" + userUnsubToken,
-                        unsubscribeOne: urlPrefix + "/unsubscribe?token=" + notificationUnsubToken
-                    ])
+                        plugin: "email-confirmation",
+                        model: [title           : localeSubject,
+                                message         : query.updateMessage,
+                                query           : query,
+                                moreInfo        : queryResult.queryUrlUIUsed,
+                                listcode        : queryService.isMyAnnotation(query) ? "biocache.view.myannotation.list" : "biocache.view.list",
+                                stopNotification: urlPrefix + '/notification/myAlerts',
+                                records         : records,
+                                frequency       : messageSource.getMessage('frequency.' + frequency, null, siteLocale),
+                                totalRecords    : (totalRecords >= 0 ? totalRecords : records.size()),
+                                unsubscribeAll  : urlPrefix + "/unsubscribe?token=" + userUnsubToken,
+                                unsubscribeOne  : urlPrefix + "/unsubscribe?token=" + notificationUnsubToken
+                        ])
             }
-        } catch(Exception e){
+        } catch (Exception e) {
             log.error("Error sending email to addresses: " + subsetOfAddresses, e)
         }
     }

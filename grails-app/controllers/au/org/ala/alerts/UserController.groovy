@@ -14,6 +14,6 @@ class UserController {
      * method internals are run or not (5 min cache expiry).
      */
     def testCache = {
-       render ([response: userService.testEhCache(params.q)] as JSON)
+        render([response: userService.testEhCache(params.q)] as JSON)
     }
 }

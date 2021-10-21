@@ -14,18 +14,18 @@ class QueryController {
         redirect(action: "list", params: params)
     }
 
-    Map getQueryAndFQ(String str){
+    Map getQueryAndFQ(String str) {
         int startOfQuery = str.indexOf('?')
         def q = ""
         def fq = []
 
-        if(startOfQuery > 0) {
+        if (startOfQuery > 0) {
             String queryPart = str.substring(startOfQuery + 1)
 
             queryPart.split('&').each {
-                if(it.startsWith('q=')){
+                if (it.startsWith('q=')) {
                     q = it.substring(2)
-                } else if(it.startsWith('fq=')){
+                } else if (it.startsWith('fq=')) {
                     fq << it.substring(2)
                 }
             }
@@ -45,21 +45,21 @@ class QueryController {
             def queryPathUIParams = getQueryAndFQ(it.queryPathForUI)
             def qInconsistent = queryPathParams.q != queryPathUIParams.q
             def fqInconsistent = queryPathParams.fq.size() != queryPathUIParams.fq.size()
-            if(!fqInconsistent){
+            if (!fqInconsistent) {
                 queryPathParams.fq.eachWithIndex { param, idx ->
-                    if(queryPathUIParams.fq[idx] != param){
+                    if (queryPathUIParams.fq[idx] != param) {
                         fqInconsistent = true
                     }
                 }
             }
-            if(qInconsistent || fqInconsistent){
+            if (qInconsistent || fqInconsistent) {
                 inconsistentQueries << it
                 results.put(it.id, [qInconsistent: qInconsistent, fqInconsistent: fqInconsistent])
             }
         }
 
         params.max = Math.min(params.max ? params.int('max') : 1000, 10000)
-        [queryInstanceList:inconsistentQueries, queryInstanceTotal: inconsistentQueries.size(), results: results]
+        [queryInstanceList: inconsistentQueries, queryInstanceTotal: inconsistentQueries.size(), results: results]
     }
 
     @AlaSecured(value = 'ROLE_ADMIN', redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to view that page.")
@@ -106,7 +106,7 @@ class QueryController {
         }
 
         [queryInstance: queryInstance]
-}
+    }
 
     @AlaSecured(value = 'ROLE_ADMIN', redirectController = 'admin', redirectAction = 'index', message = "You don't have permission to update that record.")
     def update() {
@@ -149,7 +149,7 @@ class QueryController {
         }
 
         try {
-            if (queryInstance.notifications?.size() == 0){
+            if (queryInstance.notifications?.size() == 0) {
                 queryService.deleteQuery(queryInstance)
                 flash.message = message(code: 'default.deleted.message', args: [message(code: 'query.label', default: 'Query'), params.id])
                 redirect(action: "list")
