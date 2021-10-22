@@ -9,7 +9,7 @@ class QueryService {
 
     def serviceMethod() {}
 
-    def grailsApplication
+    def grailsApplication, notificationService
 
     def messageSource
     def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
@@ -285,7 +285,7 @@ class QueryService {
         new Query([
                 baseUrl       : grailsApplication.config.biocacheService.baseURL,
                 baseUrlForUI  : grailsApplication.config.biocache.baseURL,
-                name          : messageSource.getMessage("query.biosecurity.title", null, siteLocale) + ' for ' + listid,
+                name          : messageSource.getMessage("query.biosecurity.title", null, siteLocale) + ' ' + listid,
                 resourceName  : grailsApplication.config.postie.defaultResourceName,
                 updateMessage : 'more.biosecurity.update.message',
                 description   : messageSource.getMessage("query.biosecurity.descr", null, siteLocale),
@@ -293,7 +293,7 @@ class QueryService {
                 queryPathForUI: '/occurrences/search?q=species_list_uid:' + listid + '&fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc',
                 dateFormat    : """yyyy-MM-dd'T'HH:mm:ss'Z'""",
                 emailTemplate : '/email/biosecurity',
-                recordJsonPath: '\$.occurrences',
+                recordJsonPath: '\$.occurrences[*]',
                 idJsonPath    : 'uuid',
                 custom        : true
         ])
@@ -304,25 +304,31 @@ class QueryService {
         createQueryForUserIfNotExists(query, user, true)
     }
 
-    def unsubscribeBioSecurity(User user, String listid) {
-        Query query = createBioSecurityQuery(listid)
-        if (query) {
-            // delete the notification
-            def notification = Notification.findByQueryAndUser(query, user)
-            if (notification) {
-                notification.delete(flush: true)
-            }
+    // remove all user notifications for the specified query
+    def unsubscribeAllUsers(Long queryId) {
+        def users = getSubscribers(Long.valueOf(queryId))
+        users?.forEach{user -> notificationService.deleteAlertForUser((User)user, queryId)}
+    }
+
+    // delete a query (also remove all subscriptions)
+    def deleteQuery(Long queryId) {
+        unsubscribeAllUsers(queryId)
+        def queryInstance = Query.get(queryId)
+        if (queryInstance) {
+            deleteQuery(queryInstance)
         }
     }
 
+    // get all biosecurity queries
     def getALLBiosecurityQuery() {
         return Query.findAllByEmailTemplate('/email/biosecurity')
     }
 
+    // get all subscribers to the specified query
     def getSubscribers(Long queryId) {
         Query query = Query.findById(queryId)
         return query ? Query.executeQuery(
-                """select u.email
+                """select u
                   from User u
                   inner join u.notifications n
                   where n.query = :query

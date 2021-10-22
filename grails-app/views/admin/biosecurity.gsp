@@ -5,8 +5,8 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <meta name="layout" content="${grailsApplication.config.skin.layout}"/>
-    <meta name="breadcrumb" content="Find users" />
-    <meta name="breadcrumbParent" content="${request.contextPath}/admin,Alerts admin" />
+    <meta name="breadcrumb" content="BioSecurity alerts"/>
+    <meta name="breadcrumbParent" content="${request.contextPath}/admin,Alerts admin"/>
 
     <title>Admin - Manage BioSecurity alerts</title>
     <asset:stylesheet href="alerts.css"/>
@@ -16,8 +16,8 @@
 <div id="content">
     <header id="page-header">
         <div class="inner row">
-            <div class="col-lg-6 col-sm-6 col-xs-12">
-                <h1>Manage BioSecurity alerts</h1>
+            <div class="col-sm-6 col-xs-12">
+                <h1><g:message code="biosecurity.view.header" default="Manage BioSecurity alerts"/></h1>
             </div>
         </div>
         <g:if test="${flash.message}">
@@ -29,48 +29,53 @@
         </g:if>
     </header>
 
-    <div id="page-body" role="main">
-        <g:form name="create-security-alert" action="subscribeBioSecurityAlert" method="post" class="form-horizontal">
+    <div id="page-body" class="col-sm-12">
+        <g:form name="create-security-alert" action="subscribeBioSecurity" method="post" class="form-horizontal">
             <div class="row">
                 <div class="col-lg-6 col-sm-6 col-xs-12">
                     <div class="form-group">
-                        <label for="listid" class="control-label">Species list uid</label>
-                        <input type="text" id= "listid" name="listid" class="form-control"/>
+                        <label for="listid" class="control-label"><g:message code="biosecurity.view.body.label.specieslistid" default="Species list uid"/></label>
+                        <input type="text" id="listid" name="listid" class="form-control"/>
                     </div>
+
                     <div class="form-group">
-                        <label for="useremail" class="control-label">User email</label>
-                        <input type="text" id= "useremail" name="useremail" class="form-control"/>
+                        <label for="useremail" class="control-label"><g:message code="biosecurity.view.body.label.useremail" default="User email"/></label>
+                        <input type="text" id="useremail" name="useremail" class="form-control"/>
                     </div>
                 </div>
             </div>
+
             <div class="form-group">
-                <button type="submit" form="create-security-alert" class="btn btn-primary">Subscribe alert</button>
+                <button type="submit" form="create-security-alert" class="btn btn-primary"><g:message code="biosecurity.view.body.button.subscribe" default="Subscribe alert"/></button>
             </div>
         </g:form>
         <g:if test="${queries}">
-            <div class="row">
-                <div class="col-md-12">
-                    <table class="table table-striped">
-                        <thead>
-                        <th>Query name</th>
-                        <th>Number of subscribers</th>
+            <div>
+                <table class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th><g:message code="biosecurity.view.body.table.header.queryname" default="Query name"/></th>
+                        <th><g:message code="biosecurity.view.body.table.header.subnumber" default="Number of subscribers"/></th>
                         <th></th>
-                        </thead>
-                        <tbody>
-                        <g:each status="i" in="${queries}" var="query">
-                            <tr>
-                                <td>${query.name}</td>
-                                <td>${subscribers[i].size()}</td>
-                                <td><a href="">unsubscribe all users</a></td>
-                            </tr>
-                        </g:each>
-                        </tbody>
-                    </table>
-                </div>
+                        <th></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <g:each status="i" in="${queries}" var="query">
+                        <tr>
+                            <td>${query.name}</td>
+                            <td>${subscribers[i].size()}</td>
+                            <td><a href="${request.contextPath}/admin/deleteQuery?queryid=${query.id}"><g:message code="biosecurity.view.body.table.deletequery" default="delete the query"/></a>
+                            </td>
+                            <td><a href="${request.contextPath}/admin/unsubscribeAllUsers?queryid=${query.id}"><g:message code="biosecurity.view.body.table.unsubscribeall" default="unsubscribe all users"/></a>
+                            </td>
+                        </tr>
+                    </g:each>
+                    </tbody>
+                </table>
             </div>
         </g:if>
     </div>
 </div>
-<asset:javascript src="alerts.js"/>
 </body>
 </html>

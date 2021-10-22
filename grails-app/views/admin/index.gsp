@@ -33,7 +33,6 @@
             Each query type with counts for users</g:link></li>
         <li class="controller"><a href="${request.contextPath}/admin/user">Manage alerts for users (find user)</a></li>
         <li class="controller"><a href="${request.contextPath}/admin/biosecurity">manage BioSecurity alerts</a></li>
-%{--        <li><g:link controller="admin" action="createBioSecurityAlert">Create a BioSecurity alert</g:link></li>--}%
         <li><g:link controller="admin" action="sendTestEmail">Send test email to yourself (tests server can send emails)</g:link></li>
         <plugin:isAvailable name="alaAdminPlugin">
             <li style="margin-top:1em;"><g:link controller="alaAdmin" action="index">ALA admin plugin page (system message, app config functions, build info)</g:link>
