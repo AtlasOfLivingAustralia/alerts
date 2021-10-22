@@ -15,6 +15,7 @@ package au.org.ala.alerts
 
 import au.org.ala.web.AlaSecured
 import groovy.json.JsonSlurper
+import org.apache.http.HttpStatus
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.impl.client.DefaultHttpClient
 
@@ -301,11 +302,35 @@ class AdminController {
         redirect(action: 'index')
     }
 
-    def createBioSecurityAlert() {
-        List users = []
-        if (params.term) {
-            users = userService.findUsers(params.term)
+    def biosecurity() {
+//        List users = []
+//        if (params.term) {
+//            users = userService.findUsers(params.term)
+//        }
+        List queries = queryService.getALLBiosecurityQuery()
+        List subscribers = queries.collect {queryService.getSubscribers(it.id)}
+        render view: "/admin/biosecurity", model: [queries: queries, subscribers: subscribers]
+    }
+
+    def subscribeBioSecurityAlert() {
+        User user = userService.getUserByEmail(params.useremail)
+        if (user == null) {
+            response.status = HttpStatus.SC_NOT_FOUND
+            flash.message = "Can't find user with email " + params.useremail
+        } else {
+            queryService.subscribeBioSecurity(user, params.listid)
         }
-        render view: "/admin/biosecurity", model: [users: users]
+        redirect(controller: "admin", action: "biosecurity")
+    }
+
+    def unsubscribeBioSecurityAlert() {
+        User user = userService.getUserByEmail(params.useremail)
+        if (user == null) {
+            response.status = HttpStatus.SC_NOT_FOUND
+            flash.message = "Can't find user with email " + params.useremail
+        } else {
+            queryService.unsubscribeBioSecurity(user, params.listid)
+        }
+        redirect(controller: "admin", action: "biosecurity")
     }
 }

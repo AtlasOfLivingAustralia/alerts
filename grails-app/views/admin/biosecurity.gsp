@@ -8,7 +8,7 @@
     <meta name="breadcrumb" content="Find users" />
     <meta name="breadcrumbParent" content="${request.contextPath}/admin,Alerts admin" />
 
-    <title>Admin - creat BioSecurity alert</title>
+    <title>Admin - Manage BioSecurity alerts</title>
     <asset:stylesheet href="alerts.css"/>
 </head>
 
@@ -17,66 +17,58 @@
     <header id="page-header">
         <div class="inner row">
             <div class="col-lg-6 col-sm-6 col-xs-12">
-                <h1>Create BioSecurity alert</h1>
+                <h1>Manage BioSecurity alerts</h1>
             </div>
         </div>
+        <g:if test="${flash.message}">
+            <div id="errorAlert" class="alert alert-danger alert-dismissible alert-dismissable" role="alert">
+                <button type="button" class="close" onclick="$(this).parent().hide()" aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
+                <h4>${flash.message}></h4>
+            </div>
+        </g:if>
     </header>
 
     <div id="page-body" role="main">
-        <g:form name="create-security-alert" controller="webservice" action="subscribeBioSecurityAlert" method="post" class="form-horizontal">
+        <g:form name="create-security-alert" action="subscribeBioSecurityAlert" method="post" class="form-horizontal">
             <div class="row">
                 <div class="col-lg-6 col-sm-6 col-xs-12">
-                    <label for="listid" class="control-label">Species list uid:</label>
-                    <div class="input-group">
-
-    %{--                    <g:input-g--}%
-                        <input type="text" id= "listid" name="listid"/>
+                    <div class="form-group">
+                        <label for="listid" class="control-label">Species list uid</label>
+                        <input type="text" id= "listid" name="listid" class="form-control"/>
                     </div>
-                    <label for="useremail" class="control-label">Email contains:</label>
-                    <div class="input-group">
-                        <input type="text" id= "useremail" name="useremail"/>
-
-%{--                        <g:textField name="term" value="${params.term}" class="form-control" placeholder="Search for..."/>--}%
-                        %{--<input type="text" class="form-control" placeholder="Search for...">--}%
-                    </div><!-- /input-group -->
-                </div><!-- /.col-lg-6 -->
-            </div><!-- /.row -->
-
-            <div>
-            <span class="input-group-btn">
-%{--                <g:actionSubmit value="Find" class="btn btn-primary" action="createBioSecurityAlert"/>--}%
-                <button type="submit" form="create-security-alert" class="btn btn-primary">Save changes</button>
-                %{--<button class="btn btn-default" type="button">Go!</button>--}%
-            </span>
+                    <div class="form-group">
+                        <label for="useremail" class="control-label">User email</label>
+                        <input type="text" id= "useremail" name="useremail" class="form-control"/>
+                    </div>
+                </div>
             </div>
-
+            <div class="form-group">
+                <button type="submit" form="create-security-alert" class="btn btn-primary">Subscribe alert</button>
+            </div>
         </g:form>
-        <div class="row">
-            <div class="col-md-12">
-                <g:if test="${users}">
+        <g:if test="${queries}">
+            <div class="row">
+                <div class="col-md-12">
                     <table class="table table-striped">
                         <thead>
-                        <th>User Id</th>
-                        <th>Email</th>
+                        <th>Query name</th>
+                        <th>Number of subscribers</th>
                         <th></th>
                         </thead>
                         <tbody>
-                        <g:each in="${users}" var="user">
+                        <g:each status="i" in="${queries}" var="query">
                             <tr>
-                                <td>${user.userId}</td>
-                                <td>${user.email}</td>
-                                <td><a href="${request.contextPath}/admin/user/${user.userId}">Manage alerts</a></td>
+                                <td>${query.name}</td>
+                                <td>${subscribers[i].size()}</td>
+                                <td><a href="">unsubscribe all users</a></td>
                             </tr>
                         </g:each>
                         </tbody>
                     </table>
-                </g:if>
-                <g:elseif test="${params.term}">
-                    <div style="margin-top:15px;">No users found for &quot;${params.term}&quot;</div>
-                </g:elseif>
-            </div><!-- /.col-md-12 -->
-        </div><!-- /.row -->
-
+                </div>
+            </div>
+        </g:if>
     </div>
 </div>
 <asset:javascript src="alerts.js"/>

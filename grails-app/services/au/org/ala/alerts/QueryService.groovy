@@ -277,12 +277,9 @@ class QueryService {
         ])
     }
 
-  String constructMyAnnotationQueryPath(String userId) {
-    '/occurrences/search?fq=assertion_user_id:' + userId + '&dir=desc&pageSize=300'
-  }
-
-//  title = messageSource.getMessage("query.biosecurity.title", null, siteLocale)
-//  descr = messageSource.getMessage("query.biosecurity.descr", null, siteLocale)
+    String constructMyAnnotationQueryPath(String userId) {
+        '/occurrences/search?fq=assertion_user_id:' + userId + '&dir=desc&pageSize=300'
+    }
 
     Query createBioSecurityQuery(String listid) {
         new Query([
@@ -316,5 +313,19 @@ class QueryService {
                 notification.delete(flush: true)
             }
         }
+    }
+
+    def getALLBiosecurityQuery() {
+        return Query.findAllByEmailTemplate('/email/biosecurity')
+    }
+
+    def getSubscribers(Long queryId) {
+        Query query = Query.findById(queryId)
+        return query ? Query.executeQuery(
+                """select u.email
+                  from User u
+                  inner join u.notifications n
+                  where n.query = :query
+                  group by u""", [query: query]) : []
     }
 }
