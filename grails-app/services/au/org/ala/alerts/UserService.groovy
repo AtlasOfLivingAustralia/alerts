@@ -172,11 +172,11 @@ class UserService {
         user
     }
 
-    User getUserById(userId) {
+    User getUserById(String userId) {
         User.findByUserId(userId)
     }
 
-    User getUserByEmail(userEmail) {
+    User getUserByEmail(String userEmail) {
         User.findByEmail(userEmail)
     }
 
