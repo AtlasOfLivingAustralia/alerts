@@ -172,8 +172,12 @@ class UserService {
         user
     }
 
-    User getUserById(userId) {
+    User getUserById(String userId) {
         User.findByUserId(userId)
+    }
+
+    User getUserByEmail(String userEmail) {
+        User.findByEmail(userEmail)
     }
 
     List<User> findUsers(String term) {

@@ -300,4 +300,32 @@ class AdminController {
         flash.message = "Updated ${count} user entries with new unsubscribeToken value (was NULL)."
         redirect(action: 'index')
     }
+
+    def biosecurity() {
+        List queries = queryService.getALLBiosecurityQuery()
+        List subscribers = queries.collect {queryService.getSubscribers(it.id)}
+        render view: "/admin/biosecurity", model: [queries: queries, subscribers: subscribers]
+    }
+
+    def subscribeBioSecurity() {
+        User user = userService.getUserByEmail(params.useremail)
+        if (user == null || !params.listid) {
+            flash.message = ""
+            if (user == null) flash.message += "Can't find user with email " + params.useremail
+            if (!params.listid) flash.message += "\nSpecies list uid " + params.listid + ' is invalid'
+        } else {
+            queryService.subscribeBioSecurity(user, params.listid)
+        }
+        redirect(controller: "admin", action: "biosecurity")
+    }
+
+    def unsubscribeAllUsers() {
+        queryService.unsubscribeAllUsers(Long.valueOf(params.queryid))
+        redirect(controller: "admin", action: "biosecurity")
+    }
+
+    def deleteQuery() {
+        queryService.deleteQuery(Long.valueOf(params.queryid))
+        redirect(controller: "admin", action: "biosecurity")
+    }
 }
