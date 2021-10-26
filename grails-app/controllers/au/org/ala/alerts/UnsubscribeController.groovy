@@ -17,11 +17,11 @@ class UnsubscribeController {
 
         if (!userAndNotifications?.user) {
             response.status = HttpStatus.SC_BAD_REQUEST
-            flash.message = "Can't find user with supplied token. The user may already been unsubscribed."
+            flash.message = message(code: 'email.unsubscribe.fail.alreadyunsubscribed', default: 'Unable to unsubscribe. You may have already unsubscribed.')
             render view: '../error'
         } else if (loggedInUser && userAndNotifications.user.userId != loggedInUser.userId) {
             response.status = HttpStatus.SC_FORBIDDEN
-            flash.message = "You are not authorized to unsubscribe. Please make sure the account you logged in is the same as the one you want to unsubscribe."
+            flash.message = message(code: 'email.unsubscribe.fail.notauthorized', default:  'Unable to unsubscribe. Please make sure you are logged into the account you want to unsubscribe.')
             render view: '../error'
         } else {
             render view: "/unsubscribe/index", model: userAndNotifications
