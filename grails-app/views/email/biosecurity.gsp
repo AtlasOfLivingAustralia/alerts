@@ -110,8 +110,8 @@
     </g:if>
     <tr><td><h4>Please check with the relevant team before forwarding this email outside of the department.</h4></td></tr>
     <tr><td>This email has been generated as part of ALA's national biosecurity alert system. To find out more about this program click <a
-            href="http://www.google.com">here</a></td></tr>
-    <tr><td><g:render template="/email/unsubscribe"><p><a href="http://www.google.com">manage your alerts</a></p></g:render></td></tr>
+            href="${grailsApplication.config.biosecurity.moreinfo.link}">here</a></td></tr>
+    <tr><td><g:render template="/email/unsubscribe"/></td></tr>
     <tr><td>
         <h4>The ALA is made possible by contributions from its partners, is supported by <a href="https://www.education.gov.au/national-collaborative-research-infrastructure-strategy-ncris">NCRIS</a>, is hosted by <a href="https://csiro.au/">CSIRO</a>, and is the Australian node of <a href="https://www.gbif.org/en/">GBIF</a>.</h4>
         <p>
