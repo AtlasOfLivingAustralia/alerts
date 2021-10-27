@@ -150,55 +150,6 @@ class UnsubscribeControllerSpec extends Specification {
         controller.modelAndView.model.notifications[0].query.name == "query1"
     }
 
-    def "index() should return HTTP 403 (FORBIDDEN) if there is a logged in user but the token belongs to a different user (user level token)"() {
-        setup:
-        User user1 = new User(userId: "user1", email: "fred@bla.com")
-        user1.save(failOnError: true, flush: true)
-
-        User user2 = new User(userId: "user2", email: "fred@bla.com")
-        user2.save(failOnError: true, flush: true)
-
-        controller.userService.getUser() >> user1
-
-        when: "the logged in user is user1 but the token belongs to user2"
-        params.token = user2.unsubscribeToken
-        controller.index()
-
-        then:
-        response.status == HttpStatus.SC_FORBIDDEN
-    }
-
-    def "index() should return HTTP 403 (FORBIDDEN) if there is a logged in user but the token belongs to a different user (notification level token)"() {
-        setup:
-        Query query1 = newQuery("query1")
-        Query query2 = newQuery("query2")
-        User user1 = new User(userId: "user1", email: "fred@bla.com")
-        user1.save(failOnError: true, flush: true)
-        Notification notification1 = new Notification(user: user1, query: query1)
-        notification1.save(failOnError: true, flush: true)
-        Notification notification2 = new Notification(user: user1, query: query2)
-        notification2.save(failOnError: true, flush: true)
-        user1.addToNotifications(notification1)
-        user1.addToNotifications(notification2)
-        user1.save(failOnError: true, flush: true)
-
-        User user2 = new User(userId: "user2", email: "fred@bla.com")
-        user2.save(failOnError: true, flush: true)
-        Notification notification3 = new Notification(user: user2, query: query1)
-        notification3.save(failOnError: true, flush: true)
-        user2.addToNotifications(notification3)
-        user2.save(failOnError: true, flush: true)
-
-        controller.userService.getUser() >> user1
-
-        when: "the logged in user is user1 but the token belongs to user2"
-        params.token = notification3.unsubscribeToken
-        controller.index()
-
-        then:
-        response.status == HttpStatus.SC_FORBIDDEN
-    }
-
     def "unsubscribe() should return a HTTP 400 (BAD_REQUEST) if there is no logged in user and no token"() {
         setup:
         controller.userService.getUser() >> null
@@ -373,57 +324,6 @@ class UnsubscribeControllerSpec extends Specification {
         User.count() == 1
         User.findByUserId("user1").notifications.size() == 1
         Notification.count() == 1
-    }
-
-    def "unsubscribe() should return HTTP 403 (FORBIDDEN) if there is a logged in user but the token belongs to a different user (user level token)"() {
-        setup:
-        User user1 = new User(userId: "user1", email: "fred@bla.com")
-        user1.save(failOnError: true, flush: true)
-
-        User user2 = new User(userId: "user2", email: "fred@bla.com")
-        user2.save(failOnError: true, flush: true)
-
-        controller.userService.getUser() >> user1
-
-        when: "the logged in user is user1 but the token belongs to user2"
-        params.token = user2.unsubscribeToken
-        request.method = 'POST'
-        controller.unsubscribe()
-
-        then:
-        response.status == HttpStatus.SC_FORBIDDEN
-    }
-
-    def "unsubscribe() should return HTTP 403 (FORBIDDEN) if there is a logged in user but the token belongs to a different user (notification level token)"() {
-        setup:
-        Query query1 = newQuery("query1")
-        Query query2 = newQuery("query2")
-        User user1 = new User(userId: "user1", email: "fred@bla.com")
-        user1.save(failOnError: true, flush: true)
-        Notification notification1 = new Notification(user: user1, query: query1)
-        notification1.save(failOnError: true, flush: true)
-        Notification notification2 = new Notification(user: user1, query: query2)
-        notification2.save(failOnError: true, flush: true)
-        user1.addToNotifications(notification1)
-        user1.addToNotifications(notification2)
-        user1.save(failOnError: true, flush: true)
-
-        User user2 = new User(userId: "user2", email: "fred@bla.com")
-        user2.save(failOnError: true, flush: true)
-        Notification notification3 = new Notification(user: user2, query: query1)
-        notification3.save(failOnError: true, flush: true)
-        user2.addToNotifications(notification3)
-        user2.save(failOnError: true, flush: true)
-
-        controller.userService.getUser() >> user1
-
-        when: "the logged in user is user1 but the token belongs to user2"
-        params.token = notification3.unsubscribeToken
-        request.method = 'POST'
-        controller.unsubscribe()
-
-        then:
-        response.status == HttpStatus.SC_FORBIDDEN
     }
 
     private Query newQuery(String name) {
