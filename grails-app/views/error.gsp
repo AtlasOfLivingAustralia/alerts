@@ -33,10 +33,13 @@
 											  grailsApplication.config.skin.orgSupportEmail]" /></div>
 
   	<div class="message">
-		<strong><g:message code="error.status.code" args="[request.'javax.servlet.error.status_code']" />:</strong> ${request.'javax.servlet.error.message'.encodeAsHTML()}<br/>
-		<strong><g:message code="error.servlet" default="Servlet"/>:</strong> ${request.'javax.servlet.error.servlet_name'}<br/>
-		<strong><g:message code="error.URI" default="URI"/>:</strong> ${request.'javax.servlet.error.request_uri'}<br/>
+		<g:if test="${flash.message}">
+			<Strong><g:message code="error.message" default="Error Message"/>:</Strong> ${flash.message}<br/>
+		</g:if>
 		<g:if test="${exception}">
+			<strong><g:message code="error.status.code" args="[request.'javax.servlet.error.status_code']" />:</strong> ${request.'javax.servlet.error.message'.encodeAsHTML()}<br/>
+			<strong><g:message code="error.servlet" default="Servlet"/>:</strong> ${request.'javax.servlet.error.servlet_name'}<br/>
+			<strong><g:message code="error.URI" default="URI"/>:</strong> ${request.'javax.servlet.error.request_uri'}<br/>
 	  		<strong><g:message code="error.exception.message" default="Exception Message"/>:</strong> ${exception.message?.encodeAsHTML()} <br />
 	  		<strong><g:message code="error.exception.caused.by" default="Caused by"/>:</strong> ${exception.cause?.message?.encodeAsHTML()} <br />
 	  		<strong><g:message code="error.exception.class" default="Class" />:</strong> ${exception.className} <br />
@@ -47,9 +50,6 @@
 	  				${cs?.encodeAsHTML()}<br />
 	  			</g:each>
 	  		</div>
-		</g:if>
-		<g:if test="${flash.message}">
-			<Strong><g:message code="error.message" default="Error Message"/>:</Strong> ${flash.message}<br/>
 		</g:if>
   	</div>
 	<g:if test="${exception}">
