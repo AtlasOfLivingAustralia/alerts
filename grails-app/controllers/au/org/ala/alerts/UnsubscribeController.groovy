@@ -11,17 +11,11 @@ class UnsubscribeController {
     QueryService queryService
 
     def index() {
-        User loggedInUser = userService.getUser()
-
         Map userAndNotifications = findUserAndNotificationsForToken(params.token)
 
         if (!userAndNotifications?.user) {
             response.status = HttpStatus.SC_BAD_REQUEST
             flash.message = message(code: 'email.unsubscribe.fail.alreadyunsubscribed', default: 'Unable to unsubscribe. You may have already unsubscribed.')
-            render view: '../error'
-        } else if (loggedInUser && userAndNotifications.user.userId != loggedInUser.userId) {
-            response.status = HttpStatus.SC_FORBIDDEN
-            flash.message = message(code: 'email.unsubscribe.fail.notauthorized', default:  'Unable to unsubscribe. Please make sure you are logged into the account you want to unsubscribe.')
             render view: '../error'
         } else {
             render view: "/unsubscribe/index", model: userAndNotifications
@@ -29,16 +23,12 @@ class UnsubscribeController {
     }
 
     def unsubscribe() {
-        User loggedInUser = userService.getUser()
-
         Map userAndNotifications = findUserAndNotificationsForToken(params.token)
 
         if (!userAndNotifications?.user) {
             response.status = HttpStatus.SC_BAD_REQUEST
-            response.sendError(HttpStatus.SC_BAD_REQUEST)
-        } else if (loggedInUser && userAndNotifications.user.userId != loggedInUser.userId) {
-            response.status = HttpStatus.SC_FORBIDDEN
-            response.sendError(HttpStatus.SC_FORBIDDEN)
+            flash.message = message(code: 'email.unsubscribe.fail.alreadyunsubscribed', default: 'Unable to unsubscribe. You may have already unsubscribed.')
+            render view: '../error'
         } else {
             if (userAndNotifications.notifications) {
                 // delete notifications and update user
