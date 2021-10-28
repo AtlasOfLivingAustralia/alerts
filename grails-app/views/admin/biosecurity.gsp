@@ -24,7 +24,7 @@
             <div id="errorAlert" class="alert alert-danger alert-dismissible alert-dismissable" role="alert">
                 <button type="button" class="close" onclick="$(this).parent().hide()" aria-label="Close"><span
                         aria-hidden="true">&times;</span></button>
-                <h4>${flash.message}></h4>
+                <h4>${flash.message}</h4>
             </div>
         </g:if>
     </header>

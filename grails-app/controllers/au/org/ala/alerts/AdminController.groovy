@@ -309,10 +309,10 @@ class AdminController {
 
     def subscribeBioSecurity() {
         User user = userService.getUserByEmail(params.useremail)
-        if (user == null || !params.listid) {
-            flash.message = ""
-            if (user == null) flash.message += "Can't find user with email " + params.useremail
-            if (!params.listid) flash.message += "\nSpecies list uid " + params.listid + ' is invalid'
+        if (user == null) {
+            flash.message = "Can't find user with email " + params.useremail
+        } else if(!params.listid) {
+            flash.message = "Species list uid " + params.listid + ' is invalid'
         } else {
             queryService.subscribeBioSecurity(user, params.listid)
         }
