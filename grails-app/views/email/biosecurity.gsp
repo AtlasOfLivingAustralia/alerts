@@ -47,7 +47,7 @@
                   <td>${oc.year}-${oc.month}</td>
                 </g:elseif>
                 <g:else>
-                  <td>${oc.year}</td>
+                  <td><g:message code="email.biosecurity.label.year" default="Year"/>: ${oc.year}</td>
                 </g:else>
               </g:elseif>
               <g:else>
