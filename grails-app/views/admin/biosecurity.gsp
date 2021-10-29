@@ -39,8 +39,8 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="useremail" class="control-label"><g:message code="biosecurity.view.body.label.useremail" default="User email"/></label>
-                        <input type="text" id="useremail" name="useremail" class="form-control"/>
+                        <label for="useremails" class="control-label"><g:message code="biosecurity.view.body.label.useremails" default="User emails"/></label>
+                        <input type="text" id="useremails" name="useremails" class="form-control" placeholder="<g:message code="biosecurity.view.body.label.useremailsallowmultiple" default="You can input multiple user emails by separating them with ';'"/>"/>
                     </div>
                 </div>
             </div>
