@@ -1,14 +1,17 @@
 package au.org.ala.alerts
 
-import au.org.ala.alerts.Query
 import au.org.ala.web.AlaSecured
+import grails.util.Holders
 import org.springframework.dao.DataIntegrityViolationException
 
 class QueryController {
 
     static allowedMethods = [save: "POST", update: "POST", update: "PUT", delete: "POST"]
-    def authService
     def queryService
+    def userService
+    def notificationService
+    def messageSource
+    def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
 
     def index() {
         redirect(action: "list", params: params)
@@ -162,5 +165,26 @@ class QueryController {
             flash.message = message(code: 'default.not.deleted.message', args: [message(code: 'query.label', default: 'Query'), params.id])
             redirect(action: "show", id: params.id)
         }
+    }
+
+    def subscribers() {
+        def queryid = Long.valueOf(params.queryid)
+        render view: "subscribers", model: [users: queryService.getSubscribers(queryid), queryid: queryid]
+    }
+
+    def unsubscribeAlert() {
+        if (!params.useremail || params.useremail.allWhitespace) {
+            flash.message = messageSource.getMessage("unsubscribeusers.controller.error.emptyemail", null, "User email can't be empty.", siteLocale)
+        } else if (!params.queryid || params.queryid.allWhitespace) {
+            flash.message = messageSource.getMessage("unsubscribeusers.controller.error.emptyqueryid", null, "Query Id can't be empty.", siteLocale)
+        } else {
+            User user = userService.getUserByEmail(params.useremail);
+            if (user) {
+                notificationService.deleteAlertForUser(user, Long.valueOf(params.queryid))
+            } else {
+                flash.message = messageSource.getMessage('unsubscribeusers.controller.error.emailnotfound', [params.useremail] as Object[], "User with email: {0} are not found in the system.", siteLocale)
+            }
+        }
+        redirect(action: "subscribers", params: [queryid: params.queryid])
     }
 }

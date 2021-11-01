@@ -198,6 +198,10 @@ class UserService {
         User.findByUserId(userId)
     }
 
+    User getUserByEmail(String userEmail) {
+        User.findByEmail(userEmail)
+    }
+
     List<User> findUsers(String term) {
         User.findAllByEmailIlike("%${term}%")
     }
