@@ -161,23 +161,41 @@ class UserService {
         User user = User.findByUserId(userId)
         // if not in database try to create it
         if (user == null) {
-            UserDetails userDetails = authService.getUserForUserId(userId)
-            if (userDetails?.userId && userDetails?.email) {
-                log.debug "User is not in user table - creating new record for " + userDetails
-                user = new User([email: userDetails.email, userId: userDetails.userId, locked: userDetails.locked, frequency: Frequency.findByName("weekly")])
-                user.save(flush: true, failOnError: true)
-            }
+            user = createUser(userId)
         }
 
         user
     }
 
-    User getUserById(String userId) {
-        User.findByUserId(userId)
+    // get user via email, if not found in database create one
+    User getUserByEmailOrCreate(String userEmail) {
+        if (!userEmail) {
+            return null
+        }
+
+        // try to find in User database
+        User user = User.findByEmail(userEmail)
+        // if not in database try to create it
+        if (user == null) {
+            user = createUser(userEmail)
+        }
+
+        user
     }
 
-    User getUserByEmail(String userEmail) {
-        User.findByEmail(userEmail)
+    User createUser(String userId) {
+        User user = null
+        UserDetails userDetails = authService.getUserForUserId(userId)
+        if (userDetails?.userId && userDetails?.email) {
+            log.debug "User is not in user table - creating new record for " + userDetails
+            user = new User([email: userDetails.email, userId: userDetails.userId, locked: userDetails.locked, frequency: Frequency.findByName("weekly")])
+            user.save(flush: true, failOnError: true)
+        }
+        user
+    }
+
+    User getUserById(String userId) {
+        User.findByUserId(userId)
     }
 
     List<User> findUsers(String term) {

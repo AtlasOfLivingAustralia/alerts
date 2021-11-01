@@ -317,7 +317,7 @@ class AdminController {
             flash.message = messageSource.getMessage("biosecurity.view.error.emptyemails", null, "User emails can't be empty.", siteLocale)
         } else {
             String[] emails = ((String)params.useremails).split(';')
-            Map usermap = emails?.collectEntries{[it.trim(), userService.getUserByEmail(it.trim())]}
+            Map usermap = emails?.collectEntries{[it.trim(), userService.getUserByEmailOrCreate(it.trim())]}
             def invalidEmails = []
             usermap.each {entry ->
                 if (entry.value == null) {
