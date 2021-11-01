@@ -288,7 +288,7 @@ class QueryService {
                 name          : messageSource.getMessage("query.biosecurity.title", null, siteLocale) + ' ' + listid,
                 resourceName  : grailsApplication.config.postie.defaultResourceName,
                 updateMessage : 'more.biosecurity.update.message',
-                description   : messageSource.getMessage("query.biosecurity.descr", null, siteLocale),
+                description   : messageSource.getMessage("query.biosecurity.descr", null, siteLocale) + ' ' + listid,
                 queryPath     : '/occurrences/search?q=species_list_uid:' + listid + '&fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc&pageSize=20&facets=basis_of_record',
                 queryPathForUI: '/occurrences/search?q=species_list_uid:' + listid + '&fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc',
                 dateFormat    : """yyyy-MM-dd'T'HH:mm:ss'Z'""",
