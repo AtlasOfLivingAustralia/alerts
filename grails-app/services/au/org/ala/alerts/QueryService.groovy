@@ -282,6 +282,9 @@ class QueryService {
     }
 
     Query createBioSecurityQuery(String listid) {
+        String queryPathForUITemplate = grailsApplication.config.getProperty("biosecurity.queryurl.template", String, "/occurrences/search?q=species_list_uid:___LISTIDPARAM___&fq=decade:2020 and country:Australia&fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc")
+        String queryPathForUI = queryPathForUITemplate.replaceAll("___LISTIDPARAM___", listid)
+
         new Query([
                 baseUrl       : grailsApplication.config.biocacheService.baseURL,
                 baseUrlForUI  : grailsApplication.config.biocache.baseURL,
@@ -289,8 +292,8 @@ class QueryService {
                 resourceName  : grailsApplication.config.postie.defaultResourceName,
                 updateMessage : 'more.biosecurity.update.message',
                 description   : messageSource.getMessage("query.biosecurity.descr", null, siteLocale) + ' ' + listid,
-                queryPath     : '/occurrences/search?q=species_list_uid:' + listid + '&fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc&pageSize=20&facets=basis_of_record',
-                queryPathForUI: '/occurrences/search?q=species_list_uid:' + listid + '&fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc',
+                queryPath     : queryPathForUI + '&pageSize=20&facets=basis_of_record',
+                queryPathForUI: queryPathForUI,
                 dateFormat    : """yyyy-MM-dd'T'HH:mm:ss'Z'""",
                 emailTemplate : '/email/biosecurity',
                 recordJsonPath: '\$.occurrences[*]',
