@@ -6,7 +6,7 @@
     body { font-family:Arial,serif; }
     table.container { width: 640px; border-collapse: collapse;}
     table.container td { padding:5px; }
-    table.content { border-collapse: collapse; border: 1px solid #CCC; padding:2px; }
+    table.content { border-collapse: collapse; padding:2px; }
     table.content td { border: 1px solid #CCC; padding:4px; }
     table.content img { max-width:140px; max-height:160px; }
     td.imageCol { padding:0; margin:0; }
@@ -102,7 +102,7 @@
               </tr>
             </g:if>
 
-            <tr><td colspan="2"><br/></td></tr>
+            <tr><td colspan="2" style="border-left-style:hidden;border-right-style:hidden;"><br/></td></tr>
           </g:each>
           </tbody>
         </table>
