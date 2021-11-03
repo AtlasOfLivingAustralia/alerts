@@ -27,9 +27,7 @@
         <table class="content">
           <tbody>
           <g:each in="${records}" var="oc">
-            <g:if test="${oc.scientificName}">
-              <tr><td><g:message code="email.biosecurity.label.scientificname" default="Scientific name"/></td><td>${oc.scientificName}</td></tr>
-            </g:if>
+            <tr><td><g:message code="email.biosecurity.label.scientificname" default="Scientific name"/></td><td>${oc.scientificName ?:"N/A"}</td></tr>
 
             <g:if test="${oc.vernacularName}">
               <tr><td><g:message code="email.biosecurity.label.vernacularname" default="Vernacular name"/></td><td>${oc.vernacularName}</td></tr>
