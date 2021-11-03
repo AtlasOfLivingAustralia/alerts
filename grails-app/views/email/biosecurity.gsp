@@ -16,7 +16,7 @@
   <table class="container">
     <tr><td><div style="padding:10px">
       <a href="http://www.ala.org.au/" title="visit the ALA website"><asset:image
-              src="biosecurity-email-header.png" alt="ALA logo" absolute="true" width="650"/></a>
+              src="biosecurity-email-header.png" alt="ALA logo" absolute="true" width="640" height="107"/></a>
     </div>
     </td></tr>
     <tr><td><h3><g:message code="alert.title" args="[grailsApplication.config.skin.orgNameLong]"/></h3></td></tr>
