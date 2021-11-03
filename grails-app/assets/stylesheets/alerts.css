@@ -58,3 +58,7 @@ a.btn-ala {
 #admin-functions li {
     margin: 5px 0;
 }
+
+.biosecurityTableColumn {
+    width: 20%;
+}

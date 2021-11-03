@@ -54,10 +54,11 @@
                 <table class="table table-striped">
                     <thead>
                     <tr>
-                        <th><g:message code="biosecurity.view.body.table.header.queryname" default="Query name"/></th>
-                        <th><g:message code="biosecurity.view.body.table.header.subnumber" default="Number of subscribers"/></th>
-                        <th></th>
-                        <th></th>
+                        <th class="biosecurityTableColumn"><g:message code="biosecurity.view.body.table.header.queryname" default="Query name"/></th>
+                        <th class="biosecurityTableColumn"><g:message code="biosecurity.view.body.table.header.subnumber" default="Number of subscribers"/></th>
+                        <th class="biosecurityTableColumn"></th>
+                        <th class="biosecurityTableColumn"></th>
+                        <th class="biosecurityTableColumn"></th>
                     </tr>
                     </thead>
                     <tbody>
@@ -65,6 +66,8 @@
                         <tr>
                             <td>${query.name}</td>
                             <td>${subscribers[i].size()}</td>
+                            <td>
+                            <g:if test="${subscribers[i].size() != 0}"><a href="${request.contextPath}/query/subscribers?queryid=${query.id}">View all subscribers</a></td></g:if>
                             <td><a href="${request.contextPath}/admin/deleteQuery?queryid=${query.id}"><g:message code="biosecurity.view.body.table.deletequery" default="delete the query"/></a>
                             </td>
                             <td><a href="${request.contextPath}/admin/unsubscribeAllUsers?queryid=${query.id}"><g:message code="biosecurity.view.body.table.unsubscribeall" default="unsubscribe all users"/></a>

@@ -6,7 +6,7 @@
     body { font-family:Arial,serif; }
     table.container { width: 640px; border-collapse: collapse;}
     table.container td { padding:5px; }
-    table.content { border-collapse: collapse; border: 1px solid #CCC; padding:2px; }
+    table.content { border-collapse: collapse; padding:2px; }
     table.content td { border: 1px solid #CCC; padding:4px; }
     table.content img { max-width:140px; max-height:160px; }
     td.imageCol { padding:0; margin:0; }
@@ -14,9 +14,9 @@
   </head>
   <body>
   <table class="container">
-    <tr><td><div style="background-color:black; padding:10px">
-      <a href="http://www.ala.org.au/" title="visit the ALA website"><img
-              src="https://www.ala.org.au/app/uploads/2019/01/logo-300x45.png" alt="ALA logo"/></a>
+    <tr><td><div style="padding:10px">
+      <a href="http://www.ala.org.au/" title="visit the ALA website"><asset:image
+              src="biosecurity-email-header.png" alt="ALA logo" absolute="true" width="650"/></a>
     </div>
     </td></tr>
     <tr><td><h3><g:message code="alert.title" args="[grailsApplication.config.skin.orgNameLong]"/></h3></td></tr>
@@ -102,7 +102,7 @@
               </tr>
             </g:if>
 
-            <tr><td colspan="2"><br/></td></tr>
+            <tr><td colspan="2" style="border-left-style:hidden;border-right-style:hidden;"><br/></td></tr>
           </g:each>
           </tbody>
         </table>
