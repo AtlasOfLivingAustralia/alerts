@@ -27,12 +27,13 @@
         <table class="content">
           <tbody>
           <g:each in="${records}" var="oc">
+            <g:if test="${oc.scientificName}">
+              <tr><td><g:message code="email.biosecurity.label.scientificname" default="Scientific name"/></td><td>${oc.scientificName}</td></tr>
+            </g:if>
+
             <g:if test="${oc.vernacularName}">
               <tr><td><g:message code="email.biosecurity.label.vernacularname" default="Vernacular name"/></td><td>${oc.vernacularName}</td></tr>
             </g:if>
-            <g:elseif test="${oc.scientificName}">
-              <tr><td><g:message code="email.biosecurity.label.scientificname" default="Scientific name"/></td><td>${oc.scientificName}</td></tr>
-            </g:elseif>
 
             <tr>
               <td><g:message code="email.biosecurity.label.dateofobservation" default="Date of observation"/></td>
@@ -57,16 +58,14 @@
 
             <tr>
               <td><g:message code="email.biosecurity.label.locality" default="Locality of observation"/></td>
-              <g:if test="${oc.locality}">
-                <td>${oc.locality}</td>
+              <g:if test="${oc.locality && oc.stateProvince}">
+                <td>${oc.locality}; ${oc.stateProvince}</td>
               </g:if>
-              <g:elseif test="${oc.country}">
-                <g:if test="${oc.stateProvince}">
-                  <td>${oc.country}, ${oc.stateProvince}</td>
-                </g:if>
-                <g:else>
-                  <td>${oc.country}</td>
-                </g:else>
+              <g:elseif test="${oc.locality}">
+                <td>${oc.locality}</td>
+              </g:elseif>
+              <g:elseif test="${oc.stateProvince}">
+                <td>${oc.stateProvince}</td>
               </g:elseif>
               <g:else>
                 <td></td>
