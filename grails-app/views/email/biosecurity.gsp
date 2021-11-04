@@ -8,6 +8,8 @@
     table.container td { padding:5px; }
     table.content { border-collapse: collapse; padding:2px; }
     table.content td { border: 1px solid #CCC; padding:4px; }
+    table.content td.normalseparator { border-left-style:hidden; border-right-style:hidden; }
+    table.content td.lastseparator { border-left-style:hidden; border-right-style:hidden; border-bottom-style: hidden; }
     table.content img { max-width:140px; max-height:160px; }
     td.imageCol { padding:0; margin:0; }
     .box { display: flex; }
@@ -27,7 +29,7 @@
       <tr><td>
         <table class="content">
           <tbody>
-          <g:each in="${records}" var="oc">
+          <g:each status="i" in="${records}" var="oc">
             <tr><td><g:message code="email.biosecurity.label.scientificname" default="Scientific name"/></td><td>${oc.scientificName ?:"N/A"}</td></tr>
 
             <g:if test="${oc.vernacularName}">
@@ -100,7 +102,7 @@
               </tr>
             </g:if>
 
-            <tr><td colspan="2" style="border-left-style:hidden;border-right-style:hidden;"><br/></td></tr>
+            <tr><td colspan="2" class="${i == records.size() - 1 ? 'lastseparator' : 'normalseparator'}"><br/></td></tr>
           </g:each>
           </tbody>
         </table>
