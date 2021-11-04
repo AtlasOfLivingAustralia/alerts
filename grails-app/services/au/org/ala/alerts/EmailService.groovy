@@ -1,6 +1,7 @@
 package au.org.ala.alerts
 
 import grails.util.Holders
+import org.grails.web.json.JSONObject
 
 class EmailService {
 
@@ -9,6 +10,7 @@ class EmailService {
     def diffService
     def queryService
     def grailsApplication
+    def webService
     def messageSource
     def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
 
@@ -102,13 +104,14 @@ class EmailService {
         QueryResult queryResult = QueryResult.findByQueryAndFrequency(query, frequency)
 
         def records = retrieveRecordForQuery(query, queryResult)
+        def speciesListInfo = getSpeciesListInfo(query)
 
         Integer totalRecords = queryService.fireWhenNotZeroProperty(queryResult)
         if (grailsApplication.config.getProperty("postie.enableEmail", Boolean, false)) {
             log.info "Sending group email for ${query.name} to ${recipients.collect { it.email }}"
             recipients.each { recipient ->
                 if (!recipient.locked) {
-                    sendGroupEmail(query, [recipient.email], queryResult, records, frequency, totalRecords, recipient.userUnsubToken, recipient.notificationUnsubToken)
+                    sendGroupEmail(query, [recipient.email], queryResult, records, frequency, totalRecords, recipient.userUnsubToken as String, recipient.notificationUnsubToken as String, speciesListInfo)
                 } else {
                     log.warn "Email not sent to locked user: ${recipient}"
                 }
@@ -124,7 +127,7 @@ class EmailService {
         }
     }
 
-    private void sendGroupEmail(Query query, subsetOfAddresses, QueryResult queryResult, records, Frequency frequency, int totalRecords, String userUnsubToken, String notificationUnsubToken) {
+    private void sendGroupEmail(Query query, subsetOfAddresses, QueryResult queryResult, records, Frequency frequency, int totalRecords, String userUnsubToken, String notificationUnsubToken, Map speciesListInfo) {
         String urlPrefix = "${grailsApplication.config.security.cas.appServerName}${grailsApplication.config.getProperty('security.cas.contextPath', '')}"
         def localeSubject = messageSource.getMessage("emailservice.update.subject", [query.name] as Object[], siteLocale)
         try {
@@ -138,6 +141,7 @@ class EmailService {
                                 message         : query.updateMessage,
                                 query           : query,
                                 moreInfo        : queryResult.queryUrlUIUsed,
+                                speciesListInfo : speciesListInfo,
                                 listcode        : queryService.isMyAnnotation(query) ? "biocache.view.myannotation.list" : "biocache.view.list",
                                 stopNotification: urlPrefix + '/notification/myAlerts',
                                 records         : records,
@@ -150,5 +154,33 @@ class EmailService {
         } catch (Exception e) {
             log.error("Error sending email to addresses: " + subsetOfAddresses, e)
         }
+    }
+
+    /**
+     * Get the species list info
+     *
+     * @param query
+     * @return a Map contains list name and list URL
+     */
+    private Map getSpeciesListInfo(Query query) {
+        // if it's biosecurity query, we try to get list details
+        if (query.emailTemplate == queryService.createBioSecurityQuery('').emailTemplate) {
+            String[] parts = query.name.split(" ")
+            if (parts.length >= 1) {
+                String listid = parts[parts.length - 1]
+                String speciesListServer = grailsApplication.config.getProperty("specieslist.server", String, "https://lists.ala.org.au")
+                String listURL = speciesListServer + '/ws/speciesList/' + listid
+                try {
+                    JSONObject rslt = webService.getJsonElements(listURL)
+                    if (rslt && rslt.listName) {
+                        return [name: rslt.listName, url: speciesListServer + '/speciesListItem/list/' + listid]
+                    }
+                } catch (Exception ex) {
+                    log.error("Failed to get species list detail from " + listURL, ex)
+                }
+            }
+        }
+
+        [:]
     }
 }
