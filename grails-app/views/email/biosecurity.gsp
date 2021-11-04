@@ -10,13 +10,14 @@
     table.content td { border: 1px solid #CCC; padding:4px; }
     table.content img { max-width:140px; max-height:160px; }
     td.imageCol { padding:0; margin:0; }
+    .box { display: flex; }
     </style>
   </head>
   <body>
   <table class="container">
     <tr><td><div style="padding:10px">
       <a href="http://www.ala.org.au/" title="visit the ALA website"><asset:image
-              src="biosecurity-email-header.png" alt="ALA logo" absolute="true" width="650"/></a>
+              src="biosecurity-email-header.png" alt="ALA logo" absolute="true" width="640" height="107"/></a>
     </div>
     </td></tr>
     <tr><td><h3><g:message code="alert.title" args="[grailsApplication.config.skin.orgNameLong]"/></h3></td></tr>
@@ -27,12 +28,11 @@
         <table class="content">
           <tbody>
           <g:each in="${records}" var="oc">
+            <tr><td><g:message code="email.biosecurity.label.scientificname" default="Scientific name"/></td><td>${oc.scientificName ?:"N/A"}</td></tr>
+
             <g:if test="${oc.vernacularName}">
               <tr><td><g:message code="email.biosecurity.label.vernacularname" default="Vernacular name"/></td><td>${oc.vernacularName}</td></tr>
             </g:if>
-            <g:elseif test="${oc.scientificName}">
-              <tr><td><g:message code="email.biosecurity.label.scientificname" default="Scientific name"/></td><td>${oc.scientificName}</td></tr>
-            </g:elseif>
 
             <tr>
               <td><g:message code="email.biosecurity.label.dateofobservation" default="Date of observation"/></td>
@@ -57,16 +57,14 @@
 
             <tr>
               <td><g:message code="email.biosecurity.label.locality" default="Locality of observation"/></td>
-              <g:if test="${oc.locality}">
-                <td>${oc.locality}</td>
+              <g:if test="${oc.locality && oc.stateProvince}">
+                <td>${oc.locality}; ${oc.stateProvince}</td>
               </g:if>
-              <g:elseif test="${oc.country}">
-                <g:if test="${oc.stateProvince}">
-                  <td>${oc.country}, ${oc.stateProvince}</td>
-                </g:if>
-                <g:else>
-                  <td>${oc.country}</td>
-                </g:else>
+              <g:elseif test="${oc.locality}">
+                <td>${oc.locality}</td>
+              </g:elseif>
+              <g:elseif test="${oc.stateProvince}">
+                <td>${oc.stateProvince}</td>
               </g:elseif>
               <g:else>
                 <td></td>
@@ -113,12 +111,12 @@
             href="${grailsApplication.config.biosecurity.moreinfo.link}">here</a></td></tr>
     <tr><td><g:render template="/email/unsubscribe"/></td></tr>
     <tr><td>
-        <h4>The ALA is made possible by contributions from its partners, is supported by <a href="https://www.education.gov.au/national-collaborative-research-infrastructure-strategy-ncris">NCRIS</a>, is hosted by <a href="https://csiro.au/">CSIRO</a>, and is the Australian node of <a href="https://www.gbif.org/en/">GBIF</a>.</h4>
-        <p>
-          <a href="https://www.education.gov.au/national-collaborative-research-infrastructure-strategy-ncris"><img src="https://www.ala.org.au/app/uploads/2019/06/NCRIS_150px-150x109.jpg" alt="NCRIS logo" width="150" height="109" /></a>
-          <a href="https://csiro.au/"><img src="https://www.ala.org.au/app/uploads/2019/07/CSIRO_Solid_RGB-150x150.png" alt="CSIRO logo" width="109" height="109" /></a>
-          <a href="https://www.gbif.org/en/"><img src="https://www.ala.org.au/app/uploads/2019/06/GBIF_109px.png" alt="GBIF logo" width="207" height="109" /></a>
-        </p>
+      <h4>The ALA is made possible by contributions from its partners, is supported by <a href="https://www.education.gov.au/national-collaborative-research-infrastructure-strategy-ncris">NCRIS</a>, is hosted by <a href="https://csiro.au/">CSIRO</a>, and is the Australian node of <a href="https://www.gbif.org/en/">GBIF</a>.</h4>
+      <div class="box">
+        <div style="margin-left: 5px"><a href="https://www.education.gov.au/national-collaborative-research-infrastructure-strategy-ncris"><img src="https://www.ala.org.au/app/uploads/2019/06/NCRIS_150px-150x109.jpg" alt="NCRIS logo" width="150" height="109" /></a></div>
+        <div style="margin-left: 78px; margin-right: 64px;"><a href="https://csiro.au/"><img src="https://www.ala.org.au/app/uploads/2019/07/CSIRO_Solid_RGB-150x150.png" alt="CSIRO logo" width="109" height="109" /></a></div>
+        <div style="margin-right: 5px"><a href="https://www.gbif.org/en/"><img src="https://www.ala.org.au/app/uploads/2019/06/GBIF_109px.png" alt="GBIF logo" width="207" height="109" /></a></div>
+      </div>
     </td></tr>
     <tr><td>
       <h4>Acknowledgement of Traditional Owners and Country</h4>
