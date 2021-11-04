@@ -23,7 +23,7 @@
     </div>
     </td></tr>
     <tr><td><h3><g:message code="alert.title" args="[grailsApplication.config.skin.orgNameLong]"/></h3></td></tr>
-    <tr><td><p><g:message code="${message}" default="${message}" args="${[totalRecords, moreInfo, query.name]}"/></p>
+    <tr><td><p><g:message code="${message}" default="${message}" args="${[moreInfo, totalRecords + ' new records', speciesListInfo.url, speciesListInfo.name]}"/></p>
     </td></tr>
     <g:if test="${records}">
       <tr><td>
