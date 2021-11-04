@@ -10,6 +10,7 @@
     table.content td { border: 1px solid #CCC; padding:4px; }
     table.content img { max-width:140px; max-height:160px; }
     td.imageCol { padding:0; margin:0; }
+    .box { display: flex; }
     </style>
   </head>
   <body>
@@ -110,12 +111,12 @@
             href="${grailsApplication.config.biosecurity.moreinfo.link}">here</a></td></tr>
     <tr><td><g:render template="/email/unsubscribe"/></td></tr>
     <tr><td>
-        <h4>The ALA is made possible by contributions from its partners, is supported by <a href="https://www.education.gov.au/national-collaborative-research-infrastructure-strategy-ncris">NCRIS</a>, is hosted by <a href="https://csiro.au/">CSIRO</a>, and is the Australian node of <a href="https://www.gbif.org/en/">GBIF</a>.</h4>
-        <p>
-          <a href="https://www.education.gov.au/national-collaborative-research-infrastructure-strategy-ncris"><img src="https://www.ala.org.au/app/uploads/2019/06/NCRIS_150px-150x109.jpg" alt="NCRIS logo" width="150" height="109" /></a>
-          <a href="https://csiro.au/"><img src="https://www.ala.org.au/app/uploads/2019/07/CSIRO_Solid_RGB-150x150.png" alt="CSIRO logo" width="109" height="109" /></a>
-          <a href="https://www.gbif.org/en/"><img src="https://www.ala.org.au/app/uploads/2019/06/GBIF_109px.png" alt="GBIF logo" width="207" height="109" /></a>
-        </p>
+      <h4>The ALA is made possible by contributions from its partners, is supported by <a href="https://www.education.gov.au/national-collaborative-research-infrastructure-strategy-ncris">NCRIS</a>, is hosted by <a href="https://csiro.au/">CSIRO</a>, and is the Australian node of <a href="https://www.gbif.org/en/">GBIF</a>.</h4>
+      <div class="box">
+        <div style="margin-left: 5px"><a href="https://www.education.gov.au/national-collaborative-research-infrastructure-strategy-ncris"><img src="https://www.ala.org.au/app/uploads/2019/06/NCRIS_150px-150x109.jpg" alt="NCRIS logo" width="150" height="109" /></a></div>
+        <div style="margin-left: 78px; margin-right: 64px;"><a href="https://csiro.au/"><img src="https://www.ala.org.au/app/uploads/2019/07/CSIRO_Solid_RGB-150x150.png" alt="CSIRO logo" width="109" height="109" /></a></div>
+        <div style="margin-right: 5px"><a href="https://www.gbif.org/en/"><img src="https://www.ala.org.au/app/uploads/2019/06/GBIF_109px.png" alt="GBIF logo" width="207" height="109" /></a></div>
+      </div>
     </td></tr>
     <tr><td>
       <h4>Acknowledgement of Traditional Owners and Country</h4>
