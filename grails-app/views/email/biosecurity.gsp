@@ -91,12 +91,12 @@
               </tr>
             </g:if>
 
-            <g:if test="${oc.imageUrl}">
+            <g:if test="${oc.thumbnailUrl || oc.smallImageUrl}">
               <tr>
                 <td><g:message code="email.biosecurity.label.recordimages" default="Record images"/></td>
                 <td class="imageCol">
                   <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}">
-                    <img src="${oc.imageUrl}" alt="${message(code: "biocache.alt.image.for.record")}"/>
+                    <img src="${oc.thumbnailUrl ?: oc.smallImageUrl}" alt="${message(code: "biocache.alt.image.for.record")}"/>
                   </a>
                 </td>
               </tr>
