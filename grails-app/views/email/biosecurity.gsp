@@ -91,16 +91,19 @@
               </tr>
             </g:if>
 
-            <g:if test="${oc.imageUrl}">
-              <tr>
-                <td><g:message code="email.biosecurity.label.recordimages" default="Record images"/></td>
+            <tr>
+              <td><g:message code="email.biosecurity.label.recordimages" default="Record images"/></td>
+              <g:if test="${oc.thumbnailUrl || oc.smallImageUrl}">
                 <td class="imageCol">
                   <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}">
-                    <img src="${oc.imageUrl}" alt="${message(code: "biocache.alt.image.for.record")}"/>
+                    <img src="${oc.thumbnailUrl ?: oc.smallImageUrl}" alt="${message(code: "biocache.alt.image.for.record")}"/>
                   </a>
                 </td>
-              </tr>
-            </g:if>
+              </g:if>
+              <g:else>
+                <td></td>
+              </g:else>
+            </tr>
 
             <tr><td colspan="2" class="${i == records.size() - 1 ? 'lastseparator' : 'normalseparator'}"><br/></td></tr>
           </g:each>
