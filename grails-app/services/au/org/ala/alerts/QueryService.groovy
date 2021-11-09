@@ -46,6 +46,10 @@ class QueryService {
         query.name.startsWith(messageSource.getMessage("query.myannotations.title", null, siteLocale))
     }
 
+    Boolean isBioSecurityQuery(Query query) {
+        query.emailTemplate == '/email/biosecurity'
+    }
+
     String getUserId(Query query) {
         if (!isMyAnnotation(query)) return null
         String queryPath = query.queryPath

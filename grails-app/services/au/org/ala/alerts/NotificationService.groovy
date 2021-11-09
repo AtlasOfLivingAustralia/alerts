@@ -326,7 +326,7 @@ class NotificationService {
         }
     }
 
-    private JSONArray getAssertionsOfARecord(String baseUrl, String uuid) {
+    JSONArray getAssertionsOfARecord(String baseUrl, String uuid) {
         def url = baseUrl + '/occurrences/' + uuid + '/assertions'
         return getJsonElements(url) as JSONArray
     }

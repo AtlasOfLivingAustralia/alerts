@@ -57,6 +57,13 @@
               </g:else>
             </tr>
 
+            <g:if test="${userAssertions.containsKey(oc.uuid) && userAssertions.get(oc.uuid)}">
+              <tr>
+                <td><g:message code="email.biosecurity.userassertion" default="Biosecurity annotation"/></td>
+                <td>${userAssertions.get(oc.uuid)}</td>
+              </tr>
+            </g:if>
+
             <tr>
               <td><g:message code="email.biosecurity.label.locality" default="Locality of observation"/></td>
               <g:if test="${oc.locality && oc.stateProvince}">
