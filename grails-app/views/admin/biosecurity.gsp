@@ -64,7 +64,7 @@
                     <tbody>
                     <g:each status="i" in="${queries}" var="query">
                         <tr>
-                            <td>${query.name}</td>
+                            <td><g:link controller="query" action="show" id="${query.id}">${query.name}</g:link></td>
                             <td>${subscribers[i].size()}</td>
                             <td>
                             <g:if test="${subscribers[i].size() != 0}"><a href="${request.contextPath}/query/subscribers?queryid=${query.id}">View all subscribers</a></td></g:if>

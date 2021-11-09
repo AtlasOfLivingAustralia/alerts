@@ -164,21 +164,26 @@ class EmailService {
      */
     private Map getSpeciesListInfo(Query query) {
         // if it's biosecurity query, we try to get list details
-        if (query.emailTemplate == queryService.createBioSecurityQuery('').emailTemplate) {
-            String[] parts = query.name.split(" ")
-            if (parts.length >= 1) {
-                String listid = parts[parts.length - 1]
-                String speciesListServer = grailsApplication.config.getProperty("specieslist.server", String, "https://lists.ala.org.au")
-                String listURL = speciesListServer + '/ws/speciesList/' + listid
-                try {
-                    JSONObject rslt = webService.getJsonElements(listURL)
-                    if (rslt && rslt.listName) {
-                        return [name: rslt.listName, url: speciesListServer + '/speciesListItem/list/' + listid]
-                    }
-                } catch (Exception ex) {
-                    log.error("Failed to get species list detail from " + listURL, ex)
+        if (query.emailTemplate == '/email/biosecurity') {
+            // species list name already in query name, we just need to parse it
+            String matchStr = messageSource.getMessage("query.biosecurity.title", null, siteLocale) + ' '
+            int idx = query.name.indexOf(matchStr)
+            String listname = ""
+            String listURL = ""
+            if (idx != -1) {
+                listname = query.name.substring(idx + matchStr.length())
+            }
+
+            matchStr = "q=species_list_uid:"
+            idx = query.queryPath.indexOf(matchStr)
+            if (idx != -1) {
+                def stoppos = query.queryPath.indexOf("&", idx)
+                if (stoppos != -1) {
+                    def listid = query.queryPath.substring(idx + matchStr.length(), stoppos)
+                    listURL = grailsApplication.config.getProperty("specieslist.server", String, "https://lists.ala.org.au") + '/speciesListItem/list/' + listid
                 }
             }
+            return [name : listname, url: listURL]
         }
 
         [:]
