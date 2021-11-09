@@ -1,12 +1,12 @@
 package au.org.ala.alerts
 
 import grails.util.Holders
-import org.grails.web.json.JSONObject
 
 class EmailService {
 
     static transactional = true
 
+    def notificationService
     def diffService
     def queryService
     def grailsApplication
@@ -104,6 +104,7 @@ class EmailService {
         QueryResult queryResult = QueryResult.findByQueryAndFrequency(query, frequency)
 
         def records = retrieveRecordForQuery(query, queryResult)
+        def userAssertions = queryService.isBioSecurityQuery(query) ? getBiosecurityAssertions(query, records as List) : [:]
         def speciesListInfo = getSpeciesListInfo(query)
 
         Integer totalRecords = queryService.fireWhenNotZeroProperty(queryResult)
@@ -111,7 +112,7 @@ class EmailService {
             log.info "Sending group email for ${query.name} to ${recipients.collect { it.email }}"
             recipients.each { recipient ->
                 if (!recipient.locked) {
-                    sendGroupEmail(query, [recipient.email], queryResult, records, frequency, totalRecords, recipient.userUnsubToken as String, recipient.notificationUnsubToken as String, speciesListInfo)
+                    sendGroupEmail(query, [recipient.email], queryResult, records, frequency, totalRecords, recipient.userUnsubToken as String, recipient.notificationUnsubToken as String, speciesListInfo, userAssertions)
                 } else {
                     log.warn "Email not sent to locked user: ${recipient}"
                 }
@@ -127,7 +128,7 @@ class EmailService {
         }
     }
 
-    private void sendGroupEmail(Query query, subsetOfAddresses, QueryResult queryResult, records, Frequency frequency, int totalRecords, String userUnsubToken, String notificationUnsubToken, Map speciesListInfo) {
+    private void sendGroupEmail(Query query, subsetOfAddresses, QueryResult queryResult, records, Frequency frequency, int totalRecords, String userUnsubToken, String notificationUnsubToken, Map speciesListInfo, Map userAssertions) {
         String urlPrefix = "${grailsApplication.config.security.cas.appServerName}${grailsApplication.config.getProperty('security.cas.contextPath', '')}"
         def localeSubject = messageSource.getMessage("emailservice.update.subject", [query.name] as Object[], siteLocale)
         try {
@@ -142,6 +143,7 @@ class EmailService {
                                 query           : query,
                                 moreInfo        : queryResult.queryUrlUIUsed,
                                 speciesListInfo : speciesListInfo,
+                                userAssertions  : userAssertions,
                                 listcode        : queryService.isMyAnnotation(query) ? "biocache.view.myannotation.list" : "biocache.view.list",
                                 stopNotification: urlPrefix + '/notification/myAlerts',
                                 records         : records,
@@ -156,6 +158,13 @@ class EmailService {
         }
     }
 
+    private Map getBiosecurityAssertions(Query query, List records) {
+       records.collectEntries { [it.uuid, getBiosecurityAssertionForRecord(query.baseUrl, it.uuid as String)] }
+    }
+
+    private String getBiosecurityAssertionForRecord(String baseUrl, String recordId) {
+        return notificationService.getAssertionsOfARecord(baseUrl, recordId)?.find {it.qaStatus == 50005 && it.code == 20021}?.comment
+    }
     /**
      * Get the species list info
      *
