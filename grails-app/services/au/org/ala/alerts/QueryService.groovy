@@ -1,6 +1,7 @@
 package au.org.ala.alerts
 
 import grails.util.Holders
+import org.grails.web.json.JSONObject
 import org.springframework.dao.DataIntegrityViolationException
 
 class QueryService {
@@ -9,7 +10,7 @@ class QueryService {
 
     def serviceMethod() {}
 
-    def grailsApplication, notificationService
+    def grailsApplication, notificationService, webService
 
     def messageSource
     def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
@@ -284,14 +285,14 @@ class QueryService {
     Query createBioSecurityQuery(String listid) {
         String queryPathForUITemplate = grailsApplication.config.getProperty("biosecurity.queryurl.template", String, "/occurrences/search?q=species_list_uid:___LISTIDPARAM___&fq=decade:2020 and country:Australia&fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc")
         String queryPathForUI = queryPathForUITemplate.replaceAll("___LISTIDPARAM___", listid)
-
+        String speciesListName = getSpeciesListName(listid)
         new Query([
                 baseUrl       : grailsApplication.config.biocacheService.baseURL,
                 baseUrlForUI  : grailsApplication.config.biocache.baseURL,
-                name          : messageSource.getMessage("query.biosecurity.title", null, siteLocale) + ' ' + listid,
+                name          : messageSource.getMessage("query.biosecurity.title", null, siteLocale) + ' ' + speciesListName,
                 resourceName  : grailsApplication.config.postie.defaultResourceName,
                 updateMessage : 'more.biosecurity.update.message',
-                description   : messageSource.getMessage("query.biosecurity.descr", null, siteLocale) + ' ' + listid,
+                description   : messageSource.getMessage("query.biosecurity.descr", null, siteLocale) + ' ' + speciesListName,
                 queryPath     : queryPathForUI + '&pageSize=20&facets=basis_of_record',
                 queryPathForUI: queryPathForUI,
                 dateFormat    : """yyyy-MM-dd'T'HH:mm:ss'Z'""",
@@ -336,5 +337,19 @@ class QueryService {
                   inner join u.notifications n
                   where n.query = :query
                   group by u""", [query: query]) : []
+    }
+
+    def getSpeciesListName(String listid) {
+        String speciesListServer = grailsApplication.config.getProperty("specieslist.server", String, "https://lists.ala.org.au")
+        String listURL = speciesListServer + '/ws/speciesList/' + listid
+        try {
+            JSONObject rslt = webService.getJsonElements(listURL) as JSONObject
+            if (rslt && rslt.listName) {
+                return '\"' + rslt.listName + '\"'
+            }
+        } catch (Exception ex) {
+            log.error("Failed to get species list detail from " + listURL, ex)
+        }
+        listid
     }
 }
