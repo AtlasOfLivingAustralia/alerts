@@ -60,7 +60,11 @@
             <g:if test="${userAssertions.containsKey(oc.uuid) && userAssertions.get(oc.uuid)}">
               <tr>
                 <td><g:message code="email.biosecurity.userassertion" default="Biosecurity annotation"/></td>
-                <td>${userAssertions.get(oc.uuid)}</td>
+                <td>
+                  <g:each in="${userAssertions.get(oc.uuid)}" var="comment">
+                    <p>${comment}</p>
+                  </g:each>
+                </td>
               </tr>
             </g:if>
 
