@@ -1,6 +1,8 @@
 package au.org.ala.alerts
 
 import grails.util.Holders
+import org.grails.web.json.JSONArray
+import java.text.SimpleDateFormat
 
 class EmailService {
 
@@ -13,7 +15,8 @@ class EmailService {
     def webService
     def messageSource
     def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
-
+    // this is the date format of 'created' in user assertions
+    def dateformat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
     /**
      * Returns a list of records
      * @param query
@@ -162,8 +165,27 @@ class EmailService {
        records.collectEntries { [it.uuid, getBiosecurityAssertionForRecord(query.baseUrl, it.uuid as String)] }
     }
 
-    private String getBiosecurityAssertionForRecord(String baseUrl, String recordId) {
-        return notificationService.getAssertionsOfARecord(baseUrl, recordId)?.find {it.qaStatus == 50005 && it.code == 20021}?.comment
+    private List getBiosecurityAssertionForRecord(String baseUrl, String recordId) {
+        JSONArray biosecurityAssertions = notificationService.getAssertionsOfARecord(baseUrl, recordId)
+        return biosecurityAssertions?.findAll {it.qaStatus == 50005 && it.code == 200021}?.collect { it ->
+            if (it.comment) {
+                String created = ""
+                if (it.created) {
+                    created = new SimpleDateFormat("yyyy-MM-dd").format(dateformat.parse(it.created))
+                }
+                if (created && it.userDisplayName) {
+                    return it.comment + " (" + messageSource.getMessage("emailservice.format.name_and_date", [it.userDisplayName, created] as Object[], 'By {0} on {1}', siteLocale) + ")"
+                } else if (it.userDisplayName) {
+                    return it.comment + " (" + messageSource.getMessage("emailservice.format.name", [it.userDisplayName] as Object[], 'By {0}', siteLocale) + ")"
+                } else if (created) {
+                    return it.comment + "(" + created + ")"
+                } else {
+                    return it.comment
+                }
+            } else {
+                return null;
+            }
+        }?.findAll{it != null}
     }
     /**
      * Get the species list info
