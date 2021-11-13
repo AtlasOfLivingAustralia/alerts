@@ -26,7 +26,11 @@
       </td>
     </tr>
     <tr><td><h3><g:message code="alert.title" args="[grailsApplication.config.skin.orgNameLong]"/></h3></td></tr>
-    <tr><td><p><g:message code="${message}" default="${message}" args="${[moreInfo, totalRecords + message(code:'email.records.summary'), speciesListInfo.url, speciesListInfo.name]}"/></p>
+    <tr><td>
+      <p><g:message code="${message}" default="${message}" args="${[moreInfo, totalRecords + message(code:'email.records.summary'), speciesListInfo.url, speciesListInfo.name]}"/></p>
+      <g:if test="${records && records.size() >= 20}">
+        <p><g:message code="email.displaying.max.msg" default="Showing first 20 records"/></p>
+      </g:if>
     </td></tr>
     <g:if test="${records}">
       <tr><td>
