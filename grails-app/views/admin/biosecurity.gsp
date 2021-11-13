@@ -78,6 +78,8 @@
                 </table>
             </div>
         </g:if>
+
+        <asset:image src="biosecurity-banner_v2.png" alt="ALA logo" absolute="true" />
     </div>
 </div>
 </body>

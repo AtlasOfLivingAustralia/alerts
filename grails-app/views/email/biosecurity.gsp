@@ -10,20 +10,23 @@
     table.content td { border: 1px solid #CCC; padding:4px; }
     table.content td.normalseparator { border-left-style:hidden; border-right-style:hidden; }
     table.content td.lastseparator { border-left-style:hidden; border-right-style:hidden; border-bottom-style: hidden; }
-    table.content img { max-width:140px; max-height:160px; }
+    table.content img { max-width:200px; max-height:200px; }
     td.imageCol { padding:0; margin:0; }
     .box { display: flex; }
     </style>
   </head>
   <body>
   <table class="container">
-    <tr><td><div style="padding:10px">
-      <a href="http://www.ala.org.au/" title="visit the ALA website"><asset:image
-              src="biosecurity-email-header.png" alt="ALA logo" absolute="true" width="640" height="107"/></a>
-    </div>
-    </td></tr>
+    <tr>
+      <td>
+        <div>
+          <a href="https://www.ala.org.au/" title="Visit the ALA website"><asset:image
+              src="biosecurity-banner_v2.png" alt="ALA logo" absolute="true" width="1200" height="200"/></a>
+        </div>
+      </td>
+    </tr>
     <tr><td><h3><g:message code="alert.title" args="[grailsApplication.config.skin.orgNameLong]"/></h3></td></tr>
-    <tr><td><p><g:message code="${message}" default="${message}" args="${[moreInfo, totalRecords + ' new records', speciesListInfo.url, speciesListInfo.name]}"/></p>
+    <tr><td><p><g:message code="${message}" default="${message}" args="${[moreInfo, totalRecords + message(code:'email.records.summary'), speciesListInfo.url, speciesListInfo.name]}"/></p>
     </td></tr>
     <g:if test="${records}">
       <tr><td>
@@ -120,8 +123,9 @@
       </td></tr>
     </g:if>
     <tr><td><h4>Please check with the relevant team before forwarding this email outside of the department.</h4></td></tr>
-    <tr><td>This email has been generated as part of ALA's national biosecurity alert system. To find out more about this program click <a
-            href="${grailsApplication.config.biosecurity.moreinfo.link}">here</a></td></tr>
+    <tr><td>This email has been generated as part of ALA's national biosecurity alert system. To find out more about this program, read <a
+            href="${grailsApplication.config.getProperty('biosecurity.moreinfo.link', String, 'missing')}">ALA helps to stop pests in their tracks</a> or email
+            <a href="mailto:support@ala.org.au">support@ala.org.au</a>.</td></tr>
     <tr><td><g:render template="/email/unsubscribe"/></td></tr>
     <tr><td>
       <h4>The ALA is made possible by contributions from its partners, is supported by <a href="https://www.education.gov.au/national-collaborative-research-infrastructure-strategy-ncris">NCRIS</a>, is hosted by <a href="https://csiro.au/">CSIRO</a>, and is the Australian node of <a href="https://www.gbif.org/en/">GBIF</a>.</h4>
