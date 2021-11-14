@@ -157,7 +157,9 @@ useSpeciesListsAlerts: true
 useSpatialAlerts: true
 useBlogsAlerts: true
 useCitizenScienceAlerts: true
-
+biosecurity:
+    moreinfo:
+        link: https://www.ala.org.au/blogs-news/ala-helps-to-stop-pests-in-their-tracks/
 environments:
     development:
         grails:
