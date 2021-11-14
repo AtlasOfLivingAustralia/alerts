@@ -16,6 +16,7 @@ class NotificationService {
     def emailService
     def diffService
     def queryService
+    def grailsApplication
 
     QueryResult getQueryResult(Query query, Frequency frequency) {
         QueryResult qr = QueryResult.findByQueryAndFrequency(query, frequency)
@@ -142,7 +143,8 @@ class NotificationService {
 
         //if there is a date format, then there's a param to replace
         if (query.dateFormat) {
-            def dateToUse = org.apache.commons.lang.time.DateUtils.addSeconds(new Date(), -1 * frequency.periodInSeconds)
+            def additionalTimeoffset = grailsApplication.config.getProperty('postie.forceAllAlertsGetSent', Boolean, false) ? 24 * 180 : 1
+            def dateToUse = org.apache.commons.lang.time.DateUtils.addSeconds(new Date(), -1 * frequency.periodInSeconds * additionalTimeoffset)
             //insert the date to query with
             SimpleDateFormat sdf = new SimpleDateFormat(query.dateFormat)
             sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -496,7 +498,9 @@ class NotificationService {
         queries.each { query ->
             log.debug("Running query: " + query.name)
             boolean hasUpdated = checkStatus(query, frequency)
-            if (hasUpdated && sendEmails) {
+            Boolean forceUpdate = grailsApplication.config.getProperty('postie.forceAllAlertsGetSent', Boolean, false)
+
+            if (forceUpdate || hasUpdated && sendEmails) {
                 log.debug("Query has been updated. Sending emails....")
                 //send separate emails for now
                 //if there is a change, generate an email list

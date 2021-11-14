@@ -126,6 +126,8 @@ postie:
     emailInfoSender: "atlas-alerts@ala.org.au"
     defaultResourceName: "Atlas of Living Australia"
     enableEmail: false
+    # forceAllAlertsGetSent results in emails getting sent regardless if data has changed - only use in DEV env
+    forceAllAlertsGetSent: false
 ala:
     baseURL: "https://www.ala.org.au"
     userDetailsURL: "https://auth.ala.org.au/userdetails/userDetails/getUserListFull"
