@@ -21,7 +21,7 @@
       <td>
         <div>
           <a href="https://www.ala.org.au/" title="Visit the ALA website"><asset:image
-              src="biosecurity-banner_v2.png" alt="ALA logo" absolute="true" width="1200" height="200"/></a>
+              src="biosecurity-banner-v3.png" alt="ALA logo" absolute="true" width="1000" height="167"/></a>
         </div>
       </td>
     </tr>
