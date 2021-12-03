@@ -125,7 +125,7 @@
                 </td>
                 <td class="">
                   <g:if test="${oc.latLong}">
-                    <img src="https://maps.googleapis.com/maps/api/staticmap?center=${oc.latLong}&markers=|${oc.latLong}&zoom=5&size=300x300&maptype=roadmap&key=${grailsApplication.config.getRequiredProperty('google.apikey')}" alt="location preview map"/>
+                    <img src="https://maps.googleapis.com/maps/api/staticmap?center=${oc.latLong}&markers=|${oc.latLong}&zoom=5&size=300x300&maptype=roadmap&key=${grailsApplication.config.getProperty('google.apikey')}" alt="location preview map"/>
                   </g:if>
                   <g:if test="${oc.thumbnailUrl || oc.smallImageUrl }">&nbsp;&nbsp;
                     <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}">
