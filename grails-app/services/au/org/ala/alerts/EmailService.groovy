@@ -167,7 +167,7 @@ class EmailService {
 
     private List getBiosecurityAssertionForRecord(String baseUrl, String recordId) {
         JSONArray biosecurityAssertions = notificationService.getAssertionsOfARecord(baseUrl, recordId)
-        return biosecurityAssertions?.findAll {it.qaStatus == 50005 && it.code == 200021}?.collect { it ->
+        return biosecurityAssertions?.findAll {it.qaStatus == 50005 || it.code == 200021}?.collect { it ->
             if (it.comment) {
                 String created = ""
                 if (it.created) {

@@ -78,7 +78,9 @@
                 </table>
             </div>
         </g:if>
+        <h3>Debug output</h3>
         <asset:image src="biosecurity-banner-v3.png" alt="ALA logo" absolute="true" />
+        <img src="https://maps.googleapis.com/maps/api/staticmap?center=-36.398971,148.297871&markers=|-36.398971035554915,148.297871&zoom=5&size=300x300&maptype=roadmap&key=${grailsApplication.config.getRequiredProperty('google.apikey')}"/>
     </div>
 </div>
 </body>
