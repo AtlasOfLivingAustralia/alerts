@@ -3,13 +3,18 @@
   <head>
     <title><g:message code="alert.title" args="[query.resourceName]" /></title>
     <style type="text/css">
-    body { font-family:Arial,serif; }
+    body { font-family:Arial,serif; font-size: 14px; color: #212121; }
     table.container { width: 640px; border-collapse: collapse;}
-    table.container td { padding:5px; }
+    table tr.top-row { border-top: 1px solid #CCC; padding-top: 10px; }
+    table tr:last-child { border-bottom: 1px solid #CCC; }
+    table.container td { padding: 5px; }
+    table.container h1 { margin: 10px 0px; font-size: 18px;}
     table.content { border-collapse: collapse; padding:2px; }
-    table.content td { border: 1px solid #CCC; padding:4px; }
+    table.content td { border: 0px solid #CCC; padding:4px; }
+    table.content td:first-child { color: #424242; }
     table.content td.normalseparator { border-left-style:hidden; border-right-style:hidden; }
     table.content td.lastseparator { border-left-style:hidden; border-right-style:hidden; border-bottom-style: hidden; }
+    table.content td:first-child { text-align: left; }
     table.content img { max-width:200px; max-height:200px; }
     td.imageCol { padding:0; margin:0; }
     .box { display: flex; }
@@ -25,11 +30,11 @@
         </div>
       </td>
     </tr>
-    <tr><td><h3><g:message code="alert.title" args="[grailsApplication.config.skin.orgNameLong]"/></h3></td></tr>
+    <tr><td><h1><g:message code="alert.title" args="[grailsApplication.config.skin.orgNameLong]"/></h1></td></tr>
     <tr><td>
       <p><g:message code="${message}" default="${message}" args="${[moreInfo, totalRecords + message(code:'email.records.summary'), speciesListInfo.url, speciesListInfo.name]}"/></p>
       <g:if test="${records && records.size() >= 20}">
-        <p><g:message code="email.displaying.max.msg" default="Showing first 20 records"/></p>
+        <p><g:message code="email.displaying.max.msg" default="Showing first 20 records"/> - <a href="${moreInfo}">view all ${totalRecords} records</a></p>
       </g:if>
     </td></tr>
     <g:if test="${records}">
@@ -37,14 +42,24 @@
         <table class="content">
           <tbody>
           <g:each status="i" in="${records}" var="oc">
-            <tr><td><g:message code="email.biosecurity.label.scientificname" default="Scientific name"/></td><td>${oc.scientificName ?:"N/A"}</td></tr>
-
+            <g:set var="link" value="${query.baseUrlForUI}/occurrences/${oc.uuid}"/>
+            <tr class="top-row"><td colspan="2">&nbsp;<code style="display: none;">${(oc as grails.converters.JSON).toString(true)}</code></td></tr>
+            <tr><td>Record ID</td><td><a href="${link}">${oc.uuid}</a></td></tr>
+            <tr><td>Scientific name </td><td><em>${oc.scientificName ?:"N/A"}</em></td></tr>
+            <g:if test="${oc.scientificName && oc.raw_scientificName && oc.scientificName != oc.raw_scientificName}">
+              <tr><td>Scientific name (raw)</td><td><em>${oc.raw_scientificName}</em></td></tr>
+            </g:if>
             <g:if test="${oc.vernacularName}">
               <tr><td><g:message code="email.biosecurity.label.vernacularname" default="Vernacular name"/></td><td>${oc.vernacularName}</td></tr>
             </g:if>
-
+            <g:if test="${oc.speciesGroups}">
+              <tr><td>Species groups</td><td>${raw(oc.speciesGroups?.join(" → "))}</td></tr>
+            </g:if>
+            <g:if test="${oc.dataResourceName}">
+              <tr><td>Dataset</td><td>${oc.dataResourceName}</td></tr>
+            </g:if>
             <tr>
-              <td><g:message code="email.biosecurity.label.dateofobservation" default="Date of observation"/></td>
+              <td>Date</td>
               <g:if test="${oc.eventDate}">
                 <td>${g.formatDate(date: new Date(oc.eventDate), format: "yyyy-MM-dd")}</td>
               </g:if>
@@ -69,14 +84,14 @@
                 <td><g:message code="email.biosecurity.userassertion" default="Biosecurity annotation"/></td>
                 <td>
                   <g:each in="${userAssertions.get(oc.uuid)}" var="comment">
-                    <p>${comment}</p>
+                    ${comment}
                   </g:each>
                 </td>
               </tr>
             </g:if>
 
             <tr>
-              <td><g:message code="email.biosecurity.label.locality" default="Locality of observation"/></td>
+              <td>Locality</td>
               <g:if test="${oc.locality && oc.stateProvince}">
                 <td>${oc.locality}; ${oc.stateProvince}</td>
               </g:if>
@@ -91,16 +106,10 @@
               </g:else>
             </tr>
 
-            <tr>
-              <td><g:message code="email.biosecurity.label.record" default="ALA record"/></td>
-              <g:set var="link" value="${query.baseUrlForUI}/occurrences/${oc.uuid}"/>
-              <td><a href="${link}">${link}</a></td>
-            </tr>
-
             <g:if test="${oc.recordNumber}">
               <tr>
                 <td><g:message code="email.biosecurity.label.originalRecord" default="Original source record"/></td>
-                <g:if test="${oc.recordNumber.startsWith("http://")}">
+                <g:if test="${oc.recordNumber.startsWith("http")}">
                   <td><a href="${oc.recordNumber}">${oc.recordNumber}</a></td>
                 </g:if>
                 <g:else>
@@ -109,13 +118,20 @@
               </tr>
             </g:if>
 
-            <g:if test="${oc.thumbnailUrl || oc.smallImageUrl}">
-              <tr>
-                <td><g:message code="email.biosecurity.label.recordimages" default="Record images"/></td>
+            <g:if test="${oc.thumbnailUrl || oc.smallImageUrl || oc.latLong}">
+              <tr valign="top">
                 <td class="imageCol">
-                  <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}">
-                    <img src="${oc.thumbnailUrl ?: oc.smallImageUrl}" alt="${message(code: "biocache.alt.image.for.record")}"/>
-                  </a>
+                  Map and image
+                </td>
+                <td class="">
+                  <g:if test="${oc.latLong}">
+                    <img src="https://maps.googleapis.com/maps/api/staticmap?center=${oc.latLong}&markers=|${oc.latLong}&zoom=5&size=300x300&maptype=roadmap&key=${grailsApplication.config.getRequiredProperty('google.apikey')}" alt="location preview map"/>
+                  </g:if>
+                  <g:if test="${oc.thumbnailUrl || oc.smallImageUrl }">&nbsp;&nbsp;
+                    <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}">
+                      <img src="${oc.thumbnailUrl ?: oc.smallImageUrl}" alt="${message(code: "biocache.alt.image.for.record")}"/>
+                    </a>
+                  </g:if>
                 </td>
               </tr>
             </g:if>

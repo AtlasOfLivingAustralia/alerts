@@ -17,6 +17,7 @@ import au.org.ala.web.UserDetails
 import grails.converters.JSON
 import grails.plugin.cache.Cacheable
 import grails.util.Holders
+import grails.util.Environment
 
 class UserService {
 
@@ -100,10 +101,10 @@ class UserService {
                     }
                 }
             } else {
-                // we can't find a user in userdetails using userId - lock their account in local DB
-                if (user.locked == null || user.locked != true) {
+                // we can't find a user in userdetails using userId - lock their account in alerts DB
+                if ((user.locked == null || user.locked != true) && Environment.current == Environment.PRODUCTION) {
                     user.locked = true
-                    log.debug "Updating locked status for missing user ${user.userId}: true"
+                    log.warn "Updating locked status for missing user ${user.userId}: true"
                     userHasChanged = true
                 }
             }
