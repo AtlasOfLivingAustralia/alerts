@@ -2,6 +2,8 @@
 
 This is a small app responsible for sending email alerts when there are changes detected to endpoint web services (subscriptions).
 
+Scheduling is handled by Quartz plugin in the app. It works like RSS - it checks the JSON service and reads the results and then compares that with the previously stored check and if there are new records, it triggers an email. Relies on records being sorted by date loaded. Works with any endpoint that can return date-sorted JSON output.
+
 # Build status
 
 [![Build Status](https://travis-ci.com/AtlasOfLivingAustralia/alerts.svg?branch=master)](https://travis-ci.com/AtlasOfLivingAustralia/alerts)
