@@ -43,7 +43,6 @@
           <tbody>
           <g:each status="i" in="${records}" var="oc">
             <g:set var="link" value="${query.baseUrlForUI}/occurrences/${oc.uuid}"/>
-            <tr class="top-row"><td colspan="2">&nbsp;<code style="display: none;">${(oc as grails.converters.JSON).toString(true)}</code></td></tr>
             <tr><td>Record ID</td><td><a href="${link}">${oc.uuid}</a></td></tr>
             <tr><td>Scientific name </td><td><em>${oc.scientificName ?:"N/A"}</em></td></tr>
             <g:if test="${oc.scientificName && oc.raw_scientificName && oc.scientificName != oc.raw_scientificName}">
