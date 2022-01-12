@@ -6,7 +6,7 @@ Scheduling is handled by Quartz plugin in the app. It works like RSS - it checks
 
 # Build status
 
-[![Build Status](https://travis-ci.com/AtlasOfLivingAustralia/alerts.svg?branch=master)](https://travis-ci.com/AtlasOfLivingAustralia/alerts)
+[![Build Status](https://app.travis-ci.com/github/AtlasOfLivingAustralia/alerts.svg?branch=master)](https://app.travis-ci.com/github/AtlasOfLivingAustralia/alerts)
 
 # Dev environment set up
 
