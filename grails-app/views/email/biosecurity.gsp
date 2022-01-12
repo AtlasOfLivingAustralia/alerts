@@ -30,7 +30,7 @@
         </div>
       </td>
     </tr>
-    <tr><td><h1><g:message code="alert.title" args="[grailsApplication.config.skin.orgNameLong]"/></h1></td></tr>
+    <tr><td><h1><g:message code="alert.title" args="[grailsApplication.config.getProperty('skin.orgNameLong'), grailsApplication.config.getProperty('skin.orgNameShort')]"/></h1></td></tr>
     <tr><td>
       <p><g:message code="${message}" default="${message}" args="${[moreInfo, totalRecords + message(code:'email.records.summary'), speciesListInfo.url, speciesListInfo.name]}"/></p>
       <g:if test="${records && records.size() >= 20}">
