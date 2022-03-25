@@ -1,13 +1,12 @@
 package au.org.ala.alerts
 
 import grails.test.mixin.Mock
-import grails.test.mixin.TestFor
+import grails.testing.web.controllers.ControllerUnitTest
 import org.apache.http.HttpStatus
 import spock.lang.Specification
 
-@TestFor(UnsubscribeController)
 @Mock([Notification, User, Query, QueryResult])
-class UnsubscribeControllerSpec extends Specification {
+class UnsubscribeControllerSpec extends Specification implements ControllerUnitTest<UnsubscribeController> {
 
     def setup() {
         controller.userService = Mock(UserService)

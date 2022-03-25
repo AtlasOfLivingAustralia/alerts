@@ -253,7 +253,7 @@ class AdminController {
             def query = Query.get(1)
             def frequency = Frequency.get(1)
             def queryResult = QueryResult.findByQuery(query) ?: new QueryResult(query: query, frequency: frequency)
-            emailService.sendGroupEmail(query, [user.email], queryResult, [], frequency, 0, "", "")
+            emailService.sendGroupEmail(query, [user.email], queryResult, [], frequency, 0, "", "", [:], [:])
             msg = "Email was sent to ${user.email} - check tomcat logs for ERROR message with value \"Error sending email to addresses:\""
         } else {
             msg = "User was not found or not logged in"

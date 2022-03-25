@@ -13,12 +13,18 @@
 
 package au.org.ala.alerts
 
+import au.org.ala.userdetails.UserDetailsFromIdListRequest
 import au.org.ala.web.UserDetails
 import grails.converters.JSON
 import grails.plugin.cache.Cacheable
 import grails.util.Holders
 import grails.util.Environment
+import groovy.util.logging.Slf4j
 
+import grails.gorm.transactions.Transactional
+
+@Transactional
+@Slf4j
 class UserService {
 
     static transactional = true
@@ -207,11 +213,11 @@ class UserService {
         User.findAllByEmailIlike("%${term}%")
     }
 
-    @Cacheable("testCache")
-    boolean testEhCache(String input = "not-set") {
-        log.warn "Inside the testEhCache() method with ${input}... sleeping for 5 seconds"
-        sleep(5000)
-        log.warn "Exiting testEhCache() method"
-        true
-    }
+//    @Cacheable("testCache")
+//    boolean testEhCache(String input = "not-set") {
+//        log.warn "Inside the testEhCache() method with ${input}... sleeping for 5 seconds"
+//        sleep(5000)
+//        log.warn "Exiting testEhCache() method"
+//        true
+//    }
 }
