@@ -17,6 +17,7 @@ import au.org.ala.web.UserDetails
 import grails.converters.JSON
 import grails.plugin.cache.Cacheable
 import grails.util.Holders
+import grails.util.Environment
 
 class UserService {
 
@@ -70,7 +71,7 @@ class UserService {
      *
      * @return
      */
-    int updateUserEmails(){
+    int updateUserEmails() {
         def toUpdate = []
         log.warn "Checking all ${User.count()} users in Alerts user table."
         def count = 0
@@ -82,7 +83,7 @@ class UserService {
 
             if (userDetails) {
                 // update email
-                if (userDetails != null && user.email != userDetails.userName){
+                if (userDetails != null && user.email != userDetails.userName) {
                     user.email = userDetails.userName
                     log.debug "Updating email address for user ${user.userId}: ${userDetails.userName}"
                     userHasChanged = true
@@ -100,10 +101,10 @@ class UserService {
                     }
                 }
             } else {
-                // we can't find a user in userdetails using userId - lock their account in local DB
-                if (user.locked == null || user.locked != true) {
+                // we can't find a user in userdetails using userId - lock their account in alerts DB
+                if ((user.locked == null || user.locked != true) && Environment.current == Environment.PRODUCTION) {
                     user.locked = true
-                    log.debug "Updating locked status for missing user ${user.userId}: true"
+                    log.warn "Updating locked status for missing user ${user.userId}: true"
                     userHasChanged = true
                 }
             }
@@ -120,7 +121,7 @@ class UserService {
 
         toUpdate.each {
             log.warn "Modifying user: ${it as JSON}"
-            it.save(flush:true)
+            it.save(flush: true)
         }
 
         toUpdate.size()
@@ -128,7 +129,7 @@ class UserService {
 
     User getUser(userDetailsParam = null) {
 
-        def userDetails = !userDetailsParam? authService.userDetails(): userDetailsParam
+        def userDetails = !userDetailsParam ? authService.userDetails() : userDetailsParam
         log.debug "getUser - userDetails = ${userDetails}"
 
         if (!userDetails?.userId) {
@@ -141,7 +142,7 @@ class UserService {
         if (user == null) {
             log.debug "User is not in user table - creating new record for " + userDetails
             user = new User([email: userDetails.email, userId: userDetails.userId, locked: userDetails.locked, frequency: Frequency.findByName("weekly")])
-            user.save(flush:true, failOnError: true)
+            user.save(flush: true, failOnError: true)
             // new user gets "Blogs and News" weekly by default (opt out)
             def notificationInstance = new Notification()
             notificationInstance.query = Query.findByName(messageSource.getMessage("query.ala.blog.title", null, siteLocale))
@@ -172,8 +173,39 @@ class UserService {
         user
     }
 
-    User getUserById(userId) {
+    // get user via email, if not found in database create one
+    User getUserByEmailOrCreate(String userEmail) {
+        if (!userEmail) {
+            return null
+        }
+
+        // try to find in User database
+        User user = User.findByEmail(userEmail)
+        // if not in database try to create it
+        if (user == null) {
+            user = createUser(userEmail)
+        }
+
+        user
+    }
+
+    User createUser(String userId) {
+        User user = null
+        UserDetails userDetails = authService.getUserForUserId(userId)
+        if (userDetails?.userId && userDetails?.email) {
+            log.debug "User is not in user table - creating new record for " + userDetails
+            user = new User([email: userDetails.email, userId: userDetails.userId, locked: userDetails.locked, frequency: Frequency.findByName("weekly")])
+            user.save(flush: true, failOnError: true)
+        }
+        user
+    }
+
+    User getUserById(String userId) {
         User.findByUserId(userId)
+    }
+
+    User getUserByEmail(String userEmail) {
+        User.findByEmail(userEmail)
     }
 
     List<User> findUsers(String term) {

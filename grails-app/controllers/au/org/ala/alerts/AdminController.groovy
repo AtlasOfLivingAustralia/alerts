@@ -14,6 +14,7 @@
 package au.org.ala.alerts
 
 import au.org.ala.web.AlaSecured
+import grails.util.Holders
 import groovy.json.JsonSlurper
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.impl.client.DefaultHttpClient
@@ -26,6 +27,8 @@ class AdminController {
     def emailService
     def queryService
     def userService
+    def messageSource
+    def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
 
     def index() {}
 
@@ -273,7 +276,7 @@ class AdminController {
 
         notifications.each { Notification notification ->
             notification.unsubscribeToken = UUID.randomUUID().toString()
-            notification.save(flush:true)
+            notification.save(flush: true)
             count++
         }
 
@@ -293,11 +296,50 @@ class AdminController {
 
         users.each { User user ->
             user.unsubscribeToken = UUID.randomUUID().toString()
-            user.save(flush:true)
+            user.save(flush: true)
             count++
         }
 
         flash.message = "Updated ${count} user entries with new unsubscribeToken value (was NULL)."
         redirect(action: 'index')
+    }
+
+    def biosecurity() {
+        List queries = queryService.getALLBiosecurityQuery()
+        List subscribers = queries.collect {queryService.getSubscribers(it.id)}
+        render view: "/admin/biosecurity", model: [queries: queries, subscribers: subscribers]
+    }
+
+    def subscribeBioSecurity() {
+        if (!params.listid || params.listid.allWhitespace) {
+            flash.message = messageSource.getMessage("biosecurity.view.error.emptyspeciesid", null, "Species list uid can't be empty.", siteLocale)
+        } else if (!params.useremails || params.useremails.allWhitespace) {
+            flash.message = messageSource.getMessage("biosecurity.view.error.emptyemails", null, "User emails can't be empty.", siteLocale)
+        } else {
+            String[] emails = ((String)params.useremails).split(';')
+            Map usermap = emails?.collectEntries{[it.trim(), userService.getUserByEmailOrCreate(it.trim())]}
+            def invalidEmails = []
+            usermap.each {entry ->
+                if (entry.value == null) {
+                    invalidEmails.add(entry.key)
+                } else {
+                    queryService.subscribeBioSecurity(entry.value as User, params.listid.trim())
+                }
+            }
+            if (invalidEmails) {
+                flash.message = messageSource.getMessage("biosecurity.view.error.invalidemails", [invalidEmails.join(", ")] as Object[], "Users with emails: {0} are not found in the system.", siteLocale)
+            }
+        }
+        redirect(controller: "admin", action: "biosecurity")
+    }
+
+    def unsubscribeAllUsers() {
+        queryService.unsubscribeAllUsers(Long.valueOf(params.queryid))
+        redirect(controller: "admin", action: "biosecurity")
+    }
+
+    def deleteQuery() {
+        queryService.deleteQuery(Long.valueOf(params.queryid))
+        redirect(controller: "admin", action: "biosecurity")
     }
 }

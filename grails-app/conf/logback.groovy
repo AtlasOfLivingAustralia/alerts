@@ -70,14 +70,14 @@ switch (Environment.current) {
                 (DEBUG): [ // DEBUG and TRACE should only be enabled for non-production environments
 //                           'grails.app',
                            'au.org.ala.alerts',
-                           'au.org.ala.cas',
-                           'au.org.ala.hub',
-                           'au.org.ala.bootstrap3',
-                           'au.org.ala.biocache.hubs',
-                           'au.org.ala.downloads',
-                           'au.org.ala.downloads.plugin',
+                           //'au.org.ala.cas',
+                           //'au.org.ala.hub',
+                           //'au.org.ala.bootstrap3',
+                           //'au.org.ala.biocache.hubs',
+                           //'au.org.ala.downloads',
+                           //'au.org.ala.downloads.plugin',
                            'grails.app',
-                           'org.grails.plugins',
+                           //'org.grails.plugins',
                 ],
                 (TRACE): [
                 ]

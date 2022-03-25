@@ -1,4 +1,5 @@
 package au.org.ala.alerts
+
 import com.jayway.jsonpath.JsonPath
 import grails.converters.JSON
 import org.apache.commons.io.IOUtils
@@ -15,12 +16,13 @@ class NotificationService {
     def emailService
     def diffService
     def queryService
+    def grailsApplication
 
-    QueryResult getQueryResult(Query query, Frequency frequency){
+    QueryResult getQueryResult(Query query, Frequency frequency) {
         QueryResult qr = QueryResult.findByQueryAndFrequency(query, frequency)
-        if(qr == null){
-            qr = new QueryResult([query:query, frequency:frequency])
-            qr.save(flush:true)
+        if (qr == null) {
+            qr = new QueryResult([query: query, frequency: frequency])
+            qr.save(flush: true)
         }
         qr
     }
@@ -53,7 +55,7 @@ class NotificationService {
 
             // set check time
             qr.previousCheck = qr.lastChecked
-            
+
 
             // store the last result from the webservice call
             qr.previousResult = qr.lastResult
@@ -64,13 +66,13 @@ class NotificationService {
             qr.queryUrlUIUsed = urlStringForUI
 
             log.debug("[QUERY " + query.id + "] Has changed?: " + qr.hasChanged)
-            if(qr.hasChanged){
+            if (qr.hasChanged) {
                 qr.lastChanged = new Date()
             }
 
             qr.save(validate: true, flush: flushResult)
             qr.hasChanged
-        } catch (Exception e){
+        } catch (Exception e) {
             log.error("[QUERY " + query.id + "] There was a problem checking the URL: " + urlString, e)
         }
     }
@@ -117,7 +119,7 @@ class NotificationService {
             }
 
 
-        } catch (Exception e){
+        } catch (Exception e) {
             log.error("[QUERY " + query.id + "] There was a problem checking the URL :" + urlString, e)
             qcr.errored = true
         }
@@ -125,7 +127,7 @@ class NotificationService {
         qcr
     }
 
-    byte[] gzipResult (String json){
+    byte[] gzipResult(String json) {
         //store the last result from the webservice call
         ByteArrayOutputStream bout = new ByteArrayOutputStream()
         GZIPOutputStream gzout = new java.util.zip.GZIPOutputStream(bout)
@@ -141,9 +143,11 @@ class NotificationService {
 
         //if there is a date format, then there's a param to replace
         if (query.dateFormat) {
-            def dateToUse = org.apache.commons.lang.time.DateUtils.addSeconds(new Date(), -1 * frequency.periodInSeconds)
+            def additionalTimeoffset = grailsApplication.config.getProperty('postie.forceAllAlertsGetSent', Boolean, false) ? 24 * 180 : 1
+            def dateToUse = org.apache.commons.lang.time.DateUtils.addSeconds(new Date(), -1 * frequency.periodInSeconds * additionalTimeoffset)
             //insert the date to query with
             SimpleDateFormat sdf = new SimpleDateFormat(query.dateFormat)
+            sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
             def dateValue = sdf.format(dateToUse)
             queryPath = queryPath.replaceAll("___DATEPARAM___", dateValue)
             queryPathForUI = queryPathForUI.replaceAll("___DATEPARAM___", dateValue)
@@ -152,11 +156,11 @@ class NotificationService {
         [cleanUpUrl(query.baseUrl + queryPath), cleanUpUrl(query.baseUrlForUI + queryPathForUI)]
     }
 
-    def cleanUpUrl(url){
+    def cleanUpUrl(url) {
         def queryStart = url.indexOf("?")
-        if(queryStart>0){
-            def queryString = url.substring(queryStart+1)
-            url.substring(0, queryStart+1) + queryString.replaceAll(" ", "%20").replaceAll(":", "%3A").replaceAll("\"","%22")
+        if (queryStart > 0) {
+            def queryString = url.substring(queryStart + 1)
+            url.substring(0, queryStart + 1) + queryString.replaceAll(" ", "%20").replaceAll(":", "%3A").replaceAll("\"", "%22")
         } else {
             url
         }
@@ -182,16 +186,15 @@ class NotificationService {
                     + ", fireWhenNotZero:" + pv.propertyPath.fireWhenNotZero
                     + ", fireWhenChange:" + pv.propertyPath.fireWhenChange
             )
-            if (pv.propertyPath.fireWhenNotZero){
+            if (pv.propertyPath.fireWhenNotZero) {
                 changed = pv.currentValue.toInteger() > 0
-            }
-            else if (pv.propertyPath.fireWhenChange){
+            } else if (pv.propertyPath.fireWhenChange) {
                 changed = pv.previousValue != pv.currentValue
             }
         }
 
         if (queryService.checkChangeByDiff(queryResult.query)) {
-            log.debug("[QUERY " + queryResult.query.id + "] Has change check. Checking JSON for query : "  + queryResult.query.name)
+            log.debug("[QUERY " + queryResult.query.id + "] Has change check. Checking JSON for query : " + queryResult.query.name)
             changed = diffService.hasChangedJsonDiff(queryResult)
         }
         changed
@@ -203,7 +206,7 @@ class NotificationService {
      * @param queryResult
      * @return
      */
-    Boolean hasPropertiesChanged(Query query, Map<PropertyPath, Map<String,String>> propertyPathMap, String jsonPrevious, String jsonCurrent) {
+    Boolean hasPropertiesChanged(Query query, Map<PropertyPath, Map<String, String>> propertyPathMap, String jsonPrevious, String jsonCurrent) {
         Boolean changed = false
 
         //if there is a fireWhenNotZero or fireWhenChange ignore  idJsonPath
@@ -216,15 +219,15 @@ class NotificationService {
                     + ", fireWhenNotZero:" + propertyPath.fireWhenNotZero
                     + ", fireWhenChange:" + propertyPath.fireWhenChange
             )
-            if (propertyPath.fireWhenNotZero){
+            if (propertyPath.fireWhenNotZero) {
                 changed = value.current.toInteger() > 0
-            } else if (propertyPath.fireWhenChange){
+            } else if (propertyPath.fireWhenChange) {
                 changed = value.previous != value.current
             }
         }
 
         if (queryService.checkChangeByDiff(query)) {
-            log.debug("[QUERY " + query.id + "] Has change check. Checking JSON for query : "  + query.name)
+            log.debug("[QUERY " + query.id + "] Has change check. Checking JSON for query : " + query.name)
             changed = diffService.hasChangedJsonDiff(jsonPrevious, jsonCurrent, query)
         }
         log.debug("[QUERY " + query.id + "] Has changed: " + changed)
@@ -244,7 +247,7 @@ class NotificationService {
 
         def propertyPaths = [:]
 
-        log.debug("[QUERY " + queryResult?.query?.id?:'NULL' + "] Refreshing properties for query: " + queryResult.query.name + " : " +  queryResult.frequency)
+        log.debug("[QUERY " + queryResult?.query?.id ?: 'NULL' + "] Refreshing properties for query: " + queryResult.query.name + " : " + queryResult.frequency)
 
         try {
 
@@ -254,7 +257,7 @@ class NotificationService {
 
                 try {
                     latestValue = JsonPath.read(json, propertyPath.jsonPath)
-                } catch (Exception e){
+                } catch (Exception e) {
                     //expected behaviour for missing properties
                 }
 
@@ -265,8 +268,8 @@ class NotificationService {
                 //add to the map
                 propertyPaths.put(propertyPath, [previous: propertyValue.currentValue, current: latestValue])
             }
-        } catch (Exception e){
-            log.error("[QUERY " + queryResult?.query?.id?:'NULL' + "] There was a problem reading the supplied JSON.", e)
+        } catch (Exception e) {
+            log.error("[QUERY " + queryResult?.query?.id ?: 'NULL' + "] There was a problem reading the supplied JSON.", e)
         }
 
         propertyPaths
@@ -325,7 +328,7 @@ class NotificationService {
         }
     }
 
-    private JSONArray getAssertionsOfARecord(String baseUrl, String uuid) {
+    JSONArray getAssertionsOfARecord(String baseUrl, String uuid) {
         def url = baseUrl + '/occurrences/' + uuid + '/assertions'
         return getJsonElements(url) as JSONArray
     }
@@ -337,7 +340,7 @@ class NotificationService {
         def correctedAssertions = []
         if (assertions) {
             // all the original user assertions (issues users flagged)
-            def origUserAssertions = assertions.findAll { it.uuid && !it.relatedUuid && it.userId == userId}
+            def origUserAssertions = assertions.findAll { it.uuid && !it.relatedUuid && it.userId == userId }
 
             // all the 50001 (open issue) assertions (could belong to userId or other users)
             def openIssueIds = assertions.findAll { it.uuid && it.relatedUuid && it.code == 50000 && it.qaStatus == 50001 }.collect { it.relatedUuid }
@@ -357,7 +360,7 @@ class NotificationService {
 
     private def refreshProperties(QueryResult queryResult, json) {
 
-        log.debug("[QUERY " + queryResult?.query?.id?:'NULL' + "] Refreshing properties for query: " + queryResult.query.name + " : " +  queryResult.frequency)
+        log.debug("[QUERY " + queryResult?.query?.id ?: 'NULL' + "] Refreshing properties for query: " + queryResult.query.name + " : " + queryResult.frequency)
 
         try {
 
@@ -367,7 +370,7 @@ class NotificationService {
                 def latestValue = null
                 try {
                     latestValue = JsonPath.read(json, propertyPath.jsonPath)
-                } catch (Exception e){
+                } catch (Exception e) {
                     //expected behaviour if JSON doesnt contain the element
                 }
 
@@ -387,22 +390,22 @@ class NotificationService {
                 queryResult.addToPropertyValues(propertyValue)
             }
             queryResult.save(true)
-        } catch (Exception e){
-            log.error("[QUERY " + queryResult?.query?.id?:'NULL' + "] There was a problem reading the supplied JSON.",e)
+        } catch (Exception e) {
+            log.error("[QUERY " + queryResult?.query?.id ?: 'NULL' + "] There was a problem reading the supplied JSON.", e)
         }
     }
 
-    PropertyValue getPropertyValue(PropertyPath pp, QueryResult queryResult){
+    PropertyValue getPropertyValue(PropertyPath pp, QueryResult queryResult) {
         PropertyValue pv = PropertyValue.findByPropertyPathAndQueryResult(pp, queryResult)
-        if(pv == null){
-            pv = new PropertyValue([propertyPath:pp, queryResult:queryResult])
+        if (pv == null) {
+            pv = new PropertyValue([propertyPath: pp, queryResult: queryResult])
         }
         pv
     }
 
     def checkQueryById(queryId, freqStr) {
 
-        log.debug("[QUERY " + queryId +"] Running query...")
+        log.debug("[QUERY " + queryId + "] Running query...")
 
         def checkedCount = 0
         def checkedAndUpdatedCount = 0
@@ -424,7 +427,7 @@ class NotificationService {
         //iterate through all queries
         def checkedCount = 0
         def checkedAndUpdatedCount = 0
-        def frequency =  Frequency.findAll().first()
+        def frequency = Frequency.findAll().first()
         log.debug("Starting the running of all queries.....")
         Query.list().each { query ->
             QueryCheckResult qcr = checkStatusDontUpdate(query, Frequency.findAll().first())
@@ -432,20 +435,20 @@ class NotificationService {
             if (qcr.queryResult.hasChanged) {
                 checkedAndUpdatedCount++
             }
-            writer.write(query.id +": " + query.toString())
-            writer.write("\nUpdated (" + frequency.name+ "):" + qcr.queryResult.hasChanged)
-            writer.write("\nTime taken: " + qcr.timeTaken/1000 +' secs \n')
+            writer.write(query.id + ": " + query.toString())
+            writer.write("\nUpdated (" + frequency.name + "):" + qcr.queryResult.hasChanged)
+            writer.write("\nTime taken: " + qcr.timeTaken / 1000 + ' secs \n')
             writer.write(("-" * 80) + "\n")
             writer.flush()
         }
         log.debug("Queries checked: " + checkedCount + ", updated: " + checkedAndUpdatedCount)
     }
 
-    def debugQueriesForUser(User user, PrintWriter writer){
+    def debugQueriesForUser(User user, PrintWriter writer) {
         log.debug("Checking queries for user: " + user)
         def checkedCount = 0
         def checkedAndUpdatedCount = 0
-        def queries = (List<Query>)Query.executeQuery(
+        def queries = (List<Query>) Query.executeQuery(
                 """select q from Query q
                   inner join q.notifications n
                   inner join n.user u
@@ -458,16 +461,16 @@ class NotificationService {
             if (qcr.queryResult.hasChanged) {
                 checkedAndUpdatedCount++
             }
-            writer.write(query.id +": " + query.toString())
-            writer.write("\nUpdated (" + user.frequency.name+ "):" + qcr.queryResult.hasChanged)
-            writer.write("\nTime taken: " + qcr.timeTaken/1000 +' secs \n')
+            writer.write(query.id + ": " + query.toString())
+            writer.write("\nUpdated (" + user.frequency.name + "):" + qcr.queryResult.hasChanged)
+            writer.write("\nTime taken: " + qcr.timeTaken / 1000 + ' secs \n')
             writer.write(("-" * 80) + "\n")
             writer.flush()
         }
     }
 
 
-    def checkQueryForFrequency(String frequencyName){
+    def checkQueryForFrequency(String frequencyName) {
         log.debug("Checking frequency : " + frequencyName)
         Date now = new Date()
         Frequency frequency = Frequency.findByName(frequencyName)
@@ -476,14 +479,14 @@ class NotificationService {
         frequency = Frequency.findByName(frequencyName)
         if (frequency) {
             frequency.lastChecked = now
-            frequency.save(flush:true)
+            frequency.save(flush: true)
         } else {
             log.warn "Frequency not found for ${frequencyName}"
         }
     }
 
     //select q.id, u.frequency from query q inner join notification n on n.query_id=q.id inner join user u on n.user_id=u.id;
-    List<Map> checkQueryForFrequency(Frequency frequency, Boolean sendEmails){
+    List<Map> checkQueryForFrequency(Frequency frequency, Boolean sendEmails) {
         List<Map> recipients = []
         def queries = Query.executeQuery(
                 """select q from Query q
@@ -494,8 +497,10 @@ class NotificationService {
 
         queries.each { query ->
             log.debug("Running query: " + query.name)
-            boolean hasUpdated = checkStatus(query,frequency)
-            if (hasUpdated && sendEmails) {
+            boolean hasUpdated = checkStatus(query, frequency)
+            Boolean forceUpdate = grailsApplication.config.getProperty('postie.forceAllAlertsGetSent', Boolean, false)
+
+            if (forceUpdate || hasUpdated && sendEmails) {
                 log.debug("Query has been updated. Sending emails....")
                 //send separate emails for now
                 //if there is a change, generate an email list
@@ -514,7 +519,7 @@ class NotificationService {
                     [email: user[0], userUnsubToken: user[1], notificationUnsubToken: user[2]]
                 }
                 log.debug("Sending emails to...." + recipients*.email.join(","))
-                if(!users.isEmpty()){
+                if (!users.isEmpty()) {
                     emailService.sendGroupNotification(query, frequency, recipients)
                 }
             }
@@ -529,11 +534,11 @@ class NotificationService {
      * @param sendEmails
      * @return
      */
-    def checkQueriesForUser(User user, Boolean sendEmails){
+    def checkQueriesForUser(User user, Boolean sendEmails) {
 
         log.debug("Checking queries for user: " + user)
 
-        def queries = (List<Query>)Query.executeQuery(
+        def queries = (List<Query>) Query.executeQuery(
                 """select q from Query q
                   inner join q.notifications n
                   inner join n.user u

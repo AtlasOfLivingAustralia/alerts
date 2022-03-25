@@ -25,6 +25,9 @@ class UrlMappings {
         "/admin/user/addMyAlert/$id?"(controller: 'notification', action: 'addMyAlert')
         "/admin/user"(controller: 'admin', action: 'findUser')
         "/admin/debug/all"(controller: 'admin', action: 'debugAllAlerts')
+        "/admin/subscribeBioSecurity"(controller: 'admin', action: 'subscribeBioSecurity')
+        "/admin/unsubscribeAllUsers"(controller: 'admin', action: 'unsubscribeAllUsers')
+        "/admin/deleteQuery"(controller: 'admin', action: 'deleteQuery')
 
         "/$controller/$action?/$id?(.$format)?"{
             constraints {

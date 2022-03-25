@@ -15,8 +15,8 @@ package au.org.ala.alerts
 
 import au.ala.org.ws.security.RequireApiKey
 import grails.converters.JSON
-import org.apache.http.HttpStatus
 import grails.web.servlet.mvc.GrailsParameterMap
+import org.apache.http.HttpStatus
 
 class WebserviceController {
 
@@ -404,7 +404,7 @@ class WebserviceController {
             response.status = HttpStatus.SC_NOT_FOUND
             render ([error : "can't find a user with userId " + params.userId] as JSON)
         } else {
-            render (userService.getUserAlertsConfig(user) as JSON)
+            render(userService.getUserAlertsConfig(user) as JSON)
         }
     }
 
@@ -414,6 +414,7 @@ class WebserviceController {
         if (user == null) {
             response.status = HttpStatus.SC_NOT_FOUND
             render ([error : "can't find a user with userId " + params.userId] as JSON)
+
         } else {
             try {
                 notificationService.subscribeMyAnnotation(user)

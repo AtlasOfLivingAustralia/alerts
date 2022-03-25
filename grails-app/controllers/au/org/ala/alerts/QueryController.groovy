@@ -1,31 +1,34 @@
 package au.org.ala.alerts
 
-import au.org.ala.alerts.Query
 import au.org.ala.web.AlaSecured
+import grails.util.Holders
 import org.springframework.dao.DataIntegrityViolationException
 
 class QueryController {
 
     static allowedMethods = [save: "POST", update: "POST", update: "PUT", delete: "POST"]
-    def authService
     def queryService
+    def userService
+    def notificationService
+    def messageSource
+    def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
 
     def index() {
         redirect(action: "list", params: params)
     }
 
-    Map getQueryAndFQ(String str){
+    Map getQueryAndFQ(String str) {
         int startOfQuery = str.indexOf('?')
         def q = ""
         def fq = []
 
-        if(startOfQuery > 0) {
+        if (startOfQuery > 0) {
             String queryPart = str.substring(startOfQuery + 1)
 
             queryPart.split('&').each {
-                if(it.startsWith('q=')){
+                if (it.startsWith('q=')) {
                     q = it.substring(2)
-                } else if(it.startsWith('fq=')){
+                } else if (it.startsWith('fq=')) {
                     fq << it.substring(2)
                 }
             }
@@ -45,21 +48,21 @@ class QueryController {
             def queryPathUIParams = getQueryAndFQ(it.queryPathForUI)
             def qInconsistent = queryPathParams.q != queryPathUIParams.q
             def fqInconsistent = queryPathParams.fq.size() != queryPathUIParams.fq.size()
-            if(!fqInconsistent){
+            if (!fqInconsistent) {
                 queryPathParams.fq.eachWithIndex { param, idx ->
-                    if(queryPathUIParams.fq[idx] != param){
+                    if (queryPathUIParams.fq[idx] != param) {
                         fqInconsistent = true
                     }
                 }
             }
-            if(qInconsistent || fqInconsistent){
+            if (qInconsistent || fqInconsistent) {
                 inconsistentQueries << it
                 results.put(it.id, [qInconsistent: qInconsistent, fqInconsistent: fqInconsistent])
             }
         }
 
         params.max = Math.min(params.max ? params.int('max') : 1000, 10000)
-        [queryInstanceList:inconsistentQueries, queryInstanceTotal: inconsistentQueries.size(), results: results]
+        [queryInstanceList: inconsistentQueries, queryInstanceTotal: inconsistentQueries.size(), results: results]
     }
 
     @AlaSecured(value = 'ROLE_ADMIN', redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to view that page.")
@@ -106,7 +109,7 @@ class QueryController {
         }
 
         [queryInstance: queryInstance]
-}
+    }
 
     @AlaSecured(value = 'ROLE_ADMIN', redirectController = 'admin', redirectAction = 'index', message = "You don't have permission to update that record.")
     def update() {
@@ -149,7 +152,7 @@ class QueryController {
         }
 
         try {
-            if (queryInstance.notifications?.size() == 0){
+            if (queryInstance.notifications?.size() == 0) {
                 queryService.deleteQuery(queryInstance)
                 flash.message = message(code: 'default.deleted.message', args: [message(code: 'query.label', default: 'Query'), params.id])
                 redirect(action: "list")
@@ -162,5 +165,26 @@ class QueryController {
             flash.message = message(code: 'default.not.deleted.message', args: [message(code: 'query.label', default: 'Query'), params.id])
             redirect(action: "show", id: params.id)
         }
+    }
+
+    def subscribers() {
+        def queryid = Long.valueOf(params.queryid)
+        render view: "subscribers", model: [users: queryService.getSubscribers(queryid), queryid: queryid]
+    }
+
+    def unsubscribeAlert() {
+        if (!params.useremail || params.useremail.allWhitespace) {
+            flash.message = messageSource.getMessage("unsubscribeusers.controller.error.emptyemail", null, "User email can't be empty.", siteLocale)
+        } else if (!params.queryid || params.queryid.allWhitespace) {
+            flash.message = messageSource.getMessage("unsubscribeusers.controller.error.emptyqueryid", null, "Query Id can't be empty.", siteLocale)
+        } else {
+            User user = userService.getUserByEmail(params.useremail);
+            if (user) {
+                notificationService.deleteAlertForUser(user, Long.valueOf(params.queryid))
+            } else {
+                flash.message = messageSource.getMessage('unsubscribeusers.controller.error.emailnotfound', [params.useremail] as Object[], "User with email: {0} are not found in the system.", siteLocale)
+            }
+        }
+        redirect(action: "subscribers", params: [queryid: params.queryid])
     }
 }

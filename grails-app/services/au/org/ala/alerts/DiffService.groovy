@@ -90,7 +90,7 @@ class DiffService {
                         def curRecord = curRecords.get(i)
 
                         if (oldRecord.uuid != curRecord.uuid || oldRecord.open_assertions != curRecord.open_assertions ||
-                        oldRecord.verified_assertions != curRecord.verified_assertions || oldRecord.corrected_assertions != curRecord.corrected_assertions) {
+                                oldRecord.verified_assertions != curRecord.verified_assertions || oldRecord.corrected_assertions != curRecord.corrected_assertions) {
                             return true
                         }
                     }
@@ -133,7 +133,7 @@ class DiffService {
                 String last = decompressZipped(queryResult.lastResult)
                 String previous = decompressZipped(queryResult.previousResult)
 
-                if(!last.startsWith("<") && !previous.startsWith("<")) {
+                if (!last.startsWith("<") && !previous.startsWith("<")) {
                     // Don't try and process 401, 301, 500, etc., responses that contain HTML
                     if (!queryService.isMyAnnotation(queryResult.query)) {
                         List<String> ids1 = JsonPath.read(last, queryResult.query.recordJsonPath + "." + queryResult.query.idJsonPath)
@@ -153,17 +153,19 @@ class DiffService {
                         // so comparing occurrence uuid is not enough, we need to compare 50001/50002/50003 sections inside each occurrence record
 
                         // uuid -> occurrence record map
-                        def oldRecordsMap = JsonPath.read(previous, queryResult.query.recordJsonPath).collectEntries{ [(it.uuid): it] }
-                        def curRecordsMap = JsonPath.read(last, queryResult.query.recordJsonPath).collectEntries{ [(it.uuid): it] }
+                        def oldRecordsMap = JsonPath.read(previous, queryResult.query.recordJsonPath).collectEntries { [(it.uuid): it] }
+                        def curRecordsMap = JsonPath.read(last, queryResult.query.recordJsonPath).collectEntries { [(it.uuid): it] }
 
                         // if an occurrence record doesn't exist in previous result (added) or has different open_assertions or verified_assertions or corrected_assertions than previous (changed).
-                        records = curRecordsMap.values().findAll { !oldRecordsMap.containsKey(it.uuid) ||
-                                it.open_assertions != oldRecordsMap.get(it.uuid).open_assertions ||
-                                it.verified_assertions != oldRecordsMap.get(it.uuid).verified_assertions ||
-                                it.corrected_assertions != oldRecordsMap.get(it.uuid).corrected_assertions }
+                        records = curRecordsMap.values().findAll {
+                            !oldRecordsMap.containsKey(it.uuid) ||
+                                    it.open_assertions != oldRecordsMap.get(it.uuid).open_assertions ||
+                                    it.verified_assertions != oldRecordsMap.get(it.uuid).verified_assertions ||
+                                    it.corrected_assertions != oldRecordsMap.get(it.uuid).corrected_assertions
+                        }
 
                         // if an occurrence record exists in previous result but not in current (deleted).
-                        records.addAll(oldRecordsMap.findAll{ !curRecordsMap.containsKey(it.value.uuid) }.values())
+                        records.addAll(oldRecordsMap.findAll { !curRecordsMap.containsKey(it.value.uuid) }.values())
                     }
                 } else {
                     log.warn "queryResult last or previous objects contains HTML and not JSON - ${last} || ${previous}"

@@ -126,6 +126,8 @@ postie:
     emailInfoSender: "atlas-alerts@ala.org.au"
     defaultResourceName: "Atlas of Living Australia"
     enableEmail: false
+    # forceAllAlertsGetSent results in emails getting sent regardless if data has changed - only use in DEV env
+    forceAllAlertsGetSent: false
 ala:
     baseURL: "https://www.ala.org.au"
     userDetailsURL: "https://auth.ala.org.au/userdetails/userDetails/getUserListFull"
@@ -155,7 +157,9 @@ useSpeciesListsAlerts: true
 useSpatialAlerts: true
 useBlogsAlerts: true
 useCitizenScienceAlerts: true
-
+biosecurity:
+    moreinfo:
+        link: https://www.ala.org.au/blogs-news/ala-helps-to-stop-pests-in-their-tracks/
 environments:
     development:
         grails:

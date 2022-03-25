@@ -28,7 +28,7 @@ plugins {
     id "com.gorylenko.gradle-git-properties" version "1.4.17"
 }
 
-version "1.5.3"
+version "1.6-SNAPSHOT"
 group "au.org.ala"
 
 apply plugin:"eclipse"
@@ -114,7 +114,7 @@ dependencies {
     compile 'org.grails.plugins:cache-ehcache:3.0.0.M1'
     
     // regular JAR dependencies
-    runtime 'mysql:mysql-connector-java:5.1.42'
+    runtime 'mysql:mysql-connector-java:8.0.25'
     testRuntime "com.h2database:h2"
     testRuntime "org.seleniumhq.selenium:selenium-htmlunit-driver:2.47.1"
     testRuntime "net.sourceforge.htmlunit:htmlunit:2.18"

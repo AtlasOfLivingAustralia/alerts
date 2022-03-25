@@ -4,7 +4,7 @@
   <body>
     <h3><g:message code="alert.title" args="[grailsApplication.config.skin.orgNameLong]"/></h3>
     <h2>${title}</h2>
-    <p><g:message code="${message}" default="${message}"/></p>
+    <p><g:message code="${message}" default="${message}" args="${[records.size()]}"/></p>
 
     <p><a href="${moreInfo}"><g:message code="datasets.view.details.of.the.added" /></a></p>
 

@@ -33,15 +33,18 @@
 											  grailsApplication.config.skin.orgSupportEmail]" /></div>
 
   	<div class="message">
-		<strong><g:message code="error.status.code" args="[request.'javax.servlet.error.status_code']" />:</strong> ${request.'javax.servlet.error.message'.encodeAsHTML()}<br/>
-		<strong>Servlet:</strong> ${request.'javax.servlet.error.servlet_name'}<br/>
-		<strong>URI:</strong> ${request.'javax.servlet.error.request_uri'}<br/>
+		<g:if test="${flash.message}">
+			<Strong><g:message code="error.message" default="Error Message"/>:</Strong> ${flash.message}<br/>
+		</g:if>
 		<g:if test="${exception}">
-	  		<strong><g:message code="error.exception.message" /></strong> ${exception.message?.encodeAsHTML()} <br />
-	  		<strong><g:message code="error.exception.caused.by" /></strong> ${exception.cause?.message?.encodeAsHTML()} <br />
-	  		<strong><g:message code="error.exception.class" /></strong> ${exception.className} <br />
-	  		<strong><g:message code="error.exception.at.line" /></strong> [${exception.lineNumber}] <br />
-	  		<strong><g:message code="error.exception.code.snippet" /></strong><br />
+			<strong><g:message code="error.status.code" args="[request.'javax.servlet.error.status_code']" />:</strong> ${request.'javax.servlet.error.message'.encodeAsHTML()}<br/>
+			<strong><g:message code="error.servlet" default="Servlet"/>:</strong> ${request.'javax.servlet.error.servlet_name'}<br/>
+			<strong><g:message code="error.URI" default="URI"/>:</strong> ${request.'javax.servlet.error.request_uri'}<br/>
+	  		<strong><g:message code="error.exception.message" default="Exception Message"/>:</strong> ${exception.message?.encodeAsHTML()} <br />
+	  		<strong><g:message code="error.exception.caused.by" default="Caused by"/>:</strong> ${exception.cause?.message?.encodeAsHTML()} <br />
+	  		<strong><g:message code="error.exception.class" default="Class" />:</strong> ${exception.className} <br />
+	  		<strong><g:message code="error.exception.at.line" default="At Line" />:</strong> [${exception.lineNumber}] <br />
+	  		<strong><g:message code="error.exception.code.snippet" default="Code Snippet" />:</strong><br />
 	  		<div class="snippet">
 	  			<g:each var="cs" in="${exception.codeSnippet}">
 	  				${cs?.encodeAsHTML()}<br />
