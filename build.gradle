@@ -145,5 +145,5 @@ bootRun {
 assets {
     minifyJs = true
     minifyCss = true
-    excludes = ['**/swagger-ui-es-bundle.unminified.js']
+    excludes = ['**/swagger-ui-es-bundle.unminified.js', '**/swagger-ui.unminified.js', '**/swagger-ui-es-bundle-core.unminified.js']
 }
