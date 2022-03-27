@@ -162,12 +162,7 @@ class UserService {
         User user = User.findByUserId(userId)
         // if not in database try to create it
         if (user == null) {
-            UserDetails userDetails = authService.getUserForUserId(userId)
-            if (userDetails?.userId && userDetails?.email) {
-                log.debug "User is not in user table - creating new record for " + userDetails
-                user = new User([email: userDetails.email, userId: userDetails.userId, locked: userDetails.locked, frequency: Frequency.findByName("weekly")])
-                user.save(flush:true, failOnError: true)
-            }
+            user = createUser(userId)
         }
 
         user
