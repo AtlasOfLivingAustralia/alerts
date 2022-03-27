@@ -145,6 +145,8 @@ class EmailService {
                         message: query.updateMessage,
                         query: query,
                         moreInfo: queryResult.queryUrlUIUsed,
+                        speciesListInfo: speciesListInfo,
+                        userAssertions: userAssertions,
                         listcode: queryService.isMyAnnotation(query) ? "biocache.view.myannotation.list" : "biocache.view.list",
                         stopNotification: urlPrefix + '/notification/myAlerts',
                         records: records,
