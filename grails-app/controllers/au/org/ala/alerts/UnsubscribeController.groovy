@@ -41,7 +41,6 @@ class UnsubscribeController {
                 if (userAndNotifications.notifications.any { it.query.queryPath == myAnnotationQueryPath }) {
                     notificationService.unsubscribeMyAnnotation(userAndNotifications.user)
                 }
-
                 render view: "unsubscribed"
             }
         }
