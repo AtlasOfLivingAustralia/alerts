@@ -145,5 +145,10 @@ bootRun {
 assets {
     minifyJs = true
     minifyCss = true
-    excludes = ['**/swagger-ui-es-bundle.unminified.js', '**/swagger-ui.unminified.js', '**/swagger-ui-es-bundle-core.unminified.js']
+    maxThreads = 4
+    configOptions = [:]
+    includes = []
+    excludes = ['**/swagger-ui-es-bundle.unminified.js', '**/swagger-ui.unminified.js', '**/swagger-ui-es-bundle-core.unminified.js',
+                'swagger-ui-es-bundle.unminified.js', 'swagger-ui.unminified.js', 'swagger-ui-es-bundle-core.unminified.js','webjars/swagger-ui/4.5.0/*.js',
+                '**/swagger-ui*.js']
 }
