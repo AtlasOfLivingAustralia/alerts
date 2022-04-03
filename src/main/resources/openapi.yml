@@ -1,126 +1,81 @@
-{
-  "openapi": "3.0.1",
-  "info": {
-    "title": "Alerts REST services",
-    "description": "REST services for interacting with the alerts webapp",
-    "termsOfService": "https://www.ala.org.au/terms",
-    "contact": {
-      "name": "Support",
-      "email": "support@ala.org.au"
-    },
-    "license": {
-      "name": "Mozilla Public License 1.1",
-      "url": "https://www.mozilla.org/en-US/MPL/1.1/"
-    },
-    "version": "@info.app.version@"
-  },
-  "servers": [
-    {
-      "url": "http://devt.ala.org.au:8080"
-    }
-  ],
-  "paths": {
-    "/webservice/createUserAlerts": {
-      "post": {
-        "tags": [
-            "alerts"
-        ],
-        "summary": "Create User Alerts",
-        "description": "Create User Alerts",
-        "operationId": "Create User Alerts",
-        "parameters": [
-          {
-            "name": "userId",
-            "in": "query",
-            "description": "userId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "email",
-            "in": "query",
-            "description": "email",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "firstName",
-            "in": "query",
-            "description": "firstName",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "lastName",
-            "in": "query",
-            "description": "lastName",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Create User Alerts"
-          }
-        }
-      }
-    },
-    "/webservice/deleteAllAlertsForUser": {
-      "post": {
-        "tags": [
-            "alerts"
-        ],
-        "summary": "Unsubscribe",
-        "description": "Unsubscribe",
-        "operationId": "Unsubscribe",
-        "parameters": [
-          {
-            "name": "userId",
-            "in": "path",
-            "description": "userId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Unsubscribed"
-          }
-        }
-      }
-    },
-    "/webservice/getUserAlertsWS": {
-      "get": {
-        "tags": [
-            "alerts"
-        ],
-        "summary": "Get User Alerts",
-        "description": "Get User Alerts",
-        "operationId": "Get User Alerts",
-        "parameters": [
-          {
-            "name": "userId",
-            "in": "path",
-            "description": "userId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Get User Alerts"
-          }
-        }
-      }
-    }
-  }
-}
+openapi: 3.0.1
+info:
+  title: Alerts REST services
+  description: REST services for interacting with the alerts webapp
+  termsOfService: https://www.ala.org.au/terms
+  contact:
+    name: Support
+    email: support@ala.org.au
+  license:
+    name: Mozilla Public License 1.1
+    url: https://www.mozilla.org/en-US/MPL/1.1/
+  version: "@info.app.version@"
+servers:
+  - url: http://devt.ala.org.au:8080
+paths:
+  "/api/alerts/user/createAlerts":
+    post:
+      tags:
+        - alerts
+      summary: Create User Alerts
+      description: Create User Alerts
+      operationId: Create User Alerts
+      parameters:
+        - name: userId
+          in: query
+          description: userId
+          required: true
+          schema:
+            type: string
+        - name: email
+          in: query
+          description: email
+          schema:
+            type: string
+        - name: firstName
+          in: query
+          description: firstName
+          schema:
+            type: string
+        - name: lastName
+          in: query
+          description: lastName
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Create User Alerts
+  "/api/alerts/user/{userId}/unsubscribe":
+    post:
+      tags:
+        - alerts
+      summary: Unsubscribe
+      description: Unsubscribe
+      operationId: Unsubscribe
+      parameters:
+        - name: userId
+          in: path
+          description: userId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Unsubscribed
+  "/api/alerts/user/{userId}":
+    get:
+      tags:
+        - alerts
+      summary: Get User Alerts
+      description: Get User Alerts
+      operationId: Get User Alerts
+      parameters:
+        - name: userId
+          in: path
+          description: userId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Get User Alerts

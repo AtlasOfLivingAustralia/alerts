@@ -19,7 +19,7 @@ buildscript {
     }
     dependencies {
         classpath "org.grails:grails-gradle-plugin:$grailsVersion"
-        classpath "com.bertramlabs.plugins:asset-pipeline-gradle:2.14.1"
+        classpath "com.bertramlabs.plugins:asset-pipeline-gradle:3.0.10"
         classpath "org.grails.plugins:hibernate5:${gormVersion-".RELEASE"}"
         classpath 'org.grails.plugins:quartz:2.0.13'
     }
@@ -29,7 +29,7 @@ plugins {
     id "com.gorylenko.gradle-git-properties" version "1.4.17"
 }
 
-version "1.6-SNAPSHOT"
+version "2.0-SNAPSHOT"
 group "au.org.ala"
 
 apply plugin:"eclipse"
@@ -92,7 +92,7 @@ dependencies {
     runtime "org.glassfish.web:el-impl:2.1.2-b03"
     runtime "com.h2database:h2"
     runtime "org.apache.tomcat:tomcat-jdbc"
-    runtime "com.bertramlabs.plugins:asset-pipeline-grails:2.15.1"
+    runtime "com.bertramlabs.plugins:asset-pipeline-grails:3.2.4"
 
     //compile "org.grails.plugins:grails-plugin-converters" // only needed for grails 3.3
     //testCompile "org.grails:grails-plugin-testing"
