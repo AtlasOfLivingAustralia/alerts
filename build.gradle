@@ -19,8 +19,8 @@ buildscript {
     }
     dependencies {
         classpath "org.grails:grails-gradle-plugin:$grailsVersion"
-        classpath "com.bertramlabs.plugins:asset-pipeline-gradle:3.0.10"
-        classpath "org.grails.plugins:hibernate5:${gormVersion-".RELEASE"}"
+        classpath "com.bertramlabs.plugins:asset-pipeline-gradle:3.2.4"
+        classpath "org.grails.plugins:hibernate5:7.0.2"
         classpath 'org.grails.plugins:quartz:2.0.13'
     }
 }
@@ -85,7 +85,6 @@ dependencies {
 //    compile "org.hibernate:hibernate-core:5.4.0.Final"
 //    compile "org.hibernate:hibernate-ehcache:5.4.0.Final"
     compile "org.hibernate:hibernate-jcache"
-    runtime 'org.ehcache:ehcache'
 
     compile "org.grails.plugins:gsp"
     console "org.grails:grails-console"
