@@ -2,7 +2,6 @@ package au.org.ala.alerts
 
 import com.jayway.jsonpath.JsonPath
 import grails.converters.JSON
-import groovy.util.logging.Slf4j
 import org.apache.commons.io.IOUtils
 import org.grails.web.json.JSONArray
 import org.grails.web.json.JSONElement
@@ -13,7 +12,6 @@ import java.text.SimpleDateFormat
 import java.util.zip.GZIPOutputStream
 
 @Transactional
-@Slf4j
 class NotificationService {
 
     static transactional = true

@@ -19,12 +19,10 @@ import grails.converters.JSON
 import grails.plugin.cache.Cacheable
 import grails.util.Holders
 import grails.util.Environment
-import groovy.util.logging.Slf4j
 
 import grails.gorm.transactions.Transactional
 
 @Transactional
-@Slf4j
 class UserService {
 
     static transactional = true
