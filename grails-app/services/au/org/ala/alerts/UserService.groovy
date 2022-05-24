@@ -211,11 +211,11 @@ class UserService {
         User.findAllByEmailIlike("%${term}%")
     }
 
-//    @Cacheable("testCache")
-//    boolean testEhCache(String input = "not-set") {
-//        log.warn "Inside the testEhCache() method with ${input}... sleeping for 5 seconds"
-//        sleep(5000)
-//        log.warn "Exiting testEhCache() method"
-//        true
-//    }
+    @Cacheable("testCache")
+    boolean testEhCache(String input = "not-set") {
+        log.warn "Inside the testEhCache() method with ${input}... sleeping for 5 seconds"
+        sleep(5000)
+        log.warn "Exiting testEhCache() method"
+        true
+    }
 }
