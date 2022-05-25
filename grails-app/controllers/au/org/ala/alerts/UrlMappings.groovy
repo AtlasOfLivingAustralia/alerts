@@ -23,6 +23,7 @@ class UrlMappings {
         "/admin/user/deleteMyAlert/$id?"(controller: 'notification', action: 'deleteMyAlert')
         "/admin/user/deleteMyAlertWR/$id?"(controller: 'notification', action: 'deleteMyAlertWR')
         "/admin/user/addMyAlert/$id?"(controller: 'notification', action: 'addMyAlert')
+        "/admin/user/changeFrequency/$id?"(controller: 'notification', action: 'changeFrequency')
         "/admin/user"(controller: 'admin', action: 'findUser')
         "/admin/debug/all"(controller: 'admin', action: 'debugAllAlerts')
         "/admin/subscribeBioSecurity"(controller: 'admin', action: 'subscribeBioSecurity')
