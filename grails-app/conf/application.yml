@@ -252,14 +252,14 @@ security:
         enabled: false
     oidc:
         enabled: true
-        discoveryUri: https://auth-dev.ala.org.au/cas/oidc/.well-known
-        clientId: auth-dev-oidc-client-id
-        secret: u85789gnghdfb765
+        discoveryUri: https://auth-test.ala.org.au/cas/oidc/.well-known
+        clientId: JiSqKyN3YsKwaPrADyD5Fdcbofq1fft33BQl
+        secret: 6OGSed0yX7ajsMsrOvpgFEFB5qJzwdxeMI0Y
         scope: openid,profile,email,ala,roles,user_defined
 #        allowUnsignedIdTokens: true
     jwt:
         enabled: true
-        discoveryUri: https://auth-dev.ala.org.au/cas/oidc/.well-known
+        discoveryUri: https://auth-test.ala.org.au/cas/oidc/.well-known
         requiredClaims: ["sub", "iat", "exp", "jti", "client_id"]
         fallbackToLegacyBehaviour: true
 
