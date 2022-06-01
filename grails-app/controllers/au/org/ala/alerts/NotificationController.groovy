@@ -47,7 +47,7 @@ class NotificationController {
         def user = getUser()
         try {
             notificationService.subscribeMyAnnotation(user)
-            render([success: true] as JSON)
+            render ([success: true] as JSON)
         } catch (ignored) {
             response.sendError(HttpStatus.SC_INTERNAL_SERVER_ERROR, "failed to subscribe to 'my annotation' alert for user " + user?.getUserId())
         }
@@ -58,7 +58,7 @@ class NotificationController {
         def user = getUser()
         try {
             notificationService.unsubscribeMyAnnotation(user)
-            render([success: true] as JSON)
+            render ([success: true] as JSON)
         } catch (ignored) {
             response.sendError(HttpStatus.SC_INTERNAL_SERVER_ERROR, "failed to unsubscribe 'my annotation' alert for user " + user?.getUserId())
         }
@@ -94,7 +94,7 @@ class NotificationController {
     }
 
     def changeFrequency = {
-        def user = userService.getUser()
+        def user = getUser()
         log.debug("Changing frequency to: " + params.frequency + " for user ${user}")
         notificationService.updateFrequency(user, params.frequency)
         return null

@@ -89,15 +89,15 @@ class EmailService {
         def records = retrieveRecordForQuery(query, queryResult)
         def totalRecords = queryService.fireWhenNotZeroProperty(queryResult)
         [
-                title           : query.name,
-                message         : query.updateMessage,
-                moreInfo        : queryResult.queryUrlUIUsed,
-                listcode        : queryService.isMyAnnotation(query) ? "biocache.view.myannotation.list" : "biocache.view.list",
-                query           : query,
-                stopNotification: grailsApplication.config.security.cas.appServerName + grailsApplication.config.security.cas.contextPath + '/notification/myAlerts',
-                frequency       : frequency,
-                records         : records,
-                totalRecords    : totalRecords >= 0 ? totalRecords : records.size()
+            title           : query.name,
+            message         : query.updateMessage,
+            moreInfo        : queryResult.queryUrlUIUsed,
+            listcode        : queryService.isMyAnnotation(query) ? "biocache.view.myannotation.list" : "biocache.view.list",
+            query           : query,
+            stopNotification: grailsApplication.config.security.cas.appServerName + grailsApplication.config.security.cas.contextPath + '/notification/myAlerts',
+            frequency       : frequency,
+            records         : records,
+            totalRecords    : totalRecords >= 0 ? totalRecords : records.size()
         ]
     }
 
@@ -140,21 +140,21 @@ class EmailService {
                 subject query.name
                 bcc subsetOfAddresses
                 body(view: query.emailTemplate,
-                        plugin: "email-confirmation",
-                        model: [title           : localeSubject,
-                                message         : query.updateMessage,
-                                query           : query,
-                                moreInfo        : queryResult.queryUrlUIUsed,
-                                speciesListInfo : speciesListInfo,
-                                userAssertions  : userAssertions,
-                                listcode        : queryService.isMyAnnotation(query) ? "biocache.view.myannotation.list" : "biocache.view.list",
-                                stopNotification: urlPrefix + '/notification/myAlerts',
-                                records         : records,
-                                frequency       : messageSource.getMessage('frequency.' + frequency, null, siteLocale),
-                                totalRecords    : (totalRecords >= 0 ? totalRecords : records.size()),
-                                unsubscribeAll  : urlPrefix + "/unsubscribe?token=" + userUnsubToken,
-                                unsubscribeOne  : urlPrefix + "/unsubscribe?token=" + notificationUnsubToken
-                        ])
+                    plugin: "email-confirmation",
+                    model: [title: localeSubject,
+                        message: query.updateMessage,
+                        query: query,
+                        moreInfo: queryResult.queryUrlUIUsed,
+                        speciesListInfo: speciesListInfo,
+                        userAssertions: userAssertions,
+                        listcode: queryService.isMyAnnotation(query) ? "biocache.view.myannotation.list" : "biocache.view.list",
+                        stopNotification: urlPrefix + '/notification/myAlerts',
+                        records: records,
+                        frequency: messageSource.getMessage('frequency.' + frequency, null, siteLocale),
+                        totalRecords: (totalRecords >= 0 ? totalRecords : records.size()),
+                        unsubscribeAll: urlPrefix + "/unsubscribe?token=" + userUnsubToken,
+                        unsubscribeOne: urlPrefix + "/unsubscribe?token=" + notificationUnsubToken
+                    ])
             }
         } catch (Exception e) {
             log.error("Error sending email to addresses: " + subsetOfAddresses, e)

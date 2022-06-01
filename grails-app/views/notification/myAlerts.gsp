@@ -150,7 +150,7 @@
           $(document).ready( function(){
 
               $("#userFrequency").change(function(){
-                  $.get('changeFrequency?frequency='+$('#userFrequency').val())
+                  $.get('changeFrequency?userId=${userId}&frequency='+$('#userFrequency').val())
                       .success(function() {
                           //alert("Your alerts have been changed to : " + $('#userFrequency').val());
                       })

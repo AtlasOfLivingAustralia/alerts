@@ -479,7 +479,7 @@ class WebserviceController {
         User user = userService.getUserById(params.userId)
         if (user == null) {
             response.status = HttpStatus.SC_NOT_FOUND
-            render([error: "can't find a user with userId " + params.userId] as JSON)
+            render ([error : "can't find a user with userId " + params.userId] as JSON)
         } else {
             render(userService.getUserAlertsConfig(user) as JSON)
         }
@@ -487,10 +487,11 @@ class WebserviceController {
 
     @RequireApiKey
     def subscribeMyAnnotationWS() {
-        User user = userService.getUser((String) params.userId)
+        User user = userService.getUser((String)params.userId)
         if (user == null) {
             response.status = HttpStatus.SC_NOT_FOUND
-            render([error: "can't find a user with userId " + params.userId] as JSON)
+            render ([error : "can't find a user with userId " + params.userId] as JSON)
+
         } else {
             try {
                 notificationService.subscribeMyAnnotation(user)
@@ -506,7 +507,7 @@ class WebserviceController {
         User user = userService.getUserById(params.userId)
         if (user == null) {
             response.status = HttpStatus.SC_NOT_FOUND
-            render([error: "can't find a user with userId " + params.userId] as JSON)
+            render ([error : "can't find a user with userId " + params.userId] as JSON)
         } else {
             try {
                 notificationService.unsubscribeMyAnnotation(user)
