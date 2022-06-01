@@ -1,0 +1,87 @@
+openapi: "3.0.1"
+info:
+  title: "Alerts HTTP services"
+  description: "REST services for interacting with the alerts webapp"
+  version: "@info.app.version@"
+servers:
+  - url: "https://6ntthrif32.execute-api.ap-southeast-2.amazonaws.com/{basePath}"
+    variables:
+      basePath:
+        default: ""
+tags:
+  - name: "aws:cloudformation:stack-id"
+    x-amazon-apigateway-tag-value: "arn:aws:cloudformation:ap-southeast-2:748909248546:stack/alerts-api-stack/cfc864c0-b3d7-11ec-912f-0a7a1303494a"
+  - name: "aws:cloudformation:stack-name"
+    x-amazon-apigateway-tag-value: "alerts-api-stack"
+  - name: "aws:cloudformation:logical-id"
+    x-amazon-apigateway-tag-value: "AlertsApi"
+paths:
+  /api/alerts/user/{userId}:
+    get:
+      operationId: "Get User Alerts"
+      responses:
+        default:
+          description: "Default response for GET /api/alerts/user/{userId}"
+      security:
+        - jwt_authorizer: []
+      x-amazon-apigateway-integration:
+        payloadFormatVersion: "1.0"
+        type: "http_proxy"
+        httpMethod: "GET"
+        uri: "https://alerts-test.ala.org.au/api/alerts/user/{userId}"
+        connectionType: "INTERNET"
+    parameters:
+      - name: "userId"
+        in: "path"
+        description: "Generated path parameter for userId"
+        required: true
+        schema:
+          type: "string"
+  /api/alerts/user/createAlerts:
+    post:
+      operationId: "Create User Alerts"
+      responses:
+        default:
+          description: "Default response for POST /api/alerts/user/createAlerts"
+      security:
+        - jwt_authorizer: []
+      x-amazon-apigateway-integration:
+        payloadFormatVersion: "1.0"
+        type: "http_proxy"
+        httpMethod: "POST"
+        uri: "https://alerts-test.ala.org.au/api/alerts/user/createAlerts"
+        connectionType: "INTERNET"
+  /api/alerts/user/{userId}/unsubscribe:
+    post:
+      operationId: "Unsubscribe"
+      responses:
+        default:
+          description: "Default response for POST /api/alerts/user/{userId}/unsubscribe"
+      security:
+        - jwt_authorizer: []
+      x-amazon-apigateway-integration:
+        payloadFormatVersion: "1.0"
+        type: "http_proxy"
+        httpMethod: "POST"
+        uri: "https://alerts-test.ala.org.au/api/alerts/user/{userId}/unsubscribe"
+        connectionType: "INTERNET"
+    parameters:
+      - name: "userId"
+        in: "path"
+        description: "Generated path parameter for userId"
+        required: true
+        schema:
+          type: "string"
+components:
+  securitySchemes:
+    jwt_authorizer:
+      type: "oauth2"
+      flows: {}
+      x-amazon-apigateway-authorizer:
+        identitySource: "$request.header.Authorization"
+        jwtConfiguration:
+          audience:
+            - "JiSqKyN3YsKwaPrADyD5Fdcbofq1fft33BQl"
+          issuer: "https://auth-dev.ala.org.au/cas/oidc"
+        type: "jwt"
+x-amazon-apigateway-importexport-version: "1.0"

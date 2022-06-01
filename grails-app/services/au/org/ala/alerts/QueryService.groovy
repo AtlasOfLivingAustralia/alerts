@@ -4,6 +4,9 @@ import grails.util.Holders
 import org.grails.web.json.JSONObject
 import org.springframework.dao.DataIntegrityViolationException
 
+import grails.gorm.transactions.Transactional
+
+@Transactional
 class QueryService {
 
     static transactional = true

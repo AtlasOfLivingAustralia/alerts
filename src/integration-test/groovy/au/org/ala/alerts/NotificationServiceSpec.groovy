@@ -6,7 +6,7 @@ import au.org.ala.alerts.Query
 import au.org.ala.alerts.User
 import com.jayway.jsonpath.JsonPath
 import grails.testing.mixin.integration.Integration
-import grails.transaction.Rollback
+import grails.gorm.transactions.Rollback
 import grails.util.Holders
 import org.apache.commons.io.IOUtils
 import org.springframework.beans.factory.annotation.Autowired

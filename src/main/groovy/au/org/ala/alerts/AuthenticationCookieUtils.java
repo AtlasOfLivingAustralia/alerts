@@ -3,11 +3,12 @@ package au.org.ala.auth;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AuthenticationCookieUtils {
 
-    private final static Logger logger = Logger.getLogger(AuthenticationCookieUtils.class);
+    private final static Logger logger = LoggerFactory.getLogger(AuthenticationCookieUtils.class);
 
     public static final String ALA_AUTH_COOKIE = "ALA-Auth";
 

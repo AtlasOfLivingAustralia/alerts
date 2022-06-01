@@ -7,9 +7,11 @@ import org.grails.web.json.JSONArray
 import org.grails.web.json.JSONElement
 import org.grails.web.json.JSONObject
 
+import grails.gorm.transactions.Transactional
 import java.text.SimpleDateFormat
 import java.util.zip.GZIPOutputStream
 
+@Transactional
 class NotificationService {
 
     static transactional = true

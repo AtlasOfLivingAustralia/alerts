@@ -15,9 +15,17 @@ package au.org.ala.alerts
 
 import au.ala.org.ws.security.RequireApiKey
 import grails.converters.JSON
+import grails.gorm.transactions.Transactional
 import grails.web.servlet.mvc.GrailsParameterMap
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.responses.ApiResponse
 import org.apache.http.HttpStatus
 
+import static io.swagger.v3.oas.annotations.enums.ParameterIn.PATH
+import static io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY
+
+@Transactional
 class WebserviceController {
 
     def queryService
@@ -343,6 +351,25 @@ class WebserviceController {
         redirectIfSupplied(params)
     }
 
+    @Operation(
+            method = "POST",
+            tags = "alerts",
+            operationId = "Unsubscribe",
+            summary = "Unsubscribe",
+            description = "Unsubscribe",
+            parameters = [
+                    @Parameter(name = "userId",
+                            in = PATH,
+                            required = true,
+                            description = "userId")
+            ],
+            responses = [
+                    @ApiResponse(
+                            description = "Unsubscribed",
+                            responseCode = "200"
+                    )
+            ]
+    )
     @RequireApiKey
     def deleteAllAlertsForUser() {
         if (!params.userId) {
@@ -367,6 +394,37 @@ class WebserviceController {
         }
     }
 
+    @Operation(
+            method = "POST",
+            tags = "alerts",
+            operationId = "Create User Alerts",
+            summary = "Create User Alerts",
+            description = "Create User Alerts",
+            parameters = [
+                    @Parameter(name = "userId",
+                            in = QUERY,
+                            required = true,
+                            description = "userId"),
+                    @Parameter(name = "email",
+                            in = QUERY,
+                            required = false,
+                            description = "email"),
+                    @Parameter(name = "firstName",
+                            in = QUERY,
+                            required = false,
+                            description = "firstName"),
+                    @Parameter(name = "lastName",
+                            in = QUERY,
+                            required = false,
+                            description = "lastName")
+            ],
+            responses = [
+                    @ApiResponse(
+                            description = "Create User Alerts",
+                            responseCode = "200"
+                    )
+            ]
+    )
     @RequireApiKey
     def createUserAlerts() {
         if (!params.userId) {
@@ -397,6 +455,25 @@ class WebserviceController {
         user
     }
 
+    @Operation(
+            method = "GET",
+            tags = "alerts",
+            operationId = "Get User Alerts",
+            summary = "Get User Alerts",
+            description = "Get User Alerts",
+            parameters = [
+                    @Parameter(name = "userId",
+                            in = PATH,
+                            required = true,
+                            description = "userId")
+            ],
+            responses = [
+                    @ApiResponse(
+                            description = "Get User Alerts",
+                            responseCode = "200"
+                    )
+            ]
+    )
     @RequireApiKey
     def getUserAlertsWS() {
         User user = userService.getUserById(params.userId)

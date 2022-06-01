@@ -13,12 +13,16 @@
 
 package au.org.ala.alerts
 
+import au.org.ala.userdetails.UserDetailsFromIdListRequest
 import au.org.ala.web.UserDetails
 import grails.converters.JSON
 import grails.plugin.cache.Cacheable
 import grails.util.Holders
 import grails.util.Environment
 
+import grails.gorm.transactions.Transactional
+
+@Transactional
 class UserService {
 
     static transactional = true

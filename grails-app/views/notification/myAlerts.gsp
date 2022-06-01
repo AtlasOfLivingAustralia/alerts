@@ -1,4 +1,5 @@
 <%@ page contentType="text/html;charset=UTF-8" %>
+<%@ page expressionCodec="none" %>
 <%@ page import="au.org.ala.alerts.Notification" %>
 <!doctype html>
 <html>

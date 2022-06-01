@@ -1,9 +1,11 @@
 package au.org.ala.alerts
 
 import au.org.ala.web.AlaSecured
+import grails.gorm.transactions.Transactional
 import grails.util.Holders
 import org.springframework.dao.DataIntegrityViolationException
 
+@Transactional
 class QueryController {
 
     static allowedMethods = [save: "POST", update: "POST", update: "PUT", delete: "POST"]
