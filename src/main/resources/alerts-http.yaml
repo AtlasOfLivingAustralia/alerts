@@ -1,7 +1,7 @@
 openapi: "3.0.1"
 info:
   title: "Alerts HTTP services"
-  description: "REST services for interacting with the alerts webapp"
+  description: "HTTP services for interacting with the alerts webapp."
   version: "@info.app.version@"
 servers:
   - url: "https://6ntthrif32.execute-api.ap-southeast-2.amazonaws.com/{basePath}"

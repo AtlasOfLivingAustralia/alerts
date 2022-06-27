@@ -1,6 +1,6 @@
 swagger: "2.0"
 info:
-  description: "REST services for interacting with the alerts webapp"
+  description: "REST services for interacting with the alerts webapp."
   version: "@info.app.version@"
   title: "Alerts Rest API"
 host: "apis.dev.ala.org.au"
