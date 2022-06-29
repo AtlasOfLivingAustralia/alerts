@@ -171,7 +171,7 @@ class BootStrap {
                     recordJsonPath: '\$[*]',
                     idJsonPath: 'name'
             ])).save()
-            new PropertyPath([name: "layer_count", jsonPath: "layerList", query: newSpatialLayers, fireWhenChanged: true]).save()
+            new PropertyPath([name: "layer_count", jsonPath: "\$", query: newSpatialLayers, fireWhenChange: true]).save()
         }
 
         title = messageSource.getMessage("query.occurrence.datasets.title", null, siteLocale)
@@ -190,7 +190,7 @@ class BootStrap {
                     recordJsonPath: '\$[*]',
                     idJsonPath: 'uid'
             ])).save()
-            new PropertyPath([name: "dataset_count", jsonPath: "\$", query: newOccurrenceDatasets, fireWhenChanged: true]).save()
+            new PropertyPath([name: "dataset_count", jsonPath: "\$", query: newOccurrenceDatasets, fireWhenChange: true]).save()
         }
 
         title = messageSource.getMessage("query.datasets.title", null, siteLocale)
@@ -209,7 +209,7 @@ class BootStrap {
                     recordJsonPath: '\$[*]',
                     idJsonPath: 'uid'
             ])).save()
-            new PropertyPath([name: "dataset_count", jsonPath: "\$", query: newDatasets, fireWhenChanged: true]).save()
+            new PropertyPath([name: "dataset_count", jsonPath: "\$", query: newDatasets, fireWhenChange: true]).save()
         }
 
         title = messageSource.getMessage("query.species.lists.title", null, siteLocale)
@@ -230,7 +230,7 @@ class BootStrap {
                     recordJsonPath: '\$[*]',
                     idJsonPath: 'uid'
             ])).save()
-            new PropertyPath([name: "species_list_count", jsonPath: "\$", query: newSpeciesLists, fireWhenChanged: true]).save()
+            new PropertyPath([name: "species_list_count", jsonPath: "\$", query: newSpeciesLists, fireWhenChange: true]).save()
         }
 
         title = messageSource.getMessage("query.ala.blog.title", null, siteLocale)
@@ -251,7 +251,7 @@ class BootStrap {
                     recordJsonPath: '\$.[*]',
                     idJsonPath: 'id'
             ])).save()
-            new PropertyPath([name: "last_blog_id", jsonPath: "posts", query: newBlogs, fireWhenChanged: true]).save()
+            new PropertyPath([name: "last_blog_id", jsonPath: "\$", query: newBlogs, fireWhenChange: true]).save()
         }
         log.info("end of preloadQueries")
     }

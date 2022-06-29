@@ -24,10 +24,8 @@ class EmailService {
      * @return
      */
     def retrieveRecordForQuery(query, queryResult) {
-        //if there's a fire on property, then don't do a diff
-        if (queryService.hasAFireProperty(query) && query.recordJsonPath) {
-            diffService.getNewRecords(queryResult)
-        } else if (query.recordJsonPath) {
+        // WIP  - 161 - TODO - update this.
+        if (query.recordJsonPath) {
             diffService.getNewRecordsFromDiff(queryResult)
         } else {
             []

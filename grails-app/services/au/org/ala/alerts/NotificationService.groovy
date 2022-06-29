@@ -263,12 +263,17 @@ class NotificationService {
                     //expected behaviour for missing properties
                 }
 
+                def currentValue = null
+                if (latestValue != null && latestValue instanceof List) {
+                    currentValue = latestValue.size().toString()
+                } else {
+                    currentValue = latestValue
+                }
+
                 //get property value for this property path
                 PropertyValue propertyValue = getPropertyValue(propertyPath, queryResult)
-                propertyValue.previousValue = propertyValue.currentValue
-
                 //add to the map
-                propertyPaths.put(propertyPath, [previous: propertyValue.currentValue, current: latestValue])
+                propertyPaths.put(propertyPath, [previous:  propertyValue.currentValue, current: currentValue])
             }
         } catch (Exception e) {
             log.error("[QUERY " + queryResult?.query?.id ?: 'NULL' + "] There was a problem reading the supplied JSON.", e)
