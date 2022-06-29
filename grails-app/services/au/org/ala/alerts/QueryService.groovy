@@ -44,6 +44,10 @@ class QueryService {
         query.propertyPaths.any { it.fireWhenChange || it.fireWhenNotZero }
     }
 
+    Boolean firesWhenNotZero(query){
+        query.propertyPaths.any { it.fireWhenNotZero }
+    }
+
     Boolean isMyAnnotation(Query query) {
         // Currently only 'my annotation' alert is user specific (among all non-custom queries)
         query.name.startsWith(messageSource.getMessage("query.myannotations.title", null, siteLocale))
