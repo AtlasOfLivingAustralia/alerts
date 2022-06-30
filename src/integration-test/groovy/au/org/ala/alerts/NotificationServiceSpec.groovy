@@ -5,6 +5,7 @@ import grails.gorm.transactions.Rollback
 import grails.util.Holders
 import groovy.json.JsonBuilder
 import org.apache.commons.io.IOUtils
+import org.apache.commons.lang.time.DateUtils
 import org.springframework.beans.factory.annotation.Autowired
 import spock.lang.Ignore
 import spock.lang.Specification
@@ -105,7 +106,7 @@ class NotificationServiceSpec extends Specification {
                 new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()))
 
         // update Query queryPath to search annotations of past 60 days, increase it if no annotations found
-        def dateToUse = org.apache.commons.lang.time.DateUtils.addDays(new Date(), -60)
+        def dateToUse = DateUtils.addDays(new Date(), -60)
         SimpleDateFormat sdf = new SimpleDateFormat(annotations.dateFormat)
         def updatedQP = annotations.queryPath.replaceAll("___DATEPARAM___", sdf.format(dateToUse))
         annotations.queryPath = updatedQP
@@ -143,7 +144,7 @@ class NotificationServiceSpec extends Specification {
                 new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()))
 
         // update Query queryPath to search annotations of past 60 days, increase it if no annotations found
-        def dateToUse = org.apache.commons.lang.time.DateUtils.addDays(new Date(), -60)
+        def dateToUse = DateUtils.addDays(new Date(), -60)
         SimpleDateFormat sdf = new SimpleDateFormat(newRecords.dateFormat)
         def updatedQP = newRecords.queryPath.replaceAll("___DATEPARAM___", sdf.format(dateToUse))
         newRecords.queryPath = updatedQP
@@ -181,7 +182,7 @@ class NotificationServiceSpec extends Specification {
                 new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()))
 
         // update Query queryPath to search annotations of past 60 days, increase it if no annotations found
-        def dateToUse = org.apache.commons.lang.time.DateUtils.addDays(new Date(), -60)
+        def dateToUse = DateUtils.addDays(new Date(), -60)
         SimpleDateFormat sdf = new SimpleDateFormat(newImages.dateFormat)
         def updatedQP = newImages.queryPath.replaceAll("___DATEPARAM___", sdf.format(dateToUse))
         newImages.queryPath = updatedQP
@@ -219,7 +220,7 @@ class NotificationServiceSpec extends Specification {
                 new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()))
 
         // update Query queryPath to search annotations of past 60 days, increase it if no annotations found
-        def dateToUse = org.apache.commons.lang.time.DateUtils.addDays(new Date(), -30*7)
+        def dateToUse = DateUtils.addDays(new Date(), -30*7)
         SimpleDateFormat sdf = new SimpleDateFormat(citizen.dateFormat)
         def updatedQP = citizen.queryPath.replaceAll("___DATEPARAM___", sdf.format(dateToUse))
         citizen.queryPath = updatedQP
@@ -257,7 +258,7 @@ class NotificationServiceSpec extends Specification {
                 new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()))
 
         // update Query queryPath to search annotations of past 60 days, increase it if no annotations found
-        def dateToUse = org.apache.commons.lang.time.DateUtils.addDays(new Date(), -30*17)
+        def dateToUse = DateUtils.addDays(new Date(), -30*17)
         SimpleDateFormat sdf = new SimpleDateFormat(newCitizenImages.dateFormat)
         def updatedQP = newCitizenImages.queryPath.replaceAll("___DATEPARAM___", sdf.format(dateToUse))
         newCitizenImages.queryPath = updatedQP
