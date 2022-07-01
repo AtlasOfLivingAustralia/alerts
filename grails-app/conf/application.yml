@@ -253,8 +253,6 @@ security:
     oidc:
         enabled: true
         discoveryUri: https://auth-dev.ala.org.au/cas/oidc/.well-known
-        clientId: auth-dev-oidc-client-id
-        secret: u85789gnghdfb765
         scope: openid,profile,email,ala,roles,user_defined
 #        allowUnsignedIdTokens: true
     jwt:
