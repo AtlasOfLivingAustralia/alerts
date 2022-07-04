@@ -130,7 +130,7 @@ dependencies {
     //runtime 'org.apache.httpcomponents:httpclient:4.2.2'
     compile 'com.jayway.jsonpath:json-path:0.5.6'
     compile 'com.jayway.jsonpath:json-path-assert:0.5.6'
-    compile 'au.org.ala.plugins:openapi:0.1.0-SNAPSHOT'
+    compile 'au.org.ala.plugins:openapi:1.0.0'
 }
 
 bootRun {
