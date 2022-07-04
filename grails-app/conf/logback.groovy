@@ -118,6 +118,7 @@ root(WARN, [APPENDER])
 //                'au.org.ala'
         ],
         (DEBUG): [ // DEBUG and TRACE should only be enabled for non-production environments
+                   'au.org.ala.alerts'
         ],
         (TRACE): [
         ]
