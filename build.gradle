@@ -102,9 +102,9 @@ dependencies {
 
     // Grails plugin dependencies
     runtime "org.grails.plugins:ala-bootstrap3:4.0.0", noCache
-    compile "org.grails.plugins:ala-ws-security-plugin:4.0.1-SNAPSHOT", noCache
+    compile "org.grails.plugins:ala-ws-security-plugin:4.1.0-SNAPSHOT", noCache
     compile "org.grails.plugins:ala-ws-plugin:3.0.0", noCache
-    compile "org.grails.plugins:ala-auth:5.0.2-SNAPSHOT", noCache
+    compile "org.grails.plugins:ala-auth:5.1.0-SNAPSHOT", noCache
     compile "org.grails.plugins:ala-admin-plugin:2.1"
     //compile 'au.org.ala:userdetails-service-client:1.4.0' // TODO remove this line once updated version is included in ala-auth
     
