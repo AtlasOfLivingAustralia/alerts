@@ -3,6 +3,7 @@ package au.org.ala.alerts
 import com.jayway.jsonpath.JsonPath
 import grails.converters.JSON
 import org.apache.commons.io.IOUtils
+import org.apache.commons.lang.time.DateUtils
 import org.grails.web.json.JSONArray
 import org.grails.web.json.JSONElement
 import org.grails.web.json.JSONObject
@@ -132,23 +133,23 @@ class NotificationService {
     byte[] gzipResult(String json) {
         //store the last result from the webservice call
         ByteArrayOutputStream bout = new ByteArrayOutputStream()
-        GZIPOutputStream gzout = new java.util.zip.GZIPOutputStream(bout)
+        GZIPOutputStream gzout = new GZIPOutputStream(bout)
         gzout.write(json.toString().getBytes())
         gzout.flush()
         gzout.finish()
         bout.toByteArray()
     }
 
-    private String[] getQueryUrl(Query query, Frequency frequency) {
+    def String[] getQueryUrl(Query query, Frequency frequency) {
         def queryPath = query.queryPath
         def queryPathForUI = query.queryPathForUI
 
         //if there is a date format, then there's a param to replace
         if (query.dateFormat) {
             def additionalTimeoffset = grailsApplication.config.getProperty('postie.forceAllAlertsGetSent', Boolean, false) ? 24 * 180 : 1
-            def dateToUse = org.apache.commons.lang.time.DateUtils.addSeconds(new Date(), -1 * frequency.periodInSeconds * additionalTimeoffset)
+            def dateToUse = DateUtils.addSeconds(new Date(), -1 * frequency.periodInSeconds * additionalTimeoffset)
             // date one year prior from today.
-            def dateLastYear = org.apache.commons.lang.time.DateUtils.addYears(new Date(), -1)
+            def dateLastYear = DateUtils.addYears(new Date(), -1)
             //insert the date to query with
             SimpleDateFormat sdf = new SimpleDateFormat(query.dateFormat)
             sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -271,12 +272,17 @@ class NotificationService {
                     //expected behaviour for missing properties
                 }
 
+                def currentValue = null
+                if (latestValue != null && latestValue instanceof List) {
+                    currentValue = latestValue.size().toString()
+                } else {
+                    currentValue = latestValue
+                }
+
                 //get property value for this property path
                 PropertyValue propertyValue = getPropertyValue(propertyPath, queryResult)
-                propertyValue.previousValue = propertyValue.currentValue
-
                 //add to the map
-                propertyPaths.put(propertyPath, [previous: propertyValue.currentValue, current: latestValue])
+                propertyPaths.put(propertyPath, [previous:  propertyValue.currentValue, current: currentValue])
             }
         } catch (Exception e) {
             log.error("[QUERY " + queryResult?.query?.id ?: 'NULL' + "] There was a problem reading the supplied JSON.", e)
