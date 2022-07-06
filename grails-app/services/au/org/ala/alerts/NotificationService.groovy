@@ -149,7 +149,7 @@ class NotificationService {
             def additionalTimeoffset = grailsApplication.config.getProperty('postie.forceAllAlertsGetSent', Boolean, false) ? 24 * 180 : 1
             def dateToUse = DateUtils.addSeconds(new Date(), -1 * frequency.periodInSeconds * additionalTimeoffset)
             // date one year prior from today.
-            def dateLastYear = org.apache.commons.lang.time.DateUtils.addYears(new Date(), -1)
+            def dateLastYear = DateUtils.addYears(new Date(), -1)
             //insert the date to query with
             SimpleDateFormat sdf = new SimpleDateFormat(query.dateFormat)
             sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
