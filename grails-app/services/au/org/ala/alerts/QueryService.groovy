@@ -290,7 +290,7 @@ class QueryService {
     }
 
     Query createBioSecurityQuery(String listid) {
-        String queryPathForUITemplate = grailsApplication.config.getProperty("biosecurity.queryurl.template", String, "/occurrences/search?q=species_list_uid:___LISTIDPARAM___&fq=decade:2020&fq=country:Australia&fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc&disableAllQualityFilters=true")
+        String queryPathForUITemplate = grailsApplication.config.getProperty("biosecurity.queryurl.template", String, "/occurrences/search?q=species_list_uid:___LISTIDPARAM___&fq=decade:2020&fq=country:Australia&fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&fq=occurrence_date:[___LASTYEARPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc&disableAllQualityFilters=true")
         String queryPathForUI = queryPathForUITemplate.replaceAll("___LISTIDPARAM___", listid)
         String speciesListName = getSpeciesListName(listid)
         new Query([

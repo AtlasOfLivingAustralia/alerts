@@ -147,12 +147,20 @@ class NotificationService {
         if (query.dateFormat) {
             def additionalTimeoffset = grailsApplication.config.getProperty('postie.forceAllAlertsGetSent', Boolean, false) ? 24 * 180 : 1
             def dateToUse = org.apache.commons.lang.time.DateUtils.addSeconds(new Date(), -1 * frequency.periodInSeconds * additionalTimeoffset)
+            // date one year prior from today.
+            def dateLastYear = org.apache.commons.lang.time.DateUtils.addYears(new Date(), -1)
             //insert the date to query with
             SimpleDateFormat sdf = new SimpleDateFormat(query.dateFormat)
             sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
             def dateValue = sdf.format(dateToUse)
             queryPath = queryPath.replaceAll("___DATEPARAM___", dateValue)
             queryPathForUI = queryPathForUI.replaceAll("___DATEPARAM___", dateValue)
+
+            // replace variable with formatted date from 1 year ago.
+            def dateLastYearFormatted =  sdf.format(dateLastYear)
+            queryPath = queryPath.replaceAll("___LASTYEARPARAM___", dateLastYearFormatted)
+            queryPathForUI = queryPathForUI.replaceAll("___LASTYEARPARAM___", dateLastYearFormatted)
+
         }
 
         [cleanUpUrl(query.baseUrl + queryPath), cleanUpUrl(query.baseUrlForUI + queryPathForUI)]
