@@ -14,6 +14,7 @@
 package au.org.ala.alerts
 
 import au.ala.org.ws.security.RequireApiKey
+import au.org.ala.plugins.openapi.Path
 import grails.converters.JSON
 import grails.gorm.transactions.Transactional
 import grails.web.servlet.mvc.GrailsParameterMap
@@ -371,6 +372,7 @@ class WebserviceController {
             ]
     )
     @RequireApiKey
+    @Path("api/alerts/user/{userId}/unsubscribe")
     def deleteAllAlertsForUser() {
         if (!params.userId) {
             response.status = HttpStatus.SC_BAD_REQUEST
@@ -407,7 +409,7 @@ class WebserviceController {
                             description = "userId"),
                     @Parameter(name = "email",
                             in = QUERY,
-                            required = false,
+                            required = true,
                             description = "email"),
                     @Parameter(name = "firstName",
                             in = QUERY,
@@ -426,6 +428,7 @@ class WebserviceController {
             ]
     )
     @RequireApiKey
+    @Path("api/alerts/user/createAlerts")
     def createUserAlerts() {
         if (!params.userId) {
             response.status = HttpStatus.SC_BAD_REQUEST
@@ -475,6 +478,7 @@ class WebserviceController {
             ]
     )
     @RequireApiKey
+    @Path("api/alerts/user/{userId}")
     def getUserAlertsWS() {
         User user = userService.getUserById(params.userId)
         if (user == null) {
