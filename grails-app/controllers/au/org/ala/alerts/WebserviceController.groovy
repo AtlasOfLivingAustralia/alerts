@@ -461,7 +461,7 @@ class WebserviceController {
     @Operation(
             method = "GET",
             tags = "alerts",
-            operationId = "Get User Alerts",
+            operationId = "Get User Alerts.",
             summary = "Get User Alerts",
             description = "Get User Alerts",
             parameters = [
