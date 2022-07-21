@@ -19,7 +19,7 @@ buildscript {
     }
     dependencies {
         classpath "org.grails:grails-gradle-plugin:$grailsVersion"
-        classpath "com.bertramlabs.plugins:asset-pipeline-gradle:3.2.4"
+        classpath "com.bertramlabs.plugins:asset-pipeline-gradle:3.3.2"
         classpath "org.grails.plugins:hibernate5:7.0.2"
         classpath 'org.grails.plugins:quartz:2.0.13'
     }
@@ -37,7 +37,7 @@ apply plugin:"idea"
 apply plugin:"war"
 apply plugin:"org.grails.grails-web"
 apply plugin:"org.grails.grails-gsp"
-apply plugin:"asset-pipeline"
+apply plugin:"com.bertramlabs.asset-pipeline"
 
 //apply from: 'https://raw.githubusercontent.com/AtlasOfLivingAustralia/travis-build-configuration/master/travis_grails_publish.gradle'
 apply from: "${project.projectDir}/gradle/publish.gradle"
@@ -91,7 +91,7 @@ dependencies {
     runtime "org.glassfish.web:el-impl:2.1.2-b03"
     runtime "com.h2database:h2"
     runtime "org.apache.tomcat:tomcat-jdbc"
-    runtime "com.bertramlabs.plugins:asset-pipeline-grails:3.2.4"
+    runtime "com.bertramlabs.plugins:asset-pipeline-grails:3.3.2"
 
     //compile "org.grails.plugins:grails-plugin-converters" // only needed for grails 3.3
     //testCompile "org.grails:grails-plugin-testing"

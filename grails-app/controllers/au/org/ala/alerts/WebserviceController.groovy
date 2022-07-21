@@ -15,11 +15,14 @@ package au.org.ala.alerts
 
 import au.ala.org.ws.security.RequireApiKey
 import au.org.ala.plugins.openapi.Path
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import grails.converters.JSON
 import grails.gorm.transactions.Transactional
 import grails.web.servlet.mvc.GrailsParameterMap
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import org.apache.http.HttpStatus
@@ -368,7 +371,13 @@ class WebserviceController {
             responses = [
                     @ApiResponse(
                             description = "Unsubscribed",
-                            responseCode = "200"
+                            responseCode = "200",
+                            content = [
+                                    @Content(
+                                            mediaType = "application/json",
+                                            schema = @Schema(implementation = DeleteAllAlertsForUserResponse)
+                                    )
+                            ]
                     )
             ],
             security = [@SecurityRequirement(name = 'openIdConnect')]
@@ -402,8 +411,8 @@ class WebserviceController {
             method = "POST",
             tags = "alerts",
             operationId = "Create User Alerts",
-            summary = "Create User Alerts",
-            description = "Create User Alerts",
+            summary = "Create User Alerts  and returns the list of enabled queries names",
+            description = "Create User Alerts and returns the list of enabled queries names",
             parameters = [
                     @Parameter(name = "userId",
                             in = QUERY,
@@ -425,7 +434,13 @@ class WebserviceController {
             responses = [
                     @ApiResponse(
                             description = "Create User Alerts",
-                            responseCode = "200"
+                            responseCode = "200",
+                            content = [
+                                    @Content(
+                                            mediaType = "application/json",
+                                            schema = @Schema(implementation = List)
+                                    )
+                            ]
                     )
             ],
             security = [@SecurityRequirement(name = 'openIdConnect')]
@@ -476,7 +491,13 @@ class WebserviceController {
             responses = [
                     @ApiResponse(
                             description = "Get User Alerts",
-                            responseCode = "200"
+                            responseCode = "200",
+                            content = [
+                                    @Content(
+                                            mediaType = "application/json",
+                                            schema = @Schema(implementation = GetUserAlertsResponse)
+                                    )
+                            ]
                     )
             ],
             security = [@SecurityRequirement(name = 'openIdConnect')]
@@ -524,5 +545,20 @@ class WebserviceController {
                 render text: "failed to unsubscribe my annotation for user " + params.userId, contentType: 'text/plain', status: 500
             }
         }
+    }
+
+    // classes used for the OpenAPI definition generator
+    @JsonIgnoreProperties('metaClass')
+    static class GetUserAlertsResponse {
+        User user
+        List<Query> disabledQueries
+        List<Notification> enabledQueries
+        List<Notification> customQueries
+        List<Frequency> frequencies
+    }
+
+    @JsonIgnoreProperties('metaClass')
+    static class DeleteAllAlertsForUserResponse {
+        boolean success = true
     }
 }
