@@ -21,6 +21,7 @@ import grails.web.servlet.mvc.GrailsParameterMap
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import org.apache.http.HttpStatus
 
 import static io.swagger.v3.oas.annotations.enums.ParameterIn.PATH
@@ -369,7 +370,8 @@ class WebserviceController {
                             description = "Unsubscribed",
                             responseCode = "200"
                     )
-            ]
+            ],
+            security = [@SecurityRequirement(name = 'openIdConnect')]
     )
     @RequireApiKey
     @Path("api/alerts/user/{userId}/unsubscribe")
@@ -425,7 +427,8 @@ class WebserviceController {
                             description = "Create User Alerts",
                             responseCode = "200"
                     )
-            ]
+            ],
+            security = [@SecurityRequirement(name = 'openIdConnect')]
     )
     @RequireApiKey
     @Path("api/alerts/user/createAlerts")
@@ -475,7 +478,8 @@ class WebserviceController {
                             description = "Get User Alerts",
                             responseCode = "200"
                     )
-            ]
+            ],
+            security = [@SecurityRequirement(name = 'openIdConnect')]
     )
     @RequireApiKey
     @Path("api/alerts/user/{userId}")
