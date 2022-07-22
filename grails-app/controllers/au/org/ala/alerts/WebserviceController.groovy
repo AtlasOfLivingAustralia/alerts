@@ -375,7 +375,7 @@ class WebserviceController {
                             content = [
                                     @Content(
                                             mediaType = "application/json",
-                                            schema = @Schema(implementation = DeleteAllAlertsForUserResponse)
+                                            schema = @Schema(implementation = SuccessResponse)
                                     )
                             ]
                     )
@@ -514,7 +514,35 @@ class WebserviceController {
         }
     }
 
+    @Operation(
+            method = "POST",
+            tags = "alerts",
+            operationId = "Subscribe to my annotation",
+            summary = "Subscribe to my annotation",
+            description = "Subscribe to my annotation",
+            parameters = [
+                    @Parameter(name = "userId",
+                            in = PATH,
+                            required = true,
+                            description = "userId")
+            ],
+            responses = [
+                    @ApiResponse(
+                            description = "Subscribed to my annotation",
+                            responseCode = "200",
+                            content = [
+                                    @Content(
+                                            mediaType = "application/json",
+                                            schema = @Schema(implementation = SuccessResponse)
+                                    )
+                            ]
+                    )
+            ],
+            security = [@SecurityRequirement(name = 'openIdConnect')],
+            hidden = true
+    )
     @RequireApiKey
+    @Path("api/alerts/user/{userId}/subscribeMyAnnotation")
     def subscribeMyAnnotationWS() {
         User user = userService.getUser((String)params.userId)
         if (user == null) {
@@ -531,7 +559,35 @@ class WebserviceController {
         }
     }
 
+    @Operation(
+            method = "POST",
+            tags = "alerts",
+            operationId = "Unsubscribe my annotation",
+            summary = "Unsubscribe my annotation",
+            description = "Unsubscribe my annotation",
+            parameters = [
+                    @Parameter(name = "userId",
+                            in = PATH,
+                            required = true,
+                            description = "userId")
+            ],
+            responses = [
+                    @ApiResponse(
+                            description = "Unsubscribed my annotation",
+                            responseCode = "200",
+                            content = [
+                                    @Content(
+                                            mediaType = "application/json",
+                                            schema = @Schema(implementation = SuccessResponse)
+                                    )
+                            ]
+                    )
+            ],
+            security = [@SecurityRequirement(name = 'openIdConnect')],
+            hidden = true
+    )
     @RequireApiKey
+    @Path("api/alerts/user/{userId}/unsubscribeMyAnnotation")
     def unsubscribeMyAnnotationWS() {
         User user = userService.getUserById(params.userId)
         if (user == null) {
@@ -558,7 +614,7 @@ class WebserviceController {
     }
 
     @JsonIgnoreProperties('metaClass')
-    static class DeleteAllAlertsForUserResponse {
+    static class SuccessResponse {
         boolean success = true
     }
 }
