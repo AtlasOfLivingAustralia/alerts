@@ -1,7 +1,9 @@
 package au.org.ala.alerts
 
+import grails.gorm.transactions.Transactional
 import org.apache.http.HttpStatus
 
+@Transactional
 class UnsubscribeController {
 
     static allowedMethods = [index: "GET", unsubscribe: "POST"]

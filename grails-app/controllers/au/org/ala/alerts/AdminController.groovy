@@ -14,11 +14,13 @@
 package au.org.ala.alerts
 
 import au.org.ala.web.AlaSecured
+import grails.gorm.transactions.Transactional
 import grails.util.Holders
 import groovy.json.JsonSlurper
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.impl.client.DefaultHttpClient
 
+@Transactional
 @AlaSecured(value = 'ROLE_ADMIN', redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to view that page.")
 class AdminController {
 

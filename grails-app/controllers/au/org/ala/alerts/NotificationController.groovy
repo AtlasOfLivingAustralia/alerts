@@ -2,7 +2,9 @@ package au.org.ala.alerts
 
 import grails.converters.JSON
 import org.apache.http.HttpStatus
+import grails.gorm.transactions.Transactional
 
+@Transactional
 class NotificationController {
 
     def notificationService
