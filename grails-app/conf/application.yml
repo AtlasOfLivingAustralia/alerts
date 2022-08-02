@@ -38,12 +38,12 @@ spring:
     groovy:
         template:
             check-template-location: false
-
 # Spring Actuator Endpoints are Disabled by Default
-endpoints:
-    enabled: true
     jmx:
-        enabled: true
+        unique-names: true
+management:
+    endpoints:
+        enabled-by-default: true
 
 ---
 grails:
@@ -97,10 +97,6 @@ grails:
                 scriptlets: html
                 taglib: none
                 staticparts: none
-endpoints:
-    jmx:
-        unique-names: true
-    enabled: true
 ---
 headerAndFooter:
     baseURL: "https://www.ala.org.au/commonui-bs3-2019"
@@ -117,7 +113,7 @@ siteDefaultLanguage: "en"
 security:
     cas:
         adminRole: ROLE_ADMIN
-        uriFilterPattern: "/,/alaAdmin.*,/testAuth.*,/query/.*,/admin/?.*,/admin/user/.*,/admin/user/debug/.*,/admin/debug/all,/notification/myAlerts,/notification/changeFrequency,/notification/addMyAlert,/notification/addMyAlert/.*,/notification/deleteMyAlert/.*,/notification/deleteMyAlert/.*,/notification/deleteMyAlertWR/.*,/webservice/.*,/webservice/createTaxonAlert,/webservice/taxonAlerts,/webservice/createRegionAlert,/webservice/regionAlerts,/webservice/deleteTaxonAlert/.*,/webservice/create*,/webservice/createSpeciesGroupRegionAlert,/ws/.*,/ws/createTaxonAlert,/ws/taxonAlerts,/ws/createRegionAlert,/ws/regionAlerts,/ws/deleteTaxonAlert/.*,/ws/createTaxonRegionAlert,/ws/createSpeciesGroupRegionAlert,/admin/runChecksNow"
+        uriFilterPattern: ["/","/alaAdmin/*","/testAuth/*","/query/*","/admin/*","/admin/user/*","/admin/user/debug/*","/admin/debug/all","/notification/myAlerts","/notification/changeFrequency","/notification/addMyAlert","/notification/addMyAlert/*","/notification/deleteMyAlert/*","/notification/deleteMyAlert/*","/notification/deleteMyAlertWR/*","/webservice/*","/webservice/createTaxonAlert","/webservice/taxonAlerts","/webservice/createRegionAlert","/webservice/regionAlerts","/webservice/deleteTaxonAlert/*","/webservice/create*","/webservice/createSpeciesGroupRegionAlert","/ws/*","/ws/createTaxonAlert","/ws/taxonAlerts","/ws/createRegionAlert","/ws/regionAlerts","/ws/deleteTaxonAlert/*","/ws/createTaxonRegionAlert","/ws/createSpeciesGroupRegionAlert","/admin/runChecksNow"]
 
 postie:
     emailSender: "atlas-alerts@ala.org.au"
@@ -195,7 +191,7 @@ hibernate:
         use_second_level_cache: true
         use_query_cache: true
         region:
-            factory_class: org.hibernate.cache.ehcache.SingletonEhCacheRegionFactory
+            factory_class: org.hibernate.cache.jcache.internal.JCacheRegionFactory
 
 dataSource:
     pooled: true
@@ -250,3 +246,32 @@ environments:
 
 myannotation:
     enabled: false
+
+security:
+    cas:
+        enabled: false
+    oidc:
+        enabled: true
+        discoveryUri: https://auth-dev.ala.org.au/cas/oidc/.well-known
+        scope: openid,profile,email,ala,roles,user_defined
+#        allowUnsignedIdTokens: true
+    jwt:
+        enabled: true
+        discoveryUri: https://auth-dev.ala.org.au/cas/oidc/.well-known
+        fallbackToLegacyBehaviour: true
+
+openapi:
+    title: Alerts REST services
+    description: REST services for interacting with the alerts webapp
+    terms: https://www.ala.org.au/terms
+    contact:
+        name: Support
+        email: support@ala.org.au
+    license:
+        name: Mozilla Public License 1.1
+        url: https://www.mozilla.org/en-US/MPL/1.1/
+    version: '@info.app.version@'
+    cachetimeoutms: 0
+
+webservice:
+    jwt: true

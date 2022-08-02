@@ -14,10 +14,23 @@
 package au.org.ala.alerts
 
 import au.ala.org.ws.security.RequireApiKey
+import au.org.ala.plugins.openapi.Path
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import grails.converters.JSON
+import grails.gorm.transactions.Transactional
 import grails.web.servlet.mvc.GrailsParameterMap
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import org.apache.http.HttpStatus
 
+import static io.swagger.v3.oas.annotations.enums.ParameterIn.PATH
+import static io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY
+
+@Transactional
 class WebserviceController {
 
     def queryService
@@ -343,7 +356,34 @@ class WebserviceController {
         redirectIfSupplied(params)
     }
 
+    @Operation(
+            method = "POST",
+            tags = "alerts",
+            operationId = "Unsubscribe",
+            summary = "Unsubscribe",
+            description = "Unsubscribe",
+            parameters = [
+                    @Parameter(name = "userId",
+                            in = PATH,
+                            required = true,
+                            description = "userId")
+            ],
+            responses = [
+                    @ApiResponse(
+                            description = "Unsubscribed",
+                            responseCode = "200",
+                            content = [
+                                    @Content(
+                                            mediaType = "application/json",
+                                            schema = @Schema(implementation = SuccessResponse)
+                                    )
+                            ]
+                    )
+            ],
+            security = [@SecurityRequirement(name = 'openIdConnect')]
+    )
     @RequireApiKey
+    @Path("api/alerts/user/{userId}/unsubscribe")
     def deleteAllAlertsForUser() {
         if (!params.userId) {
             response.status = HttpStatus.SC_BAD_REQUEST
@@ -367,7 +407,46 @@ class WebserviceController {
         }
     }
 
+    @Operation(
+            method = "POST",
+            tags = "alerts",
+            operationId = "Create User Alerts",
+            summary = "Create User Alerts  and returns the list of enabled queries names",
+            description = "Create User Alerts and returns the list of enabled queries names",
+            parameters = [
+                    @Parameter(name = "userId",
+                            in = QUERY,
+                            required = true,
+                            description = "userId"),
+                    @Parameter(name = "email",
+                            in = QUERY,
+                            required = true,
+                            description = "email"),
+                    @Parameter(name = "firstName",
+                            in = QUERY,
+                            required = false,
+                            description = "firstName"),
+                    @Parameter(name = "lastName",
+                            in = QUERY,
+                            required = false,
+                            description = "lastName")
+            ],
+            responses = [
+                    @ApiResponse(
+                            description = "Create User Alerts",
+                            responseCode = "200",
+                            content = [
+                                    @Content(
+                                            mediaType = "application/json",
+                                            schema = @Schema(implementation = List)
+                                    )
+                            ]
+                    )
+            ],
+            security = [@SecurityRequirement(name = 'openIdConnect')]
+    )
     @RequireApiKey
+    @Path("api/alerts/user/createAlerts")
     def createUserAlerts() {
         if (!params.userId) {
             response.status = HttpStatus.SC_BAD_REQUEST
@@ -397,7 +476,34 @@ class WebserviceController {
         user
     }
 
+    @Operation(
+            method = "GET",
+            tags = "alerts",
+            operationId = "Get User Alerts.",
+            summary = "Get User Alerts",
+            description = "Get User Alerts",
+            parameters = [
+                    @Parameter(name = "userId",
+                            in = PATH,
+                            required = true,
+                            description = "userId")
+            ],
+            responses = [
+                    @ApiResponse(
+                            description = "Get User Alerts",
+                            responseCode = "200",
+                            content = [
+                                    @Content(
+                                            mediaType = "application/json",
+                                            schema = @Schema(implementation = GetUserAlertsResponse)
+                                    )
+                            ]
+                    )
+            ],
+            security = [@SecurityRequirement(name = 'openIdConnect')]
+    )
     @RequireApiKey
+    @Path("api/alerts/user/{userId}")
     def getUserAlertsWS() {
         User user = userService.getUserById(params.userId)
         if (user == null) {
@@ -408,7 +514,35 @@ class WebserviceController {
         }
     }
 
+    @Operation(
+            method = "POST",
+            tags = "alerts",
+            operationId = "Subscribe to my annotation",
+            summary = "Subscribe to my annotation",
+            description = "Subscribe to my annotation",
+            parameters = [
+                    @Parameter(name = "userId",
+                            in = PATH,
+                            required = true,
+                            description = "userId")
+            ],
+            responses = [
+                    @ApiResponse(
+                            description = "Subscribed to my annotation",
+                            responseCode = "200",
+                            content = [
+                                    @Content(
+                                            mediaType = "application/json",
+                                            schema = @Schema(implementation = SuccessResponse)
+                                    )
+                            ]
+                    )
+            ],
+            security = [@SecurityRequirement(name = 'openIdConnect')],
+            hidden = true
+    )
     @RequireApiKey
+    @Path("api/alerts/user/{userId}/subscribeMyAnnotation")
     def subscribeMyAnnotationWS() {
         User user = userService.getUser((String)params.userId)
         if (user == null) {
@@ -425,7 +559,35 @@ class WebserviceController {
         }
     }
 
+    @Operation(
+            method = "POST",
+            tags = "alerts",
+            operationId = "Unsubscribe my annotation",
+            summary = "Unsubscribe my annotation",
+            description = "Unsubscribe my annotation",
+            parameters = [
+                    @Parameter(name = "userId",
+                            in = PATH,
+                            required = true,
+                            description = "userId")
+            ],
+            responses = [
+                    @ApiResponse(
+                            description = "Unsubscribed my annotation",
+                            responseCode = "200",
+                            content = [
+                                    @Content(
+                                            mediaType = "application/json",
+                                            schema = @Schema(implementation = SuccessResponse)
+                                    )
+                            ]
+                    )
+            ],
+            security = [@SecurityRequirement(name = 'openIdConnect')],
+            hidden = true
+    )
     @RequireApiKey
+    @Path("api/alerts/user/{userId}/unsubscribeMyAnnotation")
     def unsubscribeMyAnnotationWS() {
         User user = userService.getUserById(params.userId)
         if (user == null) {
@@ -439,5 +601,20 @@ class WebserviceController {
                 render text: "failed to unsubscribe my annotation for user " + params.userId, contentType: 'text/plain', status: 500
             }
         }
+    }
+
+    // classes used for the OpenAPI definition generator
+    @JsonIgnoreProperties('metaClass')
+    static class GetUserAlertsResponse {
+        User user
+        List<Query> disabledQueries
+        List<Notification> enabledQueries
+        List<Notification> customQueries
+        List<Frequency> frequencies
+    }
+
+    @JsonIgnoreProperties('metaClass')
+    static class SuccessResponse {
+        boolean success = true
     }
 }

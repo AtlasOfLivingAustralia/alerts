@@ -2,7 +2,9 @@ package au.org.ala.alerts
 
 import grails.converters.JSON
 import org.apache.http.HttpStatus
+import grails.gorm.transactions.Transactional
 
+@Transactional
 class NotificationController {
 
     def notificationService
@@ -94,7 +96,7 @@ class NotificationController {
     }
 
     def changeFrequency = {
-        def user = userService.getUser()
+        def user = getUser()
         log.debug("Changing frequency to: " + params.frequency + " for user ${user}")
         notificationService.updateFrequency(user, params.frequency)
         return null

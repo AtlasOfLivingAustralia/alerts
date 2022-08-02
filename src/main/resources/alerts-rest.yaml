@@ -1,0 +1,114 @@
+swagger: "2.0"
+info:
+  description: "REST services for interacting with the alerts webapp"
+  version: "@info.app.version@"
+  title: "Alerts Rest API"
+host: "apis.dev.ala.org.au"
+basePath: "/alerts"
+schemes:
+  - "https"
+paths:
+  /api/alerts/user/createAlerts:
+    post:
+      operationId: "Create User Alerts"
+      parameters:
+        - name: "userId"
+          in: "query"
+          required: true
+          type: "string"
+        - name: "email"
+          in: "query"
+          required: false
+          type: "string"
+        - name: "firstName"
+          in: "query"
+          required: false
+          type: "string"
+        - name: "lastName"
+          in: "query"
+          required: false
+          type: "string"
+      responses:
+        "200":
+          description: "200 response"
+      security:
+        - lambda_authorizer: []
+      x-amazon-apigateway-integration:
+        httpMethod: "POST"
+        uri: "https://alerts-test.ala.org.au/api/alerts/user/createAlerts"
+        responses:
+          default:
+            statusCode: "200"
+        requestParameters:
+          integration.request.querystring.lastName: "method.request.querystring.lastName"
+          integration.request.querystring.email: "method.request.querystring.email"
+          integration.request.querystring.userId: "method.request.querystring.userId"
+          integration.request.querystring.firstName: "method.request.querystring.firstName"
+        passthroughBehavior: "when_no_match"
+        type: "http"
+  /api/alerts/user/{userId}:
+    get:
+      operationId: "Get User Alerts"
+      parameters:
+        - name: "userId"
+          in: "path"
+          required: true
+          type: "string"
+      responses:
+        "200":
+          description: "200 response"
+      security:
+        - cognito_authorizer: []
+      x-amazon-apigateway-integration:
+        httpMethod: "GET"
+        uri: "https://alerts-test.ala.org.au/api/alerts/user/{userId}"
+        responses:
+          default:
+            statusCode: "200"
+        requestParameters:
+          integration.request.path.userId: "method.request.path.userId"
+        passthroughBehavior: "when_no_match"
+        type: "http_proxy"
+  /api/alerts/user/{userId}/unsubscribe:
+    post:
+      operationId: "Unsubscribe"
+      parameters:
+        - name: "userId"
+          in: "path"
+          required: true
+          type: "string"
+      responses:
+        "200":
+          description: "200 response"
+      security:
+        - lambda_authorizer: []
+      x-amazon-apigateway-integration:
+        httpMethod: "POST"
+        uri: "https://alerts-test.ala.org.au/api/alerts/user/{userId}/unsubscribe"
+        responses:
+          default:
+            statusCode: "200"
+        requestParameters:
+          integration.request.path.userId: "method.request.path.userId"
+        passthroughBehavior: "when_no_match"
+        type: "http_proxy"
+securityDefinitions:
+  cognito_authorizer:
+    type: "apiKey"
+    name: "Authorization"
+    in: "header"
+    x-amazon-apigateway-authtype: "cognito_user_pools"
+    x-amazon-apigateway-authorizer:
+      providerARNs:
+        - "arn:aws:cognito-idp:ap-southeast-2:748909248546:userpool/ap-southeast-2_dqIVUS9bF"
+      type: "cognito_user_pools"
+  lambda_authorizer:
+    type: "apiKey"
+    name: "Authorization"
+    in: "header"
+    x-amazon-apigateway-authtype: "custom"
+    x-amazon-apigateway-authorizer:
+      authorizerUri: "arn:aws:apigateway:ap-southeast-2:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-southeast-2:748909248546:function:ala-cas-authorizer/invocations"
+      authorizerResultTtlInSeconds: 300
+      authorizerCredentials : "arn:aws:iam::748909248546:role/ala-cas-authorizer-role"
+      type: "token"

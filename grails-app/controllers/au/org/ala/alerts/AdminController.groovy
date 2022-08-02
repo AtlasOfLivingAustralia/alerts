@@ -14,11 +14,13 @@
 package au.org.ala.alerts
 
 import au.org.ala.web.AlaSecured
+import grails.gorm.transactions.Transactional
 import grails.util.Holders
 import groovy.json.JsonSlurper
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.impl.client.DefaultHttpClient
 
+@Transactional
 @AlaSecured(value = 'ROLE_ADMIN', redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to view that page.")
 class AdminController {
 
@@ -253,7 +255,7 @@ class AdminController {
             def query = Query.get(1)
             def frequency = Frequency.get(1)
             def queryResult = QueryResult.findByQuery(query) ?: new QueryResult(query: query, frequency: frequency)
-            emailService.sendGroupEmail(query, [user.email], queryResult, [], frequency, 0, "", "")
+            emailService.sendGroupEmail(query, [user.email], queryResult, [], frequency, 0, "", "", [:], [:])
             msg = "Email was sent to ${user.email} - check tomcat logs for ERROR message with value \"Error sending email to addresses:\""
         } else {
             msg = "User was not found or not logged in"

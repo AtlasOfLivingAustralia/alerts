@@ -24,11 +24,14 @@ class EmailService {
      * @return
      */
     def retrieveRecordForQuery(query, queryResult) {
-        //if there's a fire on property, then don't do a diff
-        if (queryService.hasAFireProperty(query) && query.recordJsonPath) {
-            diffService.getNewRecords(queryResult)
-        } else if (query.recordJsonPath) {
-            diffService.getNewRecordsFromDiff(queryResult)
+        if  (query.recordJsonPath) {
+            // return all of the new records if query is configured to fire on a non-zero value OR if previous value does not exist.
+            if (queryService.firesWhenNotZero(query) || queryResult.previousResult ==  null) {
+                diffService.getNewRecords(queryResult)
+            // return diff of new and old records for all other cases
+            } else {
+                diffService.getNewRecordsFromDiff(queryResult)
+            }
         } else {
             []
         }
@@ -131,7 +134,7 @@ class EmailService {
         }
     }
 
-    private void sendGroupEmail(Query query, subsetOfAddresses, QueryResult queryResult, records, Frequency frequency, int totalRecords, String userUnsubToken, String notificationUnsubToken, Map speciesListInfo, Map userAssertions) {
+    public void sendGroupEmail(Query query, subsetOfAddresses, QueryResult queryResult, records, Frequency frequency, int totalRecords, String userUnsubToken, String notificationUnsubToken, Map speciesListInfo, Map userAssertions) {
         String urlPrefix = "${grailsApplication.config.security.cas.appServerName}${grailsApplication.config.getProperty('security.cas.contextPath', '')}"
         def localeSubject = messageSource.getMessage("emailservice.update.subject", [query.name] as Object[], siteLocale)
         try {
