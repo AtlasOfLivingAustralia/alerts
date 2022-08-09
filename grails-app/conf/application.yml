@@ -247,6 +247,13 @@ environments:
 myannotation:
     enabled: false
 
+webservice:
+    jwt: true
+    jwt-scopes: "openid users/read"
+
+userDetails:
+    url: https://auth-dev.ala.org.au/userdetails/
+
 security:
     cas:
         enabled: false
