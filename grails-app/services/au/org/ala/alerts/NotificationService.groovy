@@ -111,17 +111,6 @@ class NotificationService {
             //set the has changed
             qcr.queryResult.hasChanged = hasPropertiesChanged(query, propertyPaths, previousJson, processedJson)
 
-            //set the last result
-            qcr.queryResult.lastResult = gzipResult(processedJson)
-
-            //set the property values
-            def propertyValues = []
-            propertyPaths.values().each {
-//            new PropertyValue()
-//            it.
-            }
-
-
         } catch (Exception e) {
             log.error("[QUERY " + query.id + "] There was a problem checking the URL :" + urlString, e)
             qcr.errored = true
