@@ -251,7 +251,7 @@ class BootStrap {
                     recordJsonPath: '\$.[*]',
                     idJsonPath: 'id'
             ])).save()
-            new PropertyPath([name: "last_blog_id", jsonPath: "\$", query: newBlogs, fireWhenChange: true]).save()
+            new PropertyPath([name: "last_blog_id", jsonPath: "\$", query: newBlogs]).save()
         }
         log.info("end of preloadQueries")
     }
