@@ -77,7 +77,7 @@ class UserService {
      */
 //    @Transactional // transactions handled manually
     int updateUserEmails() {
-        final int pageSize = 1000
+        final int pageSize = grailsApplication.config.getProperty('alerts.user-sync.batch-size', Integer, 1000)
         def toUpdate = []
         def total = User.count()
         log.warn "Checking all ${total} users in Alerts user table."
@@ -108,10 +108,11 @@ class UserService {
                         UserDetails userDetails = results.users[user.userId]
                         if (userDetails) {
                             // update email
+                            boolean update = false
                             if (user.email != userDetails.userName) {
                                 user.email = userDetails.userName
                                 log.debug "Updating email address for user ${user.userId}: ${userDetails.userName}"
-                                updates << user
+                                update = true
                             }
 
                             // update locked property
@@ -122,8 +123,11 @@ class UserService {
                                         (user.locked != null && user.locked != userDetails.locked)) {
                                     user.locked = userDetails.locked
                                     log.debug "Updating locked status for user ${user.userId}: ${userDetails.locked}"
-                                    updates << user
+                                    update = true
                                 }
+                            }
+                            if (update) {
+                                updates << user
                             }
                         } else {
                             // we can't find a user in userdetails using userId - lock their account in alerts DB
