@@ -14,6 +14,7 @@
 package au.org.ala.alerts
 
 import au.org.ala.userdetails.UserDetailsFromIdListRequest
+import au.org.ala.userdetails.UserDetailsFromIdListResponse
 import au.org.ala.web.UserDetails
 import grails.converters.JSON
 import grails.plugin.cache.Cacheable
@@ -71,64 +72,88 @@ class UserService {
 
     /**
      * Sync User table with UserDetails app via webservice
-     * TODO batch requests to userDetails in 100 lots (see @AuthService.getUserDetailsById )
      *
-     * @return
+     * @return total number of updates
      */
+//    @Transactional // transactions handled manually
     int updateUserEmails() {
+        final int pageSize = grailsApplication.config.getProperty('alerts.user-sync.batch-size', Integer, 1000)
         def toUpdate = []
-        log.warn "Checking all ${User.count()} users in Alerts user table."
+        def total = User.count()
+        log.warn "Checking all ${total} users in Alerts user table."
         def count = 0
 
-        User.findAll().each { user ->
-            count++
-            UserDetails userDetails = authService.getUserForUserId(user.userId, false) // under @Cacheable
-            Boolean userHasChanged = false
+        def page = 0
 
-            if (userDetails) {
-                // update email
-                if (userDetails != null && user.email != userDetails.userName) {
-                    user.email = userDetails.userName
-                    log.debug "Updating email address for user ${user.userId}: ${userDetails.userName}"
-                    userHasChanged = true
-                }
+        boolean done = false
 
-                // update locked property
-                if (userDetails?.hasProperty("locked") && userDetails.locked != null) {
-                    log.debug "Checking locked user: ${user.userId} -> ${userDetails.locked} vs ${user.locked}"
+        while (!done) {
+            User.withTransaction {
+                List<User> users = User.findAll([sort: 'id', max: (page+1) * pageSize, offset: page * pageSize])
+                done = users.size() < pageSize
+                List<User> updates = []
 
-                    if ((user.locked == null && userDetails.locked == true) ||
-                            (user.locked != null && user.locked != userDetails.locked)) {
-                        user.locked = userDetails.locked
-                        log.debug "Updating locked status for user ${user.userId}: ${userDetails.locked}"
-                        userHasChanged = true
+                def ids = users*.userId
+                UserDetailsFromIdListResponse results
+                if (ids) {
+                    try {
+                        results = authService.getUserDetailsById(ids, false)
+                    } catch (Exception e) {
+                        log.warn("couldn't get user details from web service", e)
                     }
                 }
-            } else {
-                // we can't find a user in userdetails using userId - lock their account in alerts DB
-                if ((user.locked == null || user.locked != true) && Environment.current == Environment.PRODUCTION) {
-                    user.locked = true
-                    log.warn "Updating locked status for missing user ${user.userId}: true"
-                    userHasChanged = true
+
+                if (results) {
+                    users.each {user ->
+                        UserDetails userDetails = results.users[user.userId]
+                        if (userDetails) {
+                            // update email
+                            boolean update = false
+                            if (user.email != userDetails.userName) {
+                                user.email = userDetails.userName
+                                log.debug "Updating email address for user ${user.userId}: ${userDetails.userName}"
+                                update = true
+                            }
+
+                            // update locked property
+                            if (userDetails.locked != null) {
+                                log.debug "Checking locked user: ${user.userId} -> ${userDetails.locked} vs ${user.locked}"
+
+                                if ((user.locked == null && userDetails.locked == true) ||
+                                        (user.locked != null && user.locked != userDetails.locked)) {
+                                    user.locked = userDetails.locked
+                                    log.debug "Updating locked status for user ${user.userId}: ${userDetails.locked}"
+                                    update = true
+                                }
+                            }
+                            if (update) {
+                                updates << user
+                            }
+                        } else {
+                            // we can't find a user in userdetails using userId - lock their account in alerts DB
+                            if ((user.locked == null || user.locked != true) && Environment.current == Environment.PRODUCTION) {
+                                user.locked = true
+                                log.warn "Updating locked status for missing user ${user.userId}: true"
+                                updates << user
+                            }
+                        }
+                    }
+                }
+
+                if (updates) {
+                    updates.each {
+                        log.warn "Modifying user: ${it as JSON}"
+                    }
+                    count += updates.size()
+                    updates*.save()
                 }
             }
 
+            page++
+            log.warn "Checked ${Math.min(total, page * pageSize)} users with ${count} changes, so far"
 
-            if (userHasChanged) {
-                toUpdate << user
-            }
-
-            if (count % 100 == 0) {
-                log.warn "Checked ${count} users with ${toUpdate.size()} changes, so far"
-            }
         }
-
-        toUpdate.each {
-            log.warn "Modifying user: ${it as JSON}"
-            it.save(flush: true)
-        }
-
-        toUpdate.size()
+        return count
     }
 
     User getUser(userDetailsParam = null) {
