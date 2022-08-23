@@ -3,7 +3,7 @@ package ala.postie
 class UpdateEmailsJob {
 
     static triggers = {
-        cron name: 'twiceDaily', startDelay: 10000, cronExpression: '0 32 8,16 * * ?'
+        cron name: 'dailyEmails', startDelay: 10000, cronExpression: '0 30 4 * * ?'     //4.30am
     }
 
     def userService
