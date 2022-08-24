@@ -30,7 +30,7 @@ plugins {
 }
 
 
-version "2.0.2"
+version "2.1.0-SNAPSHOT"
 group "au.org.ala"
 
 apply plugin:"eclipse"
@@ -43,8 +43,8 @@ apply plugin:"com.bertramlabs.asset-pipeline"
 //apply from: 'https://raw.githubusercontent.com/AtlasOfLivingAustralia/travis-build-configuration/master/travis_grails_publish.gradle'
 apply from: "${project.projectDir}/gradle/publish.gradle"
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+sourceCompatibility = 1.11
+targetCompatibility = 1.11
 
 repositories {
     mavenLocal()
@@ -104,10 +104,9 @@ dependencies {
     // Grails plugin dependencies
     runtime "org.grails.plugins:ala-bootstrap3:4.1.0", noCache
     compile "org.grails.plugins:ala-ws-security-plugin:4.1.1", noCache
-    compile "org.grails.plugins:ala-ws-plugin:3.1.1", noCache
+    compile "org.grails.plugins:ala-ws-plugin:3.1.2", noCache
     compile "org.grails.plugins:ala-auth:5.1.1", noCache
     compile "org.grails.plugins:ala-admin-plugin:2.3.0"
-    //compile 'au.org.ala:userdetails-service-client:1.4.0' // TODO remove this line once updated version is included in ala-auth
     
     compile 'org.grails.plugins:external-config:2.0.0'
     compile 'org.grails.plugins:mail:3.0.0'
