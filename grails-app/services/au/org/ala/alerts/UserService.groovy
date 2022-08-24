@@ -103,7 +103,7 @@ class UserService {
                     }
                 }
 
-                if (results) {
+                if (results && results.success) {
                     users.each {user ->
                         UserDetails userDetails = results.users[user.userId]
                         if (userDetails) {
@@ -138,6 +138,8 @@ class UserService {
                             }
                         }
                     }
+                } else {
+                    log.warn("Unsuccessful response from userdetails: {}", results)
                 }
 
                 if (updates) {
