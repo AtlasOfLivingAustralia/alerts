@@ -138,7 +138,7 @@ class UserService {
                             }
                         }
                     }
-                } else {
+                } else if (results && !results.success) {
                     log.warn("Unsuccessful response from userdetails: {}", results)
                 }
 
