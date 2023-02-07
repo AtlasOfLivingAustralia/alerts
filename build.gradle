@@ -119,9 +119,9 @@ dependencies {
 
     // Grails plugin dependencies
     runtimeOnly "org.grails.plugins:ala-bootstrap3:4.1.0", noCache
-    implementation "org.grails.plugins:ala-ws-security-plugin:4.3.5-SNAPSHOT", noCache
+    implementation "org.grails.plugins:ala-ws-security-plugin:4.4.0-SNAPSHOT", noCache
     implementation "org.grails.plugins:ala-ws-plugin:3.1.2", noCache
-    implementation "org.grails.plugins:ala-auth:5.2.0-CognitoLogoutFix-SNAPSHOT", noCache
+    implementation "org.grails.plugins:ala-auth:5.2.0-SNAPSHOT", noCache
     implementation "org.grails.plugins:ala-admin-plugin:2.3.0"
     
     implementation 'dk.glasius:external-config:3.1.1'
