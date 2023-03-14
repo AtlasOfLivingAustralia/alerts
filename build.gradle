@@ -119,14 +119,15 @@ dependencies {
 
     // Grails plugin dependencies
     runtimeOnly "org.grails.plugins:ala-bootstrap3:4.1.0", noCache
-    implementation "org.grails.plugins:ala-ws-security-plugin:4.4.0-SNAPSHOT", noCache
-    implementation "org.grails.plugins:ala-ws-plugin:3.1.2", noCache
-    implementation "org.grails.plugins:ala-auth:5.2.0-SNAPSHOT", noCache
+    implementation "org.grails.plugins:ala-auth:6.0.0-SNAPSHOT"
+    implementation "org.grails.plugins:ala-ws-security-plugin:6.0.0-SNAPSHOT"
+    implementation "org.grails.plugins:ala-ws-plugin:6.0.0-SNAPSHOT"
+    implementation "au.org.ala:userdetails-service-client:6.0.0-SNAPSHOT"
     implementation "org.grails.plugins:ala-admin-plugin:2.3.0"
     
     implementation 'dk.glasius:external-config:3.1.1'
     implementation 'org.grails.plugins:mail:3.0.0'
-    implementation 'org.grails.plugins:http-builder-helper:1.0.2.ALA'
+    implementation "org.codehaus.groovy.modules.http-builder:http-builder:0.7.1"
     implementation 'org.grails.plugins:schwartz-monitor:2.0.1.ALA-SNAPSHOT'
     implementation 'org.grails.plugins:quartz:2.0.13'
     implementation 'org.quartz-scheduler:quartz:2.2.1' // Is not pulled in by default
