@@ -130,7 +130,7 @@ dependencies {
     implementation "org.codehaus.groovy.modules.http-builder:http-builder:0.7.1"
     implementation 'org.grails.plugins:schwartz-monitor:2.0.1.ALA-SNAPSHOT'
     implementation 'org.grails.plugins:quartz:2.0.13'
-    implementation 'org.quartz-scheduler:quartz:2.2.1' // Is not pulled in by default
+    implementation 'org.quartz-scheduler:quartz:2.3.2' // Is not pulled in by default https://stackoverflow.com/questions/61144025/quartz-not-working-in-grails4-issue-in-dependency-not-able-to-compile
     implementation 'org.grails.plugins:cache:4.0.2'
     implementation 'org.grails.plugins:cache-ehcache:3.0.0'
     
