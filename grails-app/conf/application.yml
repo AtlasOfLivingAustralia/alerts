@@ -11,7 +11,7 @@ grails:
     config:
         locations:
             - file:/data/alerts/config/alerts-config.properties
-            - file:/data/alerts/config/alerts-confdig.yml
+            - file:/data/alerts/config/alerts-config.yml
             - file:/data/alerts/config/alerts-config.groovy
     spring:
         transactionManagement:

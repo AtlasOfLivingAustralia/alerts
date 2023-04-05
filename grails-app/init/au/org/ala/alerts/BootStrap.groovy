@@ -178,7 +178,7 @@ class BootStrap {
         descr = messageSource.getMessage("query.occurrence.datasets.descr", null, siteLocale)
         if(Query.findAllByName(title).isEmpty()){
             Query newOccurrenceDatasets = (new Query([
-                    baseUrl: grailsApplication.config.collectory.baseURL,
+                    baseUrl:  grailsApplication.config.collectoryService.baseURL ?: grailsApplication.config.collectory.baseURL,
                     baseUrlForUI: grailsApplication.config.collectory.baseURL,
                     name: title,
                     resourceName:  grailsApplication.config.postie.defaultResourceName,
@@ -197,7 +197,7 @@ class BootStrap {
         descr = messageSource.getMessage("query.datasets.descr", null, siteLocale)
         if(Query.findAllByName(title).isEmpty()){
             Query newDatasets = (new Query([
-                    baseUrl: grailsApplication.config.collectory.baseURL,
+                    baseUrl:  grailsApplication.config.collectoryService.baseURL ?: grailsApplication.config.collectory.baseURL,
                     baseUrlForUI: grailsApplication.config.collectory.baseURL,
                     name: title,
                     resourceName:  grailsApplication.config.postie.defaultResourceName,
@@ -218,7 +218,7 @@ class BootStrap {
                 Query.findAllByName(title).isEmpty()) {
             log.info "Creating species list query"
             Query newSpeciesLists = (new Query([
-                    baseUrl: grailsApplication.config.collectory.baseURL,
+                    baseUrl: grailsApplication.config.collectoryService.baseURL ?: grailsApplication.config.collectory.baseURL,
                     baseUrlForUI: grailsApplication.config.collectory.baseURL,
                     name: title,
                     resourceName:  grailsApplication.config.postie.defaultResourceName,
