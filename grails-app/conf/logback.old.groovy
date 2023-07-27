@@ -122,4 +122,4 @@ root(WARN, [APPENDER])
         ],
         (TRACE): [
         ]
-].each { level, names -> names.each { name -> logger(name, level) } }
+].each { level, names -> names.each { name -> logger(name, level) }
