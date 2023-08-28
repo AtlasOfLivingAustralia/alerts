@@ -16,6 +16,9 @@ import java.util.zip.GZIPOutputStream
 class NotificationService {
 
     static transactional = true
+
+    int PAGING_MAX = 1000
+
     def emailService
     def diffService
     def queryService
@@ -50,7 +53,40 @@ class NotificationService {
         log.debug("[QUERY " + query.id + "] Querying URL: " + urlString)
 
         try {
-            def processedJson = processQueryReturnedJson(query, IOUtils.toString(new URL(urlString).newReader()))
+            def processedJson
+
+            if (!urlString.contains("___MAX___")) {
+                processedJson = processQueryReturnedJson(query, IOUtils.toString(new URL(urlString).newReader()))
+            } else {
+                int max = PAGING_MAX
+                int offset = 0
+                def result= []
+                boolean finished = false
+                def allLists = []
+                while (!finished && (result = processQueryReturnedJson(query,new URL(urlString.replaceAll('___MAX___', String.valueOf(max)).replaceAll('___OFFSET___', String.valueOf(offset))).text))?.size()) {
+                    offset += max
+
+                    try {
+                        def latestValue = JsonPath.read(result, query.recordJsonPath)
+                        if (latestValue.size() == 0) {
+                            finished = true
+                        } else {
+                            processedJson = result
+                            allLists.addAll(latestValue)
+                        }
+                    } catch (Exception e) {
+                        //expected behaviour for missing properties
+                        finished = true
+                    }
+                }
+                // only for species lists
+                def json = JSON.parse(processedJson) as JSONObject
+                if (json.lists) {
+                    json.lists = allLists
+                    processedJson = json.toString()
+                }
+            }
+
             //update the stored properties
             refreshProperties(qr, processedJson)
 
@@ -98,8 +134,41 @@ class NotificationService {
         log.debug("[QUERY " + query.id + "] Querying URL: " + urlString)
 
         try {
-            def processedJson = processQueryReturnedJson(query, IOUtils.toString(new URL(urlString).newReader()))
+            def processedJson = []
 
+            if (!urlString.contains("___MAX___")) {
+                processedJson.add(processQueryReturnedJson(query, IOUtils.toString(new URL(urlString).newReader())))
+            } else {
+                int max = PAGING_MAX
+                int offset = 0
+                def result
+                boolean finished = false
+                def allLists = []
+                while (!finished && (result = processQueryReturnedJson(query,new URL(urlString.replaceAll('___MAX___', String.valueOf(max)).replaceAll('___OFFSET___', String.valueOf(offset))).text))?.size()) {
+                    offset += max
+
+                    try {
+                        def latestValue = JsonPath.read(result, query.recordJsonPath)
+                        if (latestValue.size() == 0) {
+                            finished = true
+                        } else {
+                            processedJson = result
+                            allLists.addAll(latestValue)
+                        }
+                    } catch (Exception e) {
+                        //expected behaviour for missing properties
+                        finished = true
+                    }
+                }
+                // only for species lists
+                def json = JSON.parse(processedJson) as JSONObject
+                if (json.lists) {
+                    json.lists = allLists
+                    processedJson = json.toString()
+                }
+            }
+
+            //update the stored properties
             qcr.response = processedJson
 
             //update the stored properties
@@ -256,9 +325,21 @@ class NotificationService {
                 def latestValue = null
 
                 try {
-                    latestValue = JsonPath.read(json, propertyPath.jsonPath)
+                    latestValue = JsonPath.read(json[0], propertyPath.jsonPath)
                 } catch (Exception e) {
                     //expected behaviour for missing properties
+                }
+
+                // handle paged results
+                if (latestValue instanceof List && json.size() > 1) {
+                    latestValue = []
+                    json.each {
+                        latestValue.addAll(JsonPath.read(it, propertyPath.jsonPath))
+                    }
+                    // this is not dynamic and will only work for species-lists paging
+                    if (json[0].lists) {
+                        json[0].lists = latestValue
+                    }
                 }
 
                 def currentValue = null
