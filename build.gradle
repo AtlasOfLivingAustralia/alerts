@@ -118,13 +118,13 @@ dependencies {
     testImplementation "org.grails:grails-test-mixins:3.3.0"
 
     // Grails plugin dependencies
-    runtimeOnly "org.grails.plugins:ala-bootstrap3:4.1.0", noCache
+    runtimeOnly "org.grails.plugins:ala-bootstrap3:4.3.0", noCache
     implementation "org.grails.plugins:ala-auth:$alaSecurityLibsVersion"
     implementation "org.grails.plugins:ala-ws-security-plugin:$alaSecurityLibsVersion"
     implementation "org.grails.plugins:ala-ws-plugin:$alaSecurityLibsVersion"
     implementation "au.org.ala:userdetails-service-client:$alaSecurityLibsVersion"
     implementation "org.grails.plugins:ala-admin-plugin:2.3.0"
-    
+
     implementation 'dk.glasius:external-config:3.1.1'
     implementation 'org.grails.plugins:mail:3.0.0'
     implementation "org.codehaus.groovy.modules.http-builder:http-builder:0.7.2"
@@ -133,7 +133,7 @@ dependencies {
     implementation 'org.quartz-scheduler:quartz:2.3.2' // Is not pulled in by default https://stackoverflow.com/questions/61144025/quartz-not-working-in-grails4-issue-in-dependency-not-able-to-compile
     implementation 'org.grails.plugins:cache:4.0.2'
     implementation 'org.grails.plugins:cache-ehcache:3.0.0'
-    
+
     // regular JAR dependencies
     runtimeOnly 'mysql:mysql-connector-java:8.0.25'
     testRuntimeOnly "com.h2database:h2"
