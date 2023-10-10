@@ -185,12 +185,12 @@ class BootStrap {
                     updateMessage: 'more.datasets.update.message',
                     description: descr,
                     queryPath: '/occurrences/search?q=*:*&facet=true&flimit=-1&facets=dataResourceUid&pageSize=0',
-                    queryPathForUI: '/datasets',
+                    queryPathForUI: '/datasets#filters=status%3AdataAvailable%3BresourceType%3Arecords',
                     emailTemplate: '/email/dataresource',
                     recordJsonPath: '\$.facetResults[0].fieldResult[*]',
                     idJsonPath: 'i18nCode'
             ])).save()
-            new PropertyPath([name: "dataset_count", jsonPath: "\$", query: newOccurrenceDatasets, fireWhenChange: true]).save()
+            new PropertyPath([name: "dataset_count", jsonPath: "\$.facetResults[0].fieldResult", query: newOccurrenceDatasets, fireWhenChange: true]).save()
         }
 
         title = messageSource.getMessage("query.datasets.title", null, siteLocale)
@@ -219,13 +219,13 @@ class BootStrap {
             log.info "Creating species list query"
             Query newSpeciesLists = (new Query([
                     baseUrl: grailsApplication.config.lists.baseURL,
-                    baseUrlForUI: grailsApplication.config.collectory.baseURL,
+                    baseUrlForUI: grailsApplication.config.lists.baseURL,
                     name: title,
                     resourceName:  grailsApplication.config.postie.defaultResourceName,
                     updateMessage: 'more.specieslist.update.message',
                     description: descr,
-                    queryPath: '/ws/speciesLists?max=___MAX___&offset=___OFFSET___',
-                    queryPathForUI: '/datasets#filters=resourceType%3Aspecies-list',
+                    queryPath: '/ws/speciesList?max=___MAX___&offset=___OFFSET___',
+                    queryPathForUI: '/public/speciesLists?q=&max=25&sort=dateCreated&order=desc',
                     emailTemplate: '/email/specieslists',
                     recordJsonPath: '\$.lists[*]',
                     idJsonPath: 'dataResourceUid'
