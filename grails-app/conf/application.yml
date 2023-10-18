@@ -157,6 +157,23 @@ useCitizenScienceAlerts: true
 biosecurity:
     moreinfo:
         link: https://www.ala.org.au/blogs-news/ala-helps-to-stop-pests-in-their-tracks/
+    dir: /data/alerts/emails
+    legacy:
+        aus: cl927:*
+        act: cl927:"Australian Capital Territory" OR cl927:"Jervis Bay Territory"
+        sa: cl927:"South Australia (including Coastal Waters)"
+        vic: cl927:"Victoria (including Coastal Waters)"
+        wa: cl927:"Western Australia (including Coastal Waters)"
+        nt: cl927:"Northern Territory (including Coastal Waters)"
+        qld: cl927:"Queensland (including Coastal Waters)"
+        tas: cl927:"Tasmania (including Coastal Waters)"
+        nsw: cl927:"New South Wales (including Coastal Waters)"
+        lgaField: cl10923
+        shape: cl11033:"Namadgi" OR cl11033:"Tidbinbilla" OR cl11033:"Bimberi"
+        #shape: spatialObject:9223660
+        eventDateAge: 29
+        firstLoadedDateAge: 8
+
 environments:
     development:
         grails:

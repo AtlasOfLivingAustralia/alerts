@@ -55,9 +55,7 @@
                     <thead>
                     <tr>
                         <th class="biosecurityTableColumn"><g:message code="biosecurity.view.body.table.header.queryname" default="Query name"/></th>
-                        <th class="biosecurityTableColumn"><g:message code="biosecurity.view.body.table.header.subnumber" default="Number of subscribers"/></th>
-                        <th class="biosecurityTableColumn"></th>
-                        <th class="biosecurityTableColumn"></th>
+                        <th class="biosecurityTableColumn">Subscribers</th>
                         <th class="biosecurityTableColumn"></th>
                     </tr>
                     </thead>
@@ -65,12 +63,36 @@
                     <g:each status="i" in="${queries}" var="query">
                         <tr>
                             <td><g:link controller="query" action="show" id="${query.id}">${query.name}</g:link></td>
-                            <td>${subscribers[i].size()}</td>
                             <td>
-                            <g:if test="${subscribers[i].size() != 0}"><a href="${request.contextPath}/query/subscribers?queryid=${query.id}">View all subscribers</a></td></g:if>
-                            <td><a href="${request.contextPath}/admin/deleteQuery?queryid=${query.id}"><g:message code="biosecurity.view.body.table.deletequery" default="delete the query"/></a>
+                                <table class="table">
+                                    <g:each in="${subscribers[i]}" var="subscriber">
+                                    <tr>
+                                        <td>${subscriber.email}</td>
+                                        <td><a target="_blank" href="${request.contextPath}/admin/unsubscribeAlert?queryid=${query.id}&useremail=${subscriber.email}">delete</a></td>
+                                    </tr>
+                                    </g:each>
+                                    <g:if test="${subscribers[i].size() == 0}">
+                                        <tr><td>
+                                            <a href="${request.contextPath}/admin/deleteQuery?queryid=${query.id}"><g:message code="biosecurity.view.body.table.deletequery" default="delete the query"/></a>
+                                        </td></tr>
+                                    </g:if>
+                                    <g:form name="create-security-alert" action="subscribeBioSecurity" method="post" class="form-horizontal">
+                                        <tr><td>
+                                            <div class="row">
+                                                <input type="hidden" name="queryid" id="queryid" value="${query.id}"/>
+                                                <input type="text" id="useremails" name="useremails" placeholder="<g:message code="biosecurity.view.body.label.useremailsallowmultiple" default="You can input multiple user emails by separating them with ';'"/>"/>
+                                                <button type="submit" class="btn">Add email</button>
+                                            </div>
+                                        </td></tr>
+                                    </g:form>
+                                </table>
+
                             </td>
-                            <td><a href="${request.contextPath}/admin/unsubscribeAllUsers?queryid=${query.id}"><g:message code="biosecurity.view.body.table.unsubscribeall" default="unsubscribe all users"/></a>
+                            <td>
+                                <form target="_blank" action="${request.contextPath}/admin/testBiosecurity?queryid=${query.id}" method="post">
+                                    Date: <input type="date" name="date" value="${date}"/>
+                                    <button type="submit" class="btn">preview</button>
+                                </form>
                             </td>
                         </tr>
                     </g:each>

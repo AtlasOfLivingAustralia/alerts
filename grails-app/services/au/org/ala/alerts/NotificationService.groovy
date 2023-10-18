@@ -1,6 +1,7 @@
 package au.org.ala.alerts
 
 import com.jayway.jsonpath.JsonPath
+import org.apache.http.entity.ContentType
 import grails.converters.JSON
 import org.apache.commons.io.IOUtils
 import org.apache.commons.lang.time.DateUtils
@@ -10,6 +11,7 @@ import org.grails.web.json.JSONObject
 
 import grails.gorm.transactions.Transactional
 import java.text.SimpleDateFormat
+import java.util.regex.Pattern
 import java.util.zip.GZIPOutputStream
 
 @Transactional
@@ -23,6 +25,7 @@ class NotificationService {
     def diffService
     def queryService
     def grailsApplication
+    def webService
 
     QueryResult getQueryResult(Query query, Frequency frequency) {
         QueryResult qr = QueryResult.findByQueryAndFrequency(query, frequency)
@@ -56,8 +59,16 @@ class NotificationService {
             def processedJson
 
             if (!urlString.contains("___MAX___")) {
-                processedJson = processQueryReturnedJson(query, IOUtils.toString(new URL(urlString).newReader()))
+                // queries without paging
+                if (!queryService.isBioSecurityQuery(query)) {
+                    // standard query
+                    processedJson = processQueryReturnedJson(query, IOUtils.toString(new URL(urlString).newReader()))
+                } else {
+                    // biosecurity query is handled elsewhere
+                    processedJson = processQueryBiosecurity(query)
+                }
             } else {
+                // queries with paging
                 int max = PAGING_MAX
                 int offset = 0
                 def result= []
@@ -134,11 +145,19 @@ class NotificationService {
         log.debug("[QUERY " + query.id + "] Querying URL: " + urlString)
 
         try {
-            def processedJson = []
+            def processedJson = ''
 
             if (!urlString.contains("___MAX___")) {
-                processedJson.add(processQueryReturnedJson(query, IOUtils.toString(new URL(urlString).newReader())))
+                // queries without paging
+                if (!queryService.isBioSecurityQuery(query)) {
+                    // standard query
+                    processedJson = processQueryReturnedJson(query, IOUtils.toString(new URL(urlString).newReader()))
+                } else {
+                    // biosecurity query is handled elsewhere
+                    processedJson = processQueryBiosecurity(query)
+                }
             } else {
+                // queries with paging
                 int max = PAGING_MAX
                 int offset = 0
                 def result
@@ -275,7 +294,7 @@ class NotificationService {
      * @param queryResult
      * @return
      */
-    Boolean hasPropertiesChanged(Query query, Map<PropertyPath, Map<String, String>> propertyPathMap, String jsonPrevious, String jsonCurrent) {
+    Boolean hasPropertiesChanged(def query, def propertyPathMap, def jsonPrevious, def jsonCurrent) {
         Boolean changed = false
 
         //if there is a fireWhenNotZero or fireWhenChange ignore  idJsonPath
@@ -398,6 +417,105 @@ class NotificationService {
         }
 
         return rslt.toString()
+    }
+
+    private def processQueryBiosecurity(Query query, Date date = new Date()) {
+        // get species list
+        Pattern pattern = Pattern.compile(".*species_list_uid:(drt?[0-9]+).*")
+        def dr = pattern.matcher(query.queryPath)[0][1]
+        def speciesList = webService.get(grailsApplication.config.getProperty('lists.baseURL') + "/ws/speciesListItemsInternal/" + dr + "?includeKVP=true", [:], ContentType.APPLICATION_JSON, true, false)
+
+        // prevent duplicates
+        def occurrences = [:]
+
+        speciesList.resp.each {
+            def searchTerms = []
+
+            def names = it.kvpValues.find { it.key == 'synonyms' }?.value?.split(',') ?: []
+
+            if (it.lsid) {
+                searchTerms.add('lsid:"' + it.lsid + '"')
+            } else {
+                names.add(it.name)
+            }
+
+            names.each {
+                searchTerms.add('genus:"' +  it + '"')
+                searchTerms.add('species:"' +  it + '"')
+                searchTerms.add('subspecies:"' +  it + '"')
+                searchTerms.add('scientificName:"' +  it + '"')
+                searchTerms.add('raw_scientificName:"' +  it + '"')
+            }
+
+            def fq = it.kvpValues?.find { it.key == 'fq' }?.value
+
+            // legacy date range filter
+            SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-dd")
+            def today = date // 2023-10-14
+            def todayMinus8 = DateUtils.addDays(today, -1 * grailsApplication.config.getProperty("biosecurity.legacy.firstLoadedDateAge", Integer, 8)) // 2023-10-06
+            def todayMinus29 = DateUtils.addDays(today, -1 * grailsApplication.config.getProperty("biosecurity.legacy.eventDateAge", Integer, 29)) // 2023-9-15
+            def firstLoadedDate = '&fq=' + URLEncoder.encode('firstLoadedDate:[' + sdf.format(todayMinus8) + 'T00:00:00Z TO ' + sdf.format(today) + 'T00:00:00Z]', 'UTF-8')
+            def dateRange = '&fq=' + URLEncoder.encode('eventDate:[' + sdf.format(todayMinus29) + 'T00:00:00Z TO ' + sdf.format(today) + 'T00:00:00Z]', 'UTF-8')
+
+            // temporary code for backward compatibility
+            fq = legacyFq(it)
+
+//            searchTerms.each {
+
+                def searchTerm = 'q=' + URLEncoder.encode("(" + searchTerms.join(") OR (") + ")")
+
+                def url = grailsApplication.config.getProperty('biocacheService.baseURL') + '/occurrences/search?' + searchTerm + fq + dateRange + firstLoadedDate + "&pageSize=10000"
+
+                try {
+                    def get = JSON.parse(new URL(url).text)
+                    get?.occurrences?.each {
+                        occurrences[it.uuid] = it
+                    }
+                } catch (Exception e) {
+                    log.error("failed to get occurrences at URL: " + url)
+                }
+//            }
+        }
+
+        return ([occurrences: occurrences.values()] as JSON).toString()
+    }
+
+    def legacyFq(def it) {
+        def fq = ''
+
+        def state = it.kvpValues?.find { it.key == 'state' }?.value
+        def lga = it.kvpValues?.find { it.key == 'lga' }?.value
+        def shapefile = it.kvpValues?.find { it.key == 'shape' }?.value
+
+        if (state?.toString()?.toUpperCase() == 'AUS') {
+            fq = grailsApplication.config.getProperty('biosecurity.legacy.aus')
+        } else if (state?.toString()?.toUpperCase() == 'NSW') {
+            fq = grailsApplication.config.getProperty('biosecurity.legacy.nsw')
+        } else if (state?.toString()?.toUpperCase() == 'ACT') {
+            fq = grailsApplication.config.getProperty('biosecurity.legacy.act')
+        } else if (state?.toString()?.toUpperCase() == 'QLD') {
+            fq = grailsApplication.config.getProperty('biosecurity.legacy.qld')
+        } else if (state?.toString()?.toUpperCase() == 'SA') {
+            fq = grailsApplication.config.getProperty('biosecurity.legacy.sa')
+        } else if (state?.toString()?.toUpperCase() == 'NT') {
+            fq = grailsApplication.config.getProperty('biosecurity.legacy.nt')
+        } else if (state?.toString()?.toUpperCase() == 'TAS') {
+            fq = grailsApplication.config.getProperty('biosecurity.legacy.tas')
+        } else if (state?.toString()?.toUpperCase() == 'VIC') {
+            fq = grailsApplication.config.getProperty('biosecurity.legacy.vic')
+        } else if (state?.toString()?.toUpperCase() == 'WA') {
+            fq = grailsApplication.config.getProperty('biosecurity.legacy.wa')
+        } else if (lga) {
+            fq = grailsApplication.config.getProperty('biosecurity.legacy.lgaField') + ":\"" + lga + "\""
+        } else if (shapefile) {
+            fq = grailsApplication.config.getProperty('biosecurity.legacy.shape')
+        }
+
+        if (fq) {
+            fq = '&fq=' + URLEncoder.encode(fq, "UTF-8")
+        }
+
+        fq
     }
 
     JSONElement getJsonElements(String url) {
@@ -555,6 +673,38 @@ class NotificationService {
         }
     }
 
+    def biosecurityAlerts() {
+        def date = new Date()
+
+        queryService.getALLBiosecurityQuery().each { Query query ->
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd")
+            def processedJson = processQueryBiosecurity(query, sdf.parse(date))
+
+            def frequency = 'weekly'
+            QueryResult qr = getQueryResult(query, Frequency.findByName(frequency))
+            qr.lastResult = gzipResult(processedJson)
+
+            // save QueryResult
+            refreshProperties(qr, processedJson)
+
+            def users = Query.executeQuery(
+                    """select u.email, max(u.unsubscribeToken), max(n.unsubscribeToken)
+                  from User u
+                  inner join u.notifications n
+                  where n.query = :query
+                  and (u.locked is null or u.locked != 1)
+                  group by u""", [query: query])
+
+            def recipients = users.collect { user ->
+                [email: user[0], userUnsubToken: user[1], notificationUnsubToken: user[2]]
+            }
+            log.debug("Sending emails to...." + recipients*.email.join(","))
+            if (!users.isEmpty()) {
+                emailService.sendGroupNotification(qr, Frequency.findByName('weekly'), recipients)
+            }
+
+        }
+    }
 
     def checkQueryForFrequency(String frequencyName) {
         log.debug("Checking frequency : " + frequencyName)
@@ -582,31 +732,34 @@ class NotificationService {
                   group by q""", [frequency: frequency])
 
         queries.each { query ->
-            log.debug("Running query: " + query.name)
-            boolean hasUpdated = checkStatus(query, frequency)
-            Boolean forceUpdate = grailsApplication.config.getProperty('postie.forceAllAlertsGetSent', Boolean, false)
+            // biosecurity queries are handled elsewhere
+            if (!queryService.isBioSecurityQuery(query)) {
+                log.debug("Running query: " + query.name)
+                boolean hasUpdated = checkStatus(query, frequency)
+                Boolean forceUpdate = grailsApplication.config.getProperty('postie.forceAllAlertsGetSent', Boolean, false)
 
-            if (forceUpdate || hasUpdated && sendEmails) {
-                log.debug("Query has been updated. Sending emails....")
-                //send separate emails for now
-                //if there is a change, generate an email list
-                //send an email
+                if (forceUpdate || hasUpdated && sendEmails) {
+                    log.debug("Query has been updated. Sending emails....")
+                    //send separate emails for now
+                    //if there is a change, generate an email list
+                    //send an email
 
-                def users = Query.executeQuery(
-                        """select u.email, max(u.unsubscribeToken), max(n.unsubscribeToken)
-                  from User u
-                  inner join u.notifications n
-                  where n.query = :query
-                  and u.frequency = :frequency
-                  and (u.locked is null or u.locked != 1)
-                  group by u""", [query: query, frequency: frequency])
+                    def users = Query.executeQuery(
+                            """select u.email, max(u.unsubscribeToken), max(n.unsubscribeToken)
+                      from User u
+                      inner join u.notifications n
+                      where n.query = :query
+                      and u.frequency = :frequency
+                      and (u.locked is null or u.locked != 1)
+                      group by u""", [query: query, frequency: frequency])
 
-                recipients = users.collect { user ->
-                    [email: user[0], userUnsubToken: user[1], notificationUnsubToken: user[2]]
-                }
-                log.debug("Sending emails to...." + recipients*.email.join(","))
-                if (!users.isEmpty()) {
-                    emailService.sendGroupNotification(query, frequency, recipients)
+                    recipients = users.collect { user ->
+                        [email: user[0], userUnsubToken: user[1], notificationUnsubToken: user[2]]
+                    }
+                    log.debug("Sending emails to...." + recipients*.email.join(","))
+                    if (!users.isEmpty()) {
+                        emailService.sendGroupNotification(query, frequency, recipients)
+                    }
                 }
             }
         }

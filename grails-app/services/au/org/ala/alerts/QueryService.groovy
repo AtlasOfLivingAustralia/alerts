@@ -1,6 +1,7 @@
 package au.org.ala.alerts
 
 import grails.util.Holders
+import org.apache.http.entity.ContentType
 import org.grails.web.json.JSONObject
 import org.springframework.dao.DataIntegrityViolationException
 
@@ -13,7 +14,7 @@ class QueryService {
 
     def serviceMethod() {}
 
-    def grailsApplication, notificationService, webService
+    def grailsApplication, notificationService, alertsWebService, webService
 
     def messageSource
     def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
@@ -111,7 +112,7 @@ class QueryService {
                 newQueryCreated = true
                 if (setPropertyPath) {
                     new PropertyPath([name: "totalRecords", jsonPath: "totalRecords", query: newQuery, fireWhenNotZero: true]).save(true)
-                    new PropertyPath([name: "last_loaded_record", jsonPath: "occurrences[0].rowKey", query: newQuery]).save(true)
+                    new PropertyPath([name: "last_loaded_record", jsonPath: "occurrences[0].uuid", query: newQuery]).save(true)
                 }
             } catch (Exception ex) {
                 log.error("Error occurred when saving Query: " + ex.toString())
@@ -351,12 +352,10 @@ class QueryService {
     }
 
     def getSpeciesListName(String listid) {
-        String speciesListServer = grailsApplication.config.getProperty("specieslist.server", String, "https://lists.ala.org.au")
-        String listURL = speciesListServer + '/ws/speciesList/' + listid
         try {
-            JSONObject rslt = webService.getJsonElements(listURL) as JSONObject
-            if (rslt && rslt.listName) {
-                return '\"' + rslt.listName + '\"'
+            def resp = webService.get(grailsApplication.config.getProperty('lists.baseURL') + "/ws/speciesListInternal/" + listid, [:], ContentType.APPLICATION_JSON, true, false)
+            if (resp?.resp?.listName) {
+                return '\"' + resp?.resp?.listName + '\"'
             }
         } catch (Exception ex) {
             log.error("Failed to get species list detail from " + listURL, ex)
