@@ -2,9 +2,9 @@ package ala.postie
 
 
 class BiosecurityQueriesJob {
-    static triggers = {
-        cron name: 'biosecurity', startDelay: 10000, cronExpression: '0 30 9 ? * WED'        //fire 9:30 every Wednesday
-    }
+    // triggers set in BootStrap.groovy
+//    static triggers = {
+//    }
 
     def notificationService
 

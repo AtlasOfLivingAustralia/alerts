@@ -51,6 +51,13 @@
         </g:form>
         <g:if test="${queries}">
             <div>
+                Get CSV list for all occurrences in all alerts
+                <form target="_blank" action="${request.contextPath}/admin/csvAllBiosecurity" method="post">
+                    Date: <input type="date" name="date" value="${date}"/>
+                    <button type="submit" class="btn">CSV</button>
+                </form>
+            </div>
+            <div>
                 <table class="table table-striped">
                     <thead>
                     <tr>
@@ -68,7 +75,7 @@
                                     <g:each in="${subscribers[i]}" var="subscriber">
                                     <tr>
                                         <td>${subscriber.email}</td>
-                                        <td><a target="_blank" href="${request.contextPath}/admin/unsubscribeAlert?queryid=${query.id}&useremail=${subscriber.email}">delete</a></td>
+                                        <td><a href="${request.contextPath}/admin/unsubscribeAlert?queryid=${query.id}&useremail=${subscriber.email}">delete</a></td>
                                     </tr>
                                     </g:each>
                                     <g:if test="${subscribers[i].size() == 0}">

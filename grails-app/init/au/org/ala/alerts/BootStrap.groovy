@@ -1,5 +1,7 @@
 package au.org.ala.alerts
 
+import ala.postie.BiosecurityQueriesJob
+
 class BootStrap {
 
     javax.sql.DataSource dataSource
@@ -34,6 +36,12 @@ class BootStrap {
 
         preloadQueries()
         log.info("Done bootstrap queries.")
+
+        // dynamic job
+        def cron = grailsApplication.config.getProperty("biosecurity.cronExpression")
+        if (cron) {
+            BiosecurityQueriesJob.schedule(cron)
+        }
     }
 
     private void preloadQueries() {

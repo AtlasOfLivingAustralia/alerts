@@ -423,61 +423,69 @@ class NotificationService {
         // get species list
         Pattern pattern = Pattern.compile(".*species_list_uid:(drt?[0-9]+).*")
         def dr = pattern.matcher(query.queryPath)[0][1]
-        def speciesList = webService.get(grailsApplication.config.getProperty('lists.baseURL') + "/ws/speciesListItemsInternal/" + dr + "?includeKVP=true", [:], ContentType.APPLICATION_JSON, true, false)
+
+        int offset = 0
+        int max = 400
+        def repeat = true
 
         // prevent duplicates
         def occurrences = [:]
 
-        speciesList.resp.each {
-            def searchTerms = []
+        while (repeat) {
+            def speciesList = webService.get(grailsApplication.config.getProperty('lists.baseURL') + "/ws/speciesListItemsInternal/" + dr + "?includeKVP=true" + "&offset=" + offset + "&max=" + max, [:], ContentType.APPLICATION_JSON, true, false)
 
-            def names = it.kvpValues.find { it.key == 'synonyms' }?.value?.split(',') ?: []
-
-            if (it.lsid) {
-                searchTerms.add('lsid:"' + it.lsid + '"')
-            } else {
-                names.add(it.name)
+            speciesList.resp?.each { listItem ->
+                processListItemBiosecurity(occurrences, listItem, date)
             }
 
-            names.each {
-                searchTerms.add('genus:"' +  it + '"')
-                searchTerms.add('species:"' +  it + '"')
-                searchTerms.add('subspecies:"' +  it + '"')
-                searchTerms.add('scientificName:"' +  it + '"')
-                searchTerms.add('raw_scientificName:"' +  it + '"')
-            }
-
-            def fq = it.kvpValues?.find { it.key == 'fq' }?.value
-
-            // legacy date range filter
-            SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-dd")
-            def today = date // 2023-10-14
-            def todayMinus8 = DateUtils.addDays(today, -1 * grailsApplication.config.getProperty("biosecurity.legacy.firstLoadedDateAge", Integer, 8)) // 2023-10-06
-            def todayMinus29 = DateUtils.addDays(today, -1 * grailsApplication.config.getProperty("biosecurity.legacy.eventDateAge", Integer, 29)) // 2023-9-15
-            def firstLoadedDate = '&fq=' + URLEncoder.encode('firstLoadedDate:[' + sdf.format(todayMinus8) + 'T00:00:00Z TO ' + sdf.format(today) + 'T00:00:00Z]', 'UTF-8')
-            def dateRange = '&fq=' + URLEncoder.encode('eventDate:[' + sdf.format(todayMinus29) + 'T00:00:00Z TO ' + sdf.format(today) + 'T00:00:00Z]', 'UTF-8')
-
-            // temporary code for backward compatibility
-            fq = legacyFq(it)
-
-//            searchTerms.each {
-
-                def searchTerm = 'q=' + URLEncoder.encode("(" + searchTerms.join(") OR (") + ")")
-
-                def url = grailsApplication.config.getProperty('biocacheService.baseURL') + '/occurrences/search?' + searchTerm + fq + dateRange + firstLoadedDate + "&pageSize=10000"
-
-                try {
-                    def get = JSON.parse(new URL(url).text)
-                    get?.occurrences?.each {
-                        occurrences[it.uuid] = it
-                    }
-                } catch (Exception e) {
-                    log.error("failed to get occurrences at URL: " + url)
-                }
-//            }
+            repeat = (max == speciesList.resp?.size())
+            offset += max
         }
 
         return ([occurrences: occurrences.values()] as JSON).toString()
+    }
+
+    def processListItemBiosecurity(def occurrences, def listItem, def date) {
+        def names = listItem.kvpValues.find { it.key == 'synonyms' }?.value?.split(',') as List ?: []
+
+        names.add(listItem.name)
+
+        def fq = listItem.kvpValues?.find { it.key == 'fq' }?.value
+
+        // legacy date range filter
+        SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-dd")
+        def today = date // 2023-10-14
+        def todayMinus8 = DateUtils.addDays(today, -1 * grailsApplication.config.getProperty("biosecurity.legacy.firstLoadedDateAge", Integer, 8)) // 2023-10-06
+        def todayMinus29 = DateUtils.addDays(today, -1 * grailsApplication.config.getProperty("biosecurity.legacy.eventDateAge", Integer, 29)) // 2023-9-15
+        def firstLoadedDate = '&fq=' + URLEncoder.encode('firstLoadedDate:[' + sdf.format(todayMinus8) + 'T00:00:00Z TO ' + sdf.format(today) + 'T00:00:00Z]', 'UTF-8')
+        def dateRange = '&fq=' + URLEncoder.encode('eventDate:[' + sdf.format(todayMinus29) + 'T00:00:00Z TO ' + sdf.format(today) + 'T00:00:00Z]', 'UTF-8')
+
+        // temporary code for backward compatibility
+        fq = legacyFq(listItem)
+
+        names.each { name ->
+            name = name.trim()
+
+            def searchTerms = []
+            searchTerms.add('genus:"' +  name + '"')
+            searchTerms.add('species:"' +  name + '"')
+            searchTerms.add('subspecies:"' +  name + '"')
+            searchTerms.add('scientificName:"' +  name + '"')
+            searchTerms.add('raw_scientificName:"' +  name + '"')
+
+            def searchTerm = 'q=' + URLEncoder.encode("(" + searchTerms.join(") OR (") + ")")
+
+            def url = grailsApplication.config.getProperty('biocacheService.baseURL') + '/occurrences/search?' + searchTerm + fq + dateRange + firstLoadedDate + "&pageSize=10000"
+
+            try {
+                def get = JSON.parse(new URL(url).text)
+                get?.occurrences?.each { occurrence ->
+                    occurrences[occurrence.uuid] = occurrence
+                }
+            } catch (Exception e) {
+                log.error("failed to get occurrences at URL: " + url)
+            }
+        }
     }
 
     def legacyFq(def it) {
@@ -487,25 +495,35 @@ class NotificationService {
         def lga = it.kvpValues?.find { it.key == 'lga' }?.value
         def shapefile = it.kvpValues?.find { it.key == 'shape' }?.value
 
-        if (state?.toString()?.toUpperCase() == 'AUS') {
-            fq = grailsApplication.config.getProperty('biosecurity.legacy.aus')
-        } else if (state?.toString()?.toUpperCase() == 'NSW') {
-            fq = grailsApplication.config.getProperty('biosecurity.legacy.nsw')
-        } else if (state?.toString()?.toUpperCase() == 'ACT') {
-            fq = grailsApplication.config.getProperty('biosecurity.legacy.act')
-        } else if (state?.toString()?.toUpperCase() == 'QLD') {
-            fq = grailsApplication.config.getProperty('biosecurity.legacy.qld')
-        } else if (state?.toString()?.toUpperCase() == 'SA') {
-            fq = grailsApplication.config.getProperty('biosecurity.legacy.sa')
-        } else if (state?.toString()?.toUpperCase() == 'NT') {
-            fq = grailsApplication.config.getProperty('biosecurity.legacy.nt')
-        } else if (state?.toString()?.toUpperCase() == 'TAS') {
-            fq = grailsApplication.config.getProperty('biosecurity.legacy.tas')
-        } else if (state?.toString()?.toUpperCase() == 'VIC') {
-            fq = grailsApplication.config.getProperty('biosecurity.legacy.vic')
-        } else if (state?.toString()?.toUpperCase() == 'WA') {
-            fq = grailsApplication.config.getProperty('biosecurity.legacy.wa')
-        } else if (lga) {
+        if (state) {
+            state?.toString()?.toUpperCase()?.split(",").each { st ->
+                def s = st.trim()
+
+                if (fq && s) {
+                    fq += " OR "
+                }
+                if (s == 'AUS') {
+                    fq += grailsApplication.config.getProperty('biosecurity.legacy.aus')
+                } else if (s == 'NSW') {
+                    fq += grailsApplication.config.getProperty('biosecurity.legacy.nsw')
+                } else if (s == 'ACT') {
+                    fq += grailsApplication.config.getProperty('biosecurity.legacy.act')
+                } else if (s == 'QLD') {
+                    fq += grailsApplication.config.getProperty('biosecurity.legacy.qld')
+                } else if (s == 'SA') {
+                    fq += grailsApplication.config.getProperty('biosecurity.legacy.sa')
+                } else if (s == 'NT') {
+                    fq += grailsApplication.config.getProperty('biosecurity.legacy.nt')
+                } else if (s == 'TAS') {
+                    fq += grailsApplication.config.getProperty('biosecurity.legacy.tas')
+                } else if (s == 'VIC') {
+                    fq += grailsApplication.config.getProperty('biosecurity.legacy.vic')
+                } else if (s == 'WA') {
+                    fq += grailsApplication.config.getProperty('biosecurity.legacy.wa')
+                }
+            }
+        }
+        if (lga) {
             fq = grailsApplication.config.getProperty('biosecurity.legacy.lgaField') + ":\"" + lga + "\""
         } else if (shapefile) {
             fq = grailsApplication.config.getProperty('biosecurity.legacy.shape')

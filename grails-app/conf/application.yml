@@ -155,6 +155,7 @@ useSpatialAlerts: true
 useBlogsAlerts: true
 useCitizenScienceAlerts: true
 biosecurity:
+    cronExpression: '0 30 9 ? * WED'
     moreinfo:
         link: https://www.ala.org.au/blogs-news/ala-helps-to-stop-pests-in-their-tracks/
     dir: /data/alerts/emails
