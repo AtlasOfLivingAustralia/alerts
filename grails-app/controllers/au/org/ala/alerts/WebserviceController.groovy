@@ -19,13 +19,13 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import grails.converters.JSON
 import grails.gorm.transactions.Transactional
 import grails.web.servlet.mvc.GrailsParameterMap
+import io.micronaut.http.HttpStatus
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
-import org.apache.http.HttpStatus
 
 import static io.swagger.v3.oas.annotations.enums.ParameterIn.PATH
 import static io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY
@@ -386,8 +386,8 @@ class WebserviceController {
     @Path("api/alerts/user/{userId}/unsubscribe")
     def deleteAllAlertsForUser() {
         if (!params.userId) {
-            response.status = HttpStatus.SC_BAD_REQUEST
-            response.sendError(HttpStatus.SC_BAD_REQUEST, "userId is a required parameter")
+            response.status = HttpStatus.BAD_REQUEST.code
+            response.sendError(HttpStatus.BAD_REQUEST.code, "userId is a required parameter")
         } else {
             def user = userService.getUserById(params.userId)
 
@@ -401,8 +401,8 @@ class WebserviceController {
 
                 render([success: true] as JSON)
             } else {
-                response.status = HttpStatus.SC_NOT_FOUND
-                response.sendError(HttpStatus.SC_NOT_FOUND, "Unable to find user with userId ${params.userId}")
+                response.status = HttpStatus.NOT_FOUND.code
+                response.sendError(HttpStatus.NOT_FOUND.code, "Unable to find user with userId ${params.userId}")
             }
         }
     }
@@ -449,16 +449,16 @@ class WebserviceController {
     @Path("api/alerts/user/createAlerts")
     def createUserAlerts() {
         if (!params.userId) {
-            response.status = HttpStatus.SC_BAD_REQUEST
-            response.sendError(HttpStatus.SC_BAD_REQUEST, "userId is a required parameter")
+            response.status = HttpStatus.BAD_REQUEST.code
+            response.sendError(HttpStatus.BAD_REQUEST.code, "userId is a required parameter")
         } else {
             def user = userService.getUserById(params.userId)
             if (!user) {
                 Map userDetails = ["userId": params.userId, "email": params.email, "userDisplayName": params.firstName + " " + params.lastName]
                 user = userService.getUser(userDetails)
-                response.status = HttpStatus.SC_CREATED
+                response.status = HttpStatus.CREATED.code
             } else {
-                response.status = HttpStatus.SC_OK
+                response.status = HttpStatus.OK.code
             }
 
             def notificationInstanceList = Notification.findAllByUser(user)
@@ -507,7 +507,7 @@ class WebserviceController {
     def getUserAlertsWS() {
         User user = userService.getUserById(params.userId)
         if (user == null) {
-            response.status = HttpStatus.SC_NOT_FOUND
+            response.status = HttpStatus.NOT_FOUND.code
             render ([error : "can't find a user with userId " + params.userId] as JSON)
         } else {
             render(userService.getUserAlertsConfig(user) as JSON)
@@ -546,7 +546,7 @@ class WebserviceController {
     def subscribeMyAnnotationWS() {
         User user = userService.getUser((String)params.userId)
         if (user == null) {
-            response.status = HttpStatus.SC_NOT_FOUND
+            response.status = HttpStatus.NOT_FOUND.code
             render ([error : "can't find a user with userId " + params.userId] as JSON)
 
         } else {
@@ -591,7 +591,7 @@ class WebserviceController {
     def unsubscribeMyAnnotationWS() {
         User user = userService.getUserById(params.userId)
         if (user == null) {
-            response.status = HttpStatus.SC_NOT_FOUND
+            response.status = HttpStatus.NOT_FOUND.code
             render ([error : "can't find a user with userId " + params.userId] as JSON)
         } else {
             try {

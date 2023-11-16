@@ -12,7 +12,7 @@ class EmailService {
     def diffService
     def queryService
     def grailsApplication
-    def webService
+    def alertsWebService
     def messageSource
     def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
     // this is the date format of 'created' in user assertions
@@ -105,9 +105,14 @@ class EmailService {
     }
 
     def sendGroupNotification(Query query, Frequency frequency, List<Map> recipients) {
+        QueryResult queryResult = QueryResult.findByQueryAndFrequency(query, frequency)
+        sendGroupNotification(queryResult, frequency, recipients)
+    }
+
+    def sendGroupNotification(QueryResult queryResult, Frequency frequency, List<Map> recipients) {
+        Query query = queryResult.query
 
         log.debug("Using email template: " + query.emailTemplate)
-        QueryResult queryResult = QueryResult.findByQueryAndFrequency(query, frequency)
 
         def records = retrieveRecordForQuery(query, queryResult)
         def userAssertions = queryService.isBioSecurityQuery(query) ? getBiosecurityAssertions(query, records as List) : [:]
@@ -214,7 +219,7 @@ class EmailService {
                 def stoppos = query.queryPath.indexOf("&", idx)
                 if (stoppos != -1) {
                     def listid = query.queryPath.substring(idx + matchStr.length(), stoppos)
-                    listURL = grailsApplication.config.getProperty("specieslist.server", String, "https://lists.ala.org.au") + '/speciesListItem/list/' + listid
+                    listURL = grailsApplication.config.getProperty("lists.baseURL") + '/speciesListItem/list/' + listid
                 }
             }
             return [name : listname, url: listURL]

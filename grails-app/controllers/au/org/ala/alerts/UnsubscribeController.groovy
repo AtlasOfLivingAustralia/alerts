@@ -1,7 +1,7 @@
 package au.org.ala.alerts
 
 import grails.gorm.transactions.Transactional
-import org.apache.http.HttpStatus
+import io.micronaut.http.HttpStatus
 
 @Transactional
 class UnsubscribeController {
@@ -16,7 +16,7 @@ class UnsubscribeController {
         Map userAndNotifications = findUserAndNotificationsForToken(params.token)
 
         if (!userAndNotifications?.user) {
-            response.status = HttpStatus.SC_BAD_REQUEST
+            response.status = HttpStatus.BAD_REQUEST.code
             flash.message = message(code: 'email.unsubscribe.fail.alreadyunsubscribed', default: 'Unable to unsubscribe. You may have already unsubscribed.')
             render view: '../error'
         } else {
@@ -28,7 +28,7 @@ class UnsubscribeController {
         Map userAndNotifications = findUserAndNotificationsForToken(params.token)
 
         if (!userAndNotifications?.user) {
-            response.status = HttpStatus.SC_BAD_REQUEST
+            response.status = HttpStatus.BAD_REQUEST.code
             flash.message = message(code: 'email.unsubscribe.fail.alreadyunsubscribed', default: 'Unable to unsubscribe. You may have already unsubscribed.')
             render view: '../error'
         } else {

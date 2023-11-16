@@ -3,7 +3,7 @@ package au.org.ala.alerts
 import grails.testing.gorm.DataTest
 import grails.testing.web.controllers.ControllerUnitTest
 import groovy.util.logging.Slf4j
-import org.apache.http.HttpStatus
+import io.micronaut.http.HttpStatus
 import spock.lang.Specification
 
 @Slf4j
@@ -27,7 +27,7 @@ class UnsubscribeControllerSpec extends Specification implements ControllerUnitT
         controller.index()
 
         then:
-        response.status == HttpStatus.SC_BAD_REQUEST
+        response.status == HttpStatus.BAD_REQUEST.code
     }
 
     def "index() should return a HTTP 400 (BAD_REQUEST) if there is no logged in user and the token is invalid"() {
@@ -39,7 +39,7 @@ class UnsubscribeControllerSpec extends Specification implements ControllerUnitT
         controller.index()
 
         then:
-        response.status == HttpStatus.SC_BAD_REQUEST
+        response.status == HttpStatus.BAD_REQUEST.code
     }
 
     def "index() should render the index view with a user but no notifications when there is logged in user and no token"() {
@@ -50,7 +50,7 @@ class UnsubscribeControllerSpec extends Specification implements ControllerUnitT
         controller.index()
 
         then:
-        response.status == HttpStatus.SC_OK
+        response.status == HttpStatus.OK.code
         controller.modelAndView.viewName == "/unsubscribe/index"
         controller.modelAndView.model.user.userId == "1"
         !controller.modelAndView.model.notifications
@@ -66,7 +66,7 @@ class UnsubscribeControllerSpec extends Specification implements ControllerUnitT
         controller.index()
 
         then:
-        response.status == HttpStatus.SC_OK
+        response.status == HttpStatus.OK.code
         controller.modelAndView.viewName == "/unsubscribe/index"
         controller.modelAndView.model.user.userId == "user1"
         !controller.modelAndView.model.notifications
@@ -92,7 +92,7 @@ class UnsubscribeControllerSpec extends Specification implements ControllerUnitT
         controller.index()
 
         then:
-        response.status == HttpStatus.SC_OK
+        response.status == HttpStatus.OK.code
         controller.modelAndView.viewName == "/unsubscribe/index"
         controller.modelAndView.model.user.userId == "user1"
         controller.modelAndView.model.notifications.size() == 2
@@ -118,7 +118,7 @@ class UnsubscribeControllerSpec extends Specification implements ControllerUnitT
         controller.index()
 
         then:
-        response.status == HttpStatus.SC_OK
+        response.status == HttpStatus.OK.code
         controller.modelAndView.viewName == "/unsubscribe/index"
         controller.modelAndView.model.user.userId == "user1"
         controller.modelAndView.model.notifications.size() == 1
@@ -146,7 +146,7 @@ class UnsubscribeControllerSpec extends Specification implements ControllerUnitT
         controller.index()
 
         then:
-        response.status == HttpStatus.SC_OK
+        response.status == HttpStatus.OK.code
         controller.modelAndView.viewName == "/unsubscribe/index"
         controller.modelAndView.model.user.userId == "user1"
         controller.modelAndView.model.notifications.size() == 1
@@ -163,7 +163,7 @@ class UnsubscribeControllerSpec extends Specification implements ControllerUnitT
         controller.unsubscribe()
 
         then:
-        response.status == HttpStatus.SC_BAD_REQUEST
+        response.status == HttpStatus.BAD_REQUEST.code
     }
 
     def "unsubscribe() should return a HTTP 400 (BAD_REQUEST) if there is no logged in user and the token is invalid"() {
@@ -176,7 +176,7 @@ class UnsubscribeControllerSpec extends Specification implements ControllerUnitT
         controller.unsubscribe()
 
         then:
-        response.status == HttpStatus.SC_BAD_REQUEST
+        response.status == HttpStatus.BAD_REQUEST.code
     }
 
     def "unsubscribe() should do nothing when there is logged in user with no notifications and no token"() {
@@ -187,7 +187,7 @@ class UnsubscribeControllerSpec extends Specification implements ControllerUnitT
         controller.index()
 
         then:
-        response.status == HttpStatus.SC_OK
+        response.status == HttpStatus.OK.code
     }
 
     def "unsubscribe() should do nothing if the token matches the token for a user with no notifications"() {
@@ -200,7 +200,7 @@ class UnsubscribeControllerSpec extends Specification implements ControllerUnitT
         controller.index()
 
         then:
-        response.status == HttpStatus.SC_OK
+        response.status == HttpStatus.OK.code
     }
 
     def "unsubscribe() should delete all the user's notifications if the token matches the token for a user with notifications"() {
@@ -233,7 +233,7 @@ class UnsubscribeControllerSpec extends Specification implements ControllerUnitT
 
         then:
         log.info "token = ${params.token}"
-        response.status == HttpStatus.SC_OK
+        response.status == HttpStatus.OK.code
         User.count() == 2
         !User.findByUserId("user1").notifications
         User.findByUserId("user2").notifications.size() == 1
@@ -271,7 +271,7 @@ class UnsubscribeControllerSpec extends Specification implements ControllerUnitT
         then:
         log.info "token = ${params.token}"
         1 * controller.notificationService.unsubscribeMyAnnotation(user)
-        response.status == HttpStatus.SC_OK
+        response.status == HttpStatus.OK.code
     }
 
     def "unsubscribe() should delete only 1 notification if the token matches the token for a notification"() {
@@ -296,7 +296,7 @@ class UnsubscribeControllerSpec extends Specification implements ControllerUnitT
         controller.unsubscribe()
 
         then:
-        response.status == HttpStatus.SC_OK
+        response.status == HttpStatus.OK.code
         User.count() == 1
         User.findByUserId("user1").notifications.size() == 1
         Notification.count() == 1
@@ -324,7 +324,7 @@ class UnsubscribeControllerSpec extends Specification implements ControllerUnitT
         controller.unsubscribe()
 
         then:
-        response.status == HttpStatus.SC_OK
+        response.status == HttpStatus.OK.code
         User.count() == 1
         User.findByUserId("user1").notifications.size() == 1
         Notification.count() == 1

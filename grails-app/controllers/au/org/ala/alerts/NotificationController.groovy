@@ -1,8 +1,8 @@
 package au.org.ala.alerts
 
 import grails.converters.JSON
-import org.apache.http.HttpStatus
 import grails.gorm.transactions.Transactional
+import io.micronaut.http.HttpStatus
 
 @Transactional
 class NotificationController {
@@ -26,8 +26,8 @@ class NotificationController {
         def user = getUser()
 
         if (!user) {
-            response.status = HttpStatus.SC_NOT_FOUND
-            response.sendError(HttpStatus.SC_NOT_FOUND, "Unrecognised user")
+            response.status = HttpStatus.NOT_FOUND.code
+            response.sendError(HttpStatus.NOT_FOUND.code, "Unrecognised user")
         } else {
             notificationService.addAlertForUser(user, Long.valueOf(params.id))
             return null
@@ -38,8 +38,8 @@ class NotificationController {
         def user = getUser()
 
         if (!user) {
-            response.status = HttpStatus.SC_NOT_FOUND
-            response.sendError(HttpStatus.SC_NOT_FOUND, "Unrecognised user")
+            response.status = HttpStatus.NOT_FOUND.code
+            response.sendError(HttpStatus.NOT_FOUND.code, "Unrecognised user")
         } else {
             notificationService.deleteAlertForUser(user, Long.valueOf(params.id))
         }
@@ -51,7 +51,7 @@ class NotificationController {
             notificationService.subscribeMyAnnotation(user)
             render ([success: true] as JSON)
         } catch (ignored) {
-            response.sendError(HttpStatus.SC_INTERNAL_SERVER_ERROR, "failed to subscribe to 'my annotation' alert for user " + user?.getUserId())
+            response.sendError(HttpStatus.INTERNAL_SERVER_ERROR.code, "failed to subscribe to 'my annotation' alert for user " + user?.getUserId())
         }
 
     }
@@ -62,7 +62,7 @@ class NotificationController {
             notificationService.unsubscribeMyAnnotation(user)
             render ([success: true] as JSON)
         } catch (ignored) {
-            response.sendError(HttpStatus.SC_INTERNAL_SERVER_ERROR, "failed to unsubscribe 'my annotation' alert for user " + user?.getUserId())
+            response.sendError(HttpStatus.INTERNAL_SERVER_ERROR.code, "failed to unsubscribe 'my annotation' alert for user " + user?.getUserId())
         }
     }
 

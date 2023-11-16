@@ -10,39 +10,26 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  */
-
 buildscript {
-    repositories {
-        mavenLocal()
-        maven { url "https://nexus.ala.org.au/content/groups/public/" }
-        maven { url "https://repo.grails.org/grails/core" }
-    }
-    dependencies {
-        classpath "org.grails:grails-gradle-plugin:$grailsVersion"
-        classpath "com.bertramlabs.plugins:asset-pipeline-gradle:3.4.6"
-        classpath "org.grails.plugins:hibernate5:7.0.5"
-        classpath 'org.grails.plugins:quartz:2.0.13'
-        classpath "gradle.plugin.com.github.erdi.webdriver-binaries:webdriver-binaries-gradle-plugin:2.6"
-    }
+    version "4.0.0-SNAPSHOT"
+    group "au.org.ala"
 }
 
 plugins {
+    id "groovy"
+    id "org.grails.grails-gsp"
+    id "org.grails.grails-web"
+    id "com.github.erdi.webdriver-binaries" version "3.0"
+    id "war"
+    id "idea"
+    id "com.bertramlabs.asset-pipeline"
+    id "application"
+    id "eclipse"
+
     id "com.gorylenko.gradle-git-properties" version "2.4.1"
+
+    id "maven-publish"
 }
-
-
-version "3.0.0"
-group "au.org.ala"
-
-apply plugin:"eclipse"
-apply plugin:"idea"
-apply plugin:"war"
-apply plugin:"org.grails.grails-web"
-apply plugin:"com.github.erdi.webdriver-binaries"
-apply plugin:"org.grails.grails-gsp"
-apply plugin:"com.bertramlabs.asset-pipeline"
-apply plugin:"maven-publish"
-
 
 publishing {
     repositories {
@@ -67,15 +54,27 @@ bootWar {
 }
 
 repositories {
-    mavenLocal()
-    maven { url "https://nexus.ala.org.au/content/groups/public/" }
-    maven { url "https://repo.grails.org/grails/core" }
+    repositories {
+        mavenLocal()
+        maven { url "https://nexus.ala.org.au/content/groups/public/" }
+        mavenCentral()
+        maven { url "https://repo.grails.org/grails/core/" }
+    }
+    mavenCentral()
 }
 
 configurations {
     developmentOnly
     runtimeClasspath {
         extendsFrom developmentOnly
+    }
+    all {
+        resolutionStrategy.force 'org.codehaus.groovy:groovy-xml:3.0.13'
+        resolutionStrategy.eachDependency { DependencyResolveDetails details->
+            if (details.requested.group == 'org.seleniumhq.selenium') {
+                details.useVersion('4.10.0')
+            }
+        }
     }
 }
 
@@ -88,8 +87,10 @@ dependencies {
     implementation "org.springframework.boot:spring-boot-starter-logging"
     implementation "org.springframework.boot:spring-boot-autoconfigure"
     implementation "org.grails:grails-core"
+    implementation("org.springframework.boot:spring-boot-starter")
     implementation "org.springframework.boot:spring-boot-starter-actuator"
     implementation "org.springframework.boot:spring-boot-starter-tomcat"
+    implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation "org.grails:grails-web-boot"
     implementation "org.grails:grails-logging"
     implementation "org.grails:grails-plugin-rest"
@@ -102,7 +103,9 @@ dependencies {
     implementation "org.grails.plugins:scaffolding"
     implementation "org.grails.plugins:events"
     implementation "org.grails.plugins:hibernate5"
+    implementation("org.hibernate:hibernate-core:5.6.15.Final")
     implementation "org.hibernate:hibernate-jcache"
+    compileOnly("io.micronaut:micronaut-inject-groovy")
 
     implementation "org.grails.plugins:gsp"
     console "org.grails:grails-console"
@@ -110,7 +113,7 @@ dependencies {
     runtimeOnly "org.glassfish.web:el-impl:2.1.2-b03"
     runtimeOnly "com.h2database:h2"
     runtimeOnly "org.apache.tomcat:tomcat-jdbc"
-    runtimeOnly "com.bertramlabs.plugins:asset-pipeline-grails:3.4.6"
+    runtimeOnly "com.bertramlabs.plugins:asset-pipeline-grails:4.3.0"
 
     testImplementation "org.grails:grails-gorm-testing-support"
     testImplementation "org.grails.plugins:geb"
@@ -118,72 +121,94 @@ dependencies {
     testImplementation "org.grails:grails-test-mixins:3.3.0"
 
     // Grails plugin dependencies
-    runtimeOnly "org.grails.plugins:ala-bootstrap3:4.1.0", noCache
+    runtimeOnly "org.grails.plugins:ala-bootstrap3:4.4.0", noCache
     implementation "org.grails.plugins:ala-auth:$alaSecurityLibsVersion"
     implementation "org.grails.plugins:ala-ws-security-plugin:$alaSecurityLibsVersion"
     implementation "org.grails.plugins:ala-ws-plugin:$alaSecurityLibsVersion"
     implementation "au.org.ala:userdetails-service-client:$alaSecurityLibsVersion"
     implementation "org.grails.plugins:ala-admin-plugin:2.3.0"
-    
+
+    // for ContentType
+    implementation "org.apache.httpcomponents:httpcore:4.4.16"
+
     implementation 'dk.glasius:external-config:3.1.1'
     implementation 'org.grails.plugins:mail:3.0.0'
-    implementation "org.codehaus.groovy.modules.http-builder:http-builder:0.7.2"
+
     implementation 'org.grails.plugins:schwartz-monitor:2.0.1.ALA-SNAPSHOT'
     implementation 'org.grails.plugins:quartz:2.0.13'
     implementation 'org.quartz-scheduler:quartz:2.3.2' // Is not pulled in by default https://stackoverflow.com/questions/61144025/quartz-not-working-in-grails4-issue-in-dependency-not-able-to-compile
-    implementation 'org.grails.plugins:cache:4.0.2'
+    implementation 'org.grails.plugins:cache'
     implementation 'org.grails.plugins:cache-ehcache:3.0.0'
-    
+
     // regular JAR dependencies
-    runtimeOnly 'mysql:mysql-connector-java:8.0.25'
+    runtimeOnly 'mysql:mysql-connector-java:8.0.33'
     testRuntimeOnly "com.h2database:h2"
-    testImplementation "org.seleniumhq.selenium:selenium-remote-driver:3.14.0"
-    testImplementation "org.seleniumhq.selenium:selenium-api:3.14.0"
-    testImplementation "org.seleniumhq.selenium:selenium-support:3.14.0"
-    testImplementation "org.seleniumhq.selenium:selenium-firefox-driver:3.14.0"
+    testImplementation "org.seleniumhq.selenium:selenium-remote-driver:4.10.0"
+    testImplementation "org.seleniumhq.selenium:selenium-api:4.10.0"
+    testImplementation "org.seleniumhq.selenium:selenium-support:4.10.0"
+    testRuntimeOnly("org.seleniumhq.selenium:selenium-chrome-driver:4.10.0")
+    testRuntimeOnly("org.seleniumhq.selenium:selenium-firefox-driver:4.10.0")
+    testRuntimeOnly("org.seleniumhq.selenium:selenium-safari-driver:4.10.0")
     runtimeOnly 'commons-lang:commons-lang:2.6'
-    implementation 'commons-io:commons-io:2.5'
-    runtimeOnly 'org.hamcrest:hamcrest-core:1.3'
-    runtimeOnly 'org.hamcrest:hamcrest-library:1.3'
-    runtimeOnly 'xalan:xalan:2.7.2'
-    implementation 'com.jayway.jsonpath:json-path:0.5.6'
-    implementation 'com.jayway.jsonpath:json-path-assert:0.5.6'
+    implementation 'commons-io:commons-io:2.11.0'
+    runtimeOnly 'org.hamcrest:hamcrest-core:2.2'
+    runtimeOnly 'org.hamcrest:hamcrest-library:2.2'
+    runtimeOnly 'xalan:xalan:2.7.3'
+    implementation 'com.jayway.jsonpath:json-path:2.7.0'
+    implementation 'com.jayway.jsonpath:json-path-assert:2.7.0'
     implementation 'au.org.ala.plugins:openapi:1.1.0'
 }
-
-bootRun {
-    ignoreExitValue true
-    jvmArgs(
-            '-Dspring.output.ansi.enabled=always',
-            '-noverify',
-            '-XX:TieredStopAtLevel=1',
-            '-Xmx1024m')
-    sourceResources sourceSets.main
-    String springProfilesActive = 'spring.profiles.active'
-    systemProperty springProfilesActive, System.getProperty(springProfilesActive)
-}
-
-tasks.withType(GroovyCompile) {
-    configure(groovyOptions) {
-        forkOptions.jvmArgs = ['-Xmx1024m']
-    }
-}
-
-
-webdriverBinaries {
-    chromedriver '2.45.0'
-    geckodriver '0.24.0'
-}
+//
+//bootRun {
+//    ignoreExitValue true
+//    jvmArgs(
+//            '-Dspring.output.ansi.enabled=always',
+//            '-noverify',
+//            '-XX:TieredStopAtLevel=1',
+//            '-Xmx1024m')
+//    sourceResources sourceSets.main
+//    String springProfilesActive = 'spring.profiles.active'
+//    systemProperty springProfilesActive, System.getProperty(springProfilesActive)
+//}
+//
+//tasks.withType(GroovyCompile) {
+//    configure(groovyOptions) {
+//        forkOptions.jvmArgs = ['-Xmx1024m']
+//    }
+//}
+//
 
 tasks.withType(Test) {
+    useJUnitPlatform()
     systemProperty "geb.env", System.getProperty('geb.env')
     systemProperty "geb.build.reportsDir", reporting.file("geb/integrationTest")
-    systemProperty "webdriver.chrome.driver", System.getProperty('webdriver.chrome.driver')
-    systemProperty "webdriver.gecko.driver", System.getProperty('webdriver.gecko.driver')
+    systemProperty 'webdriver.chrome.driver', "${System.getenv('CHROMEWEBDRIVER')}/chromedriver"
+    systemProperty 'webdriver.gecko.driver', "${System.getenv('GECKOWEBDRIVER')}/geckodriver"
 }
-
-
+tasks.withType(War).configureEach { War war ->
+    war.dependsOn compileGroovyPages
+}
+webdriverBinaries {
+    chromedriver '110.0.5481.77'
+    geckodriver '0.32.2'
+    edgedriver '110.0.1587.57'
+}
 assets {
     minifyJs = true
     minifyCss = true
 }
+
+
+
+bootWar {
+    dependsOn(compileGroovyPages)
+}
+
+war {
+    dependsOn(compileGroovyPages)
+}
+
+java {
+    sourceCompatibility = JavaVersion.toVersion("11")
+}
+

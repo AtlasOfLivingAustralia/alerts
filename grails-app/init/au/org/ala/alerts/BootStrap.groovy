@@ -1,5 +1,7 @@
 package au.org.ala.alerts
 
+import ala.postie.BiosecurityQueriesJob
+
 class BootStrap {
 
     javax.sql.DataSource dataSource
@@ -34,6 +36,12 @@ class BootStrap {
 
         preloadQueries()
         log.info("Done bootstrap queries.")
+
+        // dynamic job
+        def cron = grailsApplication.config.getProperty("biosecurity.cronExpression")
+        if (cron) {
+            BiosecurityQueriesJob.schedule(cron)
+        }
     }
 
     private void preloadQueries() {
@@ -178,19 +186,19 @@ class BootStrap {
         descr = messageSource.getMessage("query.occurrence.datasets.descr", null, siteLocale)
         if(Query.findAllByName(title).isEmpty()){
             Query newOccurrenceDatasets = (new Query([
-                    baseUrl:  grailsApplication.config.collectoryService.baseURL ?: grailsApplication.config.collectory.baseURL,
+                    baseUrl:  grailsApplication.config.biocacheService.baseURL,
                     baseUrlForUI: grailsApplication.config.collectory.baseURL,
                     name: title,
                     resourceName:  grailsApplication.config.postie.defaultResourceName,
-                    updateMessage: 'more.cs.images.update.message',
+                    updateMessage: 'more.datasets.update.message',
                     description: descr,
-                    queryPath: '/ws/dataResource?resourceType=records',
-                    queryPathForUI: '/datasets',
-                    emailTemplate: '/email/datasets',
-                    recordJsonPath: '\$[*]',
-                    idJsonPath: 'uid'
+                    queryPath: '/occurrences/search?q=*:*&facet=true&flimit=-1&facets=dataResourceUid&pageSize=0',
+                    queryPathForUI: '/datasets#filters=status%3AdataAvailable%3BresourceType%3Arecords',
+                    emailTemplate: '/email/dataresource',
+                    recordJsonPath: '\$.facetResults[0].fieldResult[*]',
+                    idJsonPath: 'i18nCode'
             ])).save()
-            new PropertyPath([name: "dataset_count", jsonPath: "\$", query: newOccurrenceDatasets, fireWhenChange: true]).save()
+            new PropertyPath([name: "dataset_count", jsonPath: "\$.facetResults[0].fieldResult", query: newOccurrenceDatasets, fireWhenChange: true]).save()
         }
 
         title = messageSource.getMessage("query.datasets.title", null, siteLocale)
@@ -218,19 +226,19 @@ class BootStrap {
                 Query.findAllByName(title).isEmpty()) {
             log.info "Creating species list query"
             Query newSpeciesLists = (new Query([
-                    baseUrl: grailsApplication.config.collectoryService.baseURL ?: grailsApplication.config.collectory.baseURL,
-                    baseUrlForUI: grailsApplication.config.collectory.baseURL,
+                    baseUrl: grailsApplication.config.lists.baseURL,
+                    baseUrlForUI: grailsApplication.config.lists.baseURL,
                     name: title,
                     resourceName:  grailsApplication.config.postie.defaultResourceName,
                     updateMessage: 'more.specieslist.update.message',
                     description: descr,
-                    queryPath: '/ws/dataResource?resourceType=species-list',
-                    queryPathForUI: '/datasets#filters=resourceType%3Aspecies-list',
-                    emailTemplate: '/email/datasets',
-                    recordJsonPath: '\$[*]',
-                    idJsonPath: 'uid'
+                    queryPath: '/ws/speciesList?max=___MAX___&offset=___OFFSET___',
+                    queryPathForUI: '/public/speciesLists?q=&max=25&sort=dateCreated&order=desc',
+                    emailTemplate: '/email/specieslists',
+                    recordJsonPath: '\$.lists[*]',
+                    idJsonPath: 'dataResourceUid'
             ])).save()
-            new PropertyPath([name: "species_list_count", jsonPath: "\$", query: newSpeciesLists, fireWhenChange: true]).save()
+            new PropertyPath([name: "species_list_count", jsonPath: "\$.lists", query: newSpeciesLists, fireWhenChange: true]).save()
         }
 
         title = messageSource.getMessage("query.ala.blog.title", null, siteLocale)
