@@ -34,10 +34,10 @@ class DiffServiceSpec extends Specification {
         given:
         def query = Query.findByName("Blogs and News")
         def json1 = """
-                 {"id":44342,"date":"2020-09-30T10:09:11","date_gmt":"2020-09-30T00:09:11","guid":{"rendered":"https://www.ala.org.au/?p=44342"},"modified":"2020-09-30T10:09:12","modified_gmt":"2020-09-30T00:09:12","slug":"data-in-the-ala-bushfire-affected-areas-2019-2020-bushfire-season","status":"publish","type":"post","link":"https://www.ala.org.au/blogs-news/data-in-the-ala-bushfire-affected-areas-2019-2020-bushfire-season/","title":{"rendered":"Data in the ALA: bushfire affected areas (2019-2020 bushfire season)"}}
+                 [{"id":44342,"date":"2020-09-30T10:09:11","date_gmt":"2020-09-30T00:09:11","guid":{"rendered":"https://www.ala.org.au/?p=44342"},"modified":"2020-09-30T10:09:12","modified_gmt":"2020-09-30T00:09:12","slug":"data-in-the-ala-bushfire-affected-areas-2019-2020-bushfire-season","status":"publish","type":"post","link":"https://www.ala.org.au/blogs-news/data-in-the-ala-bushfire-affected-areas-2019-2020-bushfire-season/","title":{"rendered":"Data in the ALA: bushfire affected areas (2019-2020 bushfire season)"}}]
                  """.stripIndent()
         def json2 = """
-                {"id":44343,"date":"2020-09-30T10:09:11","date_gmt":"2020-09-30T00:09:11","guid":{"rendered":"https://www.ala.org.au/?p=44342"},"modified":"2020-09-30T10:09:12","modified_gmt":"2020-09-30T00:09:12","slug":"data-in-the-ala-bushfire-affected-areas-2019-2020-bushfire-season","status":"publish","type":"post","link":"https://www.ala.org.au/blogs-news/data-in-the-ala-bushfire-affected-areas-2019-2020-bushfire-season/","title":{"rendered":"Data in the ALA: bushfire affected areas (2019-2020 bushfire season)"}}
+                [{"id":44343,"date":"2020-09-30T10:09:11","date_gmt":"2020-09-30T00:09:11","guid":{"rendered":"https://www.ala.org.au/?p=44342"},"modified":"2020-09-30T10:09:12","modified_gmt":"2020-09-30T00:09:12","slug":"data-in-the-ala-bushfire-affected-areas-2019-2020-bushfire-season","status":"publish","type":"post","link":"https://www.ala.org.au/blogs-news/data-in-the-ala-bushfire-affected-areas-2019-2020-bushfire-season/","title":{"rendered":"Data in the ALA: bushfire affected areas (2019-2020 bushfire season)"}}]
                 """.stripIndent()
 
         when:
