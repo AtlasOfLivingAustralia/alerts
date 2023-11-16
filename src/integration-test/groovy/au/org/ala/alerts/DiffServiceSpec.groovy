@@ -16,10 +16,12 @@ package au.org.ala.alerts
 import grails.test.mixin.integration.Integration
 import grails.gorm.transactions.*
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.test.context.TestPropertySource
 import spock.lang.*
 
 @Integration
 @Rollback
+@TestPropertySource(locations="classpath:application-test.yml")
 class DiffServiceSpec extends Specification {
     @Autowired
     DiffService diffService
