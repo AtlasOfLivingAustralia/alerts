@@ -16,11 +16,12 @@ package au.org.ala.alerts
 import au.org.ala.web.AlaSecured
 import grails.gorm.transactions.Transactional
 import grails.util.Holders
-import groovy.json.JsonSlurper
-import org.apache.http.client.methods.HttpPost
-import org.apache.http.impl.client.DefaultHttpClient
+import org.apache.commons.lang3.time.DateParser
 
-@Transactional
+import java.text.DateFormat
+import java.text.SimpleDateFormat
+import java.time.LocalDate
+
 @AlaSecured(value = 'ROLE_ADMIN', redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to view that page.")
 class AdminController {
 
@@ -34,6 +35,7 @@ class AdminController {
 
     def index() {}
 
+    @Transactional
     def findUser() {
         List users = []
         if (params.term) {
@@ -42,6 +44,7 @@ class AdminController {
         render view: "/admin/userAlerts", model: [users: users]
     }
 
+    @Transactional
     def updateUserEmails() {
         def updated = userService.updateUserEmails()
         flash.message = "Updated ${updated} email addresses in system"
@@ -72,6 +75,7 @@ class AdminController {
         }
     }
 
+    @Transactional
     def fixupBiocacheQueries() {
         def toUpdate = []
         Query.findAllByQueryPathForUI('/occurrences/search?q=*:*&fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc').each {
@@ -135,6 +139,7 @@ class AdminController {
         null
     }
 
+    @Transactional
     def debugAlertsForUser() {
         User user = User.findByUserId(params.userId)
         if (user) {
@@ -148,11 +153,13 @@ class AdminController {
         }
     }
 
+    @Transactional
     def debugAllAlerts() {
         response.setContentType("text/plain")
         notificationService.checkAllQueries(response.getWriter())
     }
 
+    @Transactional
     def debugAlertEmail() {
         def frequency = params.frequency ?: 'weekly'
         def qcr = notificationService.checkQueryById(params.id, params.frequency ?: 'weekly')
@@ -160,6 +167,7 @@ class AdminController {
         render(view: qcr.query.emailTemplate, model: model)
     }
 
+    @Transactional
     def debugAlert() {
         [alerts: [
                 hourly : notificationService.checkQueryById(params.id, params.frequency ?: 'hourly'),
@@ -170,11 +178,13 @@ class AdminController {
         ]
     }
 
+    @Transactional
     def deleteOrphanAlerts() {
         int noDeleted = queryService.deleteOrphanedQueries()
         render(view: 'index', model: [message: """Removed ${noDeleted} queries from system"""])
     }
 
+    @Transactional
     def showUsersAlerts() {
         User user = User.findByUserId(params.userId)
         if (user) {
@@ -195,52 +205,23 @@ class AdminController {
      *
      * @return
      */
+    @Transactional
     def refreshUserDetails() {
         try {
-            def userListJson = doPost(grailsApplication.config.ala.userDetailsURL)
-            log.info "Refreshing user ids...."
-            if (userListJson && !userListJson.error) {
-                def userEmailMap = [:]
-                userListJson.resp.each {
-                    userEmailMap.put(it.email.toLowerCase(), it.id.toString())
+            // this is to update User table with the current ID value
+            User.all.each { User user ->
+                def foundUser = authService.getUserForEmailAddress(user.email)
+                if (user.id != foundUser.id) {
+                    user.id = foundUser.id
+                    user.save(true)
                 }
-                userEmailMap.each { email, id ->
-                    def user = User.findByEmail(email)
-                    if (user) {
-                        user.userId = id
-                        user.save(true)
-                    }
-                }
-            } else {
-                log.info "error -  " + userListJson.getClass() + ":" + userListJson
             }
         } catch (Exception e) {
             log.error("Cache refresh error" + e.message, e)
         }
     }
 
-    def doPost(String url) {
-        DefaultHttpClient httpclient = new DefaultHttpClient();
-        HttpPost post = new HttpPost(url)
-        try {
-            def response = httpclient.execute(post)
-            def content = response.getEntity().getContent()
-            def jsonSlurper = new JsonSlurper()
-            def json = jsonSlurper.parse(new InputStreamReader(content))
-            return [error: null, resp: json]
-        } catch (SocketTimeoutException e) {
-            def error = [error: "Timed out calling web service. URL= \${url}."]
-            log.error(error.error)
-            return [error: error]
-        } catch (Exception e) {
-            def error = [error: "Failed calling web service. ${e.getClass()} ${e.getMessage()} ${e} URL= ${url}."]
-            log.error(error.error)
-            return [error: error]
-        } finally {
-            post.releaseConnection()
-        }
-    }
-
+    @Transactional
     def unsubscribeUser(String id) {}
 
     /**
@@ -248,6 +229,7 @@ class AdminController {
      * Sends to email address of logged-in user
      *
      */
+    @Transactional
     def sendTestEmail() {
         def msg
         User user = userService.getUser()
@@ -268,10 +250,11 @@ class AdminController {
 
     /**
      * Utility method to fix broken unsubscribe links in email, where the unsubscribe link
-     * has '?token=NULL'. 
+     * has '?token=NULL'.
      *
      * @return
      */
+    @Transactional
     def repairNotificationsWithoutUnsubscribeToken() {
         List notifications = Notification.findAllByUnsubscribeTokenIsNull()
         def count = 0
@@ -292,6 +275,7 @@ class AdminController {
      *
      * @return
      */
+    @Transactional
     def repairUsersWithoutUnsubscribeToken() {
         List users = User.findAllByUnsubscribeTokenIsNull()
         def count = 0
@@ -306,14 +290,18 @@ class AdminController {
         redirect(action: 'index')
     }
 
+    @Transactional
     def biosecurity() {
         List queries = queryService.getALLBiosecurityQuery()
         List subscribers = queries.collect {queryService.getSubscribers(it.id)}
-        render view: "/admin/biosecurity", model: [queries: queries, subscribers: subscribers]
+        SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-dd")
+
+        render view: "/admin/biosecurity", model: [queries: queries, subscribers: subscribers, date: sdf.format(new Date())]
     }
 
+    @Transactional
     def subscribeBioSecurity() {
-        if (!params.listid || params.listid.allWhitespace) {
+        if ((!params.listid || params.listid.allWhitespace) && !params.queryid) {
             flash.message = messageSource.getMessage("biosecurity.view.error.emptyspeciesid", null, "Species list uid can't be empty.", siteLocale)
         } else if (!params.useremails || params.useremails.allWhitespace) {
             flash.message = messageSource.getMessage("biosecurity.view.error.emptyemails", null, "User emails can't be empty.", siteLocale)
@@ -325,7 +313,11 @@ class AdminController {
                 if (entry.value == null) {
                     invalidEmails.add(entry.key)
                 } else {
-                    queryService.subscribeBioSecurity(entry.value as User, params.listid.trim())
+                    if (params.queryid) {
+                        queryService.createQueryForUserIfNotExists(Query.get(params.queryid), entry.value as User, true)
+                    } else {
+                        queryService.subscribeBioSecurity(entry.value as User, params.listid.trim())
+                    }
                 }
             }
             if (invalidEmails) {
@@ -335,13 +327,102 @@ class AdminController {
         redirect(controller: "admin", action: "biosecurity")
     }
 
+    // Not transactional
+    def testBiosecurity() {
+        def date = params.date
+        def query = Query.get(params.queryid)
+
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd")
+        def processedJson = notificationService.processQueryBiosecurity(query, sdf.parse(date))
+
+        def frequency = 'weekly'
+        QueryResult qr = notificationService.getQueryResult(query, Frequency.findByName(frequency))
+        qr.lastResult = notificationService.gzipResult(processedJson)
+        //notificationService.refreshProperties(qr, processedJson)
+
+        def records = emailService.retrieveRecordForQuery(qr.query, qr)
+        def userAssertions = queryService.isBioSecurityQuery(qr.query) ? emailService.getBiosecurityAssertions(qr.query, records as List) : [:]
+        def speciesListInfo = emailService.getSpeciesListInfo(qr.query)
+
+        String urlPrefix = "${grailsApplication.config.security.cas.appServerName}${grailsApplication.config.getProperty('security.cas.contextPath', '')}"
+        def localeSubject = messageSource.getMessage("emailservice.update.subject", [query.name] as Object[], siteLocale)
+        render(view: query.emailTemplate,
+//                plugin: "email-confirmation",
+                model: [title: localeSubject,
+                        message: query.updateMessage,
+                        query: query,
+                        moreInfo: qr.queryUrlUIUsed,
+                        speciesListInfo: speciesListInfo,
+                        userAssertions: userAssertions,
+                        listcode: queryService.isMyAnnotation(query) ? "biocache.view.myannotation.list" : "biocache.view.list",
+                        stopNotification: urlPrefix + '/notification/myAlerts',
+                        records: records,
+                        frequency: messageSource.getMessage('frequency.' + frequency, null, siteLocale),
+                        totalRecords: records.size(),
+                        unsubscribeAll: urlPrefix + "/unsubscribe?token=test",
+                        unsubscribeOne: urlPrefix + "/unsubscribe?token=test"
+                ])
+    }
+
+    // Not transactional
+    def csvAllBiosecurity() {
+        def date = params.date
+
+        queryService.getALLBiosecurityQuery().each { query ->
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd")
+            def processedJson = notificationService.processQueryBiosecurity(query, sdf.parse(date))
+
+            def frequency = 'weekly'
+            QueryResult qr = notificationService.getQueryResult(query, Frequency.findByName(frequency))
+            qr.lastResult = notificationService.gzipResult(processedJson)
+            //notificationService.refreshProperties(qr, processedJson)
+
+            def records = emailService.retrieveRecordForQuery(qr.query, qr)
+            def userAssertions = queryService.isBioSecurityQuery(qr.query) ? emailService.getBiosecurityAssertions(qr.query, records as List) : [:]
+            def speciesListInfo = emailService.getSpeciesListInfo(qr.query)
+
+            String urlPrefix = "${grailsApplication.config.security.cas.appServerName}${grailsApplication.config.getProperty('security.cas.contextPath', '')}"
+            def localeSubject = messageSource.getMessage("emailservice.update.subject", [query.name] as Object[], siteLocale)
+
+            if (records) {
+                records.each { record ->
+                    response.outputStream << date
+                    response.outputStream << ','
+                    response.outputStream << record.uuid
+                    response.outputStream << ','
+                    response.outputStream << speciesListInfo.name
+                    response.outputStream << '\n'
+                }
+            }
+        }
+    }
+
+    @Transactional
     def unsubscribeAllUsers() {
         queryService.unsubscribeAllUsers(Long.valueOf(params.queryid))
         redirect(controller: "admin", action: "biosecurity")
     }
 
+    @Transactional
     def deleteQuery() {
         queryService.deleteQuery(Long.valueOf(params.queryid))
+        redirect(controller: "admin", action: "biosecurity")
+    }
+
+    @Transactional
+    def unsubscribeAlert() {
+        if (!params.useremail || params.useremail.allWhitespace) {
+            flash.message = messageSource.getMessage("unsubscribeusers.controller.error.emptyemail", null, "User email can't be empty.", siteLocale)
+        } else if (!params.queryid || params.queryid.allWhitespace) {
+            flash.message = messageSource.getMessage("unsubscribeusers.controller.error.emptyqueryid", null, "Query Id can't be empty.", siteLocale)
+        } else {
+            User user = userService.getUserByEmail(params.useremail);
+            if (user) {
+                notificationService.deleteAlertForUser(user, Long.valueOf(params.queryid))
+            } else {
+                flash.message = messageSource.getMessage('unsubscribeusers.controller.error.emailnotfound', [params.useremail] as Object[], "User with email: {0} are not found in the system.", siteLocale)
+            }
+        }
         redirect(controller: "admin", action: "biosecurity")
     }
 }

@@ -1,3 +1,22 @@
+pluginManagement {
+    repositories {
+        mavenLocal()
+        maven { url "https://nexus.ala.org.au/content/groups/public/" }
+        maven { url "https://repo.grails.org/grails/core/" }
+        gradlePluginPortal()
+    }
+    plugins {
+        id "org.grails.grails-web" version "6.0.0"
+        id "org.grails.grails-gsp" version "6.0.0"
+        id "com.bertramlabs.asset-pipeline" version "4.3.0"
+//        classpath "org.grails:grails-gradle-plugin:$grailsVersion"
+//        classpath "com.bertramlabs.plugins:asset-pipeline-gradle:3.4.6"
+//        classpath "org.grails.plugins:hibernate5:7.0.5"
+//        classpath 'org.grails.plugins:quartz:2.0.13'
+//        classpath "gradle.plugin.com.github.erdi.webdriver-binaries:webdriver-binaries-gradle-plugin:2.6"
+    }
+}
+
 //include ':ala-admin-plugin'
 //project(':ala-admin-plugin').projectDir = new File('/Users/dos009/Documents/ALA-code/ala-admin-plugin')
 rootProject.name = 'alerts'

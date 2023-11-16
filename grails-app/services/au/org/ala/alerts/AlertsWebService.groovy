@@ -17,7 +17,7 @@ import grails.converters.JSON
 import org.grails.web.json.JSONElement
 import org.springframework.web.client.RestClientException
 
-class WebService {
+class AlertsWebService {
     /**
      * Perform HTTP GET on a JSON web service
      *

@@ -1,0 +1,9 @@
+security:
+    cas:
+        enabled: true
+    oidc:
+        enabled: false
+    jwt:
+        enabled: false
+    apikey:
+        enabled: false
