@@ -16,8 +16,11 @@ cache:
 #    - $HOME/.m2
 #    - $HOME/.gradle/caches/
     - $HOME/.gradle/wrapper/
-#install:
-#  - ./gradlew assemble --refresh-dependencies
+
+install:
+  - 'travis_wait 30 ./gradlew clean'
+  - './gradlew assemble'
+
 after_success:
   - '[ "${TRAVIS_PULL_REQUEST}" = "false" ] && travis_retry ./gradlew publish'
 env:
