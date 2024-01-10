@@ -29,6 +29,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement
 
 import static io.swagger.v3.oas.annotations.enums.ParameterIn.PATH
 import static io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY
+import static io.swagger.v3.oas.annotations.enums.ParameterIn.HEADER
 
 @Transactional
 class WebserviceController {
@@ -366,7 +367,10 @@ class WebserviceController {
                     @Parameter(name = "userId",
                             in = PATH,
                             required = true,
-                            description = "userId")
+                            description = "userId"),
+                    @Parameter(name = "Authorization",
+                            in = HEADER,
+                            required = true)
             ],
             responses = [
                     @ApiResponse(
@@ -429,7 +433,10 @@ class WebserviceController {
                     @Parameter(name = "lastName",
                             in = QUERY,
                             required = false,
-                            description = "lastName")
+                            description = "lastName"),
+                    @Parameter(name = "Authorization",
+                            in = HEADER,
+                            required = true)
             ],
             responses = [
                     @ApiResponse(
@@ -486,7 +493,10 @@ class WebserviceController {
                     @Parameter(name = "userId",
                             in = PATH,
                             required = true,
-                            description = "userId")
+                            description = "userId"),
+                    @Parameter(name = "Authorization",
+                            in = HEADER,
+                            required = true)
             ],
             responses = [
                     @ApiResponse(
@@ -524,7 +534,10 @@ class WebserviceController {
                     @Parameter(name = "userId",
                             in = PATH,
                             required = true,
-                            description = "userId")
+                            description = "userId"),
+                    @Parameter(name = "Authorization",
+                            in = HEADER,
+                            required = true)
             ],
             responses = [
                     @ApiResponse(
@@ -538,12 +551,16 @@ class WebserviceController {
                             ]
                     )
             ],
-            security = [@SecurityRequirement(name = 'openIdConnect')],
-            hidden = true
+            security = [@SecurityRequirement(name = 'openIdConnect')]
+            // hidden = grailsApplication.config.myannotation.enabled
     )
     @RequireApiKey
     @Path("api/alerts/user/{userId}/subscribeMyAnnotation")
     def subscribeMyAnnotationWS() {
+        if (!grailsApplication.config.myannotation.enabled) {
+            return
+        }
+
         User user = userService.getUser((String)params.userId)
         if (user == null) {
             response.status = HttpStatus.NOT_FOUND.code
@@ -569,7 +586,10 @@ class WebserviceController {
                     @Parameter(name = "userId",
                             in = PATH,
                             required = true,
-                            description = "userId")
+                            description = "userId"),
+                    @Parameter(name = "Authorization",
+                            in = HEADER,
+                            required = true)
             ],
             responses = [
                     @ApiResponse(
@@ -583,12 +603,16 @@ class WebserviceController {
                             ]
                     )
             ],
-            security = [@SecurityRequirement(name = 'openIdConnect')],
-            hidden = true
+            security = [@SecurityRequirement(name = 'openIdConnect')]
+            // hidden = grailsApplication.config.myannotation.enabled
     )
     @RequireApiKey
     @Path("api/alerts/user/{userId}/unsubscribeMyAnnotation")
     def unsubscribeMyAnnotationWS() {
+        if (!grailsApplication.config.myannotation.enabled) {
+            return
+        }
+
         User user = userService.getUserById(params.userId)
         if (user == null) {
             response.status = HttpStatus.NOT_FOUND.code
