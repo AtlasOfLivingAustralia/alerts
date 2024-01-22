@@ -229,7 +229,7 @@ dataSource:
         validationQueryTimeout: 10 # seconds (default: -1 i.e. disabled)
         validationInterval: 30000 # milliseconds, default is 30000 (30 seconds)
         removeAbandoned: true # # default: false
-        removeAbandonedTimeout: 300 # seconds (default: 60)
+        removeAbandonedTimeout: 3600 # seconds (default: 60), must be > quartz job duration
         logAbandoned: true # adds some overhead to every borrow from the pool, disable if it becomes a performance issue
         logValidationErrors: true # default: false, logs validation errors at SEVERE
         # NOTE: removeAbandoned: true OR testWhileIdle: true enables the Pool Cleaner. There is a bug with the
