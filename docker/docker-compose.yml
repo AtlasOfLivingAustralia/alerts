@@ -1,0 +1,23 @@
+
+services:
+  mysql:
+    container_name: mysql-alerts
+    image: "mysql:8.1.0"
+    environment:
+      MYSQL_DATABASE: 'alerts'
+      MYSQL_USER:  'alerts_user'
+      MYSQL_PASSWORD: 'password'
+      MYSQL_ROOT_PASSWORD: 'password'
+    command: --default-authentication-plugin=mysql_native_password
+    ports:
+      - "3306:3306"
+    expose:
+      - '3306'
+  smtpdev:
+    image: rnwood/smtp4dev
+    ports:
+      - "3000:80"
+      - "2525:25"
+    container_name: smtpdev-alerts
+
+version: "2"
