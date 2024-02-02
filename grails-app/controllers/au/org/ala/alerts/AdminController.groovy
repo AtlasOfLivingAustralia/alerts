@@ -352,6 +352,7 @@ class AdminController {
                         message: query.updateMessage,
                         query: query,
                         moreInfo: qr.queryUrlUIUsed,
+                        queryDate: date,
                         speciesListInfo: speciesListInfo,
                         userAssertions: userAssertions,
                         listcode: queryService.isMyAnnotation(query) ? "biocache.view.myannotation.list" : "biocache.view.list",
