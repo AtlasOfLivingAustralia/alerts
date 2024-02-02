@@ -398,7 +398,7 @@
                                       <tbody>
                                       <tr>
                                         <td class="pc-fb-font" style="vertical-align: top; padding: 2px 30px 0px 30px; line-height: 1.43; font-family: 'Lato', Helvetica, Arial, sans-serif; font-size: 16px; font-weight: 700; color: #ffffff; text-align: center;" valign="top"> <a style="text-decoration: none; cursor: text; color: #ffffff;">
-                                          ${new SimpleDateFormat("dd-MMMM-yyyy").format(new SimpleDateFormat("yyyy-MM-dd").parse(queryDate))}
+                                          ${new SimpleDateFormat("dd-MMMM-yyyy").format(new Date())}
                                         </19></a>
                                         </td>
                                       </tr>
@@ -461,7 +461,9 @@
                                   <td class="pc-fb-font" style="vertical-align: top; padding: 10px 0 0 0; font-family: 'Lato', Helvetica, Arial, sans-serif; font-size: 22px; font-weight: 500; line-height: 1.42; letter-spacing: -0.4px; color: #212121; text-align: center;" valign="top" align="center">
                                     ${totalRecords} new ${totalRecords == 1 ? 'alert' : 'alerts'} for
                                     <br>
+                                    <div title="${speciesListInfo.name}">
                                     <strong>${StringUtils.abbreviate(speciesListInfo.name, 40)}, <a href="${speciesListInfo.url}"> ${speciesListInfo.drId}</a></strong>
+                                    </div>
                                   </td>
                                 </tr>
                                 </tbody>
@@ -606,7 +608,7 @@
                                   <td style="vertical-align: top; text-align: center;" valign="top" align="center">
 
                                     <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}">
-                                      <img src="${oc.thumbnailUrl ?: oc.smallImageUrl}"  alt="${message(code: "biocache.alt.image.for.record")}" style="border: 0; line-height: 100%; outline: 0; -ms-interpolation-mode: bicubic; display: block; color: #212121; border-radius: 6px; max-width: 100%; max-height: 120px; Margin: 0 auto"/>
+                                      <img src="${oc.thumbnailUrl ?: oc.smallImageUrl}"  alt="${message(code: "biocache.alt.image.for.record")}" style="border: 0; line-height: 100%; outline: 0; -ms-interpolation-mode: bicubic; display: block; color: #212121; border-radius: 6px; max-width: 100%; max-height: 118px; Margin: 0 auto"/>
                                     </a>
 
                                   </td>
@@ -854,7 +856,8 @@
             <img src="/assets/email/ncris.png" alt="Affiliated orgs" usemap="#orgsMap"  height="80"  style="border: 0; line-height: 100%; outline: 0; -ms-interpolation-mode: bicubic; display: block; font-family: 'Fira Sans', Helvetica, Arial, sans-serif; font-size: 20px; font-weight: 500; color: #212121;">
             <map name="orgsMap">
               <area shape="rect" coords="0,0,100,100" href="https://www.education.gov.au/ncris" alt="NCRIS">
-              <area shape="rect" coords="100,0,200,100" href="https://csiro.au" alt="CSIRO">
+              <area shape="rect" coords="100,0,180,100" href="https://csiro.au" alt="CSIRO">
+              <area shape="rect" coords="180,0,300,100" href="https://www.gbif.org/" alt="GBIF">
               <!-- Add more areas for link3 and link4 as needed -->
             </map>
           </td>
