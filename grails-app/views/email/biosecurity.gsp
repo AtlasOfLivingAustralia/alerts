@@ -245,13 +245,13 @@
                                                                                      <tbody>
                                                                                        <tr>
                                                                                          <td style="vertical-align: top; font-family: 'Fira Sans', Helvetica, Arial, sans-serif; font-size: 10px; line-height: 1.3; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; text-align: center;" valign="top" align="center"> <a href="http://example.com" style="text-decoration: none;">
-                                                                                 <img src="/assets/email/facebook-dark.png" width="15" height="15" alt="" style="border: 0; line-height: 100%; outline: 0; -ms-interpolation-mode: bicubic; color: #1B1B1B;">
+                                                                                 <img src="${grailsApplication.config.grails.serverURL}/assets/email/facebook-dark.png" width="15" height="15" alt="" style="border: 0; line-height: 100%; outline: 0; -ms-interpolation-mode: bicubic; color: #1B1B1B;">
                                                                              </a> <span>&nbsp;&nbsp;</span> <a href="http://example.com" style="text-decoration: none;">
-                                                                                 <img src="/assets/email/twitter-dark.png" width="16" height="14" alt="" style="border: 0; line-height: 100%; outline: 0; -ms-interpolation-mode: bicubic; color: #1B1B1B;">
+                                                                                 <img src="${grailsApplication.config.grails.serverURL}/assets/email/twitter-dark.png" width="16" height="14" alt="" style="border: 0; line-height: 100%; outline: 0; -ms-interpolation-mode: bicubic; color: #1B1B1B;">
                                                                              </a> <span>&nbsp;&nbsp;</span> <a href="http://example.com" style="text-decoration: none;">
-                                                                                 <img src="/assets/email/google-plus-dark.png" width="22" height="15" alt="" style="border: 0; line-height: 100%; outline: 0; -ms-interpolation-mode: bicubic; color: #1B1B1B;">
+                                                                                 <img src="${grailsApplication.config.grails.serverURL}/assets/email/google-plus-dark.png" width="22" height="15" alt="" style="border: 0; line-height: 100%; outline: 0; -ms-interpolation-mode: bicubic; color: #1B1B1B;">
                                                                              </a> <span>&nbsp;&nbsp;</span> <a href="http://example.com" style="text-decoration: none;">
-                                                                                 <img src="/assets/email/instagram-dark.png" width="16" height="15" alt="" style="border: 0; line-height: 100%; outline: 0; -ms-interpolation-mode: bicubic; color: #1B1B1B;">
+                                                                                 <img src="${grailsApplication.config.grails.serverURL}/assets/email/instagram-dark.png" width="16" height="15" alt="" style="border: 0; line-height: 100%; outline: 0; -ms-interpolation-mode: bicubic; color: #1B1B1B;">
                                                                              </a> </td>
                                                                                        </tr>
                                                                                      </tbody>
@@ -308,10 +308,10 @@
                   <table border="0" cellpadding="0" cellspacing="0" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; width: 100%;" width="100%">
                     <tbody>
                     <tr>
-                      <td class="pc-content-box-s5" background="/assets/email/biosecurity-alert-header.png" style="vertical-align: top; background-color: #C44D34;  background-image: url('/assets/email/biosecurity-alert-header.png'); background-position: top center; background-size: cover; background-repeat: no-repeat;" width="00" valign="top">
+                      <td class="pc-content-box-s5" background="${grailsApplication.config.grails.serverURL}/assets/email/biosecurity-alert-header.png" style="vertical-align: top; background-color: #C44D34;  background-image: url('/assets/email/biosecurity-alert-header.png'); background-position: top center; background-size: cover; background-repeat: no-repeat;" width="00" valign="top">
                       <!--[if gte mso 9]>
                         <v:rect xmlns:v="urn:schemas-microsoft-com:vml" fill="true" stroke="false" style="width:600px;height:360px;">
-                          <v:fill type="frame" src="/assets/email/content-6-image-2.jpg" color="#1B1B1B"></v:fill>
+                          <v:fill type="frame" src="${grailsApplication.config.grails.serverURL}/assets/email/content-6-image-2.jpg" color="#1B1B1B"></v:fill>
                           <v:textbox inset="40px,30px,40px,40px">
                             <div>
                                <![endif]-->
@@ -853,7 +853,7 @@
         <tbody>
         <tr>
           <td style="vertical-align: top;" align="center" valign="top" width: 130px;>
-            <img src="/assets/email/ncris.png" alt="Affiliated orgs" usemap="#orgsMap"  height="80"  style="border: 0; line-height: 100%; outline: 0; -ms-interpolation-mode: bicubic; display: block; font-family: 'Fira Sans', Helvetica, Arial, sans-serif; font-size: 20px; font-weight: 500; color: #212121;">
+            <img src="${grailsApplication.config.grails.serverURL}/assets/email/ncris.png" alt="Affiliated orgs" usemap="#orgsMap"  height="80"  style="border: 0; line-height: 100%; outline: 0; -ms-interpolation-mode: bicubic; display: block; font-family: 'Fira Sans', Helvetica, Arial, sans-serif; font-size: 20px; font-weight: 500; color: #212121;">
             <map name="orgsMap">
               <area shape="rect" coords="0,0,100,100" href="https://www.education.gov.au/ncris" alt="NCRIS">
               <area shape="rect" coords="100,0,180,100" href="https://csiro.au" alt="CSIRO">
