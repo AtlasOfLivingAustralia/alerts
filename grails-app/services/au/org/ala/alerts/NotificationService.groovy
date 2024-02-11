@@ -432,8 +432,13 @@ class NotificationService {
         def occurrences = [:]
 
         while (repeat) {
-            def speciesList = webService.get(grailsApplication.config.getProperty('lists.baseURL') + "/ws/speciesListItemsInternal/" + dr + "?includeKVP=true" + "&offset=" + offset + "&max=" + max, [:], ContentType.APPLICATION_JSON, true, false)
-
+            def url = grailsApplication.config.getProperty('lists.baseURL') + "/ws/speciesListItemsInternal/" + dr + "?includeKVP=true" + "&offset=" + offset + "&max=" + max
+            def speciesList = webService.get(url, [:], ContentType.APPLICATION_JSON, true, false)
+            if (speciesList.statusCode != 200 && speciesList.statusCode != 201) {
+                log.error("Failed to access: " + url )
+                log.error("Error: " + speciesList.error )
+                break;
+            }
             speciesList.resp?.each { listItem ->
                 processListItemBiosecurity(occurrences, listItem, date)
             }

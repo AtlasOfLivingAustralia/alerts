@@ -209,6 +209,7 @@ class EmailService {
             int idx = query.name.indexOf(matchStr)
             String listname = ""
             String listURL = ""
+            String listid = ""
             if (idx != -1) {
                 listname = query.name.substring(idx + matchStr.length())
             }
@@ -218,11 +219,11 @@ class EmailService {
             if (idx != -1) {
                 def stoppos = query.queryPath.indexOf("&", idx)
                 if (stoppos != -1) {
-                    def listid = query.queryPath.substring(idx + matchStr.length(), stoppos)
+                    listid = query.queryPath.substring(idx + matchStr.length(), stoppos)
                     listURL = grailsApplication.config.getProperty("lists.baseURL") + '/speciesListItem/list/' + listid
                 }
             }
-            return [name : listname, url: listURL]
+            return [name : listname, url: listURL, drId: listid]
         }
 
         [:]

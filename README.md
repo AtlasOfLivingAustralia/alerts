@@ -8,18 +8,27 @@ Scheduling is handled by Quartz plugin in the app. It works like RSS - it checks
 
 [![Build Status](https://api.travis-ci.com/AtlasOfLivingAustralia/alerts.svg?branch=develop)](https://app.travis-ci.com/github/AtlasOfLivingAustralia/alerts)
 
-# Dev environment set up
+# Dev environment set up 
 
+## Recommend: 
+Go folder ```./docker```, run ```docker-compose up```
+
+Docker-compose runs MySql 8.1 on 3306, smtp4dev on 3000, 2525
+  
+
+## Alternative, you can install your own environment
+
+What the docker-compose does:
 1. Install MySql
 1. Log in as root
 1. ```create user 'alerts_user'@'localhost' identified as 'alerts_user';```
 1. ```grant all privileges on *.* to 'alerts_user'@'localhost';```
 1. ```create database alerts```
 1. Create /data/alerts/config/alerts-config.properties
-  1. Use the template in ala-install to get the necessary values
+1. Use the template in ala-install to get the necessary values
 
 
-## To check email sending on local dev environment
+### To check email sending on local dev environment
 Run [smtp4dev](https://github.com/rnwood/smtp4dev) via Docker:
 
 `docker run -p 3000:80 -p 2525:25 -d --name smtpdev rnwood/smtp4dev`
