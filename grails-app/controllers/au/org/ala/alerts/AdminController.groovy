@@ -234,9 +234,10 @@ class AdminController {
         def msg
         User user = userService.getUser()
         if (user) {
-            def query = Query.get(1)
+            def query = Query.get(14)
             def frequency = Frequency.get(1)
             def queryResult = QueryResult.findByQuery(query) ?: new QueryResult(query: query, frequency: frequency)
+            QueryResult qr = notificationService.getQueryResult(query, frequency)
             emailService.sendGroupEmail(query, [user.email], queryResult, [], frequency, 0, "", "", [:], [:])
             msg = "Email was sent to ${user.email} - check tomcat logs for ERROR message with value \"Error sending email to addresses:\""
         } else {
@@ -247,6 +248,35 @@ class AdminController {
         flash.message = msg
         redirect(action: "index")
     }
+
+    @Transactional
+    def sendExampleEmail() {
+        def date = params.date ?:"2024-01-01"
+        def query = Query.get(params.queryid?:14)
+
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd")
+        def processedJson = notificationService.processQueryBiosecurity(query, sdf.parse(date))
+
+        User user = userService.getUser()
+        def msg = ""
+        if (user) {
+            def frequency = Frequency.get(1)
+            def queryResult = QueryResult.findByQuery(query) ?: new QueryResult(query: query, frequency: frequency)
+            queryResult.lastResult = notificationService.gzipResult(processedJson)
+            def records = emailService.retrieveRecordForQuery(queryResult.query, queryResult)
+            def speciesListInfo = emailService.getSpeciesListInfo(query)
+            emailService.sendGroupEmail(query, [user.email], queryResult, records, frequency, records.size(), "", "", speciesListInfo, [:])
+
+            msg = "Email was sent to ${user.email} - check tomcat logs for ERROR message with value \"Error sending email to addresses:\""
+        } else {
+            msg ="User was not found or not logged in"
+        }
+
+        render msg
+    }
+
+
+
 
     /**
      * Utility method to fix broken unsubscribe links in email, where the unsubscribe link
@@ -331,6 +361,7 @@ class AdminController {
     def testBiosecurity() {
         def date = params.date
         def query = Query.get(params.queryid)
+
 
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd")
         def processedJson = notificationService.processQueryBiosecurity(query, sdf.parse(date))

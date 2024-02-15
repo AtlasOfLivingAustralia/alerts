@@ -1,5 +1,8 @@
 ---
 grails:
+    mail:
+        port: 2525
+        server: localhost
     profile: web
     cache:
         clearAtStartup: true

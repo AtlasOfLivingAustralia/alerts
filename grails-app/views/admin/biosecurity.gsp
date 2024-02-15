@@ -10,6 +10,36 @@
 
     <title>Admin - Manage BioSecurity alerts</title>
     <asset:stylesheet href="alerts.css"/>
+    <script>
+        function submitPreview(action, button, newPage) {
+            let form = button.closest('form')
+            form.action = action;
+            if (newPage) {
+                form.target = '_blank';
+                form.submit();
+            } else {
+                //Using Ajax to keep the current page
+                var formData = new FormData(form); // Get form data
+                var xhr = new XMLHttpRequest(); // Create new XHR object
+                xhr.open("POST", action, true); // Open POST request
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === XMLHttpRequest.DONE) {
+                        if (xhr.status === 200) {
+                            // Request successful, do something if needed
+                            console.log("Form submitted successfully.");
+                        } else {
+                            // Error handling if needed
+                            console.error("Error submitting form:", xhr.status);
+                        }
+                    }
+                };
+                xhr.send(formData);
+                alert ("Email is sent.")
+            }
+
+        }
+    </script>
+
 </head>
 
 <body>
@@ -17,7 +47,7 @@
     <header id="page-header">
         <div class="inner row">
             <div class="col-sm-6 col-xs-12">
-                <h1><g:message code="biosecurity.view.header" default="Manage BioSecurity alerts"/></h1>
+                <h1><g:message code="biosecurity.view.header" default="Manage Biosecurity Alerts"/></h1>
             </div>
         </div>
         <g:if test="${flash.message}">
@@ -96,10 +126,14 @@
 
                             </td>
                             <td>
-                                <form target="_blank" action="${request.contextPath}/admin/testBiosecurity?queryid=${query.id}" method="post">
-                                    Date: <input type="date" name="date" value="${date}"/>
-                                    <button type="submit" class="btn">preview</button>
+                                <form  action="${request.contextPath}/admin/testBiosecurity?queryid=${query.id}" method="post" name="previewAndEmail">
+                                    <div class="row">
+                                            Date: <input type="date" name="date" value="${date}"/>
+                                            <button type="button" onclick="submitPreview('${request.contextPath}/admin/testBiosecurity?queryid=${query.id}', this, true)" >Preview</button>
+                                            <button type="button" onclick="submitPreview('${request.contextPath}/admin/sendExampleEmail?queryid=${query.id}', this, false)">Email to yourself</button>
+                                    </div>
                                 </form>
+
                             </td>
                         </tr>
                     </g:each>
@@ -107,9 +141,7 @@
                 </table>
             </div>
         </g:if>
-        <h3>Debug output</h3>
-        <asset:image src="biosecurity-banner-v3.png" alt="ALA logo" absolute="true" />
-        <img src="https://maps.googleapis.com/maps/api/staticmap?center=-36.398971,148.297871&markers=|-36.398971035554915,148.297871&zoom=5&size=300x300&maptype=roadmap&key=${grailsApplication.config.getProperty('google.apikey')}"/>
+
     </div>
 </div>
 </body>

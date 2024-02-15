@@ -201,7 +201,8 @@ class EmailService {
      * @param query
      * @return a Map contains list name and list URL
      */
-    private Map getSpeciesListInfo(Query query) {
+
+    Map getSpeciesListInfo(Query query) {
         // if it's biosecurity query, we try to get list details
         if (query.emailTemplate == '/email/biosecurity') {
             // species list name already in query name, we just need to parse it
