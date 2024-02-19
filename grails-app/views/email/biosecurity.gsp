@@ -104,6 +104,7 @@
     justify-content: center;
     align-items: center;
     background-color: #ffffff;
+    padding: 20px 20px 10px 20px;
   }
 
   .background-image-div {

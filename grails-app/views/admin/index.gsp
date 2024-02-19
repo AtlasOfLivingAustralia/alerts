@@ -67,6 +67,13 @@
     </div>
 
     <div class="panel-heading">
+        <h3>News and Blogs</h3>
+        <ul>
+            <li class="controller"><a href="${request.contextPath}/admin/blogPreview">Preview of blogs</a></li>
+        </ul>
+    </div>
+
+    <div class="panel-heading">
         <h3>Application Management </h3>
         <ul>
             <plugin:isAvailable name="alaAdminPlugin">

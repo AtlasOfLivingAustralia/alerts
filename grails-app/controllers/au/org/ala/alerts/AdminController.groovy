@@ -16,17 +16,20 @@ package au.org.ala.alerts
 import au.org.ala.web.AlaSecured
 import grails.gorm.transactions.Transactional
 import grails.util.Holders
+import io.micronaut.http.annotation.Trace
 import org.apache.commons.lang3.time.DateParser
 
 import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.time.LocalDate
+import groovy.json.JsonSlurper
 
 @AlaSecured(value = 'ROLE_ADMIN', redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to view that page.")
 class AdminController {
 
     def authService
     def notificationService
+    def diffService
     def emailService
     def queryService
     def userService
@@ -249,6 +252,11 @@ class AdminController {
         redirect(action: "index")
     }
 
+    /**
+     * Used to check if the biosecurity alerts page are properly designed for email system.
+     * ONLY for developer use.
+     * @return
+     */
     @Transactional
     def sendExampleEmail() {
         def date = params.date ?:"2024-01-01"
@@ -389,6 +397,33 @@ class AdminController {
                         stopNotification: urlPrefix + '/notification/myAlerts',
                         records: records,
                         frequency: messageSource.getMessage('frequency.' + frequency, null, siteLocale),
+                        totalRecords: records.size(),
+                        unsubscribeAll: urlPrefix + "/unsubscribe?token=test",
+                        unsubscribeOne: urlPrefix + "/unsubscribe?token=test"
+                ])
+    }
+
+    @Transactional
+    def blogPreview() {
+        String urlPrefix = "${grailsApplication.config.security.cas.appServerName}${grailsApplication.config.getProperty('security.cas.contextPath', '')}"
+        Query query = Query.findByName(messageSource.getMessage("query.ala.blog.title", null,
+                new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()))
+        def records = []
+        if (query) {
+            QueryResult qs = QueryResult.findByQuery(query);
+            if(qs) {
+                def lastResult = diffService.decompressZipped(qs?.lastResult)
+                def jsonSlurper = new JsonSlurper()
+                records = jsonSlurper.parseText(lastResult)
+            }
+        }
+
+        render(view: query.emailTemplate,
+//                plugin: "email-confirmation",
+                model: [
+                        query: query,
+                        stopNotification: urlPrefix + '/notification/myAlerts',
+                        records: records.take(5),
                         totalRecords: records.size(),
                         unsubscribeAll: urlPrefix + "/unsubscribe?token=test",
                         unsubscribeOne: urlPrefix + "/unsubscribe?token=test"
