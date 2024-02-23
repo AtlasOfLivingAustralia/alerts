@@ -14,14 +14,12 @@
 package au.org.ala.alerts
 
 import au.org.ala.web.AlaSecured
+import grails.converters.JSON
 import grails.gorm.transactions.Transactional
 import grails.util.Holders
-import io.micronaut.http.annotation.Trace
-import org.apache.commons.lang3.time.DateParser
 
-import java.text.DateFormat
 import java.text.SimpleDateFormat
-import java.time.LocalDate
+
 import groovy.json.JsonSlurper
 
 @AlaSecured(value = 'ROLE_ADMIN', redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to view that page.")
@@ -35,6 +33,8 @@ class AdminController {
     def userService
     def messageSource
     def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
+
+    def subscriptionsPerPage = grailsApplication.config.biosecurity.subscriptionsPerPage.toInteger() ?: 10
 
     def index() {}
 
@@ -328,13 +328,34 @@ class AdminController {
         redirect(action: 'index')
     }
 
-    @Transactional
     def biosecurity() {
-        List queries = queryService.getALLBiosecurityQuery()
+        int total = queryService.countBiosecurityQuery()
+        List queries = queryService.getBiosecurityQuery(0, subscriptionsPerPage)
         List subscribers = queries.collect {queryService.getSubscribers(it.id)}
         SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-dd")
 
-        render view: "/admin/biosecurity", model: [queries: queries, subscribers: subscribers, date: sdf.format(new Date())]
+        def subscriptions = queries as JSON
+        render view: "/admin/biosecurity", model: [total: total, queries: queries, subscribers: subscribers, date: sdf.format(new Date()), subscriptionsPerPage: subscriptionsPerPage]
+    }
+
+    /**
+     * For Ajax call to get more biosecurity queries
+     * @param offset
+     * @param limit
+     * @return
+     */
+    def getMoreBioSecurityQuery(int startIdx) {
+        List queries = queryService.getBiosecurityQuery(startIdx, subscriptionsPerPage)
+        List subscribers = queries.collect {queryService.getSubscribers(it.id)}
+        SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-dd")
+        render view: "/admin/_bioSecuritySubscriptions", model: [queries: queries, subscribers: subscribers, startIdx: startIdx, date: sdf.format(new Date()), ]
+    }
+
+    def countBioSecurityQuery() {
+        int total = queryService.countBiosecurityQuery()
+        render (contentType: 'application/json') {
+            count total
+        }
     }
 
     @Transactional
@@ -490,5 +511,81 @@ class AdminController {
             }
         }
         redirect(controller: "admin", action: "biosecurity")
+    }
+
+    /**
+     * API call
+     * Unsubscribe user from a query
+     *
+     * @param useremail
+     * @param queryid
+     *
+     * @return
+     */
+    def unsubscribe() {
+        def result = [:]
+        if (!params.useremail || params.useremail.allWhitespace) {
+            result = [status: 1, message: messageSource.getMessage("unsubscribeusers.controller.error.emptyemail", null, "User email can't be empty.", siteLocale)]
+        } else if (!params.queryid || params.queryid.allWhitespace) {
+            result = [status: 1, message: messageSource.getMessage("unsubscribeusers.controller.error.emptyqueryid", null, "Query Id can't be empty.", siteLocale)]
+        } else {
+            User user = userService.getUserByEmail(params.useremail);
+            if (user) {
+                notificationService.deleteAlertForUser(user, Long.valueOf(params.queryid))
+                result = [status : 0]
+            } else {
+                result = [status: 1, message: messageSource.getMessage('unsubscribeusers.controller.error.emailnotfound', [params.useremail] as Object[], "User with email: {0} are not found in the system.", siteLocale)]
+            }
+        }
+        render(result as JSON)
+    }
+
+    /**
+     * API call
+     *
+     * Subscribe users/emails to a biosecurity query
+     * @return
+     */
+    def addSubscribers() {
+        def result = [:]
+        if ((!params.listid || params.listid.allWhitespace) && !params.queryid) {
+            result = [status: 1, message: messageSource.getMessage("biosecurity.view.error.emptyspeciesid", null, "Species list uid can't be empty.", siteLocale)]
+        } else if (!params.useremails || params.useremails.allWhitespace) {
+            result = [status: 1, message: messageSource.getMessage("biosecurity.view.error.emptyemails", null, "User emails can't be empty.", siteLocale)]
+        } else {
+            String[] emails = ((String)params.useremails).split(';')
+            Map usermap = emails?.collectEntries{[it.trim(), userService.getUserByEmailOrCreate(it.trim())]}
+            def invalidEmails = []
+            usermap.each {entry ->
+                if (entry.value == null) {
+                    invalidEmails.add(entry.key)
+                } else {
+                    if (params.queryid) {
+                        queryService.createQueryForUserIfNotExists(Query.get(params.queryid), entry.value as User, true)
+                    } else {
+                        queryService.subscribeBioSecurity(entry.value as User, params.listid.trim())
+                    }
+                }
+            }
+            if (invalidEmails) {
+                result =[status:1, message: messageSource.getMessage("biosecurity.view.error.invalidemails", [invalidEmails.join(", ")] as Object[], "Users with emails: {0} are not found in the system.", siteLocale)]
+            } else {
+                result = [status: 0]
+            }
+        }
+       render(result as JSON)
+    }
+    /**
+     * API call
+     * Get subscribers for a query
+     *
+     * @param queryId
+     * @return
+     */
+
+    def getSubscribers() {
+        def subscribers = queryService.getSubscribers(Long.valueOf(params.queryId))
+
+        render view: "/admin/_bioSecuritySubscribers", model: [queryid: params.queryId, subscribers: subscribers]
     }
 }

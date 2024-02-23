@@ -62,3 +62,24 @@ a.btn-ala {
 .biosecurityTableColumn {
     width: 20%;
 }
+
+.bioscecrurity-padding {
+    padding: 20px 0px 20px 0px;
+}
+
+.more-button {
+    background-color: #C44D34;
+    cursor: pointer;
+    border: 0;
+    border-radius: 10px;
+    color: white;
+    padding: 11px 19px;
+    text-align: center;
+    display: inline-block;
+    font-size: 16px;
+}
+
+.badge-info {
+    background-color: #17a2b8; /* Adjust the color as needed */
+    color: #fff;
+}

@@ -335,9 +335,23 @@ class QueryService {
         }
     }
 
+    // return the number of biosecurity queries
+    def countBiosecurityQuery() {
+        return Query.countByEmailTemplate('/email/biosecurity')
+    }
+
     // get all biosecurity queries
     def getALLBiosecurityQuery() {
         return Query.findAllByEmailTemplate('/email/biosecurity')
+    }
+
+    // get biosecurity queries with offset and limit
+    def getBiosecurityQuery(int offset,int limit) {
+        def criteria = Query.createCriteria()
+        def result = criteria.list(max: limit, offset: offset) {
+            eq('emailTemplate', '/email/biosecurity')
+        }
+        return result.toList()
     }
 
     // get all subscribers to the specified query

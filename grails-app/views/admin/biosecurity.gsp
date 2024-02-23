@@ -11,6 +11,9 @@
     <title>Admin - Manage BioSecurity alerts</title>
     <asset:stylesheet href="alerts.css"/>
     <script>
+        var subscriptionsPerLoad = ${subscriptionsPerPage?:10};
+        var nextSubscription = 0;
+
         function submitPreview(action, button, newPage) {
             let form = button.closest('form')
             form.action = action;
@@ -38,8 +41,123 @@
             }
 
         }
-    </script>
 
+        function loadMore() {
+            // Make an AJAX request to fetch more records
+            nextSubscription += subscriptionsPerLoad;
+            let url = "${createLink(controller: 'admin', action: 'getMoreBioSecurityQuery')}" + "?startIdx=" + nextSubscription;
+            $.ajax({
+                url: url,
+                type: "GET",
+                success: function(response) {
+                    // Append new records to the container
+                    $("div#biosecurityDetails").append(response);
+
+                    // Hide the button if there are no more records to fetch
+                    $.ajax({
+                        url: "${createLink(controller: 'admin', action: 'countBioSecurityQuery')}" ,
+                        type: "GET",
+                        success: function(response) {
+
+                            if (nextSubscription+subscriptionsPerLoad >= response.count) {
+                                $("button.more-button").hide();
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            console.error(error);
+                        }
+                    });
+
+                },
+                error: function(xhr, status, error) {
+                    console.error(error);
+                }
+            })
+        }
+
+        function addSubscribers(button) {
+            let form = button.closest('form')
+            let action = "${request.contextPath}/admin/addSubscribers";
+
+            //Using Ajax to keep the current page
+            var formData = new FormData(form); // Get form data
+            var queryId = formData.get("queryid")
+            var xhr = new XMLHttpRequest(); // Create new XHR object
+            xhr.open("POST", action, true); // Open POST request
+            xhr.setRequestHeader("Accept", "application/json");
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === XMLHttpRequest.DONE) {
+                    if (xhr.status === 200) {
+                        var result = JSON.parse(xhr.responseText);
+                        if (result['status'] === 0) {
+                            getSubscribers(queryId)
+                            form["useremails"].value = "";
+                        } else {
+                            alert("Error: " + result['message']);
+                        }
+                    } else {
+                        // Error handling if needed
+                        console.error("Error in subscribing:", xhr.status);
+                    }
+                }
+            };
+            xhr.send(formData);
+        }
+
+        function deleteSubscription(queryId) {
+            let url = "${request.contextPath}/admin/deleteQuery?queryid=" + queryId;
+            $.ajax({
+                url: url,
+                type: 'GET',
+                success: function (data) {
+                    $("div[name='subscription_" + queryId + "']").remove();
+                },
+                error: function (xhr, status, error) {
+                    // Handle errors
+                    console.error(xhr.responseText);
+                    alert("Delete failed");
+                }
+            });
+        }
+
+        function unsubscribe( queryId, email) {
+            let url  ="${request.contextPath}/admin/unsubscribe?queryid="+queryId+"&useremail="+email
+            $.ajax({
+                url: url,
+                type: 'GET',
+                success: function(data) {
+                    if (data.status === 0) {
+                        getSubscribers(queryId);
+                    } else {
+                        alert("Unsubscribe failed. " + data.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    // Handle errors
+                    console.error(xhr.responseText);
+                    alert("Unsubscribe failed");
+                }
+            });
+        }
+
+        //get subscribers
+        function getSubscribers(queryId) {
+            let url = "${request.contextPath}/admin/getSubscribers?queryId=" + queryId;
+            $.ajax({
+                url: url,
+                type: 'GET',
+                success: function(data) {
+                   $("div#subscribers_"+queryId).replaceWith(data);
+                },
+                error: function(xhr, status, error) {
+                    // Handle errors
+                    console.error(xhr.responseText);
+                    alert("Get subscribers failed");
+                }
+            });
+        }
+
+    </script>
 </head>
 
 <body>
@@ -81,67 +199,33 @@
         </g:form>
         <g:if test="${queries}">
             <div>
+                <hr>
                 Get CSV list for all occurrences in all alerts
                 <form target="_blank" action="${request.contextPath}/admin/csvAllBiosecurity" method="post">
                     Date: <input type="date" name="date" value="${date}"/>
                     <button type="submit" class="btn">CSV</button>
                 </form>
+                <hr>
             </div>
             <div>
-                <table class="table table-striped">
-                    <thead>
-                    <tr>
-                        <th class="biosecurityTableColumn"><g:message code="biosecurity.view.body.table.header.queryname" default="Query name"/></th>
-                        <th class="biosecurityTableColumn">Subscribers</th>
-                        <th class="biosecurityTableColumn"></th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <g:each status="i" in="${queries}" var="query">
-                        <tr>
-                            <td><g:link controller="query" action="show" id="${query.id}">${query.name}</g:link></td>
-                            <td>
-                                <table class="table">
-                                    <g:each in="${subscribers[i]}" var="subscriber">
-                                    <tr>
-                                        <td>${subscriber.email}</td>
-                                        <td><a href="${request.contextPath}/admin/unsubscribeAlert?queryid=${query.id}&useremail=${subscriber.email}">delete</a></td>
-                                    </tr>
-                                    </g:each>
-                                    <g:if test="${subscribers[i].size() == 0}">
-                                        <tr><td>
-                                            <a href="${request.contextPath}/admin/deleteQuery?queryid=${query.id}"><g:message code="biosecurity.view.body.table.deletequery" default="delete the query"/></a>
-                                        </td></tr>
-                                    </g:if>
-                                    <g:form name="create-security-alert" action="subscribeBioSecurity" method="post" class="form-horizontal">
-                                        <tr><td>
-                                            <div class="row">
-                                                <input type="hidden" name="queryid" id="queryid" value="${query.id}"/>
-                                                <input type="text" id="useremails" name="useremails" placeholder="<g:message code="biosecurity.view.body.label.useremailsallowmultiple" default="You can input multiple user emails by separating them with ';'"/>"/>
-                                                <button type="submit" class="btn">Add email</button>
-                                            </div>
-                                        </td></tr>
-                                    </g:form>
-                                </table>
 
-                            </td>
-                            <td>
-                                <form  action="${request.contextPath}/admin/testBiosecurity?queryid=${query.id}" method="post" name="previewAndEmail">
-                                    <div class="row">
-                                            Date: <input type="date" name="date" value="${date}"/>
-                                            <button type="button" onclick="submitPreview('${request.contextPath}/admin/testBiosecurity?queryid=${query.id}', this, true)" >Preview</button>
-                                            <button type="button" onclick="submitPreview('${request.contextPath}/admin/sendExampleEmail?queryid=${query.id}', this, false)">Email to yourself</button>
-                                    </div>
-                                </form>
-
-                            </td>
-                        </tr>
-                    </g:each>
-                    </tbody>
-                </table>
+                <div class="text-center"><h3>There are ${total} subscription(s)</h3></div>
+                <div id="biosecurityDetails" class="bioscecrurity-padding" >
+                    <div class="row">
+                        <div class="col-md-1"></div>
+                        <div class="col-md-4"><b><g:message code="biosecurity.view.body.table.header.queryname" default="Subscription"/></b></div>
+                        <div class="col-md-4"><b>Subscribers</b></div>
+                        <div class="col-md-3"><b>Action</b></div>
+                    </div>
+                    <g:render template="bioSecuritySubscriptions" model="[queries: queries,  subscribers: subscribers, startIdx: 0 ]"/>
+                </div>
+                <g:if test="${ total > subscriptionsPerPage}">
+                    <div>
+                        <button  class="more-button" onclick="loadMore()">Show More</button>
+                    </div>
+                </g:if>
             </div>
         </g:if>
-
     </div>
 </div>
 </body>
