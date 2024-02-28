@@ -912,4 +912,16 @@ class NotificationService {
 
         user.save(flush: true)
     }
+
+    def getUnsubscribeToken(user, query) {
+        if (user && query) {
+            def notification = Notification.findByUserAndQuery(user, query)
+            if (notification) {
+                return notification.unsubscribeToken
+            }
+        } else {
+            log.error("User or query not found for userId: " + userId + ", queryId: " + queryId)
+            return null;
+        }
+    }
 }

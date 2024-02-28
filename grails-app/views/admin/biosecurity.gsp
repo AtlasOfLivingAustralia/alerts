@@ -212,9 +212,8 @@
                 <div class="text-center"><h3>There are ${total} subscription(s)</h3></div>
                 <div id="biosecurityDetails" class="bioscecrurity-padding" >
                     <div class="row">
-                        <div class="col-md-1"></div>
                         <div class="col-md-4"><b><g:message code="biosecurity.view.body.table.header.queryname" default="Subscription"/></b></div>
-                        <div class="col-md-4"><b>Subscribers</b></div>
+                        <div class="col-md-5"><b>Subscribers</b></div>
                         <div class="col-md-3"><b>Action</b></div>
                     </div>
                     <g:render template="bioSecuritySubscriptions" model="[queries: queries,  subscribers: subscribers, startIdx: 0 ]"/>

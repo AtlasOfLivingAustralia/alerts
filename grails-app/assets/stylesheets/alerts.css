@@ -83,3 +83,12 @@ a.btn-ala {
     background-color: #17a2b8; /* Adjust the color as needed */
     color: #fff;
 }
+
+.custom-list {
+    counter-reset: list-counter;
+}
+
+.indented-text {
+    text-indent: -2ch;
+    padding-left: 3ch;
+}

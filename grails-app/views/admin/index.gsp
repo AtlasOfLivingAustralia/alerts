@@ -67,9 +67,9 @@
     </div>
 
     <div class="panel-heading">
-        <h3>News and Blogs</h3>
+        <h3>Alerts for News and Blogs</h3>
         <ul>
-            <li class="controller"><a href="${request.contextPath}/admin/blogPreview">Preview of blogs</a></li>
+            <li class="controller"><a href="${request.contextPath}/admin/previewBlogAlerts">Preview alerts for the five most recent blogs</a></li>
         </ul>
     </div>
 

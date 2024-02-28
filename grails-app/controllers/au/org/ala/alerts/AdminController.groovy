@@ -19,7 +19,7 @@ import grails.gorm.transactions.Transactional
 import grails.util.Holders
 
 import java.text.SimpleDateFormat
-
+import groovyx.net.http.HTTPBuilder
 import groovy.json.JsonSlurper
 
 @AlaSecured(value = 'ROLE_ADMIN', redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to view that page.")
@@ -34,8 +34,7 @@ class AdminController {
     def messageSource
     def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
 
-    def subscriptionsPerPage = grailsApplication.config.biosecurity.subscriptionsPerPage.toInteger() ?: 10
-
+    def subscriptionsPerPage = grailsApplication.config.biosecurity?.subscriptionsPerPage? grailsApplication.config.biosecurity.subscriptionsPerPage.toInteger() : 10
     def index() {}
 
     @Transactional
@@ -273,7 +272,10 @@ class AdminController {
             queryResult.lastResult = notificationService.gzipResult(processedJson)
             def records = emailService.retrieveRecordForQuery(queryResult.query, queryResult)
             def speciesListInfo = emailService.getSpeciesListInfo(query)
-            emailService.sendGroupEmail(query, [user.email], queryResult, records, frequency, records.size(), "", "", speciesListInfo, [:])
+
+            def unsubscribeToken = notificationService.getUnsubscribeToken(user, query)
+
+            emailService.sendGroupEmail(query, [user.email], queryResult, records, frequency, records.size(), user.unsubscribeToken, unsubscribeToken, speciesListInfo, [:])
 
             msg = "Email was sent to ${user.email} - check tomcat logs for ERROR message with value \"Error sending email to addresses:\""
         } else {
@@ -406,6 +408,17 @@ class AdminController {
 
         String urlPrefix = "${grailsApplication.config.security.cas.appServerName}${grailsApplication.config.getProperty('security.cas.contextPath', '')}"
         def localeSubject = messageSource.getMessage("emailservice.update.subject", [query.name] as Object[], siteLocale)
+
+        //Get unsubscribe token
+        def unsubscribeOneUrl
+
+        def alaUser = authService.userDetails()
+        def user = userService.getUserByEmail(alaUser?.email)
+        def unsubscribeToken = notificationService.getUnsubscribeToken(user, query)
+        if (user && unsubscribeToken) {
+            unsubscribeOneUrl = grailsApplication.config.grails.serverURL + "/unsubscribe?token=${unsubscribeToken}"
+        }
+
         render(view: query.emailTemplate,
 //                plugin: "email-confirmation",
                 model: [title: localeSubject,
@@ -420,24 +433,47 @@ class AdminController {
                         frequency: messageSource.getMessage('frequency.' + frequency, null, siteLocale),
                         totalRecords: records.size(),
                         unsubscribeAll: urlPrefix + "/unsubscribe?token=test",
-                        unsubscribeOne: urlPrefix + "/unsubscribe?token=test"
+                        unsubscribeOne: unsubscribeOneUrl
                 ])
     }
 
     @Transactional
-    def blogPreview() {
+    def previewBlogAlerts() {
         String urlPrefix = "${grailsApplication.config.security.cas.appServerName}${grailsApplication.config.getProperty('security.cas.contextPath', '')}"
         Query query = Query.findByName(messageSource.getMessage("query.ala.blog.title", null,
                 new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()))
+
+        def unsubscribeOneUrl = ""
         def records = []
         if (query) {
-            QueryResult qs = QueryResult.findByQuery(query);
+            QueryResult qs = QueryResult.findByQuery(query)
             if(qs) {
-                def lastResult = diffService.decompressZipped(qs?.lastResult)
-                def jsonSlurper = new JsonSlurper()
-                records = jsonSlurper.parseText(lastResult)
+                def http = new HTTPBuilder(query.baseUrl)
+                try {
+                    http.get(path: query.queryPath) { resp, json ->
+                        if (json) {
+                            records = json
+                        }
+                    }
+                } catch (Exception ex) {
+                    // Handle any exceptions
+                    log.error("An error fetching data from ${query.baseUrl}, Using records in databae. : ${ex.message}")
+                    def lastResult = diffService.decompressZipped(qs?.lastResult)
+                    def jsonSlurper = new JsonSlurper()
+                    records = jsonSlurper.parseText(lastResult)
+                }
+            }
+
+            //Get unsubscribe token
+            def alaUser = authService.userDetails()
+            def user = userService.getUserByEmail(alaUser?.email)
+            def unsubscribeToken = notificationService.getUnsubscribeToken(user, query)
+            if (user && unsubscribeToken) {
+                unsubscribeOneUrl = grailsApplication.config.grails.serverURL + "/unsubscribe?token=${unsubscribeToken}"
             }
         }
+
+
 
         render(view: query.emailTemplate,
 //                plugin: "email-confirmation",
@@ -446,8 +482,7 @@ class AdminController {
                         stopNotification: urlPrefix + '/notification/myAlerts',
                         records: records.take(5),
                         totalRecords: records.size(),
-                        unsubscribeAll: urlPrefix + "/unsubscribe?token=test",
-                        unsubscribeOne: urlPrefix + "/unsubscribe?token=test"
+                        unsubscribeOne: unsubscribeOneUrl,
                 ])
     }
 
@@ -553,7 +588,8 @@ class AdminController {
         } else if (!params.useremails || params.useremails.allWhitespace) {
             result = [status: 1, message: messageSource.getMessage("biosecurity.view.error.emptyemails", null, "User emails can't be empty.", siteLocale)]
         } else {
-            String[] emails = ((String)params.useremails).split(';')
+            def delimiters = /[\s\|;,]/
+            String[] emails = ((String)params.useremails).split(delimiters).findAll { it?.trim() }
             Map usermap = emails?.collectEntries{[it.trim(), userService.getUserByEmailOrCreate(it.trim())]}
             def invalidEmails = []
             usermap.each {entry ->

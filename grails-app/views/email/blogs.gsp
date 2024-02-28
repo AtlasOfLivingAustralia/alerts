@@ -178,11 +178,33 @@
 
       <g:each status="i" in="${records}" var="blog">
         <div class="blog-div" >
-          <div style="display: inline-flex; flex-direction: row; justify-content: space-between ">
-            <div class="blog-thumbnail-div" style="width: 30%;">
-              <g:if test="${blog?._links?.'wp:featuredmedia'?.href}">
-                <img src="${blog?._links?.'wp:featuredmedia'?.href}" alt="${raw(blog.title.rendered)}">
+          <div style="display: inline-flex; flex-direction: row; justify-content: space-between; flex-grow: 1; ">
+            <div name="thumbnail-image" class="blog-thumbnail-div" style="width: 30%;">
+              <g:if test="${blog?._links?.'wp:featuredmedia'}">
+                <%
+                  if (blog._links['wp:featuredmedia'].size() > 0) {
+                    // Choose the first one. Need to be updated if we have multiple images
+                    def featuredMedia = blog._links['wp:featuredmedia'][0]
+                    def imageUrl = "${featuredMedia?.href}"
+                    def url = new URL(imageUrl)
+                    def connection = url.openConnection() as HttpURLConnection
+                    int responseCode = connection.responseCode
+                    if (responseCode == 404) {
+                      // Handle the case where the image URL returns a 404 status code
+                       out <<  "<img src=\"${grailsApplication.config.grails.serverURL + '/assets/email/no-img-av-ALAsilver.png'}\" height='80' alt='Sorry, no image availabe' > "
+                    } else {
+                      // Handle the case where the image URL returns a different status code
+                      out << "<img src=\"${imageUrl}\" alt=\"${raw(blog.title.rendered)}\">"
+                    }
+                  }
+                %>
+
               </g:if>
+              <g:else>
+                <i class="bi bi-images"></i>
+              </g:else>
+
+
             </div>
             <div style="width: 70%;">
               <a class="blog-title-font ala-color" href="${blog.link}" ><b>${raw(blog.title.rendered)}</b></a>
@@ -200,7 +222,7 @@
       </div>
 
       <div class="info-div" >
-        <p>The Atlas of Living Australia acknowledges Australia’s Traditional Owners and pays respect to the past and present Elders of the nation’s Aboriginal and Torres Strait Islander communities.</p>
+        <p>The Atlas of Living Australia acknowledges Australia's Traditional Owners and pays respect to the past and present Elders of the nation's Aboriginal and Torres Strait Islander communities.</p>
         <p>
           We honour and celebrate the spiritual, cultural and customary connections of Traditional Owners to Country and the biodiversity that forms part of that Country.</p>
       </div>
@@ -213,7 +235,7 @@
             <area shape="rect" coords="100,0,180,100" href="https://csiro.au" alt="CSIRO">
             <area shape="rect" coords="180,0,300,100" href="https://www.gbif.org/" alt="GBIF">
           </map>
-          <p>You are receiving this email because you opted in to ALA biosecurity alerts.
+          <p>You are receiving this email because you opted in to ALA blog alerts.
             <br>
             Don't want to receive these emails? You can <a href="${unsubscribeOne}" style="color: #C44D34;">unsubscribe</a>.
           </p>
