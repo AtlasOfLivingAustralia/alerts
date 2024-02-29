@@ -1,11 +1,12 @@
 package au.org.ala.alerts
 
 import grails.util.Holders
+import groovy.sql.Sql
 import org.apache.http.entity.ContentType
 import org.grails.web.json.JSONObject
 import org.springframework.dao.DataIntegrityViolationException
-
 import grails.gorm.transactions.Transactional
+
 
 @Transactional
 class QueryService {
@@ -16,7 +17,7 @@ class QueryService {
 
     def grailsApplication, notificationService, alertsWebService, webService
 
-    def messageSource
+    def messageSource, dataSource
     def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
 
     Notification getNotificationForUser(Query query, User user) {
@@ -354,6 +355,12 @@ class QueryService {
         return result.toList()
     }
 
+    def findBiosecurityQueryById(id) {
+        def subscription = Query.get(id)
+         def subscribers = getSubscribers(id)
+        return [subscription: subscription, subscribers: subscribers]
+    }
+
     // get all subscribers to the specified query
     def getSubscribers(Long queryId) {
         Query query = Query.findById(queryId)
@@ -375,5 +382,23 @@ class QueryService {
             log.error("Failed to get species list detail from " + listURL, ex)
         }
         listid
+    }
+
+    def searchSubscriptions(keywords) {
+        def sql = new Sql(dataSource)
+        def result = null
+        try {
+            // Execute a raw SQL for full-text match query
+            String query = "SELECT * FROM query WHERE MATCH(name) AGAINST ('${keywords}') LIMIT 10"
+            result = sql.rows(query)
+        } catch(Exception e) {
+            // Handle any exceptions
+            println e
+        }
+        finally {
+            // Close the SQL connection
+            sql.close()
+        }
+        result
     }
 }

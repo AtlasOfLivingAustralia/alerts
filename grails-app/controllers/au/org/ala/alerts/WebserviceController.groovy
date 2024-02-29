@@ -627,6 +627,12 @@ class WebserviceController {
         }
     }
 
+    def searchSubscriptions() {
+       def results =  queryService.searchSubscriptions(params.q)
+
+       render results as JSON
+    }
+
     // classes used for the OpenAPI definition generator
     @JsonIgnoreProperties('metaClass')
     static class GetUserAlertsResponse {

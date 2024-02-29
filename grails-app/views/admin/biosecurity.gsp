@@ -10,6 +10,7 @@
 
     <title>Admin - Manage BioSecurity alerts</title>
     <asset:stylesheet href="alerts.css"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-3-typeahead/4.0.1/bootstrap3-typeahead.min.js"></script>
     <script>
         var subscriptionsPerLoad = ${subscriptionsPerPage?:10};
         var nextSubscription = 0;
@@ -42,10 +43,22 @@
 
         }
 
+        /**
+         * todo: refactor the way of passing params
+         */
         function loadMore() {
-            // Make an AJAX request to fetch more records
-            nextSubscription += subscriptionsPerLoad;
-            let url = "${createLink(controller: 'admin', action: 'getMoreBioSecurityQuery')}" + "?startIdx=" + nextSubscription;
+            let url
+            // If the function is called with no arguments, the action is to load more records
+            if (arguments.length === 0) {
+                // Make an AJAX request to fetch more records
+                nextSubscription += subscriptionsPerLoad;
+                url = "${createLink(controller: 'admin', action: 'getMoreBioSecurityQuery')}" + "?startIdx=" + nextSubscription;
+            } else {
+                // Fetch queries AKA subscriptions from the first record
+                nextSubscription = 0;
+                url = "${createLink(controller: 'admin', action: 'getMoreBioSecurityQuery')}" + "?startIdx=0" ;
+            }
+
             $.ajax({
                 url: url,
                 type: "GET",
@@ -58,9 +71,10 @@
                         url: "${createLink(controller: 'admin', action: 'countBioSecurityQuery')}" ,
                         type: "GET",
                         success: function(response) {
-
                             if (nextSubscription+subscriptionsPerLoad >= response.count) {
                                 $("button.more-button").hide();
+                            } else {
+                                $("button.more-button").show();
                             }
                         },
                         error: function(xhr, status, error) {
@@ -157,7 +171,57 @@
             });
         }
 
+        $(document).ready(function(){
+            $('input#searchSubscriptions').typeahead({
+                minLength: 3,
+                displayText: function(item) {
+                    return item.name;
+                },
+                source: function(query, process) {
+                    // Fetch options from another URL based on the input value
+                    $.ajax({
+                        url: '${request.contextPath}/ws/searchSubscriptions?q="' + query, // Replace with your URL
+                        dataType: 'json',
+                        success: function(data) {
+                            process(data);
+                        },
+                        error: function(xhr, status, error) {
+                            console.error('Failed to fetch options:', error);
+                        }
+                    });
+                },
+                afterSelect: function(item) {
+                    if(item.id) {
+                        loadSubscription(item.id);
+                    }
+                }
+            });
+
+            function loadSubscription(id) {
+                let url = "${createLink(controller: 'admin', action: 'getBioSecurityQuery')}" + "?id=" + id;
+                $.ajax({
+                    url: url,
+                    type: "GET",
+                    success: function(response) {
+                        $("div#biosecurityDetails").html(response);
+                        //hide 'load more' button
+                        $("button.more-button").hide();
+                    },
+                    error: function(xhr, status, error) {
+                        console.error(error);
+                    }
+                })
+            }
+
+            $('#resetSubscriptionSearch').click(function() {
+                $('#searchSubscriptions').val('');
+                $("div#biosecurityDetails").html("");
+                loadMore(0);
+            })
+        })
+
     </script>
+
 </head>
 
 <body>
@@ -209,7 +273,19 @@
             </div>
             <div>
 
-                <div class="text-center"><h3>There are ${total} subscription(s)</h3></div>
+                <div style="display: flex; justify-content: space-between">
+                    <div class="col-md-5 " ><h4>There are ${total} subscription(s)</h4></div>
+                    <div class="col-md-6 row" >
+
+                            <div class="col-md-8">
+                                <input type="text" class="form-control" placeholder="Search ..." id="searchSubscriptions" />
+                            </div>
+                            <div class="col-auto">
+                                <button type="button" id="resetSubscriptionSearch" class="btn btn-info">Cancel</button>
+                            </div>
+
+                    </div>
+                </div>
                 <div id="biosecurityDetails" class="bioscecrurity-padding" >
                     <div class="row">
                         <div class="col-md-4"><b><g:message code="biosecurity.view.body.table.header.queryname" default="Subscription"/></b></div>

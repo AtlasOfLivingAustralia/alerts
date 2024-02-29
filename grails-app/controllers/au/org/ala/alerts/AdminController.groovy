@@ -353,6 +353,13 @@ class AdminController {
         render view: "/admin/_bioSecuritySubscriptions", model: [queries: queries, subscribers: subscribers, startIdx: startIdx, date: sdf.format(new Date()), ]
     }
 
+    def getBioSecurityQuery(int id) {
+        def subscription = queryService.findBiosecurityQueryById(id)
+        SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-dd")
+        //For be compatible with the method rendering a list of queries AKA subscriptions, we need to convert the single query to a list
+        render view: "/admin/_bioSecuritySubscriptions", model: [queries: [subscription.subscription], subscribers: [subscription.subscribers], startIdx: 0,date: sdf.format(new Date()) ]
+    }
+
     def countBioSecurityQuery() {
         int total = queryService.countBiosecurityQuery()
         render (contentType: 'application/json') {
