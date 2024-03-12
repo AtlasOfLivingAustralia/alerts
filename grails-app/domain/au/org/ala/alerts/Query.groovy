@@ -1,7 +1,6 @@
 package au.org.ala.alerts
 
 class Query {
-
     String name
     String updateMessage
     String description

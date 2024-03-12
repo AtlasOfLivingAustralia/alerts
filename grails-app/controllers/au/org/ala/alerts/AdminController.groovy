@@ -14,6 +14,7 @@
 package au.org.ala.alerts
 
 import au.org.ala.web.AlaSecured
+import com.nimbusds.oauth2.sdk.util.date.SimpleDate
 import grails.converters.JSON
 import grails.gorm.transactions.Transactional
 import grails.util.Holders
@@ -334,14 +335,11 @@ class AdminController {
         int total = queryService.countBiosecurityQuery()
         List queries = queryService.getBiosecurityQuery(0, subscriptionsPerPage)
         List subscribers = queries.collect {queryService.getSubscribers(it.id)}
-        SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-dd")
-
-        def subscriptions = queries as JSON
-        render view: "/admin/biosecurity", model: [total: total, queries: queries, subscribers: subscribers, date: sdf.format(new Date()), subscriptionsPerPage: subscriptionsPerPage]
+        render view: "/admin/biosecurity", model: [total: total, queries: queries, subscribers: subscribers, subscriptionsPerPage: subscriptionsPerPage]
     }
 
     /**
-     * For Ajax call to get more biosecurity queries
+     * For Ajax call to get more biosecurity queries (subscription)
      * @param offset
      * @param limit
      * @return
@@ -349,15 +347,13 @@ class AdminController {
     def getMoreBioSecurityQuery(int startIdx) {
         List queries = queryService.getBiosecurityQuery(startIdx, subscriptionsPerPage)
         List subscribers = queries.collect {queryService.getSubscribers(it.id)}
-        SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-dd")
-        render view: "/admin/_bioSecuritySubscriptions", model: [queries: queries, subscribers: subscribers, startIdx: startIdx, date: sdf.format(new Date()), ]
+        render view: "/admin/_bioSecuritySubscriptions", model: [queries: queries, subscribers: subscribers, startIdx: startIdx ]
     }
 
     def getBioSecurityQuery(int id) {
         def subscription = queryService.findBiosecurityQueryById(id)
-        SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-dd")
         //For be compatible with the method rendering a list of queries AKA subscriptions, we need to convert the single query to a list
-        render view: "/admin/_bioSecuritySubscriptions", model: [queries: [subscription.subscription], subscribers: [subscription.subscribers], startIdx: 0,date: sdf.format(new Date()) ]
+        render view: "/admin/_bioSecuritySubscriptions", model: [queries: [subscription.subscription], subscribers: [subscription.subscribers], startIdx: 0 ]
     }
 
     def countBioSecurityQuery() {
@@ -396,13 +392,14 @@ class AdminController {
     }
 
     // Not transactional
-    def testBiosecurity() {
+    def previewBiosecurityAlert() {
         def date = params.date
         def query = Query.get(params.queryid)
 
 
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd")
-        def processedJson = notificationService.processQueryBiosecurity(query, sdf.parse(date))
+        Date since =  sdf.parse(date)
+        def processedJson = notificationService.processQueryBiosecurity(query, since)
 
         def frequency = 'weekly'
         QueryResult qr = notificationService.getQueryResult(query, Frequency.findByName(frequency))
@@ -426,6 +423,11 @@ class AdminController {
             unsubscribeOneUrl = grailsApplication.config.grails.serverURL + "/unsubscribe?token=${unsubscribeToken}"
         }
 
+
+        SimpleDateFormat utcFormat = new SimpleDateFormat("yyyy-MM-dd'T'00:00:00'Z'");
+        utcFormat.setTimeZone(TimeZone.getTimeZone("UTC")); // Set the UTC timezone
+        String formattedUtcDate = utcFormat.format(since);
+
         render(view: query.emailTemplate,
 //                plugin: "email-confirmation",
                 model: [title: localeSubject,
@@ -436,7 +438,8 @@ class AdminController {
                         userAssertions: userAssertions,
                         listcode: queryService.isMyAnnotation(query) ? "biocache.view.myannotation.list" : "biocache.view.list",
                         stopNotification: urlPrefix + '/notification/myAlerts',
-                        records: records,
+                        since: formattedUtcDate,
+                        records: records.take(10),
                         frequency: messageSource.getMessage('frequency.' + frequency, null, siteLocale),
                         totalRecords: records.size(),
                         unsubscribeAll: urlPrefix + "/unsubscribe?token=test",
@@ -497,32 +500,41 @@ class AdminController {
     def csvAllBiosecurity() {
         def date = params.date
 
-        queryService.getALLBiosecurityQuery().each { query ->
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd")
-            def processedJson = notificationService.processQueryBiosecurity(query, sdf.parse(date))
+        response.setContentType("application/octet-stream")
+        response.setHeader("Content-Disposition", "attachment; filename=occurrence_alerts_${date}.csv")
+        def outputStream = response.outputStream
 
-            def frequency = 'weekly'
-            QueryResult qr = notificationService.getQueryResult(query, Frequency.findByName(frequency))
-            qr.lastResult = notificationService.gzipResult(processedJson)
-            //notificationService.refreshProperties(qr, processedJson)
+        try {
 
-            def records = emailService.retrieveRecordForQuery(qr.query, qr)
-            def userAssertions = queryService.isBioSecurityQuery(qr.query) ? emailService.getBiosecurityAssertions(qr.query, records as List) : [:]
-            def speciesListInfo = emailService.getSpeciesListInfo(qr.query)
+            queryService.getALLBiosecurityQuery().each { query ->
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd")
+                def processedJson = notificationService.processQueryBiosecurity(query, sdf.parse(date))
 
-            String urlPrefix = "${grailsApplication.config.security.cas.appServerName}${grailsApplication.config.getProperty('security.cas.contextPath', '')}"
-            def localeSubject = messageSource.getMessage("emailservice.update.subject", [query.name] as Object[], siteLocale)
+                def frequency = 'weekly'
+                QueryResult qr = notificationService.getQueryResult(query, Frequency.findByName(frequency))
+                qr.lastResult = notificationService.gzipResult(processedJson)
+                //notificationService.refreshProperties(qr, processedJson)
 
-            if (records) {
-                records.each { record ->
-                    response.outputStream << date
-                    response.outputStream << ','
-                    response.outputStream << record.uuid
-                    response.outputStream << ','
-                    response.outputStream << speciesListInfo.name
-                    response.outputStream << '\n'
+                def records = emailService.retrieveRecordForQuery(qr.query, qr)
+                def userAssertions = queryService.isBioSecurityQuery(qr.query) ? emailService.getBiosecurityAssertions(qr.query, records as List) : [:]
+                def speciesListInfo = emailService.getSpeciesListInfo(qr.query)
+
+                String urlPrefix = "${grailsApplication.config.security.cas.appServerName}${grailsApplication.config.getProperty('security.cas.contextPath', '')}"
+                def localeSubject = messageSource.getMessage("emailservice.update.subject", [query.name] as Object[], siteLocale)
+                log.debug( "${records.size()}  records were found in ${query.name}" )
+                if (records) {
+                    records.each { record ->
+                        outputStream << date
+                        outputStream << ','
+                        outputStream << record.uuid
+                        outputStream << ','
+                        outputStream << speciesListInfo.name
+                        outputStream << '\n'
+                    }
                 }
             }
+        }finally {
+            outputStream.close()
         }
     }
 
@@ -555,80 +567,8 @@ class AdminController {
         redirect(controller: "admin", action: "biosecurity")
     }
 
-    /**
-     * API call
-     * Unsubscribe user from a query
-     *
-     * @param useremail
-     * @param queryid
-     *
-     * @return
-     */
-    def unsubscribe() {
-        def result = [:]
-        if (!params.useremail || params.useremail.allWhitespace) {
-            result = [status: 1, message: messageSource.getMessage("unsubscribeusers.controller.error.emptyemail", null, "User email can't be empty.", siteLocale)]
-        } else if (!params.queryid || params.queryid.allWhitespace) {
-            result = [status: 1, message: messageSource.getMessage("unsubscribeusers.controller.error.emptyqueryid", null, "Query Id can't be empty.", siteLocale)]
-        } else {
-            User user = userService.getUserByEmail(params.useremail);
-            if (user) {
-                notificationService.deleteAlertForUser(user, Long.valueOf(params.queryid))
-                result = [status : 0]
-            } else {
-                result = [status: 1, message: messageSource.getMessage('unsubscribeusers.controller.error.emailnotfound', [params.useremail] as Object[], "User with email: {0} are not found in the system.", siteLocale)]
-            }
-        }
-        render(result as JSON)
-    }
 
-    /**
-     * API call
-     *
-     * Subscribe users/emails to a biosecurity query
-     * @return
-     */
-    def addSubscribers() {
-        def result = [:]
-        if ((!params.listid || params.listid.allWhitespace) && !params.queryid) {
-            result = [status: 1, message: messageSource.getMessage("biosecurity.view.error.emptyspeciesid", null, "Species list uid can't be empty.", siteLocale)]
-        } else if (!params.useremails || params.useremails.allWhitespace) {
-            result = [status: 1, message: messageSource.getMessage("biosecurity.view.error.emptyemails", null, "User emails can't be empty.", siteLocale)]
-        } else {
-            def delimiters = /[\s\|;,]/
-            String[] emails = ((String)params.useremails).split(delimiters).findAll { it?.trim() }
-            Map usermap = emails?.collectEntries{[it.trim(), userService.getUserByEmailOrCreate(it.trim())]}
-            def invalidEmails = []
-            usermap.each {entry ->
-                if (entry.value == null) {
-                    invalidEmails.add(entry.key)
-                } else {
-                    if (params.queryid) {
-                        queryService.createQueryForUserIfNotExists(Query.get(params.queryid), entry.value as User, true)
-                    } else {
-                        queryService.subscribeBioSecurity(entry.value as User, params.listid.trim())
-                    }
-                }
-            }
-            if (invalidEmails) {
-                result =[status:1, message: messageSource.getMessage("biosecurity.view.error.invalidemails", [invalidEmails.join(", ")] as Object[], "Users with emails: {0} are not found in the system.", siteLocale)]
-            } else {
-                result = [status: 0]
-            }
-        }
-       render(result as JSON)
-    }
-    /**
-     * API call
-     * Get subscribers for a query
-     *
-     * @param queryId
-     * @return
-     */
 
-    def getSubscribers() {
-        def subscribers = queryService.getSubscribers(Long.valueOf(params.queryId))
 
-        render view: "/admin/_bioSecuritySubscribers", model: [queryid: params.queryId, subscribers: subscribers]
-    }
+
 }

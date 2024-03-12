@@ -295,10 +295,23 @@ class QueryService {
         '/occurrences/search?fq=assertion_user_id:' + userId + '&dir=desc&pageSize=300'
     }
 
+    /**
+     * Deprecated
+     * ___DATEPARAM___
+     * @param listid
+     * @return
+     */
     Query createBioSecurityQuery(String listid) {
-        String queryPathForUITemplate = grailsApplication.config.getProperty("biosecurity.queryurl.template", String, "/occurrences/search?q=species_list_uid:___LISTIDPARAM___&fq=decade:2020&fq=country:Australia&fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&fq=occurrence_date:[___LASTYEARPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc&disableAllQualityFilters=true")
+        def sList = getSpeciesListName(listid)
+        String speciesListName = sList.name
+        //differentiate non-authoritative / authoritative list
+        String queryPathForUITemplate = grailsApplication.config.getProperty("biosecurity.query.template.nonAuthoritativeList", String, "/occurrences/search?q=species_list:___LISTIDPARAM___&fq=decade:2020&fq=country:Australia&fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&fq=occurrence_date:[___LASTYEARPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc&disableAllQualityFilters=true")
+        if (sList.isAuthoritative) {
+            queryPathForUITemplate = grailsApplication.config.getProperty("biosecurity.query.template.authoritativeList", String, "/occurrences/search?q=species_list_uid:___LISTIDPARAM___&fq=decade:2020&fq=country:Australia&fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&fq=occurrence_date:[___LASTYEARPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc&disableAllQualityFilters=true")
+        }
+
         String queryPathForUI = queryPathForUITemplate.replaceAll("___LISTIDPARAM___", listid)
-        String speciesListName = getSpeciesListName(listid)
+
         new Query([
                 baseUrl       : grailsApplication.config.biocacheService.baseURL,
                 baseUrlForUI  : grailsApplication.config.biocache.baseURL,
@@ -351,6 +364,7 @@ class QueryService {
         def criteria = Query.createCriteria()
         def result = criteria.list(max: limit, offset: offset) {
             eq('emailTemplate', '/email/biosecurity')
+            order('id', 'desc')
         }
         return result.toList()
     }
@@ -373,15 +387,19 @@ class QueryService {
     }
 
     def getSpeciesListName(String listid) {
+        def info = [id: listid, name: listid, isAuthoritative: false]
         try {
             def resp = webService.get(grailsApplication.config.getProperty('lists.baseURL') + "/ws/speciesListInternal/" + listid, [:], ContentType.APPLICATION_JSON, true, false)
+
             if (resp?.resp?.listName) {
-                return '\"' + resp?.resp?.listName + '\"'
+               info.name = resp?.resp?.listName
             }
+            info.isAuthoritative =resp?.resp?.isAuthoritative
         } catch (Exception ex) {
             log.error("Failed to get species list detail from " + listURL, ex)
         }
-        listid
+
+        info
     }
 
     def searchSubscriptions(keywords) {
@@ -389,7 +407,7 @@ class QueryService {
         def result = null
         try {
             // Execute a raw SQL for full-text match query
-            String query = "SELECT * FROM query WHERE MATCH(name) AGAINST ('${keywords}') LIMIT 10"
+            String query = "SELECT * FROM query WHERE MATCH(name) AGAINST ('${keywords}*' IN BOOLEAN MODE ) LIMIT 10"
             result = sql.rows(query)
         } catch(Exception e) {
             // Handle any exceptions

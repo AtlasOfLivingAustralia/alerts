@@ -91,7 +91,7 @@
 
         function addSubscribers(button) {
             let form = button.closest('form')
-            let action = "${request.contextPath}/admin/addSubscribers";
+            let action = "${request.contextPath}/ws/addSubscribers";
 
             //Using Ajax to keep the current page
             var formData = new FormData(form); // Get form data
@@ -135,7 +135,7 @@
         }
 
         function unsubscribe( queryId, email) {
-            let url  ="${request.contextPath}/admin/unsubscribe?queryid="+queryId+"&useremail="+email
+            let url  ="${request.contextPath}/ws/unsubscribe?queryid="+queryId+"&useremail="+email
             $.ajax({
                 url: url,
                 type: 'GET',
@@ -156,7 +156,7 @@
 
         //get subscribers
         function getSubscribers(queryId) {
-            let url = "${request.contextPath}/admin/getSubscribers?queryId=" + queryId;
+            let url = "${request.contextPath}/ws/getSubscribers?queryId=" + queryId;
             $.ajax({
                 url: url,
                 type: 'GET',
@@ -227,10 +227,10 @@
 <body>
 <div id="content">
     <header id="page-header">
-        <div class="inner row">
-            <div class="col-sm-6 col-xs-12">
+        <div class="inner row text-center">
+
                 <h1><g:message code="biosecurity.view.header" default="Manage Biosecurity Alerts"/></h1>
-            </div>
+
         </div>
         <g:if test="${flash.message}">
             <div id="errorAlert" class="alert alert-danger alert-dismissible alert-dismissable" role="alert">
@@ -242,48 +242,57 @@
     </header>
 
     <div id="page-body" class="col-sm-12">
-        <g:form name="create-security-alert" action="subscribeBioSecurity" method="post" class="form-horizontal">
-            <div class="row">
-                <div class="col-lg-6 col-sm-6 col-xs-12">
-                    <div class="form-group">
-                        <label for="listid" class="control-label"><g:message code="biosecurity.view.body.label.specieslistid" default="Species list uid"/></label>
-                        <input type="text" id="listid" name="listid" class="form-control"/>
-                    </div>
+        <g:set var="today" value="${new java.text.SimpleDateFormat('yyyy-MM-dd').format(new Date())}"/>
 
-                    <div class="form-group">
-                        <label for="useremails" class="control-label"><g:message code="biosecurity.view.body.label.useremails" default="User emails"/></label>
-                        <input type="text" id="useremails" name="useremails" class="form-control" placeholder="<g:message code="biosecurity.view.body.label.useremailsallowmultiple" default="You can input multiple user emails by separating them with ';'"/>"/>
-                    </div>
-                </div>
-            </div>
+        <div class="jumbotron jumbotron-fluid">
+            <div class="container">
+                <p class="lead">Quick entry for adding subscribers</p>
+                <g:form name="create-security-alert" action="subscribeBioSecurity" method="post" class="form-horizontal">
+                    <div class="row" >
+                        <div class="col-sm-3">
+                            <label for="queryid" class="control-label"><g:message code="biosecurity.view.body.label.specieslistid" default="Species list uid"/></label>
+                            <input type="text" id="queryid" name="listid" class="form-control" placeholder='Species list ID, AKA drid'/>
+                        </div>
 
-            <div class="form-group">
-                <button type="submit" form="create-security-alert" class="btn btn-primary"><g:message code="biosecurity.view.body.button.subscribe" default="Subscribe alert"/></button>
+                        <div class="col-sm-7">
+                            <label for="useremails" class="control-label"><g:message code="biosecurity.view.body.label.useremails" default="User emails"/></label>
+                            <input type="text" id="useremails" name="useremails" class="form-control" placeholder="<g:message code="biosecurity.view.body.label.useremailsallowmultiple" default="You can input multiple user emails by separating them with ';'"/>"/>
+                        </div>
+
+                        <div class="col-sm-2" style="text-align: right; ">
+                            <label for="quick-submit"  style="visibility: hidden;">control</label>
+                            <button type="submit" id="quick-submit" form="create-security-alert" class="btn btn-primary"><g:message code="biosecurity.view.body.button.subscribe" default="Subscribe"/></button>
+                        </div>
+                    </div>
+                </g:form>
+                <p></p>
+                <g:if test="${queries}">
+                    <form target="_blank" action="${request.contextPath}/admin/csvAllBiosecurity" method="post">
+                    <div class="row" style="text-align: right">
+                        <div class="col-sm-10" >
+                        You can download a CSV list of all occurrences in all alerts since: <input type="date" class="form" name="date" value="${today}"/>
+                        </div>
+                        <div class="col-sm-2">
+                         <button type="submit" class="btn  btn-info">Download CSV</button>
+                        </div>
+                    </div>
+                    </form>
+                </g:if>
+
             </div>
-        </g:form>
+        </div>
+
         <g:if test="${queries}">
             <div>
-                <hr>
-                Get CSV list for all occurrences in all alerts
-                <form target="_blank" action="${request.contextPath}/admin/csvAllBiosecurity" method="post">
-                    Date: <input type="date" name="date" value="${date}"/>
-                    <button type="submit" class="btn">CSV</button>
-                </form>
-                <hr>
-            </div>
-            <div>
-
                 <div style="display: flex; justify-content: space-between">
-                    <div class="col-md-5 " ><h4>There are ${total} subscription(s)</h4></div>
+                    <div ><p class="lead">There are ${total} subscription(s)</p></div>
                     <div class="col-md-6 row" >
-
                             <div class="col-md-8">
-                                <input type="text" class="form-control" placeholder="Search ..." id="searchSubscriptions" />
+                                <input type="text" class="form-control" placeholder="Search by query name" id="searchSubscriptions" />
                             </div>
                             <div class="col-auto">
-                                <button type="button" id="resetSubscriptionSearch" class="btn btn-info">Cancel</button>
+                                <button type="button" id="resetSubscriptionSearch" class="btn btn-info">Reset</button>
                             </div>
-
                     </div>
                 </div>
                 <div id="biosecurityDetails" class="bioscecrurity-padding" >

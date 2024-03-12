@@ -210,7 +210,7 @@
         </div>
       </div>
       <div class="large-padding medium-weight-font">
-        <div> ${totalRecords} new ${totalRecords == 1 ? 'alert' : 'alerts'} for
+        <div> ${totalRecords} new ${totalRecords == 1 ? 'record' : 'records'} for
         </div>
         <div title="${speciesListInfo.name}">
           <strong>${StringUtils.abbreviate(speciesListInfo.name, 40)}, <a href="${speciesListInfo.url}">${speciesListInfo.drId}</a></strong>
@@ -278,8 +278,16 @@
       </g:each>
 
       <div class="species-div" >
-        <a href="${query.baseUrlForUI + query.queryPathForUI}">
-          <button class="record-button" ><strong>View all records online</strong>
+      <g:if test="${since == null}">
+        <g:set var="since" value="${new SimpleDateFormat('yyyy-MM-dd\'T\'00:00:00').format(new Date())}Z" />
+      </g:if>
+      <%
+        def queryPath = query.queryPathForUI
+        def modifiedPath = queryPath.replaceAll('___DATEPARAM___', since).replaceAll('___LASTYEARPARAM___', since)
+        def modifiedBiocacheUrl = query.baseUrlForUI + modifiedPath
+      %>
+        <a href="${modifiedBiocacheUrl}">
+          <button class="record-button" ><strong>View all records in ALA</strong>
           </button>
         </a>
       </div>

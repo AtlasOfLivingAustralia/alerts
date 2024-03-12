@@ -421,7 +421,8 @@ class NotificationService {
 
     private def processQueryBiosecurity(Query query, Date date = new Date()) {
         // get species list
-        Pattern pattern = Pattern.compile(".*species_list_uid:(drt?[0-9]+).*")
+        // species_list_uid is for authoritative list, and species_list is for non-authoritative
+        Pattern pattern = Pattern.compile(".*(?:species_list_uid|species_list):(drt?[0-9]+).*")
         def dr = pattern.matcher(query.queryPath)[0][1]
 
         int offset = 0

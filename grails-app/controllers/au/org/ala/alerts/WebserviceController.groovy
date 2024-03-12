@@ -629,8 +629,84 @@ class WebserviceController {
 
     def searchSubscriptions() {
        def results =  queryService.searchSubscriptions(params.q)
-
        render results as JSON
+    }
+
+    /**
+     * API call
+     * Get subscribers for a query
+     *
+     * @param queryId
+     * @return
+     */
+
+    def getSubscribers() {
+        def subscribers = queryService.getSubscribers(Long.valueOf(params.queryId))
+        render view: "/admin/_bioSecuritySubscribers", model: [queryid: params.queryId, subscribers: subscribers]
+    }
+
+    /**
+     * API call
+     *
+     * Subscribe users/emails to a biosecurity query
+     * @return
+     */
+    def addSubscribers() {
+        def result = [:]
+        if ((!params.listid || params.listid.allWhitespace) && !params.queryid) {
+            result = [status: 1, message: messageSource.getMessage("biosecurity.view.error.emptyspeciesid", null, "Species list uid can't be empty.", siteLocale)]
+        } else if (!params.useremails || params.useremails.allWhitespace) {
+            result = [status: 1, message: messageSource.getMessage("biosecurity.view.error.emptyemails", null, "User emails can't be empty.", siteLocale)]
+        } else {
+            def delimiters = /[\s\|;,]/
+            String[] emails = ((String)params.useremails).split(delimiters).findAll { it?.trim() }
+            Map usermap = emails?.collectEntries{[it.trim(), userService.getUserByEmailOrCreate(it.trim())]}
+            def invalidEmails = []
+            usermap.each {entry ->
+                if (entry.value == null) {
+                    invalidEmails.add(entry.key)
+                } else {
+                    if (params.queryid) {
+                        queryService.createQueryForUserIfNotExists(Query.get(params.queryid), entry.value as User, true)
+                    } else {
+                        queryService.subscribeBioSecurity(entry.value as User, params.listid.trim())
+                    }
+                }
+            }
+            if (invalidEmails) {
+                result =[status:1, message: messageSource.getMessage("biosecurity.view.error.invalidemails", [invalidEmails.join(", ")] as Object[], "Users with emails: {0} are not found in the system.", siteLocale)]
+            } else {
+                result = [status: 0]
+            }
+        }
+        render(result as JSON)
+    }
+
+    /**
+     * API call
+     * Unsubscribe user from a query
+     *
+     * @param useremail
+     * @param queryid
+     *
+     * @return
+     */
+    def unsubscribe() {
+        def result = [:]
+        if (!params.useremail || params.useremail.allWhitespace) {
+            result = [status: 1, message: messageSource.getMessage("unsubscribeusers.controller.error.emptyemail", null, "User email can't be empty.", siteLocale)]
+        } else if (!params.queryid || params.queryid.allWhitespace) {
+            result = [status: 1, message: messageSource.getMessage("unsubscribeusers.controller.error.emptyqueryid", null, "Query Id can't be empty.", siteLocale)]
+        } else {
+            User user = userService.getUserByEmail(params.useremail);
+            if (user) {
+                notificationService.deleteAlertForUser(user, Long.valueOf(params.queryid))
+                result = [status : 0]
+            } else {
+                result = [status: 1, message: messageSource.getMessage('unsubscribeusers.controller.error.emailnotfound', [params.useremail] as Object[], "User with email: {0} are not found in the system.", siteLocale)]
+            }
+        }
+        render(result as JSON)
     }
 
     // classes used for the OpenAPI definition generator
