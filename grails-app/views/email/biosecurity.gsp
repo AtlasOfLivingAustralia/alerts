@@ -215,6 +215,7 @@
         <div title="${speciesListInfo.name}">
           <strong>${StringUtils.abbreviate(speciesListInfo.name, 40)}, <a href="${speciesListInfo.url}">${speciesListInfo.drId}</a></strong>
         </div>
+        <div> since ${new SimpleDateFormat("dd-MMMM-yyyy").format(query.lastChecked)} </div>
       </div>
 
       <g:each status="i" in="${records}" var="oc">
@@ -277,20 +278,12 @@
         </div>
       </g:each>
 
-      <div class="species-div" >
-      <g:if test="${since == null}">
-        <g:set var="since" value="${new SimpleDateFormat('yyyy-MM-dd\'T\'00:00:00').format(new Date())}Z" />
-      </g:if>
-      <%
-        def queryPath = query.queryPathForUI
-        def modifiedPath = queryPath.replaceAll('___DATEPARAM___', since).replaceAll('___LASTYEARPARAM___', since)
-        def modifiedBiocacheUrl = query.baseUrlForUI + modifiedPath
-      %>
-        <a href="${modifiedBiocacheUrl}">
-          <button class="record-button" ><strong>View all records in ALA</strong>
-          </button>
-        </a>
-      </div>
+%{--      <div class="species-div" >--}%
+%{--        <a href="${moreInfo}">--}%
+%{--          <button class="record-button" ><strong>View records in ALA</strong>--}%
+%{--          </button>--}%
+%{--        </a>--}%
+%{--      </div>--}%
 
       <div class="info-div">
         <p>If you notice a record has been misidentified, we encourage you to use your expertise to improve the quality of Australia’s biosecurity data.</p>

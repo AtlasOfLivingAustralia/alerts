@@ -7,6 +7,8 @@ import org.grails.web.json.JSONObject
 import org.springframework.dao.DataIntegrityViolationException
 import grails.gorm.transactions.Transactional
 
+import java.util.regex.Pattern
+
 
 @Transactional
 class QueryService {
@@ -69,12 +71,18 @@ class QueryService {
         Integer fireWhenNotZeroValue = -1
         queryResult.propertyValues.each { pv ->
             if (pv.propertyPath.fireWhenNotZero) {
-                fireWhenNotZeroValue = pv.currentValue.toInteger()
+                fireWhenNotZeroValue = pv?.currentValue? pv?.currentValue.toInteger() : -1
             }
         }
         fireWhenNotZeroValue
     }
 
+    /**
+     * Voilate the constraints, cannot delete
+     * @param queryInstance
+     * @return
+     * @throws DataIntegrityViolationException
+     */
     def deleteQuery(Query queryInstance) throws DataIntegrityViolationException {
         def propertyPaths = PropertyPath.findAllByQuery(queryInstance)
         def queryResults = QueryResult.findAllByQuery(queryInstance)
@@ -362,16 +370,29 @@ class QueryService {
     // get biosecurity queries with offset and limit
     def getBiosecurityQuery(int offset,int limit) {
         def criteria = Query.createCriteria()
-        def result = criteria.list(max: limit, offset: offset) {
+        def queries = criteria.list(max: limit, offset: offset) {
             eq('emailTemplate', '/email/biosecurity')
             order('id', 'desc')
         }
-        return result.toList()
+
+        def results = queries.collect{ query ->
+            QueryResult qr = QueryResult.findByQuery(query)
+            if (qr) {
+                query.lastChecked = qr.lastChecked
+            }
+            query
+        }
+        return results.toList()
     }
 
+
     def findBiosecurityQueryById(id) {
-        def subscription = Query.get(id)
-         def subscribers = getSubscribers(id)
+        Query subscription = Query.get(id)
+        QueryResult qr = QueryResult.findByQuery(subscription)
+        if (qr) {
+            subscription.lastChecked = qr.lastChecked
+        }
+        def subscribers = getSubscribers(id)
         return [subscription: subscription, subscribers: subscribers]
     }
 
@@ -407,16 +428,54 @@ class QueryService {
         def result = null
         try {
             // Execute a raw SQL for full-text match query
-            String query = "SELECT * FROM query WHERE MATCH(name) AGAINST ('${keywords}*' IN BOOLEAN MODE ) LIMIT 10"
+            String query = "SELECT * FROM query WHERE MATCH(name) AGAINST ('${keywords}*' IN BOOLEAN MODE ) AND email_template = '/email/biosecurity' LIMIT 10 "
             result = sql.rows(query)
         } catch(Exception e) {
             // Handle any exceptions
-            println e
+            log.error(e.message)
         }
         finally {
             // Close the SQL connection
             sql.close()
         }
         result
+    }
+
+    // delete a query (also remove all subscriptions)
+    def wipe(id) {
+        def result = ['status': 1, 'message': 'Runtime error, check logs']
+        if (id) {
+            def query = Query.findById(id)
+            if (query) {
+                //Manually delete all related PropertyPath and PropertyValue, since the cascade delete does not work
+                PropertyPath.findAllByQuery(query).each { PropertyPath pp->
+                    log.debug("Deleting property path of : ${id}")
+                    PropertyValue.findAllByPropertyPath(pp).each { PropertyValue pv ->
+                        pv.delete(flush: true)
+                    }
+                    pp.delete(flush: true)
+                }
+
+               query.delete()
+                result['status'] = 0
+                result['message'] = "Query ${id} removed"
+            } else {
+                result['status'] = 0
+                result['message'] = "Query ${id} not found"
+            }
+        } else {
+            result['status'] = 1
+            result['message'] = "Query id not provided"
+        }
+        result
+    }
+
+    def getLastCheckedDate(Query query) {
+        def lastCheckedDate = null
+        def queryResult = QueryResult.findByQuery(query)
+        if (queryResult) {
+            lastCheckedDate = queryResult.lastChecked
+        }
+        lastCheckedDate
     }
 }

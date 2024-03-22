@@ -24,6 +24,10 @@
             } else {
                 //Using Ajax to keep the current page
                 var formData = new FormData(form); // Get form data
+                var localDate = new Date(formData.get("date"));
+                var utcDate = localDate.toISOString();
+                formData.set("date", utcDate)
+
                 var xhr = new XMLHttpRequest(); // Create new XHR object
                 xhr.open("POST", action, true); // Open POST request
                 xhr.onreadystatechange = function() {
@@ -38,7 +42,7 @@
                     }
                 };
                 xhr.send(formData);
-                alert ("Email is sent.")
+                alert ("Subscriptions have been triggered. Monitor the console logs for progress updates.")
             }
 
         }
@@ -171,6 +175,69 @@
             });
         }
 
+        function triggerSubscriptions() {
+            let url = "${request.contextPath}/ws/triggerBiosecurityAlerts"
+            $.ajax({
+                url: url,
+                type: 'GET',
+                success: function (data) {
+                    data.forEach(function(item) {
+                        let status = item[0];
+                        let message = item[1];
+
+                        if (status === 0) {
+                            console.info( message);
+                        } else {
+                            console.error(message);
+                        }
+                    });
+                },
+                error: function (xhr, status, error) {
+                    // Handle errors
+                    console.error(xhr.responseText);
+                }
+            });
+
+            alert("Subscriptions have been triggered. Monitor the console logs for progress updates.")
+        }
+
+        function triggerSubscription(queryId) {
+            let url = "${request.contextPath}/ws/triggerBiosecurityAlert?id=" + queryId
+            $.ajax({
+                url: url,
+                type: 'GET',
+                success: function (data) {
+                   console.log(data)
+                },
+                error: function (xhr, status, error) {
+                    // Handle errors
+                    console.error(xhr.responseText);
+                }
+            });
+
+            alert("Subscription has been triggered. Monitor the console logs for progress updates.")
+        }
+
+        function triggerSubscriptionSince(queryId, date) {
+            let url = "${request.contextPath}/ws/triggerBiosecurityAlertSince?id=" + queryId + "&since=" + date
+            $.ajax({
+                url: url,
+                type: 'GET',
+                success: function (data) {
+                    console.log(data)
+                },
+                error: function (xhr, status, error) {
+                    // Handle errors
+                    console.error(xhr.responseText);
+                }
+            });
+
+            alert("Subscription has been triggered. Monitor the console logs for progress updates.")
+        }
+
+
+
+
         $(document).ready(function(){
             $('input#searchSubscriptions').typeahead({
                 minLength: 3,
@@ -265,12 +332,13 @@
                         </div>
                     </div>
                 </g:form>
+
                 <p></p>
                 <g:if test="${queries}">
                     <form target="_blank" action="${request.contextPath}/admin/csvAllBiosecurity" method="post">
                     <div class="row" style="text-align: right">
                         <div class="col-sm-10" >
-                        You can download a CSV list of all occurrences in all alerts since: <input type="date" class="form" name="date" value="${today}"/>
+                            Download CSV list of all occurrences from all alerts since: <input type="date" class="form" name="date" value="${today}"/>
                         </div>
                         <div class="col-sm-2">
                          <button type="submit" class="btn  btn-info">Download CSV</button>
@@ -278,6 +346,15 @@
                     </div>
                     </form>
                 </g:if>
+                <p></p>
+                <div class="row" style="text-align: right">
+                    <div class="col-sm-10" >
+                        Search for new records of all subscriptions and notify to subscribers
+                    </div>
+                    <div class="col-sm-2" >
+                        <button class="btn btn-info" onclick="triggerSubscriptions()">Check & Notify </button>
+                    </div>
+                </div>
 
             </div>
         </div>
@@ -285,7 +362,7 @@
         <g:if test="${queries}">
             <div>
                 <div style="display: flex; justify-content: space-between">
-                    <div ><p class="lead">There are ${total} subscription(s)</p></div>
+                    <div ><p class="lead">There are ${total} active alert(s)</p></div>
                     <div class="col-md-6 row" >
                             <div class="col-md-8">
                                 <input type="text" class="form-control" placeholder="Search by query name" id="searchSubscriptions" />
@@ -299,7 +376,7 @@
                     <div class="row">
                         <div class="col-md-4"><b><g:message code="biosecurity.view.body.table.header.queryname" default="Subscription"/></b></div>
                         <div class="col-md-5"><b>Subscribers</b></div>
-                        <div class="col-md-3"><b>Action</b></div>
+                        <div class="col-md-3"><b>For developers only</b></div>
                     </div>
                     <g:render template="bioSecuritySubscriptions" model="[queries: queries,  subscribers: subscribers, startIdx: 0 ]"/>
                 </div>

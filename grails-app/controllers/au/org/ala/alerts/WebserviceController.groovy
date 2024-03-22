@@ -26,6 +26,11 @@ import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
+import org.apache.commons.lang.time.DateUtils
+
+import java.text.SimpleDateFormat
+import java.time.LocalDate
+import java.time.ZoneOffset
 
 import static io.swagger.v3.oas.annotations.enums.ParameterIn.PATH
 import static io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY
@@ -708,6 +713,76 @@ class WebserviceController {
         }
         render(result as JSON)
     }
+
+    /**
+     * Triggers the process of refreshing subscriptions.
+     * Retrieves all subscriptions, iterates over each subscription,
+     * checks for new records since the last check, and sends alert emails to subscribers
+     */
+    def triggerBiosecurityAlerts () {
+       def result = notificationService.biosecurityAlerts()
+        render(result as JSON)
+    }
+
+    /**
+     * Triggers the process of refreshing subscriptions since last check.
+     * Retrieves all subscriptions, iterates over each subscription,
+     * checks for new records since the last check, and sends alert emails to subscribers
+     *
+     * All dates should be UTC
+     */
+    def triggerBiosecurityAlert (int id) {
+        def query = Query.get(id)
+        if (query) {
+//            LocalDate utcDate = LocalDate.now(ZoneOffset.UTC);
+//            utcDate = utcDate.atStartOfDay().toLocalDate()
+//            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd")
+//            Date date = sdf.parse(utcDate.toString())
+
+            //If lastCheck is null, then set it to 7 days before
+            Date lastChecked = queryService.getLastCheckedDate(query)
+            if (lastChecked == null) {
+                lastChecked = DateUtils.addDays(new Date(), -7 )
+            }
+
+            def result = notificationService.triggerSubscription(query, lastChecked)
+            render(result as JSON)
+
+        } else {
+            render([status: 1, message: "Query not found"] as JSON)
+        }
+    }
+    /**
+     * Testing purposes for developers only
+     *
+     * It searches the records of given query back from the given date
+     * And it also set the last checked date to the given date
+     *
+     * For example, if we set date = 2023-05-01, it will return the records from 2023-05-01 to now, and set the lastCheck date to 2023-05-01
+     * And then next time, if we set date = 2023-05-15, will return the records from 2023-05-15 to now, and set the lastCheck date to 2023-05-15
+     *
+     * DiffSevice will check and compare if there are new records between the lastCheck date and the current date
+     *
+     * @param id
+     * @param since  the UTC date to search from
+     * @return
+     */
+    def triggerBiosecurityAlertSince (int id) {
+        String localDateString = params.date
+        def query = Query.get(id)
+        if (query) {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd")
+            Date since = sdf.parse(localDateString)
+
+            def result = notificationService.triggerSubscription(query, since)
+            render(result as JSON)
+
+        } else {
+            render([status: 1, message: "Query not found"] as JSON)
+        }
+    }
+
+
 
     // classes used for the OpenAPI definition generator
     @JsonIgnoreProperties('metaClass')

@@ -1,8 +1,12 @@
 package au.org.ala.alerts
 
+import grails.util.Environment
 import grails.util.Holders
 import org.grails.web.json.JSONArray
+import org.springframework.boot.autoconfigure.couchbase.CouchbaseProperties
+
 import java.text.SimpleDateFormat
+import java.util.regex.Pattern
 
 class EmailService {
 
@@ -119,17 +123,22 @@ class EmailService {
         def speciesListInfo = getSpeciesListInfo(query)
 
         Integer totalRecords = queryService.fireWhenNotZeroProperty(queryResult)
+
         if (grailsApplication.config.getProperty("postie.enableEmail", Boolean, false)) {
-            log.info "Sending group email for ${query.name} to ${recipients.collect { it.email }}"
-            recipients.each { recipient ->
-                if (!recipient.locked) {
-                    sendGroupEmail(query, [recipient.email], queryResult, records, frequency, totalRecords, recipient.userUnsubToken as String, recipient.notificationUnsubToken as String, speciesListInfo, userAssertions)
-                } else {
-                    log.warn "Email not sent to locked user: ${recipient}"
+            if (totalRecords > 0 ) {
+                log.info "Sending group email for ${query.name} to ${recipients.collect { it.email }}"
+                recipients.each { recipient ->
+                    if (!recipient.locked) {
+                        sendGroupEmail(query, [recipient.email], queryResult, records, frequency, totalRecords, recipient.userUnsubToken as String, recipient.notificationUnsubToken as String, speciesListInfo, userAssertions)
+                    } else {
+                        log.warn "Email not sent to locked user: ${recipient}"
+                    }
                 }
+            } else {
+                log.info "No records found for ${query.name}. No email sent."
             }
         } else {
-            log.info("Email would have been sent to: ${recipients*.email.join(',')} for ${query.name}")
+            log.info("Email would have been sent to: ${recipients*.email.join(',')} for ${query.name}.")
             log.debug("message:" + query.updateMessage)
             log.debug("moreInfo:" + queryResult.queryUrlUIUsed)
             log.debug("stopNotification:" + grailsApplication.config.security.cas.appServerName + grailsApplication.config.security.cas.contextPath + '/notification/myAlerts')
@@ -142,6 +151,7 @@ class EmailService {
     public void sendGroupEmail(Query query, subsetOfAddresses, QueryResult queryResult, records, Frequency frequency, int totalRecords, String userUnsubToken, String notificationUnsubToken, Map speciesListInfo, Map userAssertions) {
         String urlPrefix = "${grailsApplication.config.security.cas.appServerName}${grailsApplication.config.getProperty('security.cas.contextPath', '')}"
         def localeSubject = messageSource.getMessage("emailservice.update.subject", [query.name] as Object[], siteLocale)
+        query.lastChecked = queryResult.lastChecked
         try {
             sendMail {
                 from grailsApplication.config.postie.emailAlertAddressTitle + "<" + grailsApplication.config.postie.emailSender + ">"
@@ -209,21 +219,12 @@ class EmailService {
             String matchStr = messageSource.getMessage("query.biosecurity.title", null, siteLocale) + ' '
             int idx = query.name.indexOf(matchStr)
             String listname = ""
-            String listURL = ""
-            String listid = ""
+            String listid = query.listId
+            String listURL =  grailsApplication.config.getProperty("lists.baseURL") + '/speciesListItem/list/' + listid
             if (idx != -1) {
                 listname = query.name.substring(idx + matchStr.length())
             }
 
-            matchStr = "q=species_list_uid:"
-            idx = query.queryPath.indexOf(matchStr)
-            if (idx != -1) {
-                def stoppos = query.queryPath.indexOf("&", idx)
-                if (stoppos != -1) {
-                    listid = query.queryPath.substring(idx + matchStr.length(), stoppos)
-                    listURL = grailsApplication.config.getProperty("lists.baseURL") + '/speciesListItem/list/' + listid
-                }
-            }
             return [name : listname, url: listURL, drId: listid]
         }
 

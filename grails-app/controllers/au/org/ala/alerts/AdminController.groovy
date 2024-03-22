@@ -23,6 +23,8 @@ import java.text.SimpleDateFormat
 import groovyx.net.http.HTTPBuilder
 import groovy.json.JsonSlurper
 
+import java.util.regex.Pattern
+
 @AlaSecured(value = 'ROLE_ADMIN', redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to view that page.")
 class AdminController {
 
@@ -393,9 +395,8 @@ class AdminController {
 
     // Not transactional
     def previewBiosecurityAlert() {
-        def date = params.date
+        def date = params.date //only from preview
         def query = Query.get(params.queryid)
-
 
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd")
         Date since =  sdf.parse(date)
@@ -404,6 +405,7 @@ class AdminController {
         def frequency = 'weekly'
         QueryResult qr = notificationService.getQueryResult(query, Frequency.findByName(frequency))
         qr.lastResult = notificationService.gzipResult(processedJson)
+        query.lastChecked = qr.lastChecked
         //notificationService.refreshProperties(qr, processedJson)
 
         def records = emailService.retrieveRecordForQuery(qr.query, qr)
@@ -424,10 +426,6 @@ class AdminController {
         }
 
 
-        SimpleDateFormat utcFormat = new SimpleDateFormat("yyyy-MM-dd'T'00:00:00'Z'");
-        utcFormat.setTimeZone(TimeZone.getTimeZone("UTC")); // Set the UTC timezone
-        String formattedUtcDate = utcFormat.format(since);
-
         render(view: query.emailTemplate,
 //                plugin: "email-confirmation",
                 model: [title: localeSubject,
@@ -438,7 +436,6 @@ class AdminController {
                         userAssertions: userAssertions,
                         listcode: queryService.isMyAnnotation(query) ? "biocache.view.myannotation.list" : "biocache.view.list",
                         stopNotification: urlPrefix + '/notification/myAlerts',
-                        since: formattedUtcDate,
                         records: records.take(10),
                         frequency: messageSource.getMessage('frequency.' + frequency, null, siteLocale),
                         totalRecords: records.size(),
