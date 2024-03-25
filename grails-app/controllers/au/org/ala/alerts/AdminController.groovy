@@ -254,41 +254,6 @@ class AdminController {
         redirect(action: "index")
     }
 
-    /**
-     * Used to check if the biosecurity alerts page are properly designed for email system.
-     * ONLY for developer use.
-     * @return
-     */
-    @Transactional
-    def sendExampleEmail() {
-        def date = params.date ?:"2024-01-01"
-        def query = Query.get(params.queryid?:14)
-
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd")
-        def processedJson = notificationService.processQueryBiosecurity(query, sdf.parse(date))
-
-        User user = userService.getUser()
-        def msg = ""
-        if (user) {
-            def frequency = Frequency.get(1)
-            def queryResult = QueryResult.findByQuery(query) ?: new QueryResult(query: query, frequency: frequency)
-            queryResult.lastResult = notificationService.gzipResult(processedJson)
-            def records = emailService.retrieveRecordForQuery(queryResult.query, queryResult)
-            def speciesListInfo = emailService.getSpeciesListInfo(query)
-
-            def unsubscribeToken = notificationService.getUnsubscribeToken(user, query)
-
-            emailService.sendGroupEmail(query, [user.email], queryResult, records, frequency, records.size(), user.unsubscribeToken, unsubscribeToken, speciesListInfo, [:])
-
-            msg = "Email was sent to ${user.email} - check tomcat logs for ERROR message with value \"Error sending email to addresses:\""
-        } else {
-            msg ="User was not found or not logged in"
-        }
-
-        render msg
-    }
-
-
 
 
     /**
@@ -405,7 +370,12 @@ class AdminController {
         def frequency = 'weekly'
         QueryResult qr = notificationService.getQueryResult(query, Frequency.findByName(frequency))
         qr.lastResult = notificationService.gzipResult(processedJson)
-        query.lastChecked = qr.lastChecked
+        //this logic only applies on preview page
+        qr.previousCheck = qr.lastChecked
+        qr.lastChecked = since
+        query.lastChecked = since
+
+
         //notificationService.refreshProperties(qr, processedJson)
 
         def records = emailService.retrieveRecordForQuery(qr.query, qr)

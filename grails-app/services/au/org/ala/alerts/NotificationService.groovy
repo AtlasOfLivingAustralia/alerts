@@ -349,7 +349,7 @@ class NotificationService {
                 def latestValue = null
 
                 try {
-                    latestValue = JsonPath.read(json[0], propertyPath.jsonPath)
+                    latestValue = JsonPath.read(json, propertyPath.jsonPath)
                 } catch (Exception e) {
                     //expected behaviour for missing properties
                 }
@@ -433,7 +433,7 @@ class NotificationService {
             def dr = matcher.group(1)
             int offset = 0
             int max = 400
-            int maxRecords = grailsApplication.config.getProperty("biosecurity.query.maxRecords", Integer, 100)
+            //int maxRecords = grailsApplication.config.getProperty("biosecurity.query.maxRecords", Integer, 100)
             def repeat = true
 
             // prevent duplicates
@@ -455,9 +455,9 @@ class NotificationService {
                 offset += max
 
             }
-            return ([occurrences: occurrences.values()] as JSON).toString()
+            return ([occurrences: occurrences.values(), totalRecords: occurrences.values().size()] as JSON).toString()
         } else {
-            return ([occurrences: [] ] as JSON).toString()
+            return ([occurrences: [], totalRecords : 0 ] as JSON).toString()
         }
     }
 
@@ -746,6 +746,7 @@ class NotificationService {
             qr.previousResult = qr.lastResult
             qr.lastResult = gzipResult(processedJson)
             qr.lastChecked = date
+
             qr.hasChanged = diffService.hasChangedJsonDiff(qr)
 
             log.debug("[QUERY " + query.id + "] Has changed?: " + qr.hasChanged)
@@ -756,11 +757,16 @@ class NotificationService {
             //Copied from #464 to calculate query date range.
             // Search on biocache for occurrences that have been loaded since the last check time
 
+            // todo Need to be reviewed, the queryUrlUIUsed does not work with biosecurity query
+            //If previousCheck is null, then set it to 7 days before lastChecked
+            if (qr.previousCheck == null) {
+                qr.previousCheck = DateUtils.addDays(qr.lastChecked, -7 )
+            }
 
-            // todo Need to be reviewed
-
+            def todayMinus7 = DateUtils.addDays(qr.previousCheck, -1 * grailsApplication.config.getProperty("biosecurity.legacy.firstLoadedDateAge", Integer, 7))
             def todayMinus29 = DateUtils.addDays(qr.previousCheck, -1 * grailsApplication.config.getProperty("biosecurity.legacy.eventDateAge", Integer, 29))
-            def firstLoadedDate = sdf.format(qr.previousCheck) + 'T00:00:00Z'
+
+            def firstLoadedDate = sdf.format(todayMinus7) + 'T00:00:00Z'
             def occuranceDate = sdf.format(todayMinus29) + 'T00:00:00Z'
             String queryPath = query.queryPathForUI
             String modifiedPath = queryPath.replaceAll('___DATEPARAM___', firstLoadedDate).replaceAll('___LASTYEARPARAM___', occuranceDate)

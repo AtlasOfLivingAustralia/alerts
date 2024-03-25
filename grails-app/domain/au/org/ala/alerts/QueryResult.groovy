@@ -16,20 +16,16 @@ class QueryResult {
     byte[] previousResult
 
     String getQueryUrlUIUsed() {
-        if (!queryUrlUIUsed) {
-            Date since = lastChecked ?: (previousCheck ?: (lastChanged ?: new Date()))
-            SimpleDateFormat utcFormat = new SimpleDateFormat("yyyy-MM-dd'T'00:00:00'Z'");
-            utcFormat.setTimeZone(TimeZone.getTimeZone("UTC")); // Set the UTC timezone
-            String formattedUtcDate = utcFormat.format(since)
+        Date since = lastChecked ?: (previousCheck ?: (lastChanged ?: new Date()))
+        SimpleDateFormat utcFormat = new SimpleDateFormat("yyyy-MM-dd'T'00:00:00'Z'");
+        utcFormat.setTimeZone(TimeZone.getTimeZone("UTC")); // Set the UTC timezone
+        String formattedUtcDate = utcFormat.format(since)
 
-            String queryPath = query.queryPathForUI
-            String modifiedPath = queryPath.replaceAll('___DATEPARAM___', formattedUtcDate).replaceAll('___LASTYEARPARAM___', formattedUtcDate)
-            String currentBiocacheUrl = query.baseUrlForUI + modifiedPath
+        String queryPath = query.queryPathForUI
+        String modifiedPath = queryPath.replaceAll('___DATEPARAM___', formattedUtcDate).replaceAll('___LASTYEARPARAM___', formattedUtcDate)
+        String currentBiocacheUrl = query.baseUrlForUI + modifiedPath
 
-            currentBiocacheUrl
-        } else {
-            return queryUrlUIUsed
-        }
+        currentBiocacheUrl
     }
 
     static hasMany = [propertyValues: PropertyValue]

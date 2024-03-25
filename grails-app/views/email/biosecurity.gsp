@@ -278,12 +278,12 @@
         </div>
       </g:each>
 
-%{--      <div class="species-div" >--}%
-%{--        <a href="${moreInfo}">--}%
-%{--          <button class="record-button" ><strong>View records in ALA</strong>--}%
-%{--          </button>--}%
-%{--        </a>--}%
-%{--      </div>--}%
+      <div class="species-div" >
+        <a href="${moreInfo}">
+          <button class="record-button" ><strong>View records in ALA</strong>
+          </button>
+        </a>
+      </div>
 
       <div class="info-div">
         <p>If you notice a record has been misidentified, we encourage you to use your expertise to improve the quality of Australia’s biosecurity data.</p>

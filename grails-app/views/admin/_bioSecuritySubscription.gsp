@@ -12,7 +12,7 @@
                 <g:if test="${query.lastChecked}">
                     Last checked on ${new java.text.SimpleDateFormat('yyyy-MM-dd').format(query.lastChecked)} &nbsp;
                 </g:if>
-                <button class="btn btn-info"  onclick="triggerSubscription(${query.id})">Check & Notify</button>
+%{--                <button class="btn btn-info"  onclick="triggerSubscription(${query.id})">Check & Notify</button>--}%
             </div>
         </g:if>
         <g:else>
@@ -43,9 +43,11 @@
         <form  action="${request.contextPath}/admin/testBiosecurity?queryid=${query.id}" method="post" name="previewAndEmail">
                 <label >Preview of alerts since</label>
                 <input type="date" name="date" value="${today}" class="form-control" />
-                <small class="form-text text-info">This is for preview purposes only. The records shown on this page may differ from those obtained through Biocache search</small>
+                <small class="form-text text-info">The records shown on this page may differ from those obtained through Biocache search</small><br>
                 <button class="btn btn-primary" type="button" onclick="submitPreview('${request.contextPath}/admin/previewBiosecurityAlert?queryid=${query.id}', this, true)" >Preview</button>
-                <button class="btn btn-primary" type="button" onclick="submitPreview('${request.contextPath}/ws/triggerBiosecurityAlertSince?id=${query.id}', this, false)">Check & Notify</button>
+                <br>
+                <small class="form-text text-info">'Check&Notify' searches new records since the PREVIEW DATE, and then set the last checked date to the PREVIEW DATE</small><br>
+                <button class="btn btn-primary" type="button" onclick="submitPreview('${request.contextPath}/ws/triggerBiosecurityAlertSince?id=${query.id}', this, false)">Check&Notify</button>
         </form>
     </div>
 </div>

@@ -122,6 +122,19 @@
             xhr.send(formData);
         }
 
+        function updateTotalNumberOfSubscriptions() {
+            $.ajax({
+                url: "${createLink(controller: 'admin', action: 'countBioSecurityQuery')}" ,
+                type: "GET",
+                success: function(response) {
+                    $("span#numOfSubscriptions").text(response.count);
+                },
+                error: function(xhr, status, error) {
+                    console.error(error);
+                }
+            });
+        }
+
         function deleteSubscription(queryId) {
             let url = "${request.contextPath}/admin/deleteQuery?queryid=" + queryId;
             $.ajax({
@@ -129,6 +142,7 @@
                 type: 'GET',
                 success: function (data) {
                     $("div[name='subscription_" + queryId + "']").remove();
+                    updateTotalNumberOfSubscriptions();
                 },
                 error: function (xhr, status, error) {
                     // Handle errors
@@ -362,7 +376,7 @@
         <g:if test="${queries}">
             <div>
                 <div style="display: flex; justify-content: space-between">
-                    <div ><p class="lead">There are ${total} active alert(s)</p></div>
+                    <div ><p class="lead">There are <span id="numOfSubscriptions">${total}</span> active alert(s)</p></div>
                     <div class="col-md-6 row" >
                             <div class="col-md-8">
                                 <input type="text" class="form-control" placeholder="Search by query name" id="searchSubscriptions" />
