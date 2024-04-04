@@ -68,7 +68,7 @@
                             if (popup) {
                                 let logs = data.logs
                                 popup.attr('data-content', "<li>" + logs.map(item => item).join('</li><li>') + '</li>');
-                                popup.html(formatToLocaleDate(localDateTo) + "&nbsp;&nbsp;&nbsp;&nbsp; <i class='fa fa-check' aria-hidden='true' style='color: red;'></i>")
+                                popup.html(formatToLocaleDate(localDateTo) + "<i class='fa fa-check' aria-hidden='true' style='color: red;padding-left: 15px;'></i>")
                             }
                             alert("The subscription has been successfully completed. Click on the last checked date for details.")
                         } else {
@@ -399,7 +399,7 @@
                     <div class="row">
                         <div class="col-md-4"><b><g:message code="biosecurity.view.body.table.header.queryname" default="Subscription"/></b></div>
                         <div class="col-md-5"><b>Subscribers</b></div>
-                        <div class="col-md-3"><b>For advanced usage</b></div>
+                        <div class="col-md-3"><b>Advanced Usage</b></div>
                     </div>
                     <g:render template="bioSecuritySubscriptions" model="[queries: queries,  subscribers: subscribers, logs: logs, startIdx: 0 ]"/>
                 </div>

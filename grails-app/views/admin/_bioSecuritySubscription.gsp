@@ -23,9 +23,8 @@
                 </g:if>
                 <g:else>
                     <small class="form-text text-info">
-                      This is the first time subscribing to this list. Please go to the right column &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-hand-o-right" aria-hidden="true"></i>
-                      to set the initial check date. Otherwise, the check date will default to the last Wednesday of the date the task is scheduled to run.
-                    </small>
+                        This is the first time subscribing to this list. Please navigate to the 'Advanced Usage' section  on the right <i style="padding-left: 20px;" class="fa fa-hand-o-right fa-lg" aria-hidden="true"></i> to set the initial check date.
+                        Otherwise, the check date will default to 7 days before the scheduled task's execution date.
                 </g:else>
         </g:if>
         <g:else>
