@@ -412,6 +412,21 @@ class QueryService {
                   group by u""", [query: query]) : []
     }
 
+    boolean speciesListExists(String listid) {
+        boolean exists = false
+        try {
+            def resp = webService.get(grailsApplication.config.getProperty('lists.baseURL') + "/ws/speciesListInternal/" + listid, [:], ContentType.APPLICATION_JSON, true, false)
+            //If the list exists, the response will contain the listName, otherwise it returns all lists
+            if (resp?.resp?.listName) {
+                exists = true
+            }
+
+        } catch (Exception ex) {
+            log.error(ex.message)
+        }
+        return exists
+    }
+
     def getSpeciesListName(String listid) {
         def info = [id: listid, name: listid, isAuthoritative: false]
         try {

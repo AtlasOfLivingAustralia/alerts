@@ -67,8 +67,11 @@
                         if(data.status === 0 ) {
                             if (popup) {
                                 let logs = data.logs
+                                popup.removeAttr('hidden');
                                 popup.attr('data-content', "<li>" + logs.map(item => item).join('</li><li>') + '</li>');
-                                popup.html(formatToLocaleDate(localDateTo) + "<i class='fa fa-check' aria-hidden='true' style='color: red;padding-left: 15px;'></i>")
+                                popup.before("Last checked on ")
+                                popup.html( formatToLocaleDate(localDateTo) + "<i class='fa fa-check' aria-hidden='true' style='color: red;padding-left: 15px;'></i>")
+
                             }
                             alert("The subscription has been successfully completed. Click on the last checked date for details.")
                         } else {
@@ -81,7 +84,6 @@
                         console.error(xhr.responseText);
                     }
                 });
-                alert("The last check date will be updated if the process is completed.")
             }
         }
 
@@ -308,6 +310,7 @@
                 html: true,
                 container: 'body'
             });
+
         })
 
     </script>
@@ -340,8 +343,8 @@
                 <g:form name="create-security-alert" action="subscribeBioSecurity" method="post" class="form-horizontal">
                     <div class="row" >
                         <div class="col-sm-3">
-                            <label for="queryid" class="control-label"><g:message code="biosecurity.view.body.label.specieslistid" default="Species list uid"/></label>
-                            <input type="text" id="queryid" name="listid" class="form-control" placeholder='Species list ID, AKA drid'/>
+                            <label class="control-label"><g:message code="biosecurity.view.body.label.specieslistid" default="Species list uid"/></label>
+                            <input type="text" name="listid" class="form-control" placeholder='Species list ID, AKA drid'/>
                         </div>
 
                         <div class="col-sm-7">

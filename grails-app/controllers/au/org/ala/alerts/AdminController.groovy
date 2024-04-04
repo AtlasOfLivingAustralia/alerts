@@ -327,6 +327,10 @@ class AdminController {
         }
     }
 
+    /**
+     * This function is used to subscribe a user to a species list or a query (an existing subscription of a list)
+     * @return
+     */
     @Transactional
     def subscribeBioSecurity() {
         if ((!params.listid || params.listid.allWhitespace) && !params.queryid) {
@@ -334,6 +338,16 @@ class AdminController {
         } else if (!params.useremails || params.useremails.allWhitespace) {
             flash.message = messageSource.getMessage("biosecurity.view.error.emptyemails", null, "User emails can't be empty.", siteLocale)
         } else {
+            //If params contains listid, it is for subscribing to a species list
+            if (params.listid) {
+                boolean queryExists = queryService.speciesListExists(params.listid.trim())
+                if (!queryExists) {
+                    flash.message = messageSource.getMessage("biosecurity.view.error.invalidListId", [params.listid.trim()] as Object[], "List with id: {0} is not found in the system.", siteLocale)
+                    redirect(controller: "admin", action: "biosecurity")
+                    return
+                }
+            }
+
             String[] emails = ((String)params.useremails).split(';')
             Map usermap = emails?.collectEntries{[it.trim(), userService.getUserByEmailOrCreate(it.trim())]}
             def invalidEmails = []
@@ -357,6 +371,7 @@ class AdminController {
 
     // Not transactional
     def previewBiosecurityAlert() {
+        log.info("Building preview page for BioSecurity alert")
         def date = params.date //only from preview
         def query = Query.get(params.queryid)
 

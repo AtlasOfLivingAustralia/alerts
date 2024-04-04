@@ -65,7 +65,7 @@ class QueryResult {
         previousResult sqlType: 'longblob' //,  minSize:0, maxSize: 200000
         queryUrlUsed sqlType: 'text'
         queryUrlUIUsed sqlType: 'text'
-        logs sqlType: 'text'
+        logs sqlType: 'text' , defaultValue: ""
     }
 
     String toString() {

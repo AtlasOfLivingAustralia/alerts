@@ -27,12 +27,10 @@ class NotificationService {
     def grailsApplication
     def webService
 
-    @NotTransactional
     QueryResult getQueryResult(Query query, Frequency frequency) {
         QueryResult qr = QueryResult.findByQueryAndFrequency(query, frequency)
         if (qr == null) {
             qr = new QueryResult([query: query, frequency: frequency])
-            qr.save(flush: true)
         }
         qr
     }
