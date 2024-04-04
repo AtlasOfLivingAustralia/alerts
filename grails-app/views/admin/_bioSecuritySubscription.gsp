@@ -1,24 +1,37 @@
 <g:set var="today" value="${new java.text.SimpleDateFormat('yyyy-MM-dd').format(new Date())}"/>
 
 <div name="subscription_${query.id}" class="row bioscecrurity-padding" style="background-color: ${(i+startIdx) % 2 == 0 ? '#f0f0f0' : '#ffffff'};">
-    <div class="col-md-4 indented-text">${i+startIdx+1}.
+    <div class="col-md-4 indented-text">
+        <g:if test ="${query.listId != null && !(query.listId instanceof String && query.listId.toLowerCase() == 'null')}">
+            &nbsp;&nbsp;
+            <g:link controller="query" action="show" id="${query.id}">
+                <span><i class="fa fa-info-circle" aria-hidden="true" title="Show the query"></i></span>
+            </g:link>
+        </g:if>
+        <g:else>
+            <span style="color: red;"><i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
+        </g:else>
+
         <g:if test ="${query.listId != null && !(query.listId instanceof String && query.listId.toLowerCase() == 'null')}">
             <a href="${grailsApplication.config.lists.baseURL+'/speciesListItem/list/'+query.listId}" target="_blank">${query.name}</a> &nbsp; &nbsp;
-            &nbsp; &nbsp;
-                <g:link controller="query" action="show" id="${query.id}">
-                    <span><i class="fa fa-info-circle" aria-hidden="true" title="Show the query"></i></span></g:link>
-               <p></p>
-            <div style="text-align: center;">
+                <p></p>
                 <g:if test="${query.lastChecked}">
-                    Last checked on ${new java.text.SimpleDateFormat('yyyy-MM-dd').format(query.lastChecked)} &nbsp;
+                  Last checked on
+                    <span name="showLastCheckDetails_${query.id}" style="cursor: pointer; text-decoration: underline;"  data-toggle="popover" data-placement="bottom" data-content="${logs.collect {'<li>' + it + '</li>'  }.join()}" >
+                        ${new java.text.SimpleDateFormat('dd MMM yyyy HH:mm').format(query.lastChecked)}
+                    </span>
                 </g:if>
-%{--                <button class="btn btn-info"  onclick="triggerSubscription(${query.id})">Check & Notify</button>--}%
-            </div>
+                <g:else>
+                    <small class="form-text text-info">
+                      This is the first time subscribing to this list. Please go to the right column &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-hand-o-right" aria-hidden="true"></i>
+                      to set the initial check date. Otherwise, the check date will default to the last Wednesday of the date the task is scheduled to run.
+                    </small>
+                </g:else>
         </g:if>
         <g:else>
             ${query.name}nbsp;
             <p></p>
-            <span style="color: red;"><i class="fa fa-exclamation-triangle" aria-hidden="true"></i> Warning: This query is not associated with a valid list.</span>
+            <span style="color: red;">Warning: This query is not associated with a valid list.</span>
         </g:else>
     </div>
     <div class="col-md-5">
@@ -40,14 +53,14 @@
 
     </div>
     <div class="col-md-3 form-group">
-        <form  action="${request.contextPath}/admin/testBiosecurity?queryid=${query.id}" method="post" name="previewAndEmail">
-                <label >Preview of alerts since</label>
-                <input type="date" name="date" value="${today}" class="form-control" />
-                <small class="form-text text-info">The records shown on this page may differ from those obtained through Biocache search</small><br>
-                <button class="btn btn-primary" type="button" onclick="submitPreview('${request.contextPath}/admin/previewBiosecurityAlert?queryid=${query.id}', this, true)" >Preview</button>
+        <form  method="post" name="previewAndEmail" action="${request.contextPath}/admin/previewBiosecurityAlert?queryid=${query.id}">
+                <label >Check alerts since</label>
+                <input type="date" name="date" value="${today}" class="form-control" /><br/>
+                <button class="btn btn-primary" name="previewSubscription" type="button" onclick="submitPreview(this)" >Preview</button>
+                <button class="btn btn-primary" name="triggerSubscription" type="button" onclick="triggerSubscriptionSince(this, ${query.id})">Notify</button>
                 <br>
-                <small class="form-text text-info">'Check&Notify' searches new records since the PREVIEW DATE, and then set the last checked date to the PREVIEW DATE</small><br>
-                <button class="btn btn-primary" type="button" onclick="submitPreview('${request.contextPath}/ws/triggerBiosecurityAlertSince?id=${query.id}', this, false)">Check&Notify</button>
+                <small class="form-text text-info">"Notify" will send alerts to the subscribers and update the last check date</small><br>
+
         </form>
     </div>
 </div>

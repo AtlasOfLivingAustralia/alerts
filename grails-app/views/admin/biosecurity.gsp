@@ -15,36 +15,74 @@
         var subscriptionsPerLoad = ${subscriptionsPerPage?:10};
         var nextSubscription = 0;
 
-        function submitPreview(action, button, newPage) {
+        function submitPreview(target) {
+            let button = target
+            let btnName = button['name']
             let form = button.closest('form')
-            form.action = action;
-            if (newPage) {
+
+            var formData = new FormData(form); // Get form data
+            var localDate = new Date(formData.get("date"));
+            var utcDate = localDate.toISOString();
+            formData.set("date", utcDate)
+
+            if (btnName === 'previewSubscription') {
                 form.target = '_blank';
                 form.submit();
-            } else {
-                //Using Ajax to keep the current page
+            }
+        }
+
+        function formatToLocaleDate(currentDateTime) {
+            var year = currentDateTime.getFullYear();
+            var month = currentDateTime.toLocaleString('default', { month: 'short' }); // Get month abbreviation (e.g., Jan, Feb, etc.)
+            var day = currentDateTime.getDate();
+            var hours = currentDateTime.getHours();
+            var minutes = currentDateTime.getMinutes();
+
+            // Pad single-digit day and hours with leading zero if necessary
+            day = day < 10 ? '0' + day : day;
+            hours = hours < 10 ? '0' + hours : hours;
+            minutes = minutes < 10 ? '0' + minutes : minutes;
+
+            return day + ' ' + month + ' ' + year + ' ' + hours + ':' + minutes;
+        }
+
+        function triggerSubscriptionSince(target, queryId) {
+            var yes = confirm("It will also update the last check date to the current time. Are you sure you want to proceed?");
+
+            if (yes) {
+                let form = target.closest('form');
                 var formData = new FormData(form); // Get form data
                 var localDate = new Date(formData.get("date"));
-                var utcDate = localDate.toISOString();
-                formData.set("date", utcDate)
 
-                var xhr = new XMLHttpRequest(); // Create new XHR object
-                xhr.open("POST", action, true); // Open POST request
-                xhr.onreadystatechange = function() {
-                    if (xhr.readyState === XMLHttpRequest.DONE) {
-                        if (xhr.status === 200) {
-                            // Request successful, do something if needed
-                            console.log("Form submitted successfully.");
+                //Convert it to UTC
+                let utcDateSince = localDate.toISOString();
+                let localDateTo = new Date();
+                let url = "${request.contextPath}/ws/triggerBiosecurityAlertSince?id=" + queryId + "&since=" + utcDateSince
+                $.ajax({
+                    url: url,
+                    type: 'GET',
+                    success: function (data) {
+                        console.log(data)
+                        let popup = $('span[name=showLastCheckDetails_'+queryId+']')
+                        if(data.status === 0 ) {
+                            if (popup) {
+                                let logs = data.logs
+                                popup.attr('data-content', "<li>" + logs.map(item => item).join('</li><li>') + '</li>');
+                                popup.html(formatToLocaleDate(localDateTo) + "&nbsp;&nbsp;&nbsp;&nbsp; <i class='fa fa-check' aria-hidden='true' style='color: red;'></i>")
+                            }
+                            alert("The subscription has been successfully completed. Click on the last checked date for details.")
                         } else {
-                            // Error handling if needed
-                            console.error("Error submitting form:", xhr.status);
+                            popup.text(localDate +" - Failed")
+                            alert("The subscription failed. Click on the last checked date for details.")
                         }
+                    },
+                    error: function (xhr, status, error) {
+                        // Handle errors
+                        console.error(xhr.responseText);
                     }
-                };
-                xhr.send(formData);
-                alert ("Subscriptions have been triggered. Monitor the console logs for progress updates.")
+                });
+                alert("The last check date will be updated if the process is completed.")
             }
-
         }
 
         /**
@@ -215,40 +253,6 @@
             alert("Subscriptions have been triggered. Monitor the console logs for progress updates.")
         }
 
-        function triggerSubscription(queryId) {
-            let url = "${request.contextPath}/ws/triggerBiosecurityAlert?id=" + queryId
-            $.ajax({
-                url: url,
-                type: 'GET',
-                success: function (data) {
-                   console.log(data)
-                },
-                error: function (xhr, status, error) {
-                    // Handle errors
-                    console.error(xhr.responseText);
-                }
-            });
-
-            alert("Subscription has been triggered. Monitor the console logs for progress updates.")
-        }
-
-        function triggerSubscriptionSince(queryId, date) {
-            let url = "${request.contextPath}/ws/triggerBiosecurityAlertSince?id=" + queryId + "&since=" + date
-            $.ajax({
-                url: url,
-                type: 'GET',
-                success: function (data) {
-                    console.log(data)
-                },
-                error: function (xhr, status, error) {
-                    // Handle errors
-                    console.error(xhr.responseText);
-                }
-            });
-
-            alert("Subscription has been triggered. Monitor the console logs for progress updates.")
-        }
-
 
 
 
@@ -299,6 +303,11 @@
                 $("div#biosecurityDetails").html("");
                 loadMore(0);
             })
+
+            $('[data-toggle="popover"]').popover({
+                html: true,
+                container: 'body'
+            });
         })
 
     </script>
@@ -390,9 +399,9 @@
                     <div class="row">
                         <div class="col-md-4"><b><g:message code="biosecurity.view.body.table.header.queryname" default="Subscription"/></b></div>
                         <div class="col-md-5"><b>Subscribers</b></div>
-                        <div class="col-md-3"><b>For developers only</b></div>
+                        <div class="col-md-3"><b>For advanced usage</b></div>
                     </div>
-                    <g:render template="bioSecuritySubscriptions" model="[queries: queries,  subscribers: subscribers, startIdx: 0 ]"/>
+                    <g:render template="bioSecuritySubscriptions" model="[queries: queries,  subscribers: subscribers, logs: logs, startIdx: 0 ]"/>
                 </div>
                 <g:if test="${ total > subscriptionsPerPage}">
                     <div>

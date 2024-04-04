@@ -1,5 +1,9 @@
 package au.org.ala.alerts
 
+import groovy.json.JsonBuilder
+import groovyjarjarpicocli.CommandLine
+
+import javax.persistence.Column
 import java.text.SimpleDateFormat
 
 class QueryResult {
@@ -14,18 +18,32 @@ class QueryResult {
     Date lastChanged
     byte[] lastResult
     byte[] previousResult
+    String logs
+
+    String[] retrieveLogs() {
+        return logs ? logs.split("\n") : []
+    }
+
+    void appendLogs(String log) {
+        logs = logs ? logs + "\n" + log : log
+    }
+
 
     String getQueryUrlUIUsed() {
-        Date since = lastChecked ?: (previousCheck ?: (lastChanged ?: new Date()))
-        SimpleDateFormat utcFormat = new SimpleDateFormat("yyyy-MM-dd'T'00:00:00'Z'");
-        utcFormat.setTimeZone(TimeZone.getTimeZone("UTC")); // Set the UTC timezone
-        String formattedUtcDate = utcFormat.format(since)
+        if (!queryUrlUIUsed) {
+            Date since = lastChecked ?: (previousCheck ?: (lastChanged ?: new Date()))
+            SimpleDateFormat utcFormat = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss'Z'");
+            utcFormat.setTimeZone(TimeZone.getTimeZone("UTC")); // Set the UTC timezone
+            String formattedUtcDate = utcFormat.format(since)
 
-        String queryPath = query.queryPathForUI
-        String modifiedPath = queryPath.replaceAll('___DATEPARAM___', formattedUtcDate).replaceAll('___LASTYEARPARAM___', formattedUtcDate)
-        String currentBiocacheUrl = query.baseUrlForUI + modifiedPath
+            String queryPath = query.queryPathForUI
+            String modifiedPath = queryPath.replaceAll('___DATEPARAM___', formattedUtcDate).replaceAll('___LASTYEARPARAM___', formattedUtcDate)
+            String currentBiocacheUrl = query.baseUrlForUI + modifiedPath
 
-        currentBiocacheUrl
+            currentBiocacheUrl
+        } else {
+            queryUrlUIUsed
+        }
     }
 
     static hasMany = [propertyValues: PropertyValue]
@@ -47,6 +65,7 @@ class QueryResult {
         previousResult sqlType: 'longblob' //,  minSize:0, maxSize: 200000
         queryUrlUsed sqlType: 'text'
         queryUrlUIUsed sqlType: 'text'
+        logs sqlType: 'text'
     }
 
     String toString() {

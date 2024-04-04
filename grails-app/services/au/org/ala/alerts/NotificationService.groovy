@@ -2,7 +2,6 @@ package au.org.ala.alerts
 
 import com.jayway.jsonpath.JsonPath
 import grails.gorm.transactions.NotTransactional
-import grails.util.Environment
 import org.apache.http.entity.ContentType
 import grails.converters.JSON
 import org.apache.commons.io.IOUtils
@@ -10,11 +9,8 @@ import org.apache.commons.lang.time.DateUtils
 import org.grails.web.json.JSONArray
 import org.grails.web.json.JSONElement
 import org.grails.web.json.JSONObject
-
 import grails.gorm.transactions.Transactional
 import java.text.SimpleDateFormat
-import java.time.LocalDate
-import java.time.ZoneOffset;
 import java.util.regex.Pattern
 import java.util.zip.GZIPOutputStream
 
@@ -31,6 +27,7 @@ class NotificationService {
     def grailsApplication
     def webService
 
+    @NotTransactional
     QueryResult getQueryResult(Query query, Frequency frequency) {
         QueryResult qr = QueryResult.findByQueryAndFrequency(query, frequency)
         if (qr == null) {
@@ -64,12 +61,14 @@ class NotificationService {
 
             if (!urlString.contains("___MAX___")) {
                 // queries without paging
-                if (!queryService.isBioSecurityQuery(query)) {
+                if (queryService.isBioSecurityQuery(query)) {
+                    // biosecurity query is handled elsewhere
+                    Date since = qr.lastChecked ?: DateUtils.addDays(new Date(), -1 * grailsApplication.config.getProperty("biosecurity.legacy.firstLoadedDateAge", Integer, 7))
+                    Date to = new Date()
+                    processedJson = processQueryBiosecurity(query, since, to)
+                } else {
                     // standard query
                     processedJson = processQueryReturnedJson(query, IOUtils.toString(new URL(urlString).newReader()))
-                } else {
-                    // biosecurity query is handled elsewhere
-                    processedJson = processQueryBiosecurity(query)
                 }
             } else {
                 // queries with paging
@@ -109,8 +108,6 @@ class NotificationService {
 
             // set check time
             qr.previousCheck = qr.lastChecked
-
-
             // store the last result from the webservice call
             qr.previousResult = qr.lastResult
             qr.lastResult = gzipResult(processedJson)
@@ -158,7 +155,9 @@ class NotificationService {
                     processedJson = processQueryReturnedJson(query, IOUtils.toString(new URL(urlString).newReader()))
                 } else {
                     // biosecurity query is handled elsewhere
-                    processedJson = processQueryBiosecurity(query)
+                    Date since = lastQueryResult.lastChecked ?: DateUtils.addDays(new Date(), -1 * grailsApplication.config.getProperty("biosecurity.legacy.firstLoadedDateAge", Integer, 7))
+                    Date to = new Date()
+                    processedJson = processQueryBiosecurity(query, since, to)
                 }
             } else {
                 // queries with paging
@@ -424,7 +423,7 @@ class NotificationService {
         return rslt.toString()
     }
 
-    private def processQueryBiosecurity(Query query, Date date = new Date()) {
+    def processQueryBiosecurity(Query query, Date since, Date to) {
         // get species list
         // species_list_uid is for authoritative list, and species_list is for non-authoritative
         Pattern pattern = Pattern.compile(".*(?:species_list_uid|species_list):(drt?[0-9]+).*")
@@ -433,7 +432,6 @@ class NotificationService {
             def dr = matcher.group(1)
             int offset = 0
             int max = 400
-            //int maxRecords = grailsApplication.config.getProperty("biosecurity.query.maxRecords", Integer, 100)
             def repeat = true
 
             // prevent duplicates
@@ -448,7 +446,7 @@ class NotificationService {
                     break;
                 }
                 speciesList.resp?.each { listItem ->
-                    processListItemBiosecurity(occurrences, listItem, date)
+                    processListItemBiosecurity(occurrences, listItem, since, to)
                 }
 
                 repeat = (max == speciesList.resp?.size())
@@ -461,20 +459,37 @@ class NotificationService {
         }
     }
 
-    def processListItemBiosecurity(def occurrences, def listItem, def date) {
+    /**
+     * Date will be converted to UTC
+     *
+     * @param occurrences
+     * @param listItem
+     * @param since
+     * @return
+     */
+    def processListItemBiosecurity(def occurrences, def listItem, Date since, Date to) {
         def names = listItem.kvpValues.find { it.key == 'synonyms' }?.value?.split(',') as List ?: []
-
         names.add(listItem.name)
-
         def fq = listItem.kvpValues?.find { it.key == 'fq' }?.value
+        //Convert localtime to UTC
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
+        def utcTimeZone = TimeZone.getTimeZone("UTC")
+        sdf.setTimeZone(utcTimeZone)
+
+        String utcFrom = sdf.format(since)
+        String utcTo = sdf.format(to)
+
+        def todayMinus29 = DateUtils.addDays(since, -1 * grailsApplication.config.getProperty("biosecurity.legacy.eventDateAge", Integer, 29)) // 2023-9-15
+        def firstLoadedDate = '&fq=' + URLEncoder.encode('firstLoadedDate:[' + utcFrom + ' TO ' + utcTo + ' ]', 'UTF-8')
+        def dateRange = '&fq=' + URLEncoder.encode('eventDate:[' + sdf.format(todayMinus29) +' TO ' + utcTo + ' ]', 'UTF-8')
 
         // legacy date range filter
-        SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-dd")
-        def today = date // 2023-10-14
-        def todayMinus8 = DateUtils.addDays(today, -1 * grailsApplication.config.getProperty("biosecurity.legacy.firstLoadedDateAge", Integer, 8)) // 2023-10-06
-        def todayMinus29 = DateUtils.addDays(today, -1 * grailsApplication.config.getProperty("biosecurity.legacy.eventDateAge", Integer, 29)) // 2023-9-15
-        def firstLoadedDate = '&fq=' + URLEncoder.encode('firstLoadedDate:[' + sdf.format(todayMinus8) + 'T00:00:00Z TO ' + sdf.format(today) + 'T00:00:00Z]', 'UTF-8')
-        def dateRange = '&fq=' + URLEncoder.encode('eventDate:[' + sdf.format(todayMinus29) + 'T00:00:00Z TO ' + sdf.format(today) + 'T00:00:00Z]', 'UTF-8')
+//        SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-dd")
+//        def today = date // 2023-10-14
+//        def todayMinus8 = DateUtils.addDays(today, -1 * grailsApplication.config.getProperty("biosecurity.legacy.firstLoadedDateAge", Integer, 8)) // 2023-10-06
+//        def todayMinus29 = DateUtils.addDays(today, -1 * grailsApplication.config.getProperty("biosecurity.legacy.eventDateAge", Integer, 29)) // 2023-9-15
+//        def firstLoadedDate = '&fq=' + URLEncoder.encode('firstLoadedDate:[' + sdf.format(todayMinus8) + 'T00:00:00Z TO ' + sdf.format(today) + 'T00:00:00Z]', 'UTF-8')
+//        def dateRange = '&fq=' + URLEncoder.encode('eventDate:[' + sdf.format(todayMinus29) + 'T00:00:00Z TO ' + sdf.format(today) + 'T00:00:00Z]', 'UTF-8')
 
         // temporary code for backward compatibility
         fq = legacyFq(listItem)
@@ -492,6 +507,7 @@ class NotificationService {
             def searchTerm = 'q=' + URLEncoder.encode("(" + searchTerms.join(") OR (") + ")")
 
             def url = grailsApplication.config.getProperty('biocacheService.baseURL') + '/occurrences/search?' + searchTerm + fq + dateRange + firstLoadedDate + "&pageSize=10000"
+            log.debug("URL: " + url)
 
             try {
                 def get = JSON.parse(new URL(url).text)
@@ -500,6 +516,7 @@ class NotificationService {
                 }
             } catch (Exception e) {
                 log.error("failed to get occurrences at URL: " + url)
+                log.error(e.message)
             }
         }
     }
@@ -614,7 +631,6 @@ class NotificationService {
                         //expected behaviour if JSON doesnt contain the element
                     }
 
-
                     //get property value for this property path
                     PropertyValue propertyValue = getPropertyValue(propertyPath, queryResult)
 
@@ -711,88 +727,123 @@ class NotificationService {
     }
 
     def biosecurityAlerts() {
-        // get the UTC date and set date to midnight
-        LocalDate utcDate = LocalDate.now(ZoneOffset.UTC);
-        utcDate = utcDate.atStartOfDay().toLocalDate()
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd")
-        Date date = sdf.parse(utcDate.toString())
-
         def results = []
-            queryService.getALLBiosecurityQuery().each { Query query ->
-                def result = triggerSubscription(query, date)
-                results.add(result)
-            }
+        queryService.getALLBiosecurityQuery().each { Query query ->
+            def result = triggerSubscription(query)
+            results.add(result)
+        }
         return results
     }
 
     /**
+     * Todo has potential incorrect the end date of the query issue. Need to be reviewed and updated
+     *
+     * A query contains a number of independent searches depends on the number of species in the list.
+     * Each search will return a number of records from the last checked date to the current timestamp,
+     * which means the end timestamp of the each search is different, although only have seconds/minutes differences.
+     *
+     * Trigger a subscription for a query since last the last checked date
      *
      * @param query
-     * @param date should be UTC date
      */
-    def triggerSubscription(Query query, Date date) {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd")
-        def result = [status:0, message:"Trigger subscription [ ${query?.id} ] ${query?.name} "]
-        log.info("Checking subscription [ ${query?.id} ] ${query?.name} since ${sdf.format(date)} ")
-        try {
-            def processedJson = processQueryBiosecurity(query, date)
+    def triggerSubscription(Query query) {
+        //If has not been checked before, then set the lastChecked to 7 days before
+        Date lastChecked = query.lastChecked?: DateUtils.addDays(new Date(), -1 * grailsApplication.config.getProperty("biosecurity.legacy.firstLoadedDateAge", Integer, 7))
+        triggerSubscription(query, lastChecked)
+    }
 
-            def frequency = 'weekly'
-            QueryResult qr = getQueryResult(query, Frequency.findByName(frequency))
+    /**
+     * It can be used to manually give a date to check the subscription since
+     *
+     * @param query
+     * @param since  The local date to check the subscription since
+     */
+    def triggerSubscription(Query query, Date since) {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
+        Date now = new Date()
+
+        def message = "Checking records of ${query?.id}. ${query?.name} from ${sdf.format(since)} to ${sdf.format(now)}."
+        log.info(message)
+        def result = [status:1, message: message, logs:[message]]
+
+        def frequency = 'weekly'
+        QueryResult qr = getQueryResult(query, Frequency.findByName(frequency))
+
+        try {
+            def processedJson = processQueryBiosecurity(query, since, now)
+
+            def recordsFound = JsonPath.read(processedJson, '$.totalRecords')
+            result.logs << "${recordsFound} record(s) found since ${sdf.format(since)}."
 
             // set check time
-            qr.previousCheck = qr.lastChecked
+            qr.previousCheck = since
+
             // store the last result from the webservice call
             qr.previousResult = qr.lastResult
             qr.lastResult = gzipResult(processedJson)
-            qr.lastChecked = date
-
+            qr.lastChecked = now
             qr.hasChanged = diffService.hasChangedJsonDiff(qr)
+            qr.logs = ""
 
             log.debug("[QUERY " + query.id + "] Has changed?: " + qr.hasChanged)
             if (qr.hasChanged) {
-                qr.lastChanged = date
+                qr.lastChanged = since
             }
-
-            //Copied from #464 to calculate query date range.
-            // Search on biocache for occurrences that have been loaded since the last check time
 
             // todo Need to be reviewed, the queryUrlUIUsed does not work with biosecurity query
-            //If previousCheck is null, then set it to 7 days before lastChecked
-            if (qr.previousCheck == null) {
-                qr.previousCheck = DateUtils.addDays(qr.lastChecked, -7 )
-            }
 
-            def todayMinus7 = DateUtils.addDays(qr.previousCheck, -1 * grailsApplication.config.getProperty("biosecurity.legacy.firstLoadedDateAge", Integer, 7))
-            def todayMinus29 = DateUtils.addDays(qr.previousCheck, -1 * grailsApplication.config.getProperty("biosecurity.legacy.eventDateAge", Integer, 29))
+//             copied from R code
+//            def todayMinus7 = DateUtils.addDays(qr.previousCheck, -1 * grailsApplication.config.getProperty("biosecurity.legacy.firstLoadedDateAge", Integer, 7))
+//            def todayMinus29 = DateUtils.addDays(qr.previousCheck, -1 * grailsApplication.config.getProperty("biosecurity.legacy.eventDateAge", Integer, 29))
+//
+//            def firstLoadedDate = sdf.format(todayMinus7) + 'T00:00:00Z'
+//            def occuranceDate = sdf.format(todayMinus29) + 'T00:00:00Z'
+//            String queryPath = query.queryPathForUI
+//            String modifiedPath = queryPath.replaceAll('___DATEPARAM___', firstLoadedDate).replaceAll('___LASTYEARPARAM___', occuranceDate)
+//            qr.queryUrlUIUsed = query.baseUrlForUI + modifiedPath
 
-            def firstLoadedDate = sdf.format(todayMinus7) + 'T00:00:00Z'
-            def occuranceDate = sdf.format(todayMinus29) + 'T00:00:00Z'
+            //todo experimental code, need to be reviewed and updated
+            def todayMinus29 = DateUtils.addDays(since, -1 * grailsApplication.config.getProperty("biosecurity.legacy.eventDateAge", Integer, 29))
+            def firstLoadedDate = sdf.format(since)
+            def occuranceDate = sdf.format(todayMinus29)
             String queryPath = query.queryPathForUI
             String modifiedPath = queryPath.replaceAll('___DATEPARAM___', firstLoadedDate).replaceAll('___LASTYEARPARAM___', occuranceDate)
             qr.queryUrlUIUsed = query.baseUrlForUI + modifiedPath
 
+            //Do not remove, it breaks the refreshProperties method if it is a new subscription
+            qr.save(flush: true)
             // save QueryResult
             refreshProperties(qr, processedJson)
 
-            if ( qr.hasChanged || (Environment.getCurrent() == Environment.DEVELOPMENT || Environment.getCurrent() == Environment.TEST)) {
-                def users = queryService.getSubscribers(query.id)
-                def recipients = users.collect { user ->
-                    def notificationUnsubToken = user.notifications.find { it.query.id == query.id }?.unsubscribeToken
-                    [email: user.email, userUnsubToken: user.unsubscribeToken, notificationUnsubToken: notificationUnsubToken]
-                }
-                log.debug("Sending emails to...." + recipients*.email.join(","))
-                if (!users.isEmpty()) {
-                    emailService.sendGroupNotification(qr, Frequency.findByName('weekly'), recipients)
-                }
-            } else {
-                log.info "No changes for ${query.name} since ${qr.lastChecked}. No email was sent, unless it is a Development or Test environment."
+
+            def users = queryService.getSubscribers(query.id)
+            def recipients = users.collect { user ->
+                def notificationUnsubToken = user.notifications.find { it.query.id == query.id }?.unsubscribeToken
+                [email: user.email, userUnsubToken: user.unsubscribeToken, notificationUnsubToken: notificationUnsubToken]
             }
+
+            def emails = recipients.collect { it.email }
+            result.logs << "Sending emails to ${emails.size() <= 2 ? emails.join('; ') : emails.take(2).join('; ') + ' and ' + (emails.size() - 2) +' other users.'}"
+
+            if (!users.isEmpty()) {
+                def emailStatus = emailService.sendGroupNotification(qr, Frequency.findByName('weekly'), recipients)
+
+                result.status = emailStatus.status
+                result.logs << emailStatus.message
+            }
+            result.logs << "Completed!"
+            result.message = "Completion of Subscription check: ${query?.id}. ${query?.name}."
+
         } catch (Exception e) {
             log.error("Failed to trigger subscription [ ${query?.id}  ${query?.name} ]", e)
             result = [status: 1, message: "Failed to trigger subscription [ ${query?.id}  ${query?.name} ]" + e.message]
+        } finally {
+            log.info("[Status: ${result.status}] - ${result.message}")
+
+            qr.appendLogs(result.logs.join("\n"))
+            qr.save(flush: true)
+            return result
         }
-        return  result
     }
 
     def checkQueryForFrequency(String frequencyName) {

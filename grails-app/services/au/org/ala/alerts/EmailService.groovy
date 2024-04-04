@@ -121,16 +121,21 @@ class EmailService {
         def records = retrieveRecordForQuery(query, queryResult)
         def userAssertions = queryService.isBioSecurityQuery(query) ? getBiosecurityAssertions(query, records as List) : [:]
         def speciesListInfo = getSpeciesListInfo(query)
+
         //todo review this. fireWhenNotZeroProperty is returning an Integer of true or false,
         //Nothing to do with the total records
         //Integer totalRecords = queryService.fireWhenNotZeroProperty(queryResult)
-
         int totalRecords = records.size()
+
+        int maxRecords = grailsApplication.config.getProperty("biosecurity.query.maxRecords", Integer, 500)
+
+
         if (grailsApplication.config.getProperty("postie.enableEmail", Boolean, false)) {
-            log.info "Sending group email for ${query.name} to ${recipients.collect { it.email }}"
+            def emails = recipients.collect { it.email }
+            log.info "Sending emails for ${query.name} to ${emails.size() <= 2 ? emails.join('; ') : emails.take(2).join('; ') + ' and ' + emails.size() +' other users.'}"
             recipients.each { recipient ->
                 if (!recipient.locked) {
-                    sendGroupEmail(query, [recipient.email], queryResult, records.take(200), frequency, totalRecords, recipient.userUnsubToken as String, recipient.notificationUnsubToken as String, speciesListInfo, userAssertions)
+                    sendGroupEmail(query, [recipient.email], queryResult, records.take(maxRecords), frequency, totalRecords, recipient.userUnsubToken as String, recipient.notificationUnsubToken as String, speciesListInfo, userAssertions)
                 } else {
                     log.warn "Email not sent to locked user: ${recipient}"
                 }
@@ -144,17 +149,23 @@ class EmailService {
             log.debug("frequency:" + frequency)
             log.debug("totalRecords:" + (totalRecords >= 0 ? totalRecords : records.size()))
         }
+        log.info("Email with ${totalRecords} record(s) sent for ${query.name}.")
+        def status = ["status": 0, "message": "Emails were dispatched to the Mail service."]
     }
 
     public void sendGroupEmail(Query query, subsetOfAddresses, QueryResult queryResult, records, Frequency frequency, int totalRecords, String userUnsubToken, String notificationUnsubToken, Map speciesListInfo, Map userAssertions) {
         String urlPrefix = "${grailsApplication.config.security.cas.appServerName}${grailsApplication.config.getProperty('security.cas.contextPath', '')}"
         def localeSubject = messageSource.getMessage("emailservice.update.subject", [query.name] as Object[], siteLocale)
         // pass the last check date to template
-        query.lastChecked = queryResult.lastChecked
+        query.lastChecked = queryResult.previousCheck
+        String title = query.name
+        if (Environment.current == Environment.DEVELOPMENT || Environment.current == Environment.TEST) {
+            title = "[${Environment.current}] " + query.name
+        }
         try {
             sendMail {
                 from grailsApplication.config.postie.emailAlertAddressTitle + "<" + grailsApplication.config.postie.emailSender + ">"
-                subject query.name
+                subject title
                 bcc subsetOfAddresses
                 body(view: query.emailTemplate,
                     plugin: "email-confirmation",

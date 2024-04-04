@@ -163,7 +163,7 @@ biosecurity:
         template:
             authoritativeList: /occurrences/search?q=species_list_uid:___LISTIDPARAM___&fq=decade:2020&fq=country:Australia&fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&fq=occurrence_date:[___LASTYEARPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc&disableAllQualityFilters=true
             nonAuthoritativeList: /occurrences/search?q=species_list:___LISTIDPARAM___&fq=decade:2020&fq=country:Australia&fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&fq=occurrence_date:[___LASTYEARPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc&disableAllQualityFilters=true
-        maxRecords: 100
+        maxRecords: 500
     moreinfo:
         link: https://www.ala.org.au/blogs-news/ala-helps-to-stop-pests-in-their-tracks/
     dir: /data/alerts/emails
@@ -194,12 +194,25 @@ environments:
         security:
             cas:
                 appServerName: "http://localhost:8080"
+        userDetails:
+            web:
+                url: https://aws-auth-test-2023.test.ala.org.au/userdetails/
+            api:
+                url: https://api.test.ala.org.au/userdetails/cognito/
     test:
         grails:
             serverURL: "http://dev.ala.org.au:8080"
+            mail:
+                host: "localhost"
+                port: 25
         security:
             cas:
                 appServerName: "https://auth.ala.org.au"
+        userDetails:
+            web:
+                url: https://aws-auth-test-2023.test.ala.org.au/userdetails/
+            api:
+                url: https://api.test.ala.org.au/userdetails/cognito/
     production:
         grails:
             serverURL: "https://auth.ala.org.au/alerts"
@@ -209,6 +222,11 @@ environments:
         security:
             cas:
                 appServerName: "https://auth.ala.org.au"
+        userDetails:
+            web:
+                url: https://auth.ala.org.au/userdetails/
+            api:
+                url: https://api.ala.org.au/userdetails/cognito/
 
 ---
 hibernate:
@@ -267,9 +285,11 @@ environments:
             username: sa
             password:
             url: jdbc:h2:mem:testDb;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE
+        userDetails:
+            url: https://aws-auth-test-2023.test.ala.org.au/userdetails/
     production:
         dataSource:
-            dbCreate: none
+            dbCreate: update
 
 myannotation:
     enabled: false
@@ -278,8 +298,7 @@ webservice:
     jwt: true
     jwt-scopes: "openid users/read"
 
-userDetails:
-    url: https://aws-auth-dev.ala.org.au/userdetails/
+
 
 security:
     cas:

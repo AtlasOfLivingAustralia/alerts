@@ -632,6 +632,20 @@ class WebserviceController {
         }
     }
 
+    /**
+     * @param id query id
+     * @return the logs from the query result for the given query id
+     */
+    def getQueryLogs() {
+        def query = Query.get(params.id)
+        if (query) {
+            def logs = queryService.getQueryLogs(query)
+            render logs as JSON
+        } else {
+            render([status: 1, message: "Query not found"] as JSON)
+        }
+    }
+
     def searchSubscriptions() {
        def results =  queryService.searchSubscriptions(params.q)
        render results as JSON
@@ -720,7 +734,7 @@ class WebserviceController {
      * checks for new records since the last check, and sends alert emails to subscribers
      */
     def triggerBiosecurityAlerts () {
-       def result = notificationService.biosecurityAlerts()
+        def result = notificationService.biosecurityAlerts()
         render(result as JSON)
     }
 
@@ -734,11 +748,7 @@ class WebserviceController {
     def triggerBiosecurityAlert (int id) {
         def query = Query.get(id)
         if (query) {
-//            LocalDate utcDate = LocalDate.now(ZoneOffset.UTC);
-//            utcDate = utcDate.atStartOfDay().toLocalDate()
-//            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd")
-//            Date date = sdf.parse(utcDate.toString())
-
+            //todo - review the lastCheck date
             //If lastCheck is null, then set it to 7 days before
             Date lastChecked = queryService.getLastCheckedDate(query)
             if (lastChecked == null) {
@@ -753,22 +763,18 @@ class WebserviceController {
         }
     }
     /**
-     * Testing purposes for developers only
      *
      * It searches the records of given query back from the given date
      * And it also set the last checked date to the given date
      *
      * For example, if we set date = 2023-05-01, it will return the records from 2023-05-01 to now, and set the lastCheck date to 2023-05-01
-     * And then next time, if we set date = 2023-05-15, will return the records from 2023-05-15 to now, and set the lastCheck date to 2023-05-15
-     *
-     * DiffSevice will check and compare if there are new records between the lastCheck date and the current date
      *
      * @param id
-     * @param since  the UTC date to search from
+     * @param since  The date is from the JS calendar, it only has CURRENT Date part, no time part
      * @return
      */
     def triggerBiosecurityAlertSince (int id) {
-        String localDateString = params.date
+        String localDateString = params.since
         def query = Query.get(id)
         if (query) {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd")
@@ -781,7 +787,6 @@ class WebserviceController {
             render([status: 1, message: "Query not found"] as JSON)
         }
     }
-
 
 
     // classes used for the OpenAPI definition generator

@@ -396,6 +396,11 @@ class QueryService {
         return [subscription: subscription, subscribers: subscribers]
     }
 
+    def getQueryLogs(query) {
+        def queryResult = QueryResult.findByQuery(query)
+        return queryResult?.retrieveLogs()
+    }
+
     // get all subscribers to the specified query
     def getSubscribers(Long queryId) {
         Query query = Query.findById(queryId)

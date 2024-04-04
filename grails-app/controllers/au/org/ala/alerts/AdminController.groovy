@@ -14,16 +14,12 @@
 package au.org.ala.alerts
 
 import au.org.ala.web.AlaSecured
-import com.nimbusds.oauth2.sdk.util.date.SimpleDate
-import grails.converters.JSON
 import grails.gorm.transactions.Transactional
 import grails.util.Holders
 
 import java.text.SimpleDateFormat
 import groovyx.net.http.HTTPBuilder
 import groovy.json.JsonSlurper
-
-import java.util.regex.Pattern
 
 @AlaSecured(value = 'ROLE_ADMIN', redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to view that page.")
 class AdminController {
@@ -301,8 +297,9 @@ class AdminController {
     def biosecurity() {
         int total = queryService.countBiosecurityQuery()
         List queries = queryService.getBiosecurityQuery(0, subscriptionsPerPage)
+        List logs = queries.collect {queryService.getQueryLogs(it)}
         List subscribers = queries.collect {queryService.getSubscribers(it.id)}
-        render view: "/admin/biosecurity", model: [total: total, queries: queries, subscribers: subscribers, subscriptionsPerPage: subscriptionsPerPage]
+        render view: "/admin/biosecurity", model: [total: total, queries: queries, subscribers: subscribers, logs: logs, subscriptionsPerPage: subscriptionsPerPage]
     }
 
     /**
@@ -365,7 +362,9 @@ class AdminController {
 
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd")
         Date since =  sdf.parse(date)
-        def processedJson = notificationService.processQueryBiosecurity(query, since)
+        Date now = new Date()
+
+        def processedJson = notificationService.processQueryBiosecurity(query, since, now)
 
         def frequency = 'weekly'
         QueryResult qr = notificationService.getQueryResult(query, Frequency.findByName(frequency))
@@ -375,8 +374,6 @@ class AdminController {
         qr.lastChecked = since
         query.lastChecked = since
 
-
-        //notificationService.refreshProperties(qr, processedJson)
 
         def records = emailService.retrieveRecordForQuery(qr.query, qr)
         def userAssertions = queryService.isBioSecurityQuery(qr.query) ? emailService.getBiosecurityAssertions(qr.query, records as List) : [:]
@@ -394,8 +391,7 @@ class AdminController {
         if (user && unsubscribeToken) {
             unsubscribeOneUrl = grailsApplication.config.grails.serverURL + "/unsubscribe?token=${unsubscribeToken}"
         }
-
-
+        int maxRecords = grailsApplication.config.getProperty("biosecurity.query.maxRecords", Integer, 500)
         render(view: query.emailTemplate,
 //                plugin: "email-confirmation",
                 model: [title: localeSubject,
@@ -406,7 +402,7 @@ class AdminController {
                         userAssertions: userAssertions,
                         listcode: queryService.isMyAnnotation(query) ? "biocache.view.myannotation.list" : "biocache.view.list",
                         stopNotification: urlPrefix + '/notification/myAlerts',
-                        records: records.take(10),
+                        records: records.take(maxRecords),
                         frequency: messageSource.getMessage('frequency.' + frequency, null, siteLocale),
                         totalRecords: records.size(),
                         unsubscribeAll: urlPrefix + "/unsubscribe?token=test",
@@ -450,8 +446,6 @@ class AdminController {
             }
         }
 
-
-
         render(view: query.emailTemplate,
 //                plugin: "email-confirmation",
                 model: [
@@ -475,7 +469,7 @@ class AdminController {
 
             queryService.getALLBiosecurityQuery().each { query ->
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd")
-                def processedJson = notificationService.processQueryBiosecurity(query, sdf.parse(date))
+                def processedJson = notificationService.processQueryBiosecurity(query, sdf.parse(date), new Date())
 
                 def frequency = 'weekly'
                 QueryResult qr = notificationService.getQueryResult(query, Frequency.findByName(frequency))

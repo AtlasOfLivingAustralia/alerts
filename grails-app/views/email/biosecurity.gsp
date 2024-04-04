@@ -131,8 +131,9 @@
     display: block;
     color: #212121;
     border-radius: 6px;
-    max-width: 130px;
-    max-height: 118px;
+    max-width: 140px;
+    height: 118px;
+    width: auto;
     margin: 0 auto;
   }
 
@@ -215,7 +216,7 @@
         <div title="${speciesListInfo.name}">
           <strong>${StringUtils.abbreviate(speciesListInfo.name, 40)}, <a href="${speciesListInfo.url}">${speciesListInfo.drId}</a></strong>
         </div>
-        <div> since ${new SimpleDateFormat("dd-MMMM-yyyy").format(query.lastChecked)} </div>
+        <div><i>since ${new SimpleDateFormat("dd MMM yyyy").format(query.lastChecked)}</i></div>
       </div>
 
       <g:each status="i" in="${records}" var="oc">
@@ -232,7 +233,7 @@
               <tr>
                 <td class="species-summary-font">
                   <g:if test="${oc.scientificName && oc.raw_scientificName && oc.scientificName != oc.raw_scientificName}">
-                    Supplied as:<em>{oc.raw_scientificName}</em><br>
+                    Supplied as:<em>${oc.raw_scientificName}</em><br>
                   </g:if>
                   <g:if test="${oc.vernacularName}">
                     Common name: ${oc.vernacularName}<br>
@@ -268,6 +269,9 @@
                   <img class="species-thumbnail-img" src="${oc.thumbnailUrl ?: oc.smallImageUrl}"  alt="${message(code: "biocache.alt.image.for.record")}" />
                 </a>
               </g:if>
+              <g:else>
+                <img class="species-thumbnail-img" src="${grailsApplication.config.grails.serverURL + '/assets/email/no-img-av-ALAsilver.png'}" height='80' alt='Sorry, no image availabe' />
+              </g:else>
             </div>
             <div class="species-thumbnail-div">
               <g:if test="${oc.latLong}">
@@ -278,12 +282,12 @@
         </div>
       </g:each>
 
-      <div class="species-div" >
-        <a href="${moreInfo}">
-          <button class="record-button" ><strong>View records in ALA</strong>
-          </button>
-        </a>
-      </div>
+%{--      <div class="species-div" >--}%
+%{--        <a href="${moreInfo}">--}%
+%{--          <button class="record-button" ><strong>View records in ALA</strong>--}%
+%{--          </button>--}%
+%{--        </a>--}%
+%{--      </div>--}%
 
       <div class="info-div">
         <p>If you notice a record has been misidentified, we encourage you to use your expertise to improve the quality of Australia’s biosecurity data.</p>
