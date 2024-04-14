@@ -3,10 +3,7 @@ package au.org.ala.alerts
 import grails.util.Environment
 import grails.util.Holders
 import org.grails.web.json.JSONArray
-import org.springframework.boot.autoconfigure.couchbase.CouchbaseProperties
-
 import java.text.SimpleDateFormat
-import java.util.regex.Pattern
 
 class EmailService {
 

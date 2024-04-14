@@ -21,13 +21,12 @@
                     </span>
                 </g:if>
                 <g:else>
-                    <span name="showLastCheckDetails_${query.id}" style="cursor: pointer; text-decoration: underline;"  data-toggle="popover" data-placement="bottom" data-content="${logs.collect {'<li>' + it + '</li>'  }.join()}" >
-                        <small name="neverCheckedInfo">
-                            This is the first time subscribing to this list. Please navigate to the 'Advanced Usage' section  on the right <i style="padding-left: 20px;" class="fa fa-hand-o-right fa-lg" aria-hidden="true"></i> to set the initial check date.
-                            Otherwise, the check date will default to 7 days before the scheduled task's execution date.
-                        </small>
+                    <span hidden  name="showLastCheckDetails_${query.id}" style="cursor: pointer; text-decoration: underline;"  data-toggle="popover" data-placement="bottom" >
                     </span>
-
+                    <small name="neverCheckedInfo">
+                        This is the first time subscribing to this list. Please navigate to the 'Advanced Usage' section  on the right <i style="padding-left: 20px;" class="fa fa-hand-o-right fa-lg" aria-hidden="true"></i> to set the initial check date.
+                    Otherwise, the check date will default to 7 days before the scheduled task's execution date.
+                    </small>
                 </g:else>
         </g:if>
         <g:else>
@@ -37,8 +36,8 @@
         </g:else>
     </div>
     <div class="col-md-5">
+        <g:set var="subscribers" value="${query.collect{ q -> q.notifications.collect{ notification -> ['userId': notification.user?.id, 'email' : notification.user.email] }}.flatten() as List}" />
         <g:render template="bioSecuritySubscribers" model="[subscribers: subscribers, queryid: query.id]"/>
-
         <div class="bioscecrurity-padding">
             <g:form name="create-security-alert"  method="post">
                   <div class="form-group">
@@ -46,7 +45,7 @@
                       <label>Add subscribers</label>
                       <input type="hidden" name="queryid"  value="${query.id}"/>
                       <input class="form-control"  name="useremails" placeholder="You can input multiple user emails by separating them with ';'" />
-                      <small class="form-text text-muted">You can input multiple user emails by separating them with ';'</small>
+                      <br>
                       </div>
                       <button  type="button" class="btn btn-primary " onclick="addSubscribers(this)">Add</button>
                     </div>

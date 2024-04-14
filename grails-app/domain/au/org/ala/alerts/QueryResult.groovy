@@ -1,9 +1,4 @@
 package au.org.ala.alerts
-
-import groovy.json.JsonBuilder
-import groovyjarjarpicocli.CommandLine
-
-import javax.persistence.Column
 import java.text.SimpleDateFormat
 
 class QueryResult {

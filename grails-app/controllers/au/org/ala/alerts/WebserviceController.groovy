@@ -27,10 +27,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import org.apache.commons.lang.time.DateUtils
-
 import java.text.SimpleDateFormat
-import java.time.LocalDate
-import java.time.ZoneOffset
 
 import static io.swagger.v3.oas.annotations.enums.ParameterIn.PATH
 import static io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY
@@ -42,6 +39,7 @@ class WebserviceController {
     def queryService
     def userService
     def notificationService
+    def messageSource
 
     def index = {}
     def test = {}
@@ -705,6 +703,7 @@ class WebserviceController {
      * API call
      * Unsubscribe user from a query
      *
+     * @param userId  the sequence id of the user. If not provided, it will use the email to find the user
      * @param useremail
      * @param queryid
      *
@@ -717,7 +716,13 @@ class WebserviceController {
         } else if (!params.queryid || params.queryid.allWhitespace) {
             result = [status: 1, message: messageSource.getMessage("unsubscribeusers.controller.error.emptyqueryid", null, "Query Id can't be empty.", siteLocale)]
         } else {
-            User user = userService.getUserByEmail(params.useremail);
+            User user
+            if (params.userId) {
+                user = userService.getUserBySequeceId(params.userId);
+            } else {
+                user = userService.getUserByEmail(params.useremail.trim())
+            }
+
             if (user) {
                 notificationService.deleteAlertForUser(user, Long.valueOf(params.queryid))
                 result = [status : 0]

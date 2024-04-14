@@ -226,6 +226,20 @@ class UserService {
         user
     }
 
+    /**
+     * Get user by sequence id
+     * @param id
+     * @return
+     */
+    User getUserBySequeceId(Long id) {
+        User.get(id)
+    }
+
+    /**
+     * Get user by userId
+     * @param userId ALA user id
+     * @return
+     */
     User getUserById(String userId) {
         User.findByUserId(userId)
     }

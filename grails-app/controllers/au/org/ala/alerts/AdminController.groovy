@@ -20,6 +20,7 @@ import grails.util.Holders
 import java.text.SimpleDateFormat
 import groovyx.net.http.HTTPBuilder
 import groovy.json.JsonSlurper
+import java.nio.file.Files
 
 @AlaSecured(value = 'ROLE_ADMIN', redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to view that page.")
 class AdminController {
@@ -298,8 +299,7 @@ class AdminController {
         int total = queryService.countBiosecurityQuery()
         List queries = queryService.getBiosecurityQuery(0, subscriptionsPerPage)
         List logs = queries.collect {queryService.getQueryLogs(it)}
-        List subscribers = queries.collect {queryService.getSubscribers(it.id)}
-        render view: "/admin/biosecurity", model: [total: total, queries: queries, subscribers: subscribers, logs: logs, subscriptionsPerPage: subscriptionsPerPage]
+        render view: "/admin/biosecurity", model: [total: total, queries: queries, logs: logs, subscriptionsPerPage: subscriptionsPerPage]
     }
 
     /**
@@ -310,14 +310,15 @@ class AdminController {
      */
     def getMoreBioSecurityQuery(int startIdx) {
         List queries = queryService.getBiosecurityQuery(startIdx, subscriptionsPerPage)
-        List subscribers = queries.collect {queryService.getSubscribers(it.id)}
-        render view: "/admin/_bioSecuritySubscriptions", model: [queries: queries, subscribers: subscribers, startIdx: startIdx ]
+        List logs = queries.collect {queryService.getQueryLogs(it)}
+        render view: "/admin/_bioSecuritySubscriptions", model: [queries: queries, logs: logs,startIdx: startIdx ]
     }
 
     def getBioSecurityQuery(int id) {
-        def subscription = queryService.findBiosecurityQueryById(id)
+        def query = queryService.findBiosecurityQueryById(id)
+        def queryLog = queryService.getQueryLogs(query)
         //For be compatible with the method rendering a list of queries AKA subscriptions, we need to convert the single query to a list
-        render view: "/admin/_bioSecuritySubscriptions", model: [queries: [subscription.subscription], subscribers: [subscription.subscribers], startIdx: 0 ]
+        render view: "/admin/_bioSecuritySubscriptions", model: [queries: [query], logs: [queryLog], startIdx: 0 ]
     }
 
     def countBioSecurityQuery() {
@@ -475,41 +476,51 @@ class AdminController {
     // Not transactional
     def csvAllBiosecurity() {
         def date = params.date
+        String outputFile = "occurrence_alerts_${date}.csv"
+
+        def tempFilePath = Files.createTempFile(outputFile, ".csv")
+        def tempFile = tempFilePath.toFile()
+        tempFile.withWriter { writer ->
+            try {
+                queryService.getALLBiosecurityQuery().each { query ->
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd")
+                    def processedJson = notificationService.processQueryBiosecurity(query, sdf.parse(date), new Date())
+
+                    def frequency = 'weekly'
+                    QueryResult qr = notificationService.getQueryResult(query, Frequency.findByName(frequency))
+                    qr.lastResult = notificationService.gzipResult(processedJson)
+                    //notificationService.refreshProperties(qr, processedJson)
+
+                    def records = emailService.retrieveRecordForQuery(qr.query, qr)
+                    //def userAssertions = queryService.isBioSecurityQuery(qr.query) ? emailService.getBiosecurityAssertions(qr.query, records as List) : [:]
+                    def speciesListInfo = emailService.getSpeciesListInfo(qr.query)
+
+                    //String urlPrefix = "${grailsApplication.config.security.cas.appServerName}${grailsApplication.config.getProperty('security.cas.contextPath', '')}"
+                    // def localeSubject = messageSource.getMessage("emailservice.update.subject", [query.name] as Object[], siteLocale)
+                    log.debug("${records.size()}  records were found in ${query.name}")
+                    if (records) {
+                        records.each { record ->
+                            writer << "${date},${record.uuid},${speciesListInfo.name}\n"
+                        }
+                    }
+                }
+            }catch (Exception e) {
+                log.error("Error in generating CSV file: ${e.message}")
+            }
+        }
 
         response.setContentType("application/octet-stream")
         response.setHeader("Content-Disposition", "attachment; filename=occurrence_alerts_${date}.csv")
         def outputStream = response.outputStream
 
         try {
-
-            queryService.getALLBiosecurityQuery().each { query ->
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd")
-                def processedJson = notificationService.processQueryBiosecurity(query, sdf.parse(date), new Date())
-
-                def frequency = 'weekly'
-                QueryResult qr = notificationService.getQueryResult(query, Frequency.findByName(frequency))
-                qr.lastResult = notificationService.gzipResult(processedJson)
-                //notificationService.refreshProperties(qr, processedJson)
-
-                def records = emailService.retrieveRecordForQuery(qr.query, qr)
-                def userAssertions = queryService.isBioSecurityQuery(qr.query) ? emailService.getBiosecurityAssertions(qr.query, records as List) : [:]
-                def speciesListInfo = emailService.getSpeciesListInfo(qr.query)
-
-                String urlPrefix = "${grailsApplication.config.security.cas.appServerName}${grailsApplication.config.getProperty('security.cas.contextPath', '')}"
-                def localeSubject = messageSource.getMessage("emailservice.update.subject", [query.name] as Object[], siteLocale)
-                log.debug( "${records.size()}  records were found in ${query.name}" )
-                if (records) {
-                    records.each { record ->
-                        outputStream << date
-                        outputStream << ','
-                        outputStream << record.uuid
-                        outputStream << ','
-                        outputStream << speciesListInfo.name
-                        outputStream << '\n'
-                    }
-                }
+            BufferedReader reader = Files.newBufferedReader(tempFilePath)
+            String line
+            while ((line = reader.readLine()) != null) {
+                outputStream.println(line)
             }
-        }finally {
+            reader.close()
+        } finally {
             outputStream.close()
         }
     }
@@ -542,9 +553,4 @@ class AdminController {
         }
         redirect(controller: "admin", action: "biosecurity")
     }
-
-
-
-
-
 }

@@ -422,12 +422,8 @@ class NotificationService {
     }
 
     def processQueryBiosecurity(Query query, Date since, Date to) {
-        // get species list
-        // species_list_uid is for authoritative list, and species_list is for non-authoritative
-        Pattern pattern = Pattern.compile(".*(?:species_list_uid|species_list):(drt?[0-9]+).*")
-        def matcher = pattern.matcher(query.queryPath)
-        if (matcher.find()) {
-            def dr = matcher.group(1)
+        def drId = query.listId
+        if (drId) {
             int offset = 0
             int max = 400
             def repeat = true
@@ -436,7 +432,7 @@ class NotificationService {
             def occurrences = [:]
 
             while (repeat) {
-                def url = grailsApplication.config.getProperty('lists.baseURL') + "/ws/speciesListItemsInternal/" + dr + "?includeKVP=true" + "&offset=" + offset + "&max=" + max
+                def url = grailsApplication.config.getProperty('lists.baseURL') + "/ws/speciesListItemsInternal/" + drId + "?includeKVP=true" + "&offset=" + offset + "&max=" + max
                 def speciesList = webService.get(url, [:], ContentType.APPLICATION_JSON, true, false)
                 if (speciesList.statusCode != 200 && speciesList.statusCode != 201) {
                     log.error("Failed to access: " + url)
@@ -617,7 +613,6 @@ class NotificationService {
         log.debug("[QUERY " + queryResult?.query?.id ?: 'NULL' + "] Refreshing properties for query: " + queryResult.query.name + " : " + queryResult.frequency)
 
         try {
-
             QueryResult.withTransaction {
                 queryResult.query.propertyPaths.each { propertyPath ->
 

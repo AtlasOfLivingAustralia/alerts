@@ -71,7 +71,9 @@
                                 popup.attr('data-content', "<li>" + logs.map(item => item).join('</li><li>') + '</li>');
                                 popup.before("Last checked on ")
                                 popup.html( formatToLocaleDate(localDateTo) + "<i class='fa fa-check' aria-hidden='true' style='color: red;padding-left: 15px;'></i>")
-
+                                initializePopoverAgain();
+                                //Hide possible info
+                                popup.siblings('[name=neverCheckedInfo]').hide();
                             }
                             alert("The subscription has been successfully completed. Click on the last checked date for details.")
                         } else {
@@ -109,6 +111,7 @@
                 success: function(response) {
                     // Append new records to the container
                     $("div#biosecurityDetails").append(response);
+                    initializePopoverAgain();
 
                     // Hide the button if there are no more records to fetch
                     $.ajax({
@@ -192,8 +195,8 @@
             });
         }
 
-        function unsubscribe( queryId, email) {
-            let url  ="${request.contextPath}/ws/unsubscribe?queryid="+queryId+"&useremail="+email
+        function unsubscribe( queryId, userId, email) {
+            let url  ="${request.contextPath}/ws/unsubscribe?queryid="+queryId+"&userid=" + userId + "&useremail="+email
             $.ajax({
                 url: url,
                 type: 'GET',
@@ -255,7 +258,13 @@
             alert("Subscriptions have been triggered. Monitor the console logs for progress updates.")
         }
 
-
+        // Initialize popovers again after any records are loaded by Ajax
+        function initializePopoverAgain() {
+            $('[data-toggle="popover"]').popover({
+                html: true,
+                container: 'body'
+            });
+        }
 
 
         $(document).ready(function(){
@@ -284,6 +293,10 @@
                 }
             });
 
+            /**
+             * Used by autocomplete to load subscription details
+             * @param id
+             */
             function loadSubscription(id) {
                 let url = "${createLink(controller: 'admin', action: 'getBioSecurityQuery')}" + "?id=" + id;
                 $.ajax({
@@ -293,6 +306,7 @@
                         $("div#biosecurityDetails").html(response);
                         //hide 'load more' button
                         $("button.more-button").hide();
+                        initializePopoverAgain();
                     },
                     error: function(xhr, status, error) {
                         console.error(error);
@@ -306,6 +320,7 @@
                 loadMore(0);
             })
 
+            //Init popup on page load
             $('[data-toggle="popover"]').popover({
                 html: true,
                 container: 'body'
@@ -404,7 +419,7 @@
                         <div class="col-md-5"><b>Subscribers</b></div>
                         <div class="col-md-3"><b>Advanced Usage</b></div>
                     </div>
-                    <g:render template="bioSecuritySubscriptions" model="[queries: queries,  subscribers: subscribers, logs: logs, startIdx: 0 ]"/>
+                    <g:render template="bioSecuritySubscriptions" model="[queries: queries,  logs: logs, startIdx: 0 ]"/>
                 </div>
                 <g:if test="${ total > subscriptionsPerPage}">
                     <div>

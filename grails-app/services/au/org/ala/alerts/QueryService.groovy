@@ -392,8 +392,7 @@ class QueryService {
         if (qr) {
             subscription.lastChecked = qr.lastChecked
         }
-        def subscribers = getSubscribers(id)
-        return [subscription: subscription, subscribers: subscribers]
+        return subscription
     }
 
     def getQueryLogs(query) {
