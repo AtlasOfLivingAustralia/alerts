@@ -1,4 +1,12 @@
-<g:set var="today" value="${new java.text.SimpleDateFormat('yyyy-MM-dd').format(new Date())}"/>
+<%@ page import="java.text.SimpleDateFormat" %>
+<g:set var="today" value="${new SimpleDateFormat('yyyy-MM-dd').format(new Date())}"/>
+<%
+    def qr = !query.queryResults.isEmpty() ? query.queryResults.last() : null
+    def logs = qr?.logs?.split('\n') ?: []
+%>
+
+<g:set var="logs" value="${logs}"/>
+
 
 <div name="subscription_${query.id}" class="row bioscecrurity-padding" style="background-color: ${(i+startIdx) % 2 == 0 ? '#f0f0f0' : '#ffffff'};">
     <div class="col-md-4 indented-text">

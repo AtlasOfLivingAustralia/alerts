@@ -297,9 +297,8 @@ class AdminController {
 
     def biosecurity() {
         int total = queryService.countBiosecurityQuery()
-        List queries = queryService.getBiosecurityQuery(0, subscriptionsPerPage)
-        List logs = queries.collect {queryService.getQueryLogs(it)}
-        render view: "/admin/biosecurity", model: [total: total, queries: queries, logs: logs, subscriptionsPerPage: subscriptionsPerPage]
+        List<Query> queries = queryService.getBiosecurityQuery(0, subscriptionsPerPage)
+        render view: "/admin/biosecurity", model: [total: total, queries: queries, subscriptionsPerPage: subscriptionsPerPage]
     }
 
     /**
@@ -310,15 +309,14 @@ class AdminController {
      */
     def getMoreBioSecurityQuery(int startIdx) {
         List queries = queryService.getBiosecurityQuery(startIdx, subscriptionsPerPage)
-        List logs = queries.collect {queryService.getQueryLogs(it)}
-        render view: "/admin/_bioSecuritySubscriptions", model: [queries: queries, logs: logs,startIdx: startIdx ]
+        render view: "/admin/_bioSecuritySubscriptions", model: [queries: queries, startIdx: startIdx ]
     }
 
     def getBioSecurityQuery(int id) {
         def query = queryService.findBiosecurityQueryById(id)
         def queryLog = queryService.getQueryLogs(query)
         //For be compatible with the method rendering a list of queries AKA subscriptions, we need to convert the single query to a list
-        render view: "/admin/_bioSecuritySubscriptions", model: [queries: [query], logs: [queryLog], startIdx: 0 ]
+        render view: "/admin/_bioSecuritySubscriptions", model: [queries: [query], startIdx: 0 ]
     }
 
     def countBioSecurityQuery() {

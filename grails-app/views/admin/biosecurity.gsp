@@ -419,7 +419,7 @@
                         <div class="col-md-5"><b>Subscribers</b></div>
                         <div class="col-md-3"><b>Advanced Usage</b></div>
                     </div>
-                    <g:render template="bioSecuritySubscriptions" model="[queries: queries,  logs: logs, startIdx: 0 ]"/>
+                    <g:render template="bioSecuritySubscriptions" model="[queries: queries, startIdx: 0 ]"/>
                 </div>
                 <g:if test="${ total > subscriptionsPerPage}">
                     <div>

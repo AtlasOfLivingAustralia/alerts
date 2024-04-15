@@ -370,18 +370,19 @@ class QueryService {
     // get biosecurity queries with offset and limit
     def getBiosecurityQuery(int offset,int limit) {
         def criteria = Query.createCriteria()
-        def queries = criteria.list(max: limit, offset: offset) {
+        List<Query> queries = criteria.list(max: limit, offset: offset) {
             eq('emailTemplate', '/email/biosecurity')
             order('id', 'desc')
         }
 
         def results = queries.collect{ query ->
-            QueryResult qr = QueryResult.findByQuery(query)
+            QueryResult qr = !query.queryResults.isEmpty() ? query.queryResults.last() : null
             if (qr) {
                 query.lastChecked = qr.lastChecked
             }
             query
         }
+
         return results.toList()
     }
 
