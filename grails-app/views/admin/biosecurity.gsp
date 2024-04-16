@@ -10,7 +10,7 @@
 
     <title>Admin - Manage BioSecurity alerts</title>
     <asset:stylesheet href="alerts.css"/>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-3-typeahead/4.0.1/bootstrap3-typeahead.min.js"></script>
+    <asset:javascript src="bootstrap-3-typeahead-4.0.1.min.js"/>
     <script>
         var subscriptionsPerLoad = ${subscriptionsPerPage?:10};
         var nextSubscription = 0;
