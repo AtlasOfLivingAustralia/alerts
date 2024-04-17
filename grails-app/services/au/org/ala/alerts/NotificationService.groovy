@@ -11,7 +11,6 @@ import org.grails.web.json.JSONElement
 import org.grails.web.json.JSONObject
 import grails.gorm.transactions.Transactional
 import java.text.SimpleDateFormat
-import java.util.regex.Pattern
 import java.util.zip.GZIPOutputStream
 
 @Transactional
@@ -722,14 +721,13 @@ class NotificationService {
     def biosecurityAlerts() {
         def results = []
         queryService.getALLBiosecurityQuery().each { Query query ->
-            def result = triggerSubscription(query)
+            def result = triggerBiosecuritySubscription(query)
             results.add(result)
         }
         return results
     }
 
     /**
-     * Todo has potential incorrect the end date of the query issue. Need to be reviewed and updated
      *
      * A query contains a number of independent searches depends on the number of species in the list.
      * Each search will return a number of records from the last checked date to the current timestamp,
@@ -739,10 +737,10 @@ class NotificationService {
      *
      * @param query
      */
-    def triggerSubscription(Query query) {
+    def triggerBiosecuritySubscription(Query query) {
         //If has not been checked before, then set the lastChecked to 7 days before
         Date lastChecked = query.lastChecked?: DateUtils.addDays(new Date(), -1 * grailsApplication.config.getProperty("biosecurity.legacy.firstLoadedDateAge", Integer, 7))
-        triggerSubscription(query, lastChecked)
+        triggerBiosecuritySubscription(query, lastChecked)
     }
 
     /**
@@ -751,7 +749,7 @@ class NotificationService {
      * @param query
      * @param since  The local date to check the subscription since
      */
-    def triggerSubscription(Query query, Date since) {
+    def triggerBiosecuritySubscription(Query query, Date since) {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
         Date now = new Date()
 

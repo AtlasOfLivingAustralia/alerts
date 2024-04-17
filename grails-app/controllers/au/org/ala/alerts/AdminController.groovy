@@ -223,35 +223,6 @@ class AdminController {
         }
     }
 
-    @Transactional
-    def unsubscribeUser(String id) {}
-
-    /**
-     * Used to check if server can send emails externally.
-     * Sends to email address of logged-in user
-     *
-     */
-    @Transactional
-    def sendTestEmail() {
-        def msg
-        User user = userService.getUser()
-        if (user) {
-            def query = Query.get(14)
-            def frequency = Frequency.get(1)
-            def queryResult = QueryResult.findByQuery(query) ?: new QueryResult(query: query, frequency: frequency)
-            QueryResult qr = notificationService.getQueryResult(query, frequency)
-            emailService.sendGroupEmail(query, [user.email], queryResult, [], frequency, 0, "", "", [:], [:])
-            msg = "Email was sent to ${user.email} - check tomcat logs for ERROR message with value \"Error sending email to addresses:\""
-        } else {
-            msg = "User was not found or not logged in"
-        }
-
-        log.debug "#sendTestEmail - msg = ${msg}"
-        flash.message = msg
-        redirect(action: "index")
-    }
-
-
 
     /**
      * Utility method to fix broken unsubscribe links in email, where the unsubscribe link
@@ -368,7 +339,12 @@ class AdminController {
         redirect(controller: "admin", action: "biosecurity")
     }
 
-    // Not transactional
+    /**
+     * It is a preview page for BioSecurity alert
+     * DO NOT update database in this function
+     * @return
+     */
+    @AlaSecured
     def previewBiosecurityAlert() {
         log.info("Building preview page for BioSecurity alert")
         def date = params.date //only from preview
@@ -393,7 +369,7 @@ class AdminController {
         def userAssertions = queryService.isBioSecurityQuery(qr.query) ? emailService.getBiosecurityAssertions(qr.query, records as List) : [:]
         def speciesListInfo = emailService.getSpeciesListInfo(qr.query)
 
-        String urlPrefix = "${grailsApplication.config.security.cas.appServerName}${grailsApplication.config.getProperty('security.cas.contextPath', '')}"
+        String urlPrefix = "${grailsApplication.config.getProperty("grails.serverURL")}${grailsApplication.config.getProperty('security.cas.contextPath', '')}"
         def localeSubject = messageSource.getMessage("emailservice.update.subject", [query.name] as Object[], siteLocale)
 
         //Get unsubscribe token
@@ -403,7 +379,7 @@ class AdminController {
         def user = userService.getUserByEmail(alaUser?.email)
         def unsubscribeToken = notificationService.getUnsubscribeToken(user, query)
         if (user && unsubscribeToken) {
-            unsubscribeOneUrl = grailsApplication.config.grails.serverURL + "/unsubscribe?token=${unsubscribeToken}"
+            unsubscribeOneUrl = urlPrefix + "/unsubscribe?token=${unsubscribeToken}"
         }
         int maxRecords = grailsApplication.config.getProperty("biosecurity.query.maxRecords", Integer, 500)
         render(view: query.emailTemplate,

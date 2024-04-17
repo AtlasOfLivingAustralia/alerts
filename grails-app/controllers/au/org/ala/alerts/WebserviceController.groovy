@@ -15,6 +15,7 @@ package au.org.ala.alerts
 
 import au.ala.org.ws.security.RequireApiKey
 import au.org.ala.plugins.openapi.Path
+import au.org.ala.web.AlaSecured
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import grails.converters.JSON
 import grails.gorm.transactions.Transactional
@@ -634,6 +635,7 @@ class WebserviceController {
      * @param id query id
      * @return the logs from the query result for the given query id
      */
+    @AlaSecured
     def getQueryLogs() {
         def query = Query.get(params.id)
         if (query) {
@@ -645,7 +647,7 @@ class WebserviceController {
     }
 
     def searchSubscriptions() {
-       def results =  queryService.searchSubscriptions(params.q)
+       def results =  queryService.searchBiosecuritySubscriptions(params.q)
        render results as JSON
     }
 
@@ -668,6 +670,7 @@ class WebserviceController {
      * Subscribe users/emails to a biosecurity query
      * @return
      */
+    @AlaSecured(['ROLE_ADMIN'])
     def addSubscribers() {
         def result = [:]
         if ((!params.listid || params.listid.allWhitespace) && !params.queryid) {
@@ -709,7 +712,8 @@ class WebserviceController {
      *
      * @return
      */
-    def unsubscribe() {
+    @AlaSecured(['ROLE_ADMIN'])
+    def unsubscribeBiosecurity() {
         def result = [:]
         if (!params.useremail || params.useremail.allWhitespace) {
             result = [status: 1, message: messageSource.getMessage("unsubscribeusers.controller.error.emptyemail", null, "User email can't be empty.", siteLocale)]
@@ -738,6 +742,7 @@ class WebserviceController {
      * Retrieves all subscriptions, iterates over each subscription,
      * checks for new records since the last check, and sends alert emails to subscribers
      */
+    @AlaSecured(['ROLE_ADMIN'])
     def triggerBiosecurityAlerts () {
         def result = notificationService.biosecurityAlerts()
         render(result as JSON)
@@ -750,6 +755,7 @@ class WebserviceController {
      *
      * All dates should be UTC
      */
+    @AlaSecured(['ROLE_ADMIN'])
     def triggerBiosecurityAlert (int id) {
         def query = Query.get(id)
         if (query) {
@@ -760,7 +766,7 @@ class WebserviceController {
                 lastChecked = DateUtils.addDays(new Date(), -7 )
             }
 
-            def result = notificationService.triggerSubscription(query, lastChecked)
+            def result = notificationService.triggerBiosecuritySubscription(query, lastChecked)
             render(result as JSON)
 
         } else {
@@ -778,6 +784,7 @@ class WebserviceController {
      * @param since  The date is from the JS calendar, it only has CURRENT Date part, no time part
      * @return
      */
+    @AlaSecured(['ROLE_ADMIN'])
     def triggerBiosecurityAlertSince (int id) {
         String localDateString = params.since
         def query = Query.get(id)
@@ -785,7 +792,7 @@ class WebserviceController {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd")
             Date since = sdf.parse(localDateString)
 
-            def result = notificationService.triggerSubscription(query, since)
+            def result = notificationService.triggerBiosecuritySubscription(query, since)
             render(result as JSON)
 
         } else {

@@ -51,6 +51,7 @@ class QueryResult {
         lastChecked nullable: true
         queryUrlUsed nullable: true
         queryUrlUIUsed nullable: true
+        logs nullable: true
     }
 
     static mapping = {

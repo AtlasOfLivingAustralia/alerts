@@ -443,7 +443,7 @@ class QueryService {
         info
     }
 
-    def searchSubscriptions(keywords) {
+    def searchBiosecuritySubscriptions(keywords) {
         def sql = new Sql(dataSource)
         def result = null
         try {

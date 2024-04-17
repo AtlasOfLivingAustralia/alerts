@@ -50,14 +50,14 @@
         </ul>
     </div>
 
-    <div class="panel-heading">
-        <h3>Email Management </h3>
-        <ul>
-            <li class="controller"><g:link controller="admin" action="createBulkEmailForRegisteredUsers">
-                Ad hoc bulk email to registered users</g:link> - Create and send custom email to registered users.</li>
-            <li><g:link controller="admin" action="sendTestEmail">Send test email to yourself (tests server can send emails)</g:link>- Empty alert email to current user.</li>
-        </ul>
-    </div>
+%{--    <div class="panel-heading">--}%
+%{--        <h3>Email Management </h3>--}%
+%{--        <ul>--}%
+%{--            <li class="controller"><g:link controller="admin" action="createBulkEmailForRegisteredUsers">--}%
+%{--                Ad hoc bulk email to registered users</g:link> - Create and send custom email to registered users.</li>--}%
+%{--            <li><g:link controller="admin" action="sendTestEmail">Send test email to yourself (tests server can send emails)</g:link>- Empty alert email to current user.</li>--}%
+%{--        </ul>--}%
+%{--    </div>--}%
 
     <div class="panel-heading">
         <h3>BioSecurity Alerts</h3>

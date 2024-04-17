@@ -136,34 +136,7 @@
             })
         }
 
-        function addSubscribers(button) {
-            let form = button.closest('form')
-            let action = "${request.contextPath}/ws/addSubscribers";
 
-            //Using Ajax to keep the current page
-            var formData = new FormData(form); // Get form data
-            var queryId = formData.get("queryid")
-            var xhr = new XMLHttpRequest(); // Create new XHR object
-            xhr.open("POST", action, true); // Open POST request
-            xhr.setRequestHeader("Accept", "application/json");
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState === XMLHttpRequest.DONE) {
-                    if (xhr.status === 200) {
-                        var result = JSON.parse(xhr.responseText);
-                        if (result['status'] === 0) {
-                            getSubscribers(queryId)
-                            form["useremails"].value = "";
-                        } else {
-                            alert("Error: " + result['message']);
-                        }
-                    } else {
-                        // Error handling if needed
-                        console.error("Error in subscribing:", xhr.status);
-                    }
-                }
-            };
-            xhr.send(formData);
-        }
 
         function updateTotalNumberOfSubscriptions() {
             $.ajax({
@@ -196,10 +169,13 @@
         }
 
         function unsubscribe( queryId, userId, email) {
-            let url  ="${request.contextPath}/ws/unsubscribe?queryid="+queryId+"&userid=" + userId + "&useremail="+email
+            let url  ="${request.contextPath}/ws/unsubscribeBiosecurity?queryid="+queryId+"&userid=" + userId + "&useremail="+email
             $.ajax({
                 url: url,
                 type: 'GET',
+                xhrFields: {
+                    withCredentials: true
+                },
                 success: function(data) {
                     if (data.status === 0) {
                         getSubscribers(queryId);
@@ -266,6 +242,36 @@
             });
         }
 
+        function addSubscribers(button) {
+            let form = button.closest('form')
+            let action = "${request.contextPath}/ws/addSubscribers";
+
+            //Using Ajax to keep the current page
+            var formData = new FormData(form); // Get form data
+            var queryId = formData.get("queryid")
+            var xhr = new XMLHttpRequest(); // Create new XHR object
+            xhr.open("POST", action, true); // Open POST request
+            xhr.setRequestHeader("Accept", "application/json");
+            xhr.withCredentials = true;
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === XMLHttpRequest.DONE) {
+                    if (xhr.status === 200) {
+                        var result = JSON.parse(xhr.responseText);
+                        if (result['status'] === 0) {
+                            getSubscribers(queryId)
+                            form["useremails"].value = "";
+                        } else {
+                            alert("Error: " + result['message']);
+                        }
+                    } else {
+                        // Error handling if needed
+                        console.error("Error in subscribing:", xhr.status);
+                    }
+                }
+            };
+            xhr.send(formData);
+        }
+
 
         $(document).ready(function(){
             $('input#searchSubscriptions').typeahead({
@@ -324,7 +330,7 @@
             $('[data-toggle="popover"]').popover({
                 html: true,
                 container: 'body'
-            });
+            })
 
         })
 

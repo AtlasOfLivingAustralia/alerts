@@ -194,7 +194,7 @@ environments:
         security:
             cas:
                 appServerName: "http://localhost:8080"
-        userDetails:
+        userdetails:
             web:
                 url: https://aws-auth-test-2023.test.ala.org.au/userdetails/
             api:
@@ -208,7 +208,7 @@ environments:
         security:
             cas:
                 appServerName: "https://auth.ala.org.au"
-        userDetails:
+        userdetails:
             web:
                 url: https://aws-auth-test-2023.test.ala.org.au/userdetails/
             api:
@@ -222,7 +222,7 @@ environments:
         security:
             cas:
                 appServerName: "https://auth.ala.org.au"
-        userDetails:
+        userdetails:
             web:
                 url: https://auth.ala.org.au/userdetails/
             api:
