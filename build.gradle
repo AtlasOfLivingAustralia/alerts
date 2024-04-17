@@ -29,6 +29,7 @@ plugins {
     id "com.gorylenko.gradle-git-properties" version "2.4.1"
 
     id "maven-publish"
+    id 'com.bmuschko.docker-java-application' version '9.4.0'
 }
 
 publishing {
@@ -211,4 +212,20 @@ war {
 java {
     sourceCompatibility = JavaVersion.toVersion("11")
 }
+
+import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
+
+def dockerImageName = 'ala/alerts'
+
+task buildDocker(type: DockerBuildImage, dependsOn: bootWar) {
+    dependsOn bootWar
+    inputDir = project.file('.')
+    dockerFile = project.file('Dockerfile')
+    images.add("${dockerImageName}:${project.version}")
+}
+
+//task tagDocker(type: DockerTagImage, dependsOn: buildDocker) {
+//    dependsOn buildDocker
+//    tag = buildDocker.image
+//}
 
