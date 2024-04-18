@@ -193,7 +193,7 @@
 
         //get subscribers
         function getSubscribers(queryId) {
-            let url = "${request.contextPath}/ws/getSubscribers?queryId=" + queryId;
+            let url = "${request.contextPath}/ws/getBiosecuritySubscribers?queryId=" + queryId;
             $.ajax({
                 url: url,
                 type: 'GET',
@@ -282,7 +282,7 @@
                 source: function(query, process) {
                     // Fetch options from another URL based on the input value
                     $.ajax({
-                        url: '${request.contextPath}/ws/searchSubscriptions?q="' + query, // Replace with your URL
+                        url: '${request.contextPath}/ws/searchBiosecuritySubscriptions?q="' + query, // Replace with your URL
                         dataType: 'json',
                         success: function(data) {
                             process(data);

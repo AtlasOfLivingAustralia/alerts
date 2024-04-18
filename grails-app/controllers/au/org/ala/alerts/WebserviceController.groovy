@@ -635,7 +635,7 @@ class WebserviceController {
      * @param id query id
      * @return the logs from the query result for the given query id
      */
-    @AlaSecured
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
     def getQueryLogs() {
         def query = Query.get(params.id)
         if (query) {
@@ -646,20 +646,19 @@ class WebserviceController {
         }
     }
 
-    def searchSubscriptions() {
+    def searchBiosecuritySubscriptions() {
        def results =  queryService.searchBiosecuritySubscriptions(params.q)
        render results as JSON
     }
 
     /**
-     * API call
-     * Get subscribers for a query
+     * API call to render the biosecurity subscribers
      *
      * @param queryId
      * @return
      */
-
-    def getSubscribers() {
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
+    def getBiosecuritySubscribers() {
         def subscribers = queryService.getSubscribers(Long.valueOf(params.queryId))
         render view: "/admin/_bioSecuritySubscribers", model: [queryid: params.queryId, subscribers: subscribers]
     }
@@ -670,7 +669,7 @@ class WebserviceController {
      * Subscribe users/emails to a biosecurity query
      * @return
      */
-    @AlaSecured(['ROLE_ADMIN'])
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
     def addSubscribers() {
         def result = [:]
         if ((!params.listid || params.listid.allWhitespace) && !params.queryid) {
@@ -704,7 +703,7 @@ class WebserviceController {
 
     /**
      * API call
-     * Unsubscribe user from a query
+     * Unsubscribe user from a query by an Admin
      *
      * @param userId  the sequence id of the user. If not provided, it will use the email to find the user
      * @param useremail
@@ -712,7 +711,7 @@ class WebserviceController {
      *
      * @return
      */
-    @AlaSecured(['ROLE_ADMIN'])
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
     def unsubscribeBiosecurity() {
         def result = [:]
         if (!params.useremail || params.useremail.allWhitespace) {
@@ -742,7 +741,7 @@ class WebserviceController {
      * Retrieves all subscriptions, iterates over each subscription,
      * checks for new records since the last check, and sends alert emails to subscribers
      */
-    @AlaSecured(['ROLE_ADMIN'])
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
     def triggerBiosecurityAlerts () {
         def result = notificationService.biosecurityAlerts()
         render(result as JSON)
@@ -755,7 +754,7 @@ class WebserviceController {
      *
      * All dates should be UTC
      */
-    @AlaSecured(['ROLE_ADMIN'])
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
     def triggerBiosecurityAlert (int id) {
         def query = Query.get(id)
         if (query) {
@@ -784,7 +783,7 @@ class WebserviceController {
      * @param since  The date is from the JS calendar, it only has CURRENT Date part, no time part
      * @return
      */
-    @AlaSecured(['ROLE_ADMIN'])
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
     def triggerBiosecurityAlertSince (int id) {
         String localDateString = params.since
         def query = Query.get(id)

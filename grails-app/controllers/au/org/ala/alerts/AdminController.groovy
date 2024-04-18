@@ -266,6 +266,7 @@ class AdminController {
         redirect(action: 'index')
     }
 
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
     def biosecurity() {
         int total = queryService.countBiosecurityQuery()
         List<Query> queries = queryService.getBiosecurityQuery(0, subscriptionsPerPage)
@@ -273,7 +274,7 @@ class AdminController {
     }
 
     /**
-     * For Ajax call to get more biosecurity queries (subscription)
+     * For Ajax call to render more biosecurity queries (subscription)
      * @param offset
      * @param limit
      * @return
@@ -283,6 +284,11 @@ class AdminController {
         render view: "/admin/_bioSecuritySubscriptions", model: [queries: queries, startIdx: startIdx ]
     }
 
+    /**
+     * For Ajax call to render one biosecurity queries (subscription)
+     * @param id
+     * @return
+     */
     def getBioSecurityQuery(int id) {
         def query = queryService.findBiosecurityQueryById(id)
         def queryLog = queryService.getQueryLogs(query)
