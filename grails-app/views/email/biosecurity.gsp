@@ -266,7 +266,6 @@
             <div class="species-thumbnail-div">
               <g:if test="${oc.thumbnailUrl || oc.smallImageUrl }">
                 <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}">
-                  <img class="species-thumbnail-img" src="${oc.thumbnailUrl ?: oc.smallImageUrl}"  alt="${message(code: "biocache.alt.image.for.record")}" />
                 </a>
               </g:if>
               <g:else>
