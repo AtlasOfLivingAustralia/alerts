@@ -719,18 +719,25 @@ class WebserviceController {
         } else if (!params.queryid || params.queryid.allWhitespace) {
             result = [status: 1, message: messageSource.getMessage("unsubscribeusers.controller.error.emptyqueryid", null, "Query Id can't be empty.", siteLocale)]
         } else {
-            User user
-            if (params.userId) {
-                user = userService.getUserBySequeceId(params.userId);
-            } else {
-                user = userService.getUserByEmail(params.useremail.trim())
-            }
+            try {
+                User user
+                if (params.userid) {
+                    def userId = params.userid as Long
+                    user = userService.getUserBySequeceId(userId);
+                } else {
+                    //todo - identify why duplicate users are occasionally created
+                    user = userService.getUserByEmail(params.useremail.trim())
+                }
 
-            if (user) {
-                notificationService.deleteAlertForUser(user, Long.valueOf(params.queryid))
-                result = [status : 0]
-            } else {
-                result = [status: 1, message: messageSource.getMessage('unsubscribeusers.controller.error.emailnotfound', [params.useremail] as Object[], "User with email: {0} are not found in the system.", siteLocale)]
+                if (user) {
+                    notificationService.deleteAlertForUser(user, Long.valueOf(params.queryid))
+                    result = [status : 0]
+                } else {
+                    result = [status: 1, message: messageSource.getMessage('unsubscribeusers.controller.error.emailnotfound', [params.useremail] as Object[], "User with email: {0} are not found in the system.", siteLocale)]
+                }
+            } catch (Exception e) {
+                log.error("Error getting user : ${params.userid}", e)
+                result = [status : 1, message: "Error getting user : ${params.userid}"]
             }
         }
         render(result as JSON)

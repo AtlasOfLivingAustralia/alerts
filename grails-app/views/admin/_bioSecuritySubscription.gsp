@@ -44,7 +44,7 @@
         </g:else>
     </div>
     <div class="col-md-5">
-        <g:set var="subscribers" value="${query.collect{ q -> q.notifications.collect{ notification -> ['userId': notification.user?.id, 'email' : notification.user.email] }}.flatten() as List}" />
+        <g:set var="subscribers" value="${query.collect{ q -> q.notifications.collect{ notification -> ['id': notification.user?.id,'userId': notification.user?.userId, 'email' : notification.user.email] }}.flatten() as List}" />
         <g:render template="bioSecuritySubscribers" model="[subscribers: subscribers, queryid: query.id]"/>
         <div class="bioscecrurity-padding">
             <g:form name="create-security-alert"  method="post">

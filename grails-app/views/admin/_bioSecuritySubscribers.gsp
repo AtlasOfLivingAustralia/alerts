@@ -1,6 +1,8 @@
 <div name="subscribers" id="subscribers_${queryid}">
+
     <g:each in="${subscribers}" var="subscriber">
-        <span class="badge badge-info" onclick="unsubscribe(${queryid}, '${subscriber.id}','${subscriber.email}')">${subscriber.email} <i class="fas fa-trash" ></i></span>
+         %{-- subscriber.id is the sequence id , not the ALA user id    --}%
+        <span class="badge badge-info" onclick="unsubscribe(${queryid}, ${subscriber.id},'${subscriber.email}')">${subscriber.email} <i class="fas fa-trash" ></i></span>
     </g:each>
 
     <g:if test="${subscribers.size() == 0}">

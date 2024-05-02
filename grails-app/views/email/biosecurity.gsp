@@ -137,7 +137,13 @@
     margin: 0 auto;
   }
 
+
   .species-thumbnail-div {
+    vertical-align: top;
+    max-width: 130px;
+  }
+
+  .map-div {
     vertical-align: top;
     max-width: 130px;
   }
@@ -266,13 +272,17 @@
             <div class="species-thumbnail-div">
               <g:if test="${oc.thumbnailUrl || oc.smallImageUrl }">
                 <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}">
+%{--                  <img class="species-thumbnail-img" src="${oc.thumbnailUrl ?: oc.smallImageUrl}"   onerror="this.onerror=null; this.src="${grailsApplication.config.grails.serverURL + '/assets/email/no-img-av-ALAsilver.png'}" />--}%
+                  <object class="species-thumbnail-img"  data="${oc.thumbnailUrl ?: oc.smallImageUrl}" >
+                    <img class="species-thumbnail-img" src="${grailsApplication.config.grails.serverURL + '/assets/email/no-img-av-ALAsilver.png'}"  alt="" />
+                  </object>
                 </a>
               </g:if>
               <g:else>
                 <img class="species-thumbnail-img" src="${grailsApplication.config.grails.serverURL + '/assets/email/no-img-av-ALAsilver.png'}" height='80' alt='Sorry, no image availabe' />
               </g:else>
             </div>
-            <div class="species-thumbnail-div">
+            <div class="map-div">
               <g:if test="${oc.latLong}">
                 <a href="https://www.google.com/maps/place/${oc.latLong}/@${oc.latLong},7z" target="_blank"> <img class="species-thumbnail-img" src="https://maps.googleapis.com/maps/api/staticmap?center=${oc.latLong}&markers=|${oc.latLong}&zoom=5&size=240x200&maptype=roadmap&key=${grailsApplication.config.getProperty('google.apikey')}" alt="location preview map" /></a>
               </g:if>
@@ -290,7 +300,7 @@
 
       <div class="info-div">
         <p>If you notice a record has been misidentified, we encourage you to use your expertise to improve the quality of Australia’s biosecurity data.</p>
-        <p>Please either annotate the record in the provider platform itself or notify us at <a href="mailto:biosecurity@ala.org.au" style="color: #f2f2f2; font-weight: 700;">biosecurity@ala.org.au</a> and we can make the suggested change.</p>
+        <p>Please either annotate the record in the provider platform itself or notify us at <a href="mailto:biosecurity@ala.org.au" style="color: #f2f2f2; font-weight: 700;">biosecurity@ala.org.au</a> for assistance.</p>
       </div>
 
       <div class="info-div reversed-font-color" >
