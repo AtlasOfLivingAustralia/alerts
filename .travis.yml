@@ -1,29 +1,29 @@
-language: groovy
-jdk:
-- openjdk11
-sudo: false
-branches:
-  only:
-    - master
-    - develop
-before_cache:
-  - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
-  - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
-
-cache:
-  directories:
-#    - $HOME/.m2
-#    - $HOME/.gradle/caches/
-    - $HOME/.gradle/wrapper/
-
-install:
-  - 'travis_wait 30 ./gradlew clean'
-  - './gradlew assemble'
-
-after_success:
-  - '[ "${TRAVIS_PULL_REQUEST}" = "false" ] && travis_retry ./gradlew publish'
-env:
-  global:
-    - JAVA_TOOL_OPTIONS=-Dhttps.protocols=TLSv1.2
-    - secure: OqyYLYoeTw2ifeopsXEQnLDF8DA5j12iSH9mKGXjE6abkrhXCghWOtb+jGstRvJr/ZrpJfFK3VOkistgkf6y8/RYxB7a0MJsr+1GUXtdHhtPbUcShJDybj6AlbgPCI2J4VdIQSB+ey2XZKOMOO3+XwbsczrTHBh5KpBHdI7Tw8I=
-    - secure: XvAZn/Iv/HVBcR3DiDrNhOvMy4LVvrH0eM7jims9Kyhwb6YvZc8aD2MpgfR9pEcKpyy5zSx/EKYKbB6rf5tzjjEOSgCCrYfoqNB2e1/pqNnzMsblEpRC3IsHOYs7bQwckKOclQ1pP/6BzjxSKzZNQG+dQT+KhfPPmWj4Ky+hmN0=
+#language: groovy
+#jdk:
+#- openjdk11
+#sudo: false
+#branches:
+#  only:
+#    - master
+#    - develop
+#before_cache:
+#  - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+#  - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+#
+#cache:
+#  directories:
+##    - $HOME/.m2
+##    - $HOME/.gradle/caches/
+#    - $HOME/.gradle/wrapper/
+#
+#install:
+#  - 'travis_wait 30 ./gradlew clean'
+#  - './gradlew assemble'
+#
+#after_success:
+#  - '[ "${TRAVIS_PULL_REQUEST}" = "false" ] && travis_retry ./gradlew publish'
+#env:
+#  global:
+#    - JAVA_TOOL_OPTIONS=-Dhttps.protocols=TLSv1.2
+#    - secure: OqyYLYoeTw2ifeopsXEQnLDF8DA5j12iSH9mKGXjE6abkrhXCghWOtb+jGstRvJr/ZrpJfFK3VOkistgkf6y8/RYxB7a0MJsr+1GUXtdHhtPbUcShJDybj6AlbgPCI2J4VdIQSB+ey2XZKOMOO3+XwbsczrTHBh5KpBHdI7Tw8I=
+#    - secure: XvAZn/Iv/HVBcR3DiDrNhOvMy4LVvrH0eM7jims9Kyhwb6YvZc8aD2MpgfR9pEcKpyy5zSx/EKYKbB6rf5tzjjEOSgCCrYfoqNB2e1/pqNnzMsblEpRC3IsHOYs7bQwckKOclQ1pP/6BzjxSKzZNQG+dQT+KhfPPmWj4Ky+hmN0=
