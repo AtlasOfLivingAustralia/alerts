@@ -1,0 +1,30 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: 'Alerts CloudFormation stack'
+
+Parameters:
+  pBuild:
+    Type: String
+    Description: The build number
+  pCleanBranch:
+    Type: String
+    Description: The clean branch, can be used in resource names
+  pEnvironment:
+    Type: String
+    Description: The AWS environment this belongs to
+
+Resources:
+  AlertsRepository:
+    Type: 'AWS::ECR::Repository'
+    Properties:
+      RepositoryName: 'ala-alerts'
+      RepositoryPolicyText:
+        Version: '2008-10-17'
+        Statement:
+          - Sid: AllowPublicPull
+            Effect: Allow
+            Principal: '*'
+            Action:
+              - 'ecr:GetDownloadUrlForLayer'
+              - 'ecr:BatchGetImage'
+              - 'ecr:BatchCheckLayerAvailability'
