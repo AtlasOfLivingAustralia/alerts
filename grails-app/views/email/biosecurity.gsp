@@ -131,16 +131,29 @@
     display: block;
     color: #212121;
     border-radius: 6px;
-    max-width: 140px;
+    /*max-width: 125px;*/
     height: 118px;
-    width: auto;
-    margin: 0 auto;
-  }
+    width: 128px;
+    margin-left: 2px;
+    float: left;
 
+  }
 
   .species-thumbnail-div {
     vertical-align: top;
     max-width: 130px;
+    width:130px;
+    height: 118px;
+    border-radius: 6px;
+  }
+
+  .missing-species-thumbnail-div {
+    vertical-align: top;
+    max-width: 130px;
+    width:130px;
+    height: 118px;
+    border-radius: 6px;
+    background-image: url("${grailsApplication.config.grails.serverURL + '/assets/email/no-img-gray-bg.png'}");
   }
 
   .map-div {
@@ -233,7 +246,7 @@
               <tbody>
               <tr>
                 <td class="text-left" >
-                  <a href="${link}" class="default-font ala-color text-left" style="text-decoration: none;">${i+1}. <em>${oc.scientificName ?:"N/A"}</em></a>
+                  <a href="${link}" class="default-font ala-color text-left" >${i+1}. <em>${oc.scientificName ?:"N/A"}</em></a>
                 </td>
               </tr>
               <tr>
@@ -269,24 +282,22 @@
             </table>
           </div>
           <div style="width: 50%; display: inline-flex; flex-direction: row; justify-content: space-between ">
-            <div class="species-thumbnail-div">
-              <g:if test="${oc.thumbnailUrl || oc.smallImageUrl }">
-                <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}">
-%{--                  <img class="species-thumbnail-img" src="${oc.thumbnailUrl ?: oc.smallImageUrl}"   onerror="this.onerror=null; this.src="${grailsApplication.config.grails.serverURL + '/assets/email/no-img-av-ALAsilver.png'}" />--}%
-                  <object class="species-thumbnail-img"  data="${oc.thumbnailUrl ?: oc.smallImageUrl}" >
-                    <img class="species-thumbnail-img" src="${grailsApplication.config.grails.serverURL + '/assets/email/no-img-av-ALAsilver.png'}"  alt="" />
-                  </object>
-                </a>
-              </g:if>
-              <g:else>
-                <img class="species-thumbnail-img" src="${grailsApplication.config.grails.serverURL + '/assets/email/no-img-av-ALAsilver.png'}" height='80' alt='Sorry, no image availabe' />
-              </g:else>
-            </div>
             <div class="map-div">
               <g:if test="${oc.latLong}">
                 <a href="https://www.google.com/maps/place/${oc.latLong}/@${oc.latLong},7z" target="_blank"> <img class="species-thumbnail-img" src="https://maps.googleapis.com/maps/api/staticmap?center=${oc.latLong}&markers=|${oc.latLong}&zoom=5&size=240x200&maptype=roadmap&key=${grailsApplication.config.getProperty('google.apikey')}" alt="location preview map" /></a>
               </g:if>
             </div>
+            <div class="species-thumbnail-div" >
+              <g:if test="${oc.thumbnailUrl || oc.smallImageUrl }">
+                <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}">
+                  <div class="species-thumbnail-div" style="background-image:url('${oc.thumbnailUrl ?: oc.smallImageUrl}');background-size: cover; background-position: center; "></div>
+                </a>
+              </g:if>
+              <g:else>
+                <div class="missing-species-thumbnail-div" > </div>
+              </g:else>
+            </div>
+
           </div>
         </div>
       </g:each>

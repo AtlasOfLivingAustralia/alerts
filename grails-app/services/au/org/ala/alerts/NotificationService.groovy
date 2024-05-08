@@ -463,7 +463,7 @@ class NotificationService {
     def processListItemBiosecurity(def occurrences, def listItem, Date since, Date to) {
         def names = listItem.kvpValues.find { it.key == 'synonyms' }?.value?.split(',') as List ?: []
         names.add(listItem.name)
-        def fq = listItem.kvpValues?.find { it.key == 'fq' }?.value
+
         //Convert localtime to UTC
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
         def utcTimeZone = TimeZone.getTimeZone("UTC")
@@ -484,8 +484,10 @@ class NotificationService {
 //        def firstLoadedDate = '&fq=' + URLEncoder.encode('firstLoadedDate:[' + sdf.format(todayMinus8) + 'T00:00:00Z TO ' + sdf.format(today) + 'T00:00:00Z]', 'UTF-8')
 //        def dateRange = '&fq=' + URLEncoder.encode('eventDate:[' + sdf.format(todayMinus29) + 'T00:00:00Z TO ' + sdf.format(today) + 'T00:00:00Z]', 'UTF-8')
 
+        //Build fq for anything in fq of KVP
+        def fq = buildFq(listItem)
         // temporary code for backward compatibility
-        fq = legacyFq(listItem)
+        def legacyFq = legacyFq(listItem)
 
         names.each { name ->
             name = name.trim()
@@ -499,7 +501,7 @@ class NotificationService {
 
             def searchTerm = 'q=' + URLEncoder.encode("(" + searchTerms.join(") OR (") + ")")
 
-            def url = grailsApplication.config.getProperty('biocacheService.baseURL') + '/occurrences/search?' + searchTerm + fq + dateRange + firstLoadedDate + "&pageSize=10000"
+            def url = grailsApplication.config.getProperty('biocacheService.baseURL') + '/occurrences/search?' + searchTerm + fq + legacyFq + dateRange + firstLoadedDate + "&pageSize=10000"
             log.debug("URL: " + url)
 
             try {
@@ -512,6 +514,15 @@ class NotificationService {
                 log.error(e.message)
             }
         }
+    }
+
+    def buildFq(def it) {
+        def fqValue = it.kvpValues?.find { it.key == 'fq' }?.value
+        def fq = ''
+        if (fqValue) {
+            fq = '&fq=' + URLEncoder.encode(fqValue, "UTF-8")
+        }
+        fq
     }
 
     def legacyFq(def it) {
