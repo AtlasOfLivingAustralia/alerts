@@ -266,6 +266,7 @@
                     } else {
                         // Error handling if needed
                         console.error("Error in subscribing:", xhr.status);
+                        alert("Failed to subscribe. Please check the logs for more details.")
                     }
                 }
             };

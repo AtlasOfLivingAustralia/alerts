@@ -135,8 +135,6 @@
     height: 118px;
     width: 128px;
     margin-left: 2px;
-    float: left;
-
   }
 
   .species-thumbnail-div {
@@ -158,7 +156,9 @@
 
   .map-div {
     vertical-align: top;
-    max-width: 130px;
+    width:130px;
+    height: 118px;
+    border-radius: 6px;
   }
 
   .species-div {
@@ -282,22 +282,29 @@
             </table>
           </div>
           <div style="width: 50%; display: inline-flex; flex-direction: row; justify-content: space-between ">
-            <div class="map-div">
-              <g:if test="${oc.latLong}">
-                <a href="https://www.google.com/maps/place/${oc.latLong}/@${oc.latLong},7z" target="_blank"> <img class="species-thumbnail-img" src="https://maps.googleapis.com/maps/api/staticmap?center=${oc.latLong}&markers=|${oc.latLong}&zoom=5&size=240x200&maptype=roadmap&key=${grailsApplication.config.getProperty('google.apikey')}" alt="location preview map" /></a>
-              </g:if>
-            </div>
-            <div class="species-thumbnail-div" >
-              <g:if test="${oc.thumbnailUrl || oc.smallImageUrl }">
-                <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}">
-                  <div class="species-thumbnail-div" style="background-image:url('${oc.thumbnailUrl ?: oc.smallImageUrl}');background-size: cover; background-position: center; "></div>
-                </a>
-              </g:if>
-              <g:else>
-                <div class="missing-species-thumbnail-div" > </div>
-              </g:else>
-            </div>
-
+            <table>
+              <tr>
+                <td>
+                  <div class="map-div">
+                      <g:if test="${oc.latLong}">
+                        <a href="https://www.google.com/maps/place/${oc.latLong}/@${oc.latLong},7z" target="_blank"> <img class="species-thumbnail-img" src="https://maps.googleapis.com/maps/api/staticmap?center=${oc.latLong}&markers=|${oc.latLong}&zoom=5&size=130x118&maptype=roadmap&key=${grailsApplication.config.getProperty('google.apikey')}" alt="location preview map" /></a>
+                      </g:if>
+                  </div>
+                </td>
+                <td>
+                  <div class="species-thumbnail-div" >
+                    <g:if test="${oc.thumbnailUrl || oc.smallImageUrl }">
+                      <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}">
+                        <div class="species-thumbnail-div" style="background-image:url('${oc.thumbnailUrl ?: oc.smallImageUrl}');background-size: cover; background-position: center; "></div>
+                      </a>
+                    </g:if>
+                    <g:else>
+                      <div class="missing-species-thumbnail-div" > </div>
+                    </g:else>
+                  </div>
+                </td>
+              </tr>
+            </table>
           </div>
         </div>
       </g:each>

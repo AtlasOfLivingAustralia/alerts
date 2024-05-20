@@ -19,6 +19,7 @@ import au.org.ala.web.AlaSecured
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import grails.converters.JSON
 import grails.gorm.transactions.Transactional
+import grails.util.Holders
 import grails.web.servlet.mvc.GrailsParameterMap
 import io.micronaut.http.HttpStatus
 import io.swagger.v3.oas.annotations.Operation
@@ -41,6 +42,7 @@ class WebserviceController {
     def userService
     def notificationService
     def messageSource
+    def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
 
     def index = {}
     def test = {}
