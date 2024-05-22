@@ -472,17 +472,17 @@ class NotificationService {
         String utcFrom = sdf.format(since)
         String utcTo = sdf.format(to)
 
-        def todayMinus29 = DateUtils.addDays(since, -1 * grailsApplication.config.getProperty("biosecurity.legacy.eventDateAge", Integer, 29)) // 2023-9-15
+        def todayNDaysAgo = DateUtils.addDays(since, -1 * grailsApplication.config.getProperty("biosecurity.legacy.eventDateAge", Integer, 150)) // 2023-9-15
         def firstLoadedDate = '&fq=' + URLEncoder.encode('firstLoadedDate:[' + utcFrom + ' TO ' + utcTo + ' ]', 'UTF-8')
-        def dateRange = '&fq=' + URLEncoder.encode('eventDate:[' + sdf.format(todayMinus29) +' TO ' + utcTo + ' ]', 'UTF-8')
+        def dateRange = '&fq=' + URLEncoder.encode('eventDate:[' + sdf.format(todayNDaysAgo) +' TO ' + utcTo + ' ]', 'UTF-8')
 
         // legacy date range filter
 //        SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-dd")
 //        def today = date // 2023-10-14
 //        def todayMinus8 = DateUtils.addDays(today, -1 * grailsApplication.config.getProperty("biosecurity.legacy.firstLoadedDateAge", Integer, 8)) // 2023-10-06
-//        def todayMinus29 = DateUtils.addDays(today, -1 * grailsApplication.config.getProperty("biosecurity.legacy.eventDateAge", Integer, 29)) // 2023-9-15
+//        def todayNDaysAgo = DateUtils.addDays(today, -1 * grailsApplication.config.getProperty("biosecurity.legacy.eventDateAge", Integer, 29)) // 2023-9-15
 //        def firstLoadedDate = '&fq=' + URLEncoder.encode('firstLoadedDate:[' + sdf.format(todayMinus8) + 'T00:00:00Z TO ' + sdf.format(today) + 'T00:00:00Z]', 'UTF-8')
-//        def dateRange = '&fq=' + URLEncoder.encode('eventDate:[' + sdf.format(todayMinus29) + 'T00:00:00Z TO ' + sdf.format(today) + 'T00:00:00Z]', 'UTF-8')
+//        def dateRange = '&fq=' + URLEncoder.encode('eventDate:[' + sdf.format(todayNDaysAgo) + 'T00:00:00Z TO ' + sdf.format(today) + 'T00:00:00Z]', 'UTF-8')
 
         //Build fq for anything in fq of KVP
         def fq = buildFq(listItem)
@@ -796,18 +796,18 @@ class NotificationService {
 
 //             copied from R code
 //            def todayMinus7 = DateUtils.addDays(qr.previousCheck, -1 * grailsApplication.config.getProperty("biosecurity.legacy.firstLoadedDateAge", Integer, 7))
-//            def todayMinus29 = DateUtils.addDays(qr.previousCheck, -1 * grailsApplication.config.getProperty("biosecurity.legacy.eventDateAge", Integer, 29))
+//            def todayNDaysAgo = DateUtils.addDays(qr.previousCheck, -1 * grailsApplication.config.getProperty("biosecurity.legacy.eventDateAge", Integer, 29))
 //
 //            def firstLoadedDate = sdf.format(todayMinus7) + 'T00:00:00Z'
-//            def occuranceDate = sdf.format(todayMinus29) + 'T00:00:00Z'
+//            def occuranceDate = sdf.format(todayNDaysAgo) + 'T00:00:00Z'
 //            String queryPath = query.queryPathForUI
 //            String modifiedPath = queryPath.replaceAll('___DATEPARAM___', firstLoadedDate).replaceAll('___LASTYEARPARAM___', occuranceDate)
 //            qr.queryUrlUIUsed = query.baseUrlForUI + modifiedPath
 
             //todo experimental code, need to be reviewed and updated
-            def todayMinus29 = DateUtils.addDays(since, -1 * grailsApplication.config.getProperty("biosecurity.legacy.eventDateAge", Integer, 29))
+            def todayNDaysAgo = DateUtils.addDays(since, -1 * grailsApplication.config.getProperty("biosecurity.legacy.eventDateAge", Integer, 150))
             def firstLoadedDate = sdf.format(since)
-            def occuranceDate = sdf.format(todayMinus29)
+            def occuranceDate = sdf.format(todayNDaysAgo)
             String queryPath = query.queryPathForUI
             String modifiedPath = queryPath.replaceAll('___DATEPARAM___', firstLoadedDate).replaceAll('___LASTYEARPARAM___', occuranceDate)
             qr.queryUrlUIUsed = query.baseUrlForUI + modifiedPath

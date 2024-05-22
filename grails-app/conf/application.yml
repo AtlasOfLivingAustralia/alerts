@@ -180,7 +180,7 @@ biosecurity:
         lgaField: cl10923
         shape: cl11033:"Namadgi" OR cl11033:"Tidbinbilla" OR cl11033:"Bimberi"
         #shape: spatialObject:9223660
-        eventDateAge: 29
+        eventDateAge: 150
         firstLoadedDateAge: 8
 
 environments:
