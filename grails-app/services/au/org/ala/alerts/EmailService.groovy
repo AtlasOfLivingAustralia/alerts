@@ -47,10 +47,10 @@ class EmailService {
         def emailModel = generateEmailModel(notification, queryResult)
         def user = notification.user
         def localeSubject = messageSource.getMessage("emailservice.update.subject", [notification.query.name] as Object[], siteLocale)
-        if (grailsApplication.config.postie.enableEmail && !user.locked) {
+        if (grailsApplication.config.mail.enabled && !user.locked) {
             log.info "Sending email to ${user.email} for ${notification.query.name}"
             sendMail {
-                from grailsApplication.config.postie.emailAlertAddressTitle + "<" + grailsApplication.config.postie.emailSender + ">"
+                from grailsApplication.config.mail.details.alertAddressTitle + "<" + grailsApplication.config.mail.details.sender + ">"
                 subject localeSubject
                 bcc user.email
                 body(view: notification.query.emailTemplate,
@@ -58,7 +58,7 @@ class EmailService {
                         model: emailModel
                 )
             }
-        } else if (grailsApplication.config.postie.enableEmail && user.locked) {
+        } else if (grailsApplication.config.mail.enabled && user.locked) {
             log.warn "Email not sent to locked user: ${user.email}"
         } else {
             log.info("Email would have been sent to: " + user.email)
@@ -127,7 +127,7 @@ class EmailService {
         int maxRecords = grailsApplication.config.getProperty("biosecurity.query.maxRecords", Integer, 500)
 
 
-        if (grailsApplication.config.getProperty("postie.enableEmail", Boolean, false)) {
+        if (grailsApplication.config.getProperty("mail.enabled", Boolean, false)) {
             def emails = recipients.collect { it.email }
             log.info "Sending emails for ${query.name} to ${emails.size() <= 2 ? emails.join('; ') : emails.take(2).join('; ') + ' and ' + emails.size() +' other users.'}"
             recipients.each { recipient ->
@@ -161,7 +161,7 @@ class EmailService {
         }
         try {
             sendMail {
-                from grailsApplication.config.postie.emailAlertAddressTitle + "<" + grailsApplication.config.postie.emailSender + ">"
+                from grailsApplication.config.mail.details.alertAddressTitle + "<" + grailsApplication.config.mail.details.sender + ">"
                 subject title
                 bcc subsetOfAddresses
                 body(view: query.emailTemplate,

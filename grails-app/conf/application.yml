@@ -1,5 +1,23 @@
 ---
+# mail.enabled: true will send email depending on the mail.ses.enabled
+# set true will use AWS SES, it requires the AWS credentials to be set in the environment variables
+# Set false will use the default grails mail plugin, we need to config the mail server and port in grails.mail
+# email will be relayed bt the server configured in postfix in local dev env
+mail:
+    enabled: true
+    ses:
+        enabled: false
+    details:
+        sender: "alerts@ala.org.au"
+        alertAddressTitle: "Atlas alerts"
+        infoSender: "alerts@ala.org.au"
+        infoAddressTitle: "Atlas of Living Australia"
+        defaultResourceName: "Atlas of Living Australia"
+        # forceAllAlertsGetSent results in emails getting sent regardless if data has changed - only use in DEV env
+        forceAllAlertsGetSent: false
+
 grails:
+    #default mail service
     mail:
         port: 2525
         server: localhost
@@ -118,15 +136,6 @@ security:
         adminRole: ROLE_ADMIN
         uriFilterPattern: ["/","/alaAdmin/*","/testAuth/*","/query/*","/admin/*","/admin/user/*","/admin/user/debug/*","/admin/debug/all","/notification/myAlerts","/notification/changeFrequency","/notification/addMyAlert","/notification/addMyAlert/*","/notification/deleteMyAlert/*","/notification/deleteMyAlert/*","/notification/deleteMyAlertWR/*","/webservice/*","/webservice/createTaxonAlert","/webservice/taxonAlerts","/webservice/createRegionAlert","/webservice/regionAlerts","/webservice/deleteTaxonAlert/*","/webservice/create*","/webservice/createSpeciesGroupRegionAlert","/ws/*","/ws/createTaxonAlert","/ws/taxonAlerts","/ws/createRegionAlert","/ws/regionAlerts","/ws/deleteTaxonAlert/*","/ws/createTaxonRegionAlert","/ws/createSpeciesGroupRegionAlert","/admin/runChecksNow"]
 
-postie:
-    emailSender: "atlas-alerts@ala.org.au"
-    emailAlertAddressTitle: "Atlas alerts"
-    emailInfoAddressTitle: "Atlas of Living Australia"
-    emailInfoSender: "atlas-alerts@ala.org.au"
-    defaultResourceName: "Atlas of Living Australia"
-    enableEmail: false
-    # forceAllAlertsGetSent results in emails getting sent regardless if data has changed - only use in DEV env
-    forceAllAlertsGetSent: false
 ala:
     baseURL: "https://www.ala.org.au"
     userDetailsURL: "https://auth.ala.org.au/userdetails/userDetails/getUserListFull"
@@ -190,7 +199,7 @@ environments:
             mail:
                 host: "localhost"
                 port: 1025
-                username: postie.emailSender
+                #username: postie.emailSender
         security:
             cas:
                 appServerName: "http://localhost:8080"
@@ -199,6 +208,12 @@ environments:
                 url: https://aws-auth-test-2023.test.ala.org.au/userdetails/
             api:
                 url: https://api.test.ala.org.au/userdetails/cognito/
+        mail:
+            details:
+                sender: "alerts-dev@ala.org.au"
+                alertAddressTitle: "Atlas alerts [Dev]"
+                infoAddressTitle: "Atlas of Living Australia [Dev]"
+                infoSender: "alerts-dev@ala.org.au"
     test:
         grails:
             serverURL: "http://dev.ala.org.au:8080"
@@ -213,6 +228,12 @@ environments:
                 url: https://aws-auth-test-2023.test.ala.org.au/userdetails/
             api:
                 url: https://api.test.ala.org.au/userdetails/cognito/
+        mail:
+            details:
+                sender: "alerts-test@ala.org.au"
+                alertAddressTitle: "Atlas alerts [Test]"
+                infoAddressTitle: "Atlas of Living Australia [Test]"
+                infoSender: "alerts-test@ala.org.au"
     production:
         grails:
             serverURL: "https://auth.ala.org.au/alerts"

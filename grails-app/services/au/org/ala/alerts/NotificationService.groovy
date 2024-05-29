@@ -223,7 +223,7 @@ class NotificationService {
 
         //if there is a date format, then there's a param to replace
         if (query.dateFormat) {
-            def additionalTimeoffset = grailsApplication.config.getProperty('postie.forceAllAlertsGetSent', Boolean, false) ? 24 * 180 : 1
+            def additionalTimeoffset = grailsApplication.config.getProperty('mail.details.forceAllAlertsGetSent', Boolean, false) ? 24 * 180 : 1
             def dateToUse = DateUtils.addSeconds(new Date(), -1 * frequency.periodInSeconds * additionalTimeoffset)
             // date one year prior from today.
             def dateLastYear = DateUtils.addYears(new Date(), -1)
@@ -878,7 +878,7 @@ class NotificationService {
             if (!queryService.isBioSecurityQuery(query)) {
                 log.debug("Running query: " + query.name)
                 boolean hasUpdated = checkStatus(query, frequency)
-                Boolean forceUpdate = grailsApplication.config.getProperty('postie.forceAllAlertsGetSent', Boolean, false)
+                Boolean forceUpdate = grailsApplication.config.getProperty('mail.details.forceAllAlertsGetSent', Boolean, false)
 
                 if (forceUpdate || hasUpdated && sendEmails) {
                     log.debug("Query has been updated. Sending emails....")

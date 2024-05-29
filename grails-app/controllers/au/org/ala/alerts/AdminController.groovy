@@ -64,7 +64,7 @@ class AdminController {
             try {
                 sendMail {
                     to user.email.toString()
-                    from grailsApplication.config.postie.emailInfoAddressTitle + "<" + grailsApplication.config.postie.emailInfoSender + ">"
+                    from grailsApplication.config.mail.details.infoAddressTitle + "<" + grailsApplication.config.mail.details.infoSender + ">"
                     subject params.emailSubject
                     body(view: "/email/htmlEmail",
                             plugin: "email-confirmation",
@@ -111,7 +111,7 @@ class AdminController {
                     log.info "Sending email to: " + email
                     sendMail {
                         to email.toString()
-                        from grailsApplication.config.postie.emailInfoAddressTitle + "<" + grailsApplication.config.postie.emailInfoSender + ">"
+                        from grailsApplication.config.mail.details.infoAddressTitle + "<" + grailsApplication.config.mail.details.infoSender + ">"
                         subject params.emailSubject
                         body(view: "/email/htmlEmail",
                                 plugin: "email-confirmation",

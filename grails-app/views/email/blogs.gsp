@@ -1,9 +1,8 @@
 <%@ page contentType="text/html"%>
 <%@ page import="java.text.SimpleDateFormat" %>
 <%@ page import="org.apache.commons.lang3.StringUtils" %>
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<%@ page contentType="text/html;charset=UTF-8" %>
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="format-detection" content="telephone=no">
   <meta name="x-apple-disable-message-reformatting">
@@ -172,41 +171,38 @@
         <div class="default-font large-white-font">Latest ALA Blog Updates</div>
         <br>
         <div class="default-font">
-          <b>${new SimpleDateFormat("dd-MMMM-yyyy").format(new Date())}</b>
+          <b>${new SimpleDateFormat("dd MMMM yyyy").format(new Date())}</b>
         </div>
       </div>
 
       <g:each status="i" in="${records}" var="blog">
         <div class="blog-div" >
           <div style="display: inline-flex; flex-direction: row; justify-content: space-between; flex-grow: 1; ">
-            <div name="thumbnail-image" class="blog-thumbnail-div" style="width: 30%;">
-              <g:if test="${blog?._links?.'wp:featuredmedia'}">
-                <%
-                  if (blog._links['wp:featuredmedia'].size() > 0) {
-                    // Choose the first one. Need to be updated if we have multiple images
-                    def featuredMedia = blog._links['wp:featuredmedia'][0]
-                    def imageUrl = "${featuredMedia?.href}"
-                    def url = new URL(imageUrl)
-                    def connection = url.openConnection() as HttpURLConnection
-                    int responseCode = connection.responseCode
-                    if (responseCode == 404) {
-                      // Handle the case where the image URL returns a 404 status code
-                       out <<  "<img src=\"${grailsApplication.config.grails.serverURL + '/assets/email/no-img-av-ALAsilver.png'}\" height='80' alt='Sorry, no image availabe' > "
-                    } else {
-                      // Handle the case where the image URL returns a different status code
-                      out << "<img src=\"${imageUrl}\" alt=\"${raw(blog.title.rendered)}\">"
-                    }
-                  }
-                %>
-
-              </g:if>
-              <g:else>
-                <i class="bi bi-images"></i>
-              </g:else>
-
-
-            </div>
-            <div style="width: 70%;">
+%{--            <div name="thumbnail-image" class="blog-thumbnail-div" style="width: 30%;">--}%
+%{--              <g:if test="${blog?._links?.'wp:featuredmedia'}">--}%
+%{--                <%--}%
+%{--                  if (blog._links['wp:featuredmedia'].size() > 0) {--}%
+%{--                    // Choose the first one. Need to be updated if we have multiple images--}%
+%{--                    def featuredMedia = blog._links['wp:featuredmedia'][0]--}%
+%{--                    def imageUrl = "${featuredMedia?.href}"--}%
+%{--                    def url = new URL(imageUrl)--}%
+%{--                    def connection = url.openConnection() as HttpURLConnection--}%
+%{--                    int responseCode = connection.responseCode--}%
+%{--                    if (responseCode == 404) {--}%
+%{--                      // Handle the case where the image URL returns a 404 status code--}%
+%{--                       out <<  "<img src=\"${grailsApplication.config.grails.serverURL + '/assets/email/no-img-av-ALAsilver.png'}\" height='80' alt='Sorry, no image availabe' > "--}%
+%{--                    } else {--}%
+%{--                      // Handle the case where the image URL returns a different status code--}%
+%{--                      out << "<img src=\"${imageUrl}\" alt=\"${raw(blog.title.rendered)}\">"--}%
+%{--                    }--}%
+%{--                  }--}%
+%{--                %>--}%
+%{--              </g:if>--}%
+%{--              <g:else>--}%
+%{--                <i class="bi bi-images"></i>--}%
+%{--              </g:else>--}%
+%{--            </div>--}%
+            <div style="width: 100%;">
               <a class="blog-title-font ala-color" href="${blog.link}" ><b>${raw(blog.title.rendered)}</b></a>
               <div class="blog-content-font">${raw(blog.excerpt.rendered)}</div>
             </div>
