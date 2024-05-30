@@ -210,10 +210,10 @@ environments:
                 url: https://api.test.ala.org.au/userdetails/cognito/
         mail:
             details:
-                sender: "alerts-dev@ala.org.au"
+                sender: "alerts-test@ala.org.au"
                 alertAddressTitle: "Atlas alerts [Dev]"
                 infoAddressTitle: "Atlas of Living Australia [Dev]"
-                infoSender: "alerts-dev@ala.org.au"
+                infoSender: "alerts-test@ala.org.au"
     test:
         grails:
             serverURL: "http://dev.ala.org.au:8080"

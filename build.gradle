@@ -132,7 +132,10 @@ dependencies {
     implementation "org.apache.httpcomponents:httpcore:4.4.16"
 
     implementation 'dk.glasius:external-config:3.1.1'
-    implementation 'org.grails.plugins:mail:3.0.0'
+
+    //Using AWS SES as email provider
+    implementation 'org.grails.plugins:mail:4.0.0'
+    implementation 'au.org.ala:ala-mail:1.0.0-SNAPSHOT'
 
     implementation 'org.grails.plugins:schwartz-monitor:2.0.1.ALA-SNAPSHOT'
     implementation 'org.grails.plugins:quartz:2.0.13'

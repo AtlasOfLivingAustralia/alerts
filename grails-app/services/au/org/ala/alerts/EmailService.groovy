@@ -13,7 +13,6 @@ class EmailService {
     def diffService
     def queryService
     def grailsApplication
-    def alertsWebService
     def messageSource
     def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
     // this is the date format of 'created' in user assertions
@@ -47,7 +46,7 @@ class EmailService {
         def emailModel = generateEmailModel(notification, queryResult)
         def user = notification.user
         def localeSubject = messageSource.getMessage("emailservice.update.subject", [notification.query.name] as Object[], siteLocale)
-        if (grailsApplication.config.mail.enabled && !user.locked) {
+        if (grailsApplication.config.getProperty("mail.enabled", Boolean, false) && !user.locked) {
             log.info "Sending email to ${user.email} for ${notification.query.name}"
             sendMail {
                 from grailsApplication.config.mail.details.alertAddressTitle + "<" + grailsApplication.config.mail.details.sender + ">"
@@ -58,7 +57,7 @@ class EmailService {
                         model: emailModel
                 )
             }
-        } else if (grailsApplication.config.mail.enabled && user.locked) {
+        } else if (grailsApplication.config.getProperty("mail.enabled", Boolean, false) && user.locked) {
             log.warn "Email not sent to locked user: ${user.email}"
         } else {
             log.info("Email would have been sent to: " + user.email)

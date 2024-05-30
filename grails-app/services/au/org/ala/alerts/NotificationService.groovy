@@ -2,6 +2,7 @@ package au.org.ala.alerts
 
 import com.jayway.jsonpath.JsonPath
 import grails.gorm.transactions.NotTransactional
+import grails.util.Holders
 import org.apache.http.entity.ContentType
 import grails.converters.JSON
 import org.apache.commons.io.IOUtils

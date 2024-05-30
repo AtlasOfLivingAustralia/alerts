@@ -3,11 +3,9 @@ package au.org.ala.alerts
 import grails.util.Holders
 import groovy.sql.Sql
 import org.apache.http.entity.ContentType
-import org.grails.web.json.JSONObject
 import org.springframework.dao.DataIntegrityViolationException
 import grails.gorm.transactions.Transactional
 
-import java.util.regex.Pattern
 
 
 @Transactional
