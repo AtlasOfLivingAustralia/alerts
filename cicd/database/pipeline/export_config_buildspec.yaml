@@ -10,7 +10,7 @@ env:
     DEBIAN_FRONTEND: "noninteractive"
   exported-variables:
     - CODEBUILD_BUILD_NUMBER
-    - ALERTS_STACK_FILE_PFIX
+    - ALERTS_STACK_FILE
     - PRODUCT_NAME
     - PRODUCT_COMPONENT
     - SLACK_DEPLOY_NOTIFICATION
@@ -53,7 +53,7 @@ phases:
       - echo clean branch is $CLEAN_BRANCH
       - echo Environment is $ENVIRONMENT
       - echo generating environment vars...
-      - cicd/gen_env_vars.py --env $ENVIRONMENT --clean-branch $CLEAN_BRANCH --conf cicd/$PRODUCT_COMPONENT/config.ini > env.txt
+      - cicd/gen_env_vars.py --env $ENVIRONMENT --clean-branch $CLEAN_BRANCH --conf cicd/alerts/config.ini > env.txt
       - echo loading config..
       - set -a ; source env.txt ; set +a
     finally:
@@ -62,19 +62,10 @@ phases:
   build:
     commands:
       - echo Entered the build phase...
-      # package templates and generate the template configs
-      - |
-          for i in cicd/$PRODUCT_COMPONENT/app/*.yaml; do
-            stack=$(echo $i | sed 's/.yaml$//')
-            aws cloudformation package --template-file $stack.yaml \
-                                       --s3-bucket $AWS_ARTIFACTS_BUCKET \
-                                       --s3-prefix $PRODUCT_NAME/$PRODUCT_COMPONENT/$CLEAN_BRANCH-$CODEBUILD_BUILD_NUMBER \
-                                       --output-template-file ${stack}.yaml \
-                                       --region $REGION
-
-            echo Generating the template config for $stack
-            cicd/gen_template_config.py  --template ${stack}_template_config.j2 > ${stack}_template_config.json
-          done
+      # alerts template config
+      - echo Generating the alerts template config
+      - cicd/gen_template_config.py  --template cicd/alerts/pipeline/alerts_template_config.j2 > cicd/alerts/app/alerts_template_config.json
+      - env
     finally:
       - #echo This always runs
 
@@ -85,6 +76,7 @@ phases:
 
 artifacts:
   files:
-    - cicd/$PRODUCT_COMPONENT/app/*
+    - cicd/alerts/app/$ALERTS_STACK_FILE
+    - cicd/alerts/app/alerts_template_config.json
   name: BuildTemplateConfigArtifact
   discard-paths: no

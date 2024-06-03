@@ -1,18 +1,21 @@
 version: 0.2
 
+env:
+  shell: bash
+  variables:
+    JAVA_TOOL_OPTIONS: -Dhttps.protocols=TLSv1.2
+
 phases:
   install:
-    runtime-versions:
-      java: corretto11
     commands:
       - echo Installing dependencies...
-      - sudo su && apt update -y
+      - apt update -y
         && cat /etc/lsb-release
         && apt-get -q -y install openjdk-11-jdk
         && apt-get -q -y install unzip
         && apt-get -q -y install zip
         && apt-get -q -y install curl
-        && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+        && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
         && add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
         && apt-get update
         && apt-get install -y docker-ce
@@ -21,7 +24,7 @@ phases:
         && ./get_helm.sh
         && curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
         && chmod +x kubectl
-        && sudo mv kubectl /usr/local/bin/
+        && mv kubectl /usr/local/bin/
 
   build:
     commands:
@@ -35,11 +38,6 @@ phases:
     commands:
       - echo Post-build phase...
       - echo Build completed on `date`
-
-env:
-  shell: bash
-  variables:
-    JAVA_TOOL_OPTIONS: -Dhttps.protocols=TLSv1.2
 
 cache:
   paths:
