@@ -1,0 +1,53 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: 'Aurora MySQL RDS Instance with AutoScaling'
+
+Parameters:
+  DBVersion:
+    Type: String
+    Description: The version of MySQL for the RDS instance
+  MinCapacity:
+    Type: Number
+    Description: The minimum capacity for the autoscaling group
+  MaxCapacity:
+    Type: Number
+    Description: The maximum capacity for the autoscaling group
+  VPCID:
+    Type: AWS::EC2::VPC::Id
+    Description: The ID of the VPC
+  SubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: The IDs of the subnets
+
+Resources:
+
+  AuroraDBCluster:
+    Type: AWS::RDS::DBCluster
+    Properties:
+      Engine: aurora-mysql
+      EngineVersion: !Ref DBVersion
+      DatabaseName: MyDatabase
+      MasterUsername: admin
+      MasterUserPassword: '{{resolve:secretsmanager:ala-secrets:db_pass:SecretString}}'
+      VpcSecurityGroupIds: 
+        - sg-0abcd1234efgh5678
+      DBSubnetGroupName: !Ref DBSubnetGroup
+
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Subnet group for Aurora DB Cluster
+      SubnetIds: !Ref SubnetIds
+
+  AuroraDBClusterScalingPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: AuroraDBClusterScalingPolicy
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref AuroraDBCluster
+      TargetTrackingScalingPolicyConfiguration:
+        TargetValue: 50.0
+        ScaleInCooldown: 60
+        ScaleOutCooldown: 60
+        PredefinedMetricSpecification:
+          PredefinedMetricType: RDSReaderAverageCPUUtilization

@@ -41,9 +41,6 @@ Parameters:
   pPipelineFingerprint:
     Type: String
     Description: The fingerprint of the pipeline, used to determine if it's been modified
-  pProductComponent:
-    Type: String
-    Description: The name of the product component
   pProductName:
     Type: String
     Description: The name of the product
@@ -62,9 +59,6 @@ Conditions:
   IsDev: !Equals
     - !Ref pEnvironment
     - development
-  AutoDeploy: !Equals
-    - !Ref pAutoDeploy
-    - true
 
 Resources:
  
@@ -89,7 +83,7 @@ Resources:
             Value: !Ref pCleanBranch
       Source:
         Type: CODEPIPELINE
-        BuildSpec: !Sub cicd/${pProductComponent}/pipeline/export_config_buildspec.yaml
+        BuildSpec: cicd/alerts/pipeline/export_config_buildspec.yaml
       TimeoutInMinutes: 5
 
   BuildAlerts:
@@ -111,7 +105,7 @@ Resources:
             Value: !Ref pCleanBranch
       Source:
         Type: CODEPIPELINE
-        BuildSpec: !Sub cicd/${pProductComponent}/pipeline/alerts_buildspec.yaml
+        BuildSpec: cicd/alerts/pipeline/alerts_buildspec.yml
       TimeoutInMinutes: 30
 
   DeployAlerts:
@@ -135,7 +129,7 @@ Resources:
             Value: !Ref pEksClusterName
       Source:
         Type: CODEPIPELINE
-        BuildSpec: !Sub cicd/${pProductComponent}/pipeline/deploy_alerts_buildspec.yaml
+        BuildSpec: cicd/alerts/pipeline/deploy_alerts_buildspec.yml
       TimeoutInMinutes: 20
 
   DeployNotification:
@@ -157,7 +151,7 @@ Resources:
             Value: !Ref pCleanBranch       
       Source:                             
         Type: CODEPIPELINE
-        BuildSpec: !Sub cicd/${pProductComponent}/pipeline/deploy_notification_buildspec.yaml
+        BuildSpec: cicd/alerts/pipeline/deploy_notification_buildspec.yaml
       TimeoutInMinutes: 5
 
   Pipeline:
@@ -178,14 +172,14 @@ Resources:
       Triggers:
         - ProviderType: CodeStarSourceConnection
           GitConfiguration:
-            Push:
-              - Branches:
-                  Includes:
-                    - !If [ AutoDeploy, !Ref pGitHubBranch, bogo-branch ]
-                FilePaths:
-                  Includes:
-                    - !Sub cicd/${pProductComponent}/**
-            SourceActionName: CheckoutSrc
+               Push: 
+                 - Branches:
+                     Excludes:
+                       - !If [ IsProd, !Ref pGitHubBranch, bogo-branch ]
+                   FilePaths:
+                     Includes:
+                       - cicd/database/**
+               SourceActionName: CheckoutSrc
       Variables:
         - Name: SRC_BRANCH
           DefaultValue: !Ref pGitHubBranch
@@ -242,9 +236,9 @@ Resources:
               Version: 1
               Provider: CloudFormation
             Configuration:
-              TemplatePath: !Sub 'ExportConfigArtifact::cicd/${pProductComponent}/app/#{ExportConfigNS.ALERTS_STACK_FILE_PFIX}'
+              TemplatePath: 'ExportConfigArtifact::cicd/alerts/app/#{ExportConfigNS.ALERTS_STACK_FILE}'
               ActionMode: !If [ IsDev, REPLACE_ON_FAILURE, CREATE_UPDATE ]
-              TemplateConfiguration: !Sub 'ExportConfigArtifact::cicd/${pProductComponent}/app/#{ExportConfigNS.ALERTS_STACK_FILE_PFIX}_template_config.json'
+              TemplateConfiguration: 'ExportConfigArtifact::cicd/alerts/app/alerts_template_config.json'
               Capabilities: CAPABILITY_IAM,CAPABILITY_AUTO_EXPAND,CAPABILITY_NAMED_IAM
               RoleArn: !Ref pCloudFormationServiceRole
               StackName: !Ref pAlertsStackName
@@ -267,8 +261,7 @@ Resources:
                   { "name":"SRC_BRANCH", "value":"${pGitHubBranch}" },
                   { "name":"COMMIT_ID", "value":"#{CheckoutSrcNS.CommitId}" },
                   { "name":"ENVIRONMENT", "value":"${pEnvironment}" },
-                  { "name":"PIPELINE_FINGERPRINT", "value":"#{variables.PIPELINE_FINGERPRINT}" },
-                  { "name":"ALERTS_ECR_REPOSITORY", "value":"#{AlertsCloudFormationOutNS.AlertsRepositoryArn}" }
+                  { "name":"PIPELINE_FINGERPRINT", "value":"#{variables.PIPELINE_FINGERPRINT}" }
                 ]
             InputArtifacts:
               - Name: 'SourceArtifact'
@@ -297,8 +290,7 @@ Resources:
                   { "name":"SRC_BRANCH", "value":"${pGitHubBranch}" },
                   { "name":"COMMIT_ID", "value":"#{CheckoutSrcNS.CommitId}" },
                   { "name":"ENVIRONMENT", "value":"${pEnvironment}" },
-                  { "name":"PIPELINE_FINGERPRINT", "value":"#{variables.PIPELINE_FINGERPRINT}" },
-                  { "name":"ALERTS_ECR_REPOSITORY", "value":"#{AlertsCloudFormationOutNS.AlertsRepositoryArn}" }
+                  { "name":"PIPELINE_FINGERPRINT", "value":"#{variables.PIPELINE_FINGERPRINT}" }
                 ]
             InputArtifacts:
               - Name: 'SourceArtifact'
@@ -360,26 +352,6 @@ Resources:
               StackName: !Ref AWS::StackName
               RoleArn: !Ref pCloudFormationServiceRole
             RunOrder: 3
-
-  BuildAlertsCodeBuildLogGroup:
-    Type: AWS::Logs::LogGroup
-    DeletionPolicy: Delete
-    Properties:
-      LogGroupName: !Sub /aws/codebuild/${BuildAlerts}
-      RetentionInDays: 30
-      Tags:
-        - Key: Name
-          Value: !Ref AWS::StackName
-
-  DeployAlertsCodeBuildLogGroup:
-    Type: AWS::Logs::LogGroup
-    DeletionPolicy: Delete
-    Properties:
-      LogGroupName: !Sub /aws/codebuild/${DeployAlerts}
-      RetentionInDays: 30
-      Tags:
-        - Key: Name
-          Value: !Ref AWS::StackName
 
   ExportConfigCodeBuildLogGroup:
     Type: AWS::Logs::LogGroup

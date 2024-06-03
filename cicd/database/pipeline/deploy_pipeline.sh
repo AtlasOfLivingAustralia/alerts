@@ -150,7 +150,6 @@ aws cloudformation deploy \
         pGitHubOwner=$GITHUB_OWNER \
         pGitHubRepositoryName=$GITHUB_REPO_NAME \
         pPipelineFingerprint=$PIPELINE_MD5 \
-        pProductComponent=$PRODUCT_COMPONENT \
         pProductName=$PRODUCT_NAME \
         pRestartExecutionOnUpdate=$RESTART_PIPELINE_ON_UPDATE \
         pAlertsStackName=$ALERTS_STACK_NAME-$clean_branch \
