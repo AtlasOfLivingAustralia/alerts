@@ -3,6 +3,9 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: {{ include "ala-alerts.fullname" . }}
+  annotations:
+    kubernetes.io/ingress.class: {{ .Values.ingress.className }}
+    alb.ingress.kubernetes.io/scheme: internet-facing
   labels:
     {{- include "ala-alerts.labels" . | nindent 4 }}
 spec:
