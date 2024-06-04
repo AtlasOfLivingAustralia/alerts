@@ -53,7 +53,7 @@ phases:
       - echo clean branch is $CLEAN_BRANCH
       - echo Environment is $ENVIRONMENT
       - echo generating environment vars...
-      - cicd/gen_env_vars.py --env $ENVIRONMENT --clean-branch $CLEAN_BRANCH --conf cicd/alerts/config.ini > env.txt
+      - cicd/gen_env_vars.py --env $ENVIRONMENT --clean-branch $CLEAN_BRANCH --conf cicd/$PRODUCT_COMPONENT/config.ini > env.txt
       - echo loading config..
       - set -a ; source env.txt ; set +a
     finally:
