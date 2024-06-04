@@ -105,6 +105,7 @@ Resources:
                    - ',' 
                    - Fn::ImportValue:
                        Fn::Sub: ${pVpcStackName}-PriSubnets
+
   DbSecurityGrp:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -134,7 +135,6 @@ Resources:
                       - ${pProductName}-${ResourceName}
                       - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
       DBClusterIdentifier: !Sub ${pDbInstanceName}-cluster
-      DBClusterInstanceClass: !Ref pInstanceClass
       DBClusterParameterGroupName: !Ref ClusterParamGrp
       DBSubnetGroupName: !Ref DbSubnetGrp
       DeletionProtection: !Ref pDeletionProtection
