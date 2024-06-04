@@ -2,9 +2,6 @@ AWSTemplateFormatVersion: "2010-09-09"
 Description: Code pipeline for the alerts database
 
 Parameters:
-  pArtifactsBucket:
-    Type: String
-    Description: Common artifacts bucket used by CodePipeline and CodeBuild
   pAutoDeploy:
     Type: String
     Description: Sets the pipeline to auto deploy on repo changes
@@ -77,9 +74,9 @@ Resources:
         Image: aws/codebuild/standard:5.0
         EnvironmentVariables:
           - Name: ARTIFACTS_BUCKET
-            Value: !Ref pArtifactsBucket
-          - Name: CLEAN_BRANCH
-            Value: !Ref pCleanBranch
+            Value:
+              Fn::ImportValue:
+                Fn::Sub: ${pBucketsStackName}-${AWS::Region}-CodePipelineArtifactBucketName
       Source:
         Type: CODEPIPELINE
         BuildSpec: !Sub cicd/${pProductComponent}/pipeline/export_config_buildspec.yaml
@@ -101,9 +98,6 @@ Resources:
         Type: LINUX_CONTAINER              
         ComputeType: BUILD_GENERAL1_SMALL  
         Image: aws/codebuild/standard:5.0  
-        EnvironmentVariables:              
-          - Name: CLEAN_BRANCH             
-            Value: !Ref pCleanBranch       
       Source:                             
         Type: CODEPIPELINE
         BuildSpec: !Sub cicd/${pProductComponent}/pipeline/deploy_notification_buildspec.yaml
@@ -178,10 +172,11 @@ Resources:
               ProjectName: !Ref ExportConfig
               EnvironmentVariables: !Sub |
                  [
-                   { "name":"SRC_BRANCH", "value":"${pGitHubBranch}" },
+                   { "name":"CLEAN_BRANCH", "value":"${pCleanBranch}" },
                    { "name":"COMMIT_ID", "value":"#{CheckoutSrcNS.CommitId}" },
                    { "name":"ENVIRONMENT", "value":"${pEnvironment}" },
-                   { "name":"PIPELINE_FINGERPRINT", "value":"#{variables.PIPELINE_FINGERPRINT}" }
+                   { "name":"PIPELINE_FINGERPRINT", "value":"#{variables.PIPELINE_FINGERPRINT}" },
+                   { "name":"SRC_BRANCH", "value":"${pGitHubBranch}" }
                  ]
             Namespace: ExportConfigNS
             InputArtifacts:
@@ -222,6 +217,7 @@ Resources:
               EnvironmentVariables: !Sub |
                 [
                   { "name":"AUTHOR", "value":"#{CheckoutSrcNS.AuthorDisplayName}" },
+                  { "name":"CLEAN_BRANCH", "value":"${pCleanBranch}" },
                   { "name":"COMMIT_ID", "value":"#{CheckoutSrcNS.CommitId}" },
                   { "name":"ENVIRONMENT", "value":"${pEnvironment}" },
                   { "name":"PRODUCT_COMPONENT", "value":"#{ExportConfigNS.PRODUCT_COMPONENT}" },
