@@ -52,6 +52,23 @@ Resources:
         - Key: Branch
           Value: !Ref pCleanBranch
 
+  AlertsSecrets:
+    Type: 'AWS::SecretsManager::Secret'
+    Properties:
+      Name: !Sub 
+              - alerts-${ResourceName}
+              - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
+      Description: !Sub Alerts app ${pEnvironment} secrets
+      GenerateSecretString: 
+        GenerateStringKey: db-password
+        PasswordLength: 12
+        SecretStringTemplate: |
+          {
+            "db-password": ""
+          }
+
+
+
 Outputs:
 
   AlertsRepositoryArn:
