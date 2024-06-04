@@ -67,7 +67,7 @@ phases:
           for i in cicd/$PRODUCT_COMPONENT/app/*.yaml; do
             stack=$(echo $i | sed 's/.yaml$//')
             aws cloudformation package --template-file $stack.yaml \
-                                       --s3-bucket $AWS_ARTIFACTS_BUCKET \
+                                       --s3-bucket $ARTIFACTS_BUCKET \
                                        --s3-prefix $PRODUCT_NAME/$PRODUCT_COMPONENT/$CLEAN_BRANCH-$CODEBUILD_BUILD_NUMBER \
                                        --output-template-file ${stack}.yaml \
                                        --region $REGION

@@ -5,27 +5,18 @@ Parameters:
   pAlertsStackName:
     Type: String
     Description: The name of the alerts stack
-  pArtifactsBucket:
-    Type: String
-    Description: Common artifacts bucket used by CodePipeline and CodeBuild
   pAutoDeploy:
     Type: String
     Description: Sets the pipeline to auto deploy on repo changes
+  pBootstrapStackName:
+    Type: String
+    Description: the name of the bootstrap stack
+  pBucketsStackName:
+    Type: String
+    Description: the name of the bucket stack
   pCleanBranch:
     Type: String
     Description: The clean branch, can be used in resource names
-  pCloudFormationServiceRole:
-    Type: String
-    Description: Common service role used by Cloudformation
-  pCodeBuildServiceRole:
-    Type: String
-    Description: Common service role used by CodeBuild
-  pCodePipelineServiceRole:
-    Type: String
-    Description: Common service role used by CodePipeline
-  pCodestarConnection:
-    Type: String
-    Description: Codestar connection ARN
   pEksClusterName:
     Type: String
     Description: The name of the EKS cluster
@@ -75,7 +66,9 @@ Resources:
               - ${pProductName}-export-config-${ResourceName}
               - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
       Description: Load the environment and build the CloudFormation template config file
-      ServiceRole: !Ref pCodeBuildServiceRole
+      ServiceRole:
+               Fn::ImportValue:
+                 Fn::Sub: ${pBootstrapStackName}-CodeBuildServiceRoleArn
       Artifacts:
         Type: CODEPIPELINE
       Environment:
@@ -83,8 +76,10 @@ Resources:
         ComputeType: BUILD_GENERAL1_SMALL
         Image: aws/codebuild/standard:5.0
         EnvironmentVariables:
-          - Name: AWS_ARTIFACTS_BUCKET
-            Value: !Ref pArtifactsBucket
+          - Name: ARTIFACTS_BUCKET
+            Value:
+              Fn::ImportValue:
+                Fn::Sub: ${pBucketsStackName}-${AWS::Region}-CodePipelineArtifactBucketName
           - Name: CLEAN_BRANCH
             Value: !Ref pCleanBranch
       Source:
@@ -99,7 +94,9 @@ Resources:
         - ${pProductName}-build-alerts-${ResourceName}
         - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
       Description: Build the alerts project
-      ServiceRole: !Ref pCodeBuildServiceRole
+      ServiceRole:
+               Fn::ImportValue:
+                 Fn::Sub: ${pBootstrapStackName}-CodeBuildServiceRoleArn
       Artifacts:
         Type: CODEPIPELINE
       Environment:
@@ -121,7 +118,9 @@ Resources:
         - ${pProductName}-deploy-alerts-${ResourceName}
         - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
       Description: Deploy alerts
-      ServiceRole: !Ref pCodeBuildServiceRole
+      ServiceRole:
+               Fn::ImportValue:
+                 Fn::Sub: ${pBootstrapStackName}-CodeBuildServiceRoleArn
       Artifacts:
         Type: CODEPIPELINE
       Environment:
@@ -145,7 +144,9 @@ Resources:
               - ${pProductName}-deploy-notification-${ResourceName}
               - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
       Description: Send out the deploy notifications
-      ServiceRole: !Ref pCodeBuildServiceRole
+      ServiceRole:
+               Fn::ImportValue:
+                 Fn::Sub: ${pBootstrapStackName}-CodeBuildServiceRoleArn
       Artifacts:                           
         Type: CODEPIPELINE                 
       Environment:                         
@@ -167,10 +168,14 @@ Resources:
               - ${pProductName}-${pProductComponent}-${ResourceName}
               - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
       PipelineType: V2
-      RoleArn: !Ref pCodePipelineServiceRole
+      RoleArn:
+            Fn::ImportValue:
+              Fn::Sub: ${pBootstrapStackName}-CodePipelineServiceRoleArn
       ArtifactStore:
         Type: S3
-        Location: !Ref pArtifactsBucket
+        Location:
+              Fn::ImportValue:
+                Fn::Sub: ${pBucketsStackName}-${AWS::Region}-CodePipelineArtifactBucketName
       DisableInboundStageTransitions:
         - Reason: To prevent accidental teardown
           StageName: Teardown
@@ -203,7 +208,9 @@ Resources:
               Provider: CodeStarSourceConnection
               Version: 1
             Configuration:
-              ConnectionArn: !Ref pCodestarConnection
+              ConnectionArn:
+                         Fn::ImportValue:
+                           Fn::Sub: ${pBootstrapStackName}-CodestarConnectionArn
               FullRepositoryId: !Sub ${pGitHubOwner}/${pGitHubRepositoryName}
               BranchName: !Ref pGitHubBranch
               OutputArtifactFormat: CODEBUILD_CLONE_REF
@@ -246,7 +253,9 @@ Resources:
               ActionMode: !If [ IsDev, REPLACE_ON_FAILURE, CREATE_UPDATE ]
               TemplateConfiguration: !Sub 'ExportConfigArtifact::cicd/${pProductComponent}/app/#{ExportConfigNS.ALERTS_STACK_FILE_PFIX}_template_config.json'
               Capabilities: CAPABILITY_IAM,CAPABILITY_AUTO_EXPAND,CAPABILITY_NAMED_IAM
-              RoleArn: !Ref pCloudFormationServiceRole
+              RoleArn:
+                   Fn::ImportValue:
+                     Fn::Sub: '${pBootstrapStackName}-CloudFormationServiceRoleArn'
               StackName: !Ref pAlertsStackName
             InputArtifacts:
               - Name: 'ExportConfigArtifact'
@@ -340,6 +349,19 @@ Resources:
             Configuration:
               CustomData: Approval required to tear down this stack
             RunOrder: 1
+          - Name: TeardownAlertsStack
+            ActionTypeId:
+              Owner: AWS
+              Category: Deploy
+              Version: 1
+              Provider: CloudFormation
+            Configuration:
+              ActionMode: DELETE_ONLY
+              StackName: !Ref pAlertsStackName
+              RoleArn:
+                Fn::ImportValue:
+                  Fn::Sub: '${pBootstrapStackName}-CloudFormationServiceRoleArn'
+            RunOrder: 2
           - Name: ApprovalForPipelineTeardown
             ActionTypeId:
               Owner: AWS
@@ -348,7 +370,7 @@ Resources:
               Provider: Manual
             Configuration:
               CustomData: Approval required to tear down this stack
-            RunOrder: 2
+            RunOrder: 3
           - Name: TeardownCodePipeline
             ActionTypeId:
               Owner: AWS
@@ -358,8 +380,10 @@ Resources:
             Configuration:
               ActionMode: DELETE_ONLY
               StackName: !Ref AWS::StackName
-              RoleArn: !Ref pCloudFormationServiceRole
-            RunOrder: 3
+              RoleArn:
+                   Fn::ImportValue:
+                     Fn::Sub: '${pBootstrapStackName}-CloudFormationServiceRoleArn'
+            RunOrder: 4
 
   BuildAlertsCodeBuildLogGroup:
     Type: AWS::Logs::LogGroup
