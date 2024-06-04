@@ -77,17 +77,10 @@ Resources:
       Description: Alerts DB instance parameter grp
       Family: aurora-mysql8.0
       Parameters:
-        query_cache_size: "{DBInstanceClassMemory/24}"
-        query_cache_type: 1
-        query_cache_min_res_unit: 2048
         long_query_time: 2
         slow_query_log: 1
         log_warnings: 2
-        net_read_timeout: 300
-        net_write_timeout: 300
         log_queries_not_using_indexes: 0
-        log_bin_trust_function_creators: 1
-        max_connect_errors: 100000
         performance_schema: 1
 
   ClusterParamGrp:
