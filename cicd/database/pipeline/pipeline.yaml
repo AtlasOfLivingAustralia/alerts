@@ -86,7 +86,7 @@ Resources:
     Type: AWS::CodeBuild::Project
     Properties:
       Name: !Sub 
-              - ${pProductName}-deploy-notification-${ResourceName}
+              - ${pProductName}-${pProductComponent}-deploy-notification-${ResourceName}
               - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
       Description: Send out the deploy notifications
       ServiceRole:
