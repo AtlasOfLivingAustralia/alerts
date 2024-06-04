@@ -80,8 +80,6 @@ Resources:
             Value:
               Fn::ImportValue:
                 Fn::Sub: ${pBucketsStackName}-${AWS::Region}-CodePipelineArtifactBucketName
-          - Name: CLEAN_BRANCH
-            Value: !Ref pCleanBranch
       Source:
         Type: CODEPIPELINE
         BuildSpec: !Sub cicd/${pProductComponent}/pipeline/export_config_buildspec.yaml
@@ -103,9 +101,6 @@ Resources:
         Type: LINUX_CONTAINER
         ComputeType: BUILD_GENERAL1_SMALL
         Image: aws/codebuild/standard:5.0
-        EnvironmentVariables:
-          - Name: CLEAN_BRANCH
-            Value: !Ref pCleanBranch
       Source:
         Type: CODEPIPELINE
         BuildSpec: !Sub cicd/${pProductComponent}/pipeline/alerts_buildspec.yaml
@@ -127,11 +122,6 @@ Resources:
         Type: LINUX_CONTAINER
         ComputeType: BUILD_GENERAL1_SMALL
         Image: aws/codebuild/standard:5.0
-        EnvironmentVariables:
-          - Name: CLEAN_BRANCH
-            Value: !Ref pCleanBranch
-          - Name: EKS_CLUSTER_NAME
-            Value: !Ref pEksClusterName
       Source:
         Type: CODEPIPELINE
         BuildSpec: !Sub cicd/${pProductComponent}/pipeline/deploy_alerts_buildspec.yaml
@@ -153,9 +143,6 @@ Resources:
         Type: LINUX_CONTAINER              
         ComputeType: BUILD_GENERAL1_SMALL  
         Image: aws/codebuild/standard:5.0  
-        EnvironmentVariables:              
-          - Name: CLEAN_BRANCH             
-            Value: !Ref pCleanBranch       
       Source:                             
         Type: CODEPIPELINE
         BuildSpec: !Sub cicd/${pProductComponent}/pipeline/deploy_notification_buildspec.yaml
@@ -230,10 +217,12 @@ Resources:
               ProjectName: !Ref ExportConfig
               EnvironmentVariables: !Sub |
                  [
-                   { "name":"SRC_BRANCH", "value":"${pGitHubBranch}" },
+                   { "name":"CLEAN_BRANCH", "value":"${pCleanBranch}" },
                    { "name":"COMMIT_ID", "value":"#{CheckoutSrcNS.CommitId}" },
                    { "name":"ENVIRONMENT", "value":"${pEnvironment}" },
-                   { "name":"PIPELINE_FINGERPRINT", "value":"#{variables.PIPELINE_FINGERPRINT}" }
+                   { "name":"PIPELINE_FINGERPRINT", "value":"#{variables.PIPELINE_FINGERPRINT}" },
+                   { "name":"PRODUCT_COMPONENT", "value":"${pProductComponent}" },
+                   { "name":"SRC_BRANCH", "value":"${pGitHubBranch}" }
                  ]
             Namespace: ExportConfigNS
             InputArtifacts:
@@ -273,11 +262,12 @@ Resources:
               ProjectName: !Ref BuildAlerts
               EnvironmentVariables: !Sub |
                 [
-                  { "name":"SRC_BRANCH", "value":"${pGitHubBranch}" },
+                  { "name":"ALERTS_ECR_REPOSITORY", "value":"#{AlertsCloudFormationOutNS.AlertsRepositoryArn}" },
+                  { "name":"CLEAN_BRANCH", "value":"${pCleanBranch}" },
                   { "name":"COMMIT_ID", "value":"#{CheckoutSrcNS.CommitId}" },
                   { "name":"ENVIRONMENT", "value":"${pEnvironment}" },
                   { "name":"PIPELINE_FINGERPRINT", "value":"#{variables.PIPELINE_FINGERPRINT}" },
-                  { "name":"ALERTS_ECR_REPOSITORY", "value":"#{AlertsCloudFormationOutNS.AlertsRepositoryArn}" }
+                  { "name":"SRC_BRANCH", "value":"${pGitHubBranch}" }
                 ]
             InputArtifacts:
               - Name: 'SourceArtifact'
@@ -303,11 +293,13 @@ Resources:
               ProjectName: !Ref DeployAlerts
               EnvironmentVariables: !Sub |
                 [
-                  { "name":"SRC_BRANCH", "value":"${pGitHubBranch}" },
+                  { "name":"ALERTS_ECR_REPOSITORY", "value":"#{AlertsCloudFormationOutNS.AlertsRepositoryArn}" },
+                  { "name":"CLEAN_BRANCH", "value":"${pCleanBranch}" },
                   { "name":"COMMIT_ID", "value":"#{CheckoutSrcNS.CommitId}" },
+                  { "name":"EKS_CLUSTER_NAME", "value":"${pEksClusterName}" },
                   { "name":"ENVIRONMENT", "value":"${pEnvironment}" },
                   { "name":"PIPELINE_FINGERPRINT", "value":"#{variables.PIPELINE_FINGERPRINT}" },
-                  { "name":"ALERTS_ECR_REPOSITORY", "value":"#{AlertsCloudFormationOutNS.AlertsRepositoryArn}" }
+                  { "name":"SRC_BRANCH", "value":"${pGitHubBranch}" }
                 ]
             InputArtifacts:
               - Name: 'SourceArtifact'
@@ -324,6 +316,7 @@ Resources:
               EnvironmentVariables: !Sub |
                 [
                   { "name":"AUTHOR", "value":"#{CheckoutSrcNS.AuthorDisplayName}" },
+                  { "name":"CLEAN_BRANCH", "value":"${pCleanBranch}" },
                   { "name":"COMMIT_ID", "value":"#{CheckoutSrcNS.CommitId}" },
                   { "name":"ENVIRONMENT", "value":"${pEnvironment}" },
                   { "name":"PRODUCT_COMPONENT", "value":"#{ExportConfigNS.PRODUCT_COMPONENT}" },
