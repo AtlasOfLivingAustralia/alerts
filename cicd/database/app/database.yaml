@@ -1,50 +1,255 @@
 AWSTemplateFormatVersion: '2010-09-09'
 
-Description: 'Aurora MySQL RDS Instance with AutoScaling'
+Description: 'An Aurora MySQL RDS Instance with AutoScaling'
 
 Parameters:
-  DBVersion:
+  pAdminUser:
+    Description: The username for the RDS admin user
+    Type: String
+    Default: admin
+  pBacktrackWindow:
+    Description: Backtrack window in seconds
+    Type: Number
+  pBackupRetention:
+    Description: Backup retention period in days
+    Type: Number
+  pBuild:
+    Description: The CodeBuild build number
+    Type: Number
+  pCleanBranch:
+    Description: The clean branch
+    Type: String
+  pCreateReplica:
+    Description: Create a read replica
+    Type: String
+    AllowedValues:
+      - true
+      - false
+  pDbInstanceName:
+    Description: The db instance name. This gets used as part of the hostname to connect to the db
+    Type: String
+  pDbVersion:
     Type: String
     Description: The version of MySQL for the RDS instance
-  MinCapacity:
-    Type: Number
-    Description: The minimum capacity for the autoscaling group
-  MaxCapacity:
-    Type: Number
-    Description: The maximum capacity for the autoscaling group
-  sVpcStackName:
+  pDeletionProtection:
+    Description: Enable deletion protection
     Type: String
-    Description: The ID of the VPC
+    AllowedValues:
+      - true
+      - false
+  pEnvironment:
+    Description: Environment for this RDS instance
+    AllowedValues:
+      - development
+      - testing
+      - staging
+      - production
+    Type: String
+  pInstanceClass:
+    Description: The RDS instance class
+    Type: String
+  pProductName:
+    Description: The product name
+    Type: String
+  pPerformanceInsights:
+    Description: Enable performance insights
+    Type: String
+    AllowedValues:
+      - true
+      - false
+  pVpcStackName:
+    Description: The name of the Bedrock VPC stack
+    Type: String
+
+Conditions: 
+  CreateReplica: !Equals
+                    - !Ref pCreateReplica
+                    - true
+  IsDev: !Equals
+            - !Ref pEnvironment
+            - development
 
 Resources:
 
-  AuroraDBCluster:
-    Type: AWS::RDS::DBCluster
+  DbParamGrp:
+    Type: AWS::RDS::DBParameterGroup
     Properties:
-      Engine: aurora-mysql
-      EngineVersion: !Ref DBVersion
-      DatabaseName: MyDatabase
-      MasterUsername: admin
-      MasterUserPassword: '{{resolve:secretsmanager:ala-secrets:db_pass:SecretString}}'
-      VpcSecurityGroupIds: 
-        - sg-0abcd1234efgh5678
-      DBSubnetGroupName: !Ref DBSubnetGroup
+      Description: Alerts DB instance parameter grp
+      Family: aurora-mysql8.0
+      Parameters:
+        query_cache_size: "{DBInstanceClassMemory/24}"
+        query_cache_type: 1
+        query_cache_min_res_unit: 2048
+        long_query_time: 2
+        slow_query_log: 1
+        log_warnings: 2
+        net_read_timeout: 300
+        net_write_timeout: 300
+        log_queries_not_using_indexes: 0
+        log_bin_trust_function_creators: 1
+        max_connect_errors: 100000
+        performance_schema: 1
 
-  DBSubnetGroup:
+  ClusterParamGrp:
+    Type: AWS::RDS::DBClusterParameterGroup
+    Properties: 
+      Description: Alerts cluster param group
+      Family: aurora-mysql8.0
+      Parameters: 
+        character_set_client: utf8mb4
+        character_set_connection: utf8mb4
+        character_set_database: utf8mb4
+        character_set_results: utf8mb4
+        character_set_server: utf8mb4
+        collation_connection: utf8mb4_unicode_ci
+        collation_server: utf8mb4_unicode_ci
+        time_zone: Australia/Sydney
+
+  DbSubnetGrp:
     Type: AWS::RDS::DBSubnetGroup
     Properties:
-      DBSubnetGroupDescription: Subnet group for Aurora DB Cluster
-      SubnetIds: !Ref SubnetIds
-
-  AuroraDBClusterScalingPolicy:
-    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+      DBSubnetGroupDescription: RDS subnet group
+      SubnetIds: !Split 
+                   - ',' 
+                   - Fn::ImportValue:
+                       Fn::Sub: ${pVpcStackName}-PriSubnets
+  DbSecurityGrp:
+    Type: AWS::EC2::SecurityGroup
     Properties:
-      PolicyName: AuroraDBClusterScalingPolicy
+      GroupDescription: Allow access from the VPC
+      VpcId:
+         Fn::ImportValue:
+           Fn::Sub: ${pVpcStackName}-Vpc
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 3306
+        ToPort: 3306
+        CidrIp: 
+          Fn::ImportValue:
+            Fn::Sub: ${pVpcStackName}-VpcCidr
+      Tags:
+      - Key: Name
+        Value: alerts RDS SG
+
+  DbCluster:
+    Type: "AWS::RDS::DBCluster"
+    UpdateReplacePolicy: Snapshot
+    DeletionPolicy: Snapshot
+    Properties:
+      BacktrackWindow: !Ref pBacktrackWindow
+      BackupRetentionPeriod: !Ref pBackupRetention
+      DatabaseName: !Sub
+                      - ${pProductName}-${ResourceName}
+                      - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
+      DBClusterIdentifier: !Sub ${pDbInstanceName}-cluster
+      DBClusterInstanceClass: !Ref pInstanceClass
+      DBClusterParameterGroupName: !Ref ClusterParamGrp
+      DBSubnetGroupName: !Ref DbSubnetGrp
+      DeletionProtection: !Ref pDeletionProtection
+      EnableCloudwatchLogsExports:
+        - error
+        - slowquery
+      Engine: aurora-mysql
+      EngineMode: provisioned
+      EngineVersion: !Ref pDbVersion
+      MasterUsername: !Ref pAdminUser
+      MasterUserPassword: !Sub
+                            - '{{resolve:secretsmanager:alerts-${ResourceName}:db-password:SecretString}}'
+                            - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
+      Port: 3306
+      PreferredBackupWindow: 16:00-17:00
+      PreferredMaintenanceWindow: tue:17:00-tue:19:00
+      #SnapshotIdentifier: !Ref RdsSnapshot
+      Tags:
+        - Key: Name
+          Value: Alerts DB Cluster
+      VpcSecurityGroupIds:
+        - !Ref DbSecurityGrp
+
+  RdsPrimary:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      AllowMajorVersionUpgrade: false
+      AutoMinorVersionUpgrade: true
+      DBInstanceClass: !Ref pInstanceClass
+      DBInstanceIdentifier: !Sub '${pDbInstanceName}-primary'
+      DBParameterGroupName: !Ref DbParamGrp
+      DBSubnetGroupName: !Ref DbSubnetGrp
+      Engine: aurora-mysql
+      DBClusterIdentifier: !Ref DbCluster
+      PubliclyAccessible: false
+      EnablePerformanceInsights: !Ref pPerformanceInsights
+      Tags:
+      - Key: Name
+        Value: Alerts DB primary
+
+  RdsReplica:
+    Type: AWS::RDS::DBInstance
+    Condition: CreateReplica
+    DependsOn:
+      - RdsPrimary
+    Properties:
+      AllowMajorVersionUpgrade: false
+      AutoMinorVersionUpgrade: true
+      DBInstanceClass: !Ref pInstanceClass
+      DBInstanceIdentifier: !Sub '${pDbInstanceName}-replica'
+      DBParameterGroupName: !Ref DbParamGrp
+      DBSubnetGroupName: !Ref DbSubnetGrp
+      Engine: aurora-mysql
+      DBClusterIdentifier: !Ref DbCluster
+      PubliclyAccessible: false
+      EnablePerformanceInsights: !Ref pPerformanceInsights
+      Tags:
+      - Key: Name
+        Value: Alerts DB replica
+
+  RdsScalableTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    DependsOn:
+      - DbCluster
+    Properties:
+      MaxCapacity: 15
+      MinCapacity: 1
+      ResourceId: !Sub cluster:${pDbInstanceName}-cluster
+      RoleARN: !Sub arn:aws:iam::${AWS::AccountId}:role/aws-service-role/rds.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_RDSCluster
+      ScalableDimension: rds:cluster:ReadReplicaCount
+      ServiceNamespace: rds
+
+  AuroraScalingPolicy:
+    Type : "AWS::ApplicationAutoScaling::ScalingPolicy"
+    Properties:
+      PolicyName: Alerts Aurora scaling policy
       PolicyType: TargetTrackingScaling
-      ScalingTargetId: !Ref AuroraDBCluster
+      ScalingTargetId: !Ref RdsScalableTarget
       TargetTrackingScalingPolicyConfiguration:
-        TargetValue: 50.0
-        ScaleInCooldown: 60
-        ScaleOutCooldown: 60
         PredefinedMetricSpecification:
           PredefinedMetricType: RDSReaderAverageCPUUtilization
+        ScaleInCooldown: 600
+        ScaleOutCooldown: 300
+        TargetValue: 60.0
+
+  ErrorLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties: 
+      LogGroupName: !Sub /aws/rds/cluster/${pDbInstanceName}-cluster/error
+      RetentionInDays: 30
+
+  SlowQueryLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties: 
+      LogGroupName: !Sub /aws/rds/cluster/${pDbInstanceName}-cluster/slowquery
+      RetentionInDays: 30
+
+
+Outputs:
+  WriteEndpoint:
+    Description: The write endpoint of the database
+    Value: !GetAtt DbCluster.Endpoint.Address
+    Export:
+      Name: !Sub ${AWS::StackName}-WriteEndpoint
+  ReadEndpoint:
+    Description: The read endpoint of the database
+    Value: !GetAtt DbCluster.ReadEndpoint.Address
+    Export:
+      Name: !Sub ${AWS::StackName}-ReadEndpoint
+
