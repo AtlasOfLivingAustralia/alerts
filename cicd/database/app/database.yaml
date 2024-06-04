@@ -12,12 +12,9 @@ Parameters:
   MaxCapacity:
     Type: Number
     Description: The maximum capacity for the autoscaling group
-  VPCID:
-    Type: AWS::EC2::VPC::Id
+  sVpcStackName:
+    Type: String
     Description: The ID of the VPC
-  SubnetIds:
-    Type: List<AWS::EC2::Subnet::Id>
-    Description: The IDs of the subnets
 
 Resources:
 

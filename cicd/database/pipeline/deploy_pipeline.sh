@@ -137,13 +137,10 @@ aws cloudformation deploy \
     --region $REGION \
     --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
     --parameter-overrides \
-        pArtifactsBucket=$ARTIFACTS_BUCKET \
         pAutoDeploy=$AUTO_DEPLOY \
+        pBootstrapStackName=$BOOTSTRAP_STACK_NAME \
+        pBucketsStackName=$BUCKETS_STACK_NAME \
         pCleanBranch=$clean_branch \
-        pCloudFormationServiceRole=$CLOUDFORMATION_SERVICE_ROLE \
-        pCodeBuildServiceRole=$CODEBUILD_SERVICE_ROLE \
-        pCodePipelineServiceRole=$CODEPIPELINE_SERVICE_ROLE \
-        pCodestarConnection=$CODESTAR_CONNECTION \
         pDatabaseStackName=$DATABASE_STACK_NAME \
         pEnvironment=$environment \
         pGitHubBranch=$branch \

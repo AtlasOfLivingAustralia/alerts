@@ -138,13 +138,10 @@ aws cloudformation deploy \
     --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
     --parameter-overrides \
         pAlertsStackName=$ALERTS_STACK_NAME \
-        pArtifactsBucket=$ARTIFACTS_BUCKET \
         pAutoDeploy=$AUTO_DEPLOY \
+        pBootstrapStackName=$BOOTSTRAP_STACK_NAME \
+        pBucketsStackName=$BUCKETS_STACK_NAME \
         pCleanBranch=$clean_branch \
-        pCloudFormationServiceRole=$CLOUDFORMATION_SERVICE_ROLE \
-        pCodeBuildServiceRole=$CODEBUILD_SERVICE_ROLE \
-        pCodePipelineServiceRole=$CODEPIPELINE_SERVICE_ROLE \
-        pCodestarConnection=$CODESTAR_CONNECTION \
         pEksClusterName=$EKS_CLUSTER_NAME \
         pEnvironment=$environment \
         pGitHubBranch=$branch \
