@@ -238,7 +238,7 @@ Resources:
               Version: 1
               Provider: CloudFormation
             Configuration:
-              TemplatePath: !Sub 'ExportConfigArtifact::cicd/${pProductComponent}/app/#{ExportConfigNS.ALERTS_STACK_FILE_PFIX}'
+              TemplatePath: !Sub 'ExportConfigArtifact::cicd/${pProductComponent}/app/#{ExportConfigNS.ALERTS_STACK_FILE_PFIX}.yaml'
               ActionMode: !If [ IsDev, REPLACE_ON_FAILURE, CREATE_UPDATE ]
               TemplateConfiguration: !Sub 'ExportConfigArtifact::cicd/${pProductComponent}/app/#{ExportConfigNS.ALERTS_STACK_FILE_PFIX}_template_config.json'
               Capabilities: CAPABILITY_IAM,CAPABILITY_AUTO_EXPAND,CAPABILITY_NAMED_IAM
