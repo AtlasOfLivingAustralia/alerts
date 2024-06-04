@@ -9,13 +9,13 @@ Parameters:
     Default: admin
   pBacktrackWindow:
     Description: Backtrack window in seconds
-    Type: String
+    Type: Number
   pBackupRetention:
     Description: Backup retention period in days
-    Type: String
+    Type: Number
   pBuild:
     Description: The CodeBuild build number
-    Type: String
+    Type: Number
   pCleanBranch:
     Description: The clean branch
     Type: String
@@ -154,7 +154,7 @@ Resources:
       EngineVersion: !Ref pDbVersion
       MasterUsername: !Ref pAdminUser
       MasterUserPassword: !Sub
-                            - '{{resolve:secretsmanager:alerts-${ResourceName}:db-password:SecretString}}'
+                            - '{{resolve:secretsmanager:alerts-${ResourceName}:SecretString:db-password}}'
                             - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
       Port: 3306
       PreferredBackupWindow: 16:00-17:00
