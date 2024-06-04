@@ -9,13 +9,13 @@ Parameters:
     Default: admin
   pBacktrackWindow:
     Description: Backtrack window in seconds
-    Type: Number
+    Type: String
   pBackupRetention:
     Description: Backup retention period in days
-    Type: Number
+    Type: String
   pBuild:
     Description: The CodeBuild build number
-    Type: Number
+    Type: String
   pCleanBranch:
     Description: The clean branch
     Type: String
