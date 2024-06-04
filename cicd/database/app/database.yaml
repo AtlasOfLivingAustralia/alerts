@@ -131,9 +131,7 @@ Resources:
     Properties:
       BacktrackWindow: !Ref pBacktrackWindow
       BackupRetentionPeriod: !Ref pBackupRetention
-      DatabaseName: !Sub
-                      - ${pProductName}${ResourceName}
-                      - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
+      DatabaseName: !Sub ${pProductName}${pEnvironment}
       DBClusterIdentifier: !Sub ${pDbInstanceName}-cluster
       DBClusterParameterGroupName: !Ref ClusterParamGrp
       DBSubnetGroupName: !Ref DbSubnetGrp
