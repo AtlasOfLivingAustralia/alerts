@@ -176,6 +176,7 @@ Resources:
                    { "name":"COMMIT_ID", "value":"#{CheckoutSrcNS.CommitId}" },
                    { "name":"ENVIRONMENT", "value":"${pEnvironment}" },
                    { "name":"PIPELINE_FINGERPRINT", "value":"#{variables.PIPELINE_FINGERPRINT}" },
+                   { "name":"PRODUCT_COMPONENT", "value":"${pProductComponent}" },
                    { "name":"SRC_BRANCH", "value":"${pGitHubBranch}" }
                  ]
             Namespace: ExportConfigNS
@@ -264,7 +265,7 @@ Resources:
               Provider: Manual
             Configuration:
               CustomData: Approval required to tear down this stack
-            RunOrder: 2
+            RunOrder: 3
           - Name: TeardownCodePipeline
             ActionTypeId:
               Owner: AWS
@@ -277,7 +278,7 @@ Resources:
               RoleArn:
                 Fn::ImportValue:
                   Fn::Sub: '${pBootstrapStackName}-CloudFormationServiceRoleArn'
-            RunOrder: 3
+            RunOrder: 4
 
   ExportConfigCodeBuildLogGroup:
     Type: AWS::Logs::LogGroup
