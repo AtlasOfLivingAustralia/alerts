@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: Code pipeline for the alerts repo
+Description: Code pipeline for the alerts database
 
 Parameters:
   pArtifactsBucket:
@@ -23,9 +23,9 @@ Parameters:
   pCodestarConnection:
     Type: String
     Description: Codestar connection ARN
-  pEksClusterName:
+  pDatabaseStackName:
     Type: String
-    Description: The name of the EKS cluster
+    Description: The name of the database stack
   pEnvironment:
     Type: String
     Description: The AWS environment this belongs to
@@ -41,12 +41,12 @@ Parameters:
   pPipelineFingerprint:
     Type: String
     Description: The fingerprint of the pipeline, used to determine if it's been modified
+  pProductComponent:
+    Type: String
+    Description: The name of the product component
   pProductName:
     Type: String
     Description: The name of the product
-  pAlertsStackName:
-    Type: String
-    Description: The name of the alerts stack
   pRestartExecutionOnUpdate:
     Type: String
     Description: Restart that pipeline if it's been updated
@@ -59,6 +59,9 @@ Conditions:
   IsDev: !Equals
     - !Ref pEnvironment
     - development
+  AutoDeploy: !Equals
+    - !Ref pAutoDeploy
+    - true
 
 Resources:
  
@@ -83,54 +86,8 @@ Resources:
             Value: !Ref pCleanBranch
       Source:
         Type: CODEPIPELINE
-        BuildSpec: cicd/alerts/pipeline/export_config_buildspec.yaml
+        BuildSpec: !Sub cicd/${pProductComponent}/pipeline/export_config_buildspec.yaml
       TimeoutInMinutes: 5
-
-  BuildAlerts:
-    Type: AWS::CodeBuild::Project
-    Properties:
-      Name: !Sub
-        - ${pProductName}-build-alerts-${ResourceName}
-        - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
-      Description: Build the alerts project
-      ServiceRole: !Ref pCodeBuildServiceRole
-      Artifacts:
-        Type: CODEPIPELINE
-      Environment:
-        Type: LINUX_CONTAINER
-        ComputeType: BUILD_GENERAL1_SMALL
-        Image: aws/codebuild/standard:5.0
-        EnvironmentVariables:
-          - Name: CLEAN_BRANCH
-            Value: !Ref pCleanBranch
-      Source:
-        Type: CODEPIPELINE
-        BuildSpec: cicd/alerts/pipeline/alerts_buildspec.yml
-      TimeoutInMinutes: 30
-
-  DeployAlerts:
-    Type: AWS::CodeBuild::Project
-    Properties:
-      Name: !Sub
-        - ${pProductName}-deploy-alerts-${ResourceName}
-        - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
-      Description: Deploy alerts
-      ServiceRole: !Ref pCodeBuildServiceRole
-      Artifacts:
-        Type: CODEPIPELINE
-      Environment:
-        Type: LINUX_CONTAINER
-        ComputeType: BUILD_GENERAL1_SMALL
-        Image: aws/codebuild/standard:5.0
-        EnvironmentVariables:
-          - Name: CLEAN_BRANCH
-            Value: !Ref pCleanBranch
-          - Name: EKS_CLUSTER_NAME
-            Value: !Ref pEksClusterName
-      Source:
-        Type: CODEPIPELINE
-        BuildSpec: cicd/alerts/pipeline/deploy_alerts_buildspec.yml
-      TimeoutInMinutes: 20
 
   DeployNotification:
     Type: AWS::CodeBuild::Project
@@ -151,14 +108,14 @@ Resources:
             Value: !Ref pCleanBranch       
       Source:                             
         Type: CODEPIPELINE
-        BuildSpec: cicd/alerts/pipeline/deploy_notification_buildspec.yaml
+        BuildSpec: !Sub cicd/${pProductComponent}/pipeline/deploy_notification_buildspec.yaml
       TimeoutInMinutes: 5
 
   Pipeline:
     Type: "AWS::CodePipeline::Pipeline"
     Properties:
       Name: !Sub
-              - ${pProductName}-${ResourceName}
+              - ${pProductName}-${pProductComponent}-${ResourceName}
               - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
       PipelineType: V2
       RoleArn: !Ref pCodePipelineServiceRole
@@ -172,14 +129,14 @@ Resources:
       Triggers:
         - ProviderType: CodeStarSourceConnection
           GitConfiguration:
-               Push: 
-                 - Branches:
-                     Excludes:
-                       - !If [ IsProd, !Ref pGitHubBranch, bogo-branch ]
-                   FilePaths:
-                     Includes:
-                       - cicd/database/**
-               SourceActionName: CheckoutSrc
+            Push:
+              - Branches:
+                  Includes:
+                    - !If [ AutoDeploy, !Ref pGitHubBranch, bogo-branch ]
+                FilePaths:
+                  Includes:
+                    - !Sub cicd/${pProductComponent}/**
+            SourceActionName: CheckoutSrc
       Variables:
         - Name: SRC_BRANCH
           DefaultValue: !Ref pGitHubBranch
@@ -205,7 +162,7 @@ Resources:
             Namespace: CheckoutSrcNS
             OutputArtifacts:
               - Name: 'SourceArtifact'
-      - Name: Deploy_Infrastructure_Build
+      - Name: Deploy_Infrastructure
         Actions:
           - Name: ExportConfig
             ActionTypeId:
@@ -229,72 +186,24 @@ Resources:
               - Name: ExportConfigArtifact
             RunOrder: 1
 
-          - Name: DeployAlertsCFStack
+          - Name: DeployDatabaseCFStack
             ActionTypeId:
               Owner: AWS
               Category: Deploy
               Version: 1
               Provider: CloudFormation
             Configuration:
-              TemplatePath: 'ExportConfigArtifact::cicd/alerts/app/#{ExportConfigNS.ALERTS_STACK_FILE}'
+              TemplatePath: !Sub 'ExportConfigArtifact::cicd/${pProductComponent}/app/#{ExportConfigNS.DATABASE_STACK_FILE_PFIX}.yaml'
               ActionMode: !If [ IsDev, REPLACE_ON_FAILURE, CREATE_UPDATE ]
-              TemplateConfiguration: 'ExportConfigArtifact::cicd/alerts/app/alerts_template_config.json'
+              TemplateConfiguration: !Sub 'ExportConfigArtifact::cicd/${pProductComponent}/app/#{ExportConfigNS.DATABASE_STACK_FILE_PFIX}_template_config.json'
               Capabilities: CAPABILITY_IAM,CAPABILITY_AUTO_EXPAND,CAPABILITY_NAMED_IAM
               RoleArn: !Ref pCloudFormationServiceRole
-              StackName: !Ref pAlertsStackName
+              StackName: !Ref pDatabaseStackName
             InputArtifacts:
               - Name: 'ExportConfigArtifact'
-            Namespace: AlertsCloudFormationOutNS
+            Namespace: DatabaseCloudFormationOutNS
             OutputArtifacts: [ ]
             RunOrder: 2
-
-          - Name: RunAlertsBuildspec
-            ActionTypeId:
-              Owner: AWS
-              Category: Build
-              Version: 1
-              Provider: CodeBuild
-            Configuration:
-              ProjectName: !Ref BuildAlerts
-              EnvironmentVariables: !Sub |
-                [
-                  { "name":"SRC_BRANCH", "value":"${pGitHubBranch}" },
-                  { "name":"COMMIT_ID", "value":"#{CheckoutSrcNS.CommitId}" },
-                  { "name":"ENVIRONMENT", "value":"${pEnvironment}" },
-                  { "name":"PIPELINE_FINGERPRINT", "value":"#{variables.PIPELINE_FINGERPRINT}" }
-                ]
-            InputArtifacts:
-              - Name: 'SourceArtifact'
-            RunOrder: 3
-
-          - Name: Approval
-            ActionTypeId:
-              Owner: AWS
-              Category: Approval
-              Version: 1
-              Provider: Manual
-            Configuration:
-              CustomData: Approval required to deploy build to eks
-            RunOrder: 4
-
-          - Name: RunAlertsDeployBuildspec
-            ActionTypeId:
-              Owner: AWS
-              Category: Build
-              Version: 1
-              Provider: CodeBuild
-            Configuration:
-              ProjectName: !Ref DeployAlerts
-              EnvironmentVariables: !Sub |
-                [
-                  { "name":"SRC_BRANCH", "value":"${pGitHubBranch}" },
-                  { "name":"COMMIT_ID", "value":"#{CheckoutSrcNS.CommitId}" },
-                  { "name":"ENVIRONMENT", "value":"${pEnvironment}" },
-                  { "name":"PIPELINE_FINGERPRINT", "value":"#{variables.PIPELINE_FINGERPRINT}" }
-                ]
-            InputArtifacts:
-              - Name: 'SourceArtifact'
-            RunOrder: 5
 
           - Name: DeployNotification
             ActionTypeId:
