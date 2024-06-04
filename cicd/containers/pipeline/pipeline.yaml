@@ -2,6 +2,9 @@ AWSTemplateFormatVersion: "2010-09-09"
 Description: Code pipeline for the alerts repo
 
 Parameters:
+  pAlertsStackName:
+    Type: String
+    Description: The name of the alerts stack
   pArtifactsBucket:
     Type: String
     Description: Common artifacts bucket used by CodePipeline and CodeBuild
@@ -47,9 +50,6 @@ Parameters:
   pProductName:
     Type: String
     Description: The name of the product
-  pAlertsStackName:
-    Type: String
-    Description: The name of the alerts stack
   pRestartExecutionOnUpdate:
     Type: String
     Description: Restart that pipeline if it's been updated
@@ -164,7 +164,7 @@ Resources:
     Type: "AWS::CodePipeline::Pipeline"
     Properties:
       Name: !Sub
-              - ${pProductName}-${ResourceName}
+              - ${pProductName}-${pProductComponent}-${ResourceName}
               - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
       PipelineType: V2
       RoleArn: !Ref pCodePipelineServiceRole
@@ -254,7 +254,7 @@ Resources:
             OutputArtifacts: [ ]
             RunOrder: 2
 
-          - Name: RunAlertsBuildspec
+          - Name: BuildAlerts
             ActionTypeId:
               Owner: AWS
               Category: Build
@@ -284,7 +284,7 @@ Resources:
               CustomData: Approval required to deploy build to eks
             RunOrder: 4
 
-          - Name: RunAlertsDeployBuildspec
+          - Name: DeployAlerts
             ActionTypeId:
               Owner: AWS
               Category: Build

@@ -144,13 +144,13 @@ aws cloudformation deploy \
         pCodeBuildServiceRole=$CODEBUILD_SERVICE_ROLE \
         pCodePipelineServiceRole=$CODEPIPELINE_SERVICE_ROLE \
         pCodestarConnection=$CODESTAR_CONNECTION \
+        pDatabaseStackName=$DATABASE_STACK_NAME \
         pEnvironment=$environment \
-        pEksClusterName=$EKS_CLUSTER_NAME \
         pGitHubBranch=$branch \
         pGitHubOwner=$GITHUB_OWNER \
         pGitHubRepositoryName=$GITHUB_REPO_NAME \
         pPipelineFingerprint=$PIPELINE_MD5 \
+        pProductComponent=$PRODUCT_COMPONENT \
         pProductName=$PRODUCT_NAME \
         pRestartExecutionOnUpdate=$RESTART_PIPELINE_ON_UPDATE \
-        pAlertsStackName=$ALERTS_STACK_NAME-$clean_branch \
 
