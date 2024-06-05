@@ -103,15 +103,15 @@ Resources:
         Image: aws/codebuild/standard:5.0
       Source:
         Type: CODEPIPELINE
-        BuildSpec: !Sub cicd/${pProductComponent}/pipeline/alerts_buildspec.yaml
+        BuildSpec: !Sub cicd/${pProductComponent}/pipeline/build_alerts_buildspec.yaml
       TimeoutInMinutes: 30
 
   DeployAlerts:
     Type: AWS::CodeBuild::Project
     Properties:
       Name: !Sub
-        - ${pProductName}-${pProductComponent}-deploy-alerts-${ResourceName}
-        - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
+              - ${pProductName}-${pProductComponent}-deploy-alerts-${ResourceName}
+              - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
       Description: Deploy alerts
       ServiceRole:
                Fn::ImportValue:
