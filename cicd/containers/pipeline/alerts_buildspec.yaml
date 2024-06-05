@@ -28,7 +28,7 @@ phases:
 
   build:
     commands:
-      - echo Build started on `date`
+      - echo Build started on $(date)
       - echo Building the project...
       - ./gradlew build
       - ./gradlew bootWar
@@ -36,7 +36,7 @@ phases:
   post_build:
     commands:
       - echo Post-build phase...
-      - echo Build completed on `date`
+      - echo Build completed on $(date)
 #      - aws s3 rm s3://ala-alerts-builds/devbuilds/$CLEAN_BRANCH/ --recursive
 #      - aws s3 cp build/libs/*.war s3://ala-alerts-builds/devbuilds/$CLEAN_BRANCH/
       - echo Logging in to Amazon ECR...
