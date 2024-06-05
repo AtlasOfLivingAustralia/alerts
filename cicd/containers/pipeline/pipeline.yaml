@@ -1,10 +1,10 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: Code pipeline for the alerts repo
+Description: Code pipeline for the alerts service
 
 Parameters:
-  pAlertsStackName:
+  pBaseStackName:
     Type: String
-    Description: The name of the alerts stack
+    Description: The name of the stack that contains the alerts base resources
   pAutoDeploy:
     Type: String
     Description: Sets the pipeline to auto deploy on repo changes
@@ -231,24 +231,24 @@ Resources:
               - Name: ExportConfigArtifact
             RunOrder: 1
 
-          - Name: DeployAlertsCFStack
+          - Name: DeployBaseCFStack
             ActionTypeId:
               Owner: AWS
               Category: Deploy
               Version: 1
               Provider: CloudFormation
             Configuration:
-              TemplatePath: !Sub 'ExportConfigArtifact::cicd/${pProductComponent}/app/#{ExportConfigNS.ALERTS_STACK_FILE_PFIX}.yaml'
+              TemplatePath: !Sub 'ExportConfigArtifact::cicd/${pProductComponent}/app/#{ExportConfigNS.BASE_STACK_FILE_PFIX}.yaml'
               ActionMode: !If [ IsDev, REPLACE_ON_FAILURE, CREATE_UPDATE ]
-              TemplateConfiguration: !Sub 'ExportConfigArtifact::cicd/${pProductComponent}/app/#{ExportConfigNS.ALERTS_STACK_FILE_PFIX}_template_config.json'
+              TemplateConfiguration: !Sub 'ExportConfigArtifact::cicd/${pProductComponent}/app/#{ExportConfigNS.BASE_STACK_FILE_PFIX}_template_config.json'
               Capabilities: CAPABILITY_IAM,CAPABILITY_AUTO_EXPAND,CAPABILITY_NAMED_IAM
               RoleArn:
                    Fn::ImportValue:
                      Fn::Sub: '${pBootstrapStackName}-CloudFormationServiceRoleArn'
-              StackName: !Ref pAlertsStackName
+              StackName: !Ref pBaseStackName
             InputArtifacts:
               - Name: 'ExportConfigArtifact'
-            Namespace: AlertsCloudFormationOutNS
+            Namespace: BaseCloudFormationOutNS
             OutputArtifacts: [ ]
             RunOrder: 2
 
@@ -262,7 +262,7 @@ Resources:
               ProjectName: !Ref BuildAlerts
               EnvironmentVariables: !Sub |
                 [
-                  { "name":"ALERTS_ECR_REPOSITORY", "value":"#{AlertsCloudFormationOutNS.AlertsRepositoryArn}" },
+                  { "name":"ALERTS_ECR_REPOSITORY", "value":"#{BaseCloudFormationOutNS.AlertsRepositoryArn}" },
                   { "name":"CLEAN_BRANCH", "value":"${pCleanBranch}" },
                   { "name":"COMMIT_ID", "value":"#{CheckoutSrcNS.CommitId}" },
                   { "name":"ENVIRONMENT", "value":"${pEnvironment}" },
@@ -293,7 +293,7 @@ Resources:
               ProjectName: !Ref DeployAlerts
               EnvironmentVariables: !Sub |
                 [
-                  { "name":"ALERTS_ECR_REPOSITORY", "value":"#{AlertsCloudFormationOutNS.AlertsRepositoryArn}" },
+                  { "name":"ALERTS_ECR_REPOSITORY", "value":"#{BaseCloudFormationOutNS.AlertsRepositoryArn}" },
                   { "name":"CLEAN_BRANCH", "value":"${pCleanBranch}" },
                   { "name":"COMMIT_ID", "value":"#{CheckoutSrcNS.CommitId}" },
                   { "name":"EKS_CLUSTER_NAME", "value":"${pEksClusterName}" },
@@ -342,7 +342,7 @@ Resources:
             Configuration:
               CustomData: Approval required to tear down this stack
             RunOrder: 1
-          - Name: TeardownAlertsStack
+          - Name: TeardownBaseStack
             ActionTypeId:
               Owner: AWS
               Category: Deploy
@@ -350,7 +350,7 @@ Resources:
               Provider: CloudFormation
             Configuration:
               ActionMode: DELETE_ONLY
-              StackName: !Ref pAlertsStackName
+              StackName: !Ref pBaseStackName
               RoleArn:
                 Fn::ImportValue:
                   Fn::Sub: '${pBootstrapStackName}-CloudFormationServiceRoleArn'

@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 
-Description: 'Alerts CloudFormation stack'
+Description: Base resources for the Alerts service
 
 Parameters:
   pBuild:
