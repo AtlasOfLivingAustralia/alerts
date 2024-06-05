@@ -162,7 +162,7 @@ Resources:
       AllowMajorVersionUpgrade: false
       AutoMinorVersionUpgrade: true
       DBInstanceClass: !Ref pInstanceClass
-      DBInstanceIdentifier: !Sub '${pDbInstanceName}-primary'
+      DBInstanceIdentifier: !Sub ${pDbInstanceName}-primary
       DBParameterGroupName: !Ref DbParamGrp
       DBSubnetGroupName: !Ref DbSubnetGrp
       Engine: aurora-mysql
@@ -182,7 +182,7 @@ Resources:
       AllowMajorVersionUpgrade: false
       AutoMinorVersionUpgrade: true
       DBInstanceClass: !Ref pInstanceClass
-      DBInstanceIdentifier: !Sub '${pDbInstanceName}-replica'
+      DBInstanceIdentifier: !Sub ${pDbInstanceName}-replica
       DBParameterGroupName: !Ref DbParamGrp
       DBSubnetGroupName: !Ref DbSubnetGrp
       Engine: aurora-mysql
