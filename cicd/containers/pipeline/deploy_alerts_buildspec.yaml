@@ -38,7 +38,3 @@ phases:
     commands:
       - echo Post-build phase...
       - echo Build completed on $(date)
-
-cache:
-  paths:
-    - '/root/.gradle/wrapper/**/*'

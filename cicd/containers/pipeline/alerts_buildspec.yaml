@@ -50,7 +50,3 @@ phases:
       - docker tag ala-alerts:latest $ALERTS_ECR_REPOSITORY:$CLEAN_BRANCH
       - echo Pushing the Docker image to Amazon ECR...
       - docker push $ALERTS_ECR_REPOSITORY:$CLEAN_BRANCH
-
-cache:
-  paths:
-    - '/root/.gradle/wrapper/**/*'
