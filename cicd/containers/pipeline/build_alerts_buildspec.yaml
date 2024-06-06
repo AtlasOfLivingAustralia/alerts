@@ -1,12 +1,15 @@
 version: 0.2
 
+env:
+  shell: bash
+  variables:
+    JAVA_TOOL_OPTIONS: -Dhttps.protocols=TLSv1.2
+
 phases:
   install:
-    runtime-versions:
-      java: corretto11
     commands:
       - echo Installing dependencies...
-      - sudo su && apt update -y
+      - apt update -y
         && cat /etc/lsb-release
         && apt-get -q -y install openjdk-11-jdk
         && apt-get -q -y install unzip
@@ -16,7 +19,7 @@ phases:
         && chmod a+x /root/.sdkman/bin/sdkman-init.sh
         && source /root/.sdkman/bin/sdkman-init.sh && sdk install grails 6.0.0 /root/.sdkman/candidates/grails/6.0.0
         && apt-get install -y apt-transport-https ca-certificates curl software-properties-common
-        && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+        && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
         && add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
         && apt-get update
         && apt-get install -y docker-ce
@@ -25,7 +28,7 @@ phases:
 
   build:
     commands:
-      - echo Build started on `date`
+      - echo Build started on $(date)
       - echo Building the project...
       - ./gradlew build
       - ./gradlew bootWar
@@ -33,7 +36,7 @@ phases:
   post_build:
     commands:
       - echo Post-build phase...
-      - echo Build completed on `date`
+      - echo Build completed on $(date)
 #      - aws s3 rm s3://ala-alerts-builds/devbuilds/$CLEAN_BRANCH/ --recursive
 #      - aws s3 cp build/libs/*.war s3://ala-alerts-builds/devbuilds/$CLEAN_BRANCH/
       - echo Logging in to Amazon ECR...
@@ -47,12 +50,3 @@ phases:
       - docker tag ala-alerts:latest $ALERTS_ECR_REPOSITORY:$CLEAN_BRANCH
       - echo Pushing the Docker image to Amazon ECR...
       - docker push $ALERTS_ECR_REPOSITORY:$CLEAN_BRANCH
-
-env:
-  shell: bash
-  variables:
-    JAVA_TOOL_OPTIONS: -Dhttps.protocols=TLSv1.2
-
-cache:
-  paths:
-    - '/root/.gradle/wrapper/**/*'
