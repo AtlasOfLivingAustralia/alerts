@@ -5,7 +5,7 @@ env:
   variables:
     JAVA_TOOL_OPTIONS: -Dhttps.protocols=TLSv1.2
   secrets-manager:
-    DB_PASSWORD: $ALERTS_SECRET_NAME:db-password
+    DB_PASSWORD: $ALERTS_SECRETS_NAME:db-password
 
 phases:
   install:
