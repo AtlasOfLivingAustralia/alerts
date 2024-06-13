@@ -217,13 +217,8 @@ Resources:
               ProjectName: !Ref DeployAlerts
               EnvironmentVariables: !Sub |
                 [
-                  { "name":"ALERTS_ECR_REPOSITORY", "value":"#{BaseCloudFormationOutNS.AlertsRepositoryArn}" },
                   { "name":"CLEAN_BRANCH", "value":"${pCleanBranch}" },
-                  { "name":"COMMIT_ID", "value":"#{CheckoutSrcNS.CommitId}" },
-                  { "name":"EKS_CLUSTER_NAME", "value":"${pEksClusterName}" },
-                  { "name":"ENVIRONMENT", "value":"${pEnvironment}" },
-                  { "name":"PIPELINE_FINGERPRINT", "value":"#{variables.PIPELINE_FINGERPRINT}" },
-                  { "name":"SRC_BRANCH", "value":"${pGitHubBranch}" }
+                  { "name":"EKS_CLUSTER_NAME", "value":"${pEksClusterName}" }
                 ]
             InputArtifacts:
               - Name: 'SourceArtifact'
