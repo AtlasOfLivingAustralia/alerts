@@ -45,8 +45,9 @@ phases:
       - echo Building the Docker image...
       - docker build -t ala-alerts .
       - echo Tagging the Docker image...
-      - echo $ALERTS_ECR_REPOSITORY:$CLEAN_BRANCH
+      - export REPO=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ALERTS_ECR_REPOSITORY_NAME
+      - echo REPO=$REPO
       - echo tagging
-      - docker tag ala-alerts:latest $ALERTS_ECR_REPOSITORY:$CLEAN_BRANCH
+      - docker tag ala-alerts:latest $REPO:$CLEAN_BRANCH
       - echo Pushing the Docker image to Amazon ECR...
-      - docker push $ALERTS_ECR_REPOSITORY:$CLEAN_BRANCH
+      - docker push $REPO:$CLEAN_BRANCH

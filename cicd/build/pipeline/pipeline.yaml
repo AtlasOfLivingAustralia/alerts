@@ -235,7 +235,8 @@ Resources:
               ProjectName: !Ref BuildAlerts
               EnvironmentVariables: !Sub |
                 [
-                  { "name":"ALERTS_ECR_REPOSITORY", "value":"#{ExportConfigNS.ALERTS_ECR_REPOSITORY}" },
+                  { "name":"ALERTS_ECR_REPOSITORY_NAME", "value":"#{ExportConfigNS.ALERTS_ECR_REPOSITORY_NAME}" },
+                  { "name":"AWS_ACCOUNT_ID", "value":"${AWS::AccountId}" },
                   { "name":"CLEAN_BRANCH", "value":"${pCleanBranch}" }
                 ]
             InputArtifacts:

@@ -75,6 +75,10 @@ Outputs:
     Description: The ECR repository ARN for the Alerts service
     Value: !GetAtt AlertsRepository.Arn
 
+  AlertsRepositoryName:
+    Description: The ECR repository ARN for the Alerts service
+    Value: !Ref AlertsRepository
+
   AlertsSecrets:
     Description: The Secrets name for alerts 
     Value: !Ref AlertsSecrets
