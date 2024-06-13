@@ -219,6 +219,8 @@ Resources:
                 [
                   { "name":"ALERTS_SECRET_NAME", "value":"#{ExportConfigNS.ALERTS_SECRET_NAME}" },
                   { "name":"CLEAN_BRANCH", "value":"${pCleanBranch}" },
+                  { "name":"DB_READ_ENDPOINT", "value":"#{ExportConfigNS.DB_READ_ENDPOINT}" },
+                  { "name":"DB_WRITE_ENDPOINT", "value":"#{ExportConfigNS.DB_WRITE_ENDPOINT}" },
                   { "name":"EKS_CLUSTER_NAME", "value":"${pEksClusterName}" }
                 ]
             InputArtifacts:

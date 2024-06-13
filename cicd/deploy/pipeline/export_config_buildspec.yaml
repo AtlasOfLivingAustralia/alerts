@@ -16,6 +16,8 @@ env:
     - SLACK_DEPLOY_NOTIFICATION
     - SLACK_ALERT_CHANNEL
     - ALERTS_SECRET_NAME
+    - DB_READ_ENDPOINT
+    - DB_WRITE_ENDPOINT
 
 phases:
 
@@ -59,6 +61,8 @@ phases:
       - echo loading config..
       - set -a ; source env.txt ; set +a
       - ALERTS_SECRETS_NAME=$(aws cloudformation describe-stacks --stack-name $BASE_STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='AlertsSecrets'].OutputValue" --output text)
+      - DB_READ_ENDPOINT=$(aws cloudformation describe-stacks --stack-name $DATABASE_STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='ReadEndpoint'].OutputValue" --output text)
+      - DB_WRITE_ENDPOINT=$(aws cloudformation describe-stacks --stack-name $DATABASE_STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='WriteEndpoint'].OutputValue" --output text)
     finally:
       - #echo This always runs
 
