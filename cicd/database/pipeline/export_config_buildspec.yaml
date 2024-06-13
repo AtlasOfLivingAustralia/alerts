@@ -24,6 +24,7 @@ phases:
     commands:
       - echo Running on $(lsb_release -d | cut -f2)
       - echo aws-cli version $(aws --version)
+      - pip install jinja2
       - export CUR_PIPELINE_FINGERPRINT=$(md5sum cicd/$PRODUCT_COMPONENT/pipeline/pipeline.yaml | awk '{print $1}')
       - # This next bit checks if the running pipeline is out of sync with the pipeline in the
       - # current code revision. If it is it re-launches itself! For a normal branch commit the
