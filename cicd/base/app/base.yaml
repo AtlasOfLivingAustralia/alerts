@@ -81,4 +81,4 @@ Outputs:
 
   AlertsSecret:
     Description: The Secrets name for alerts 
-    Value: !Ref AlertsSecrets
+    Value: !Ref AlertsSecret
