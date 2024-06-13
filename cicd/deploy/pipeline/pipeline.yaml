@@ -217,6 +217,7 @@ Resources:
               ProjectName: !Ref DeployAlerts
               EnvironmentVariables: !Sub |
                 [
+                  { "name":"ALERTS_SECRET_NAME", "value":"#{ExportConfigNS.ALERTS_SECRET_NAME}" },
                   { "name":"CLEAN_BRANCH", "value":"${pCleanBranch}" },
                   { "name":"EKS_CLUSTER_NAME", "value":"${pEksClusterName}" }
                 ]

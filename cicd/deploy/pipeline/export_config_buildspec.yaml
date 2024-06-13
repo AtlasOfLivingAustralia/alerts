@@ -15,6 +15,7 @@ env:
     - PRODUCT_COMPONENT
     - SLACK_DEPLOY_NOTIFICATION
     - SLACK_ALERT_CHANNEL
+    - ALERTS_SECRET_NAME
 
 phases:
 
@@ -57,6 +58,7 @@ phases:
       - cicd/gen_env_vars.py --env $ENVIRONMENT --clean-branch $CLEAN_BRANCH --conf cicd/$PRODUCT_COMPONENT/config.ini > env.txt
       - echo loading config..
       - set -a ; source env.txt ; set +a
+      - ALERTS_SECRETS_NAME=$(aws cloudformation describe-stacks --stack-name $BASE_STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='AlertsSecrets'].OutputValue" --output text)
     finally:
       - #echo This always runs
 
