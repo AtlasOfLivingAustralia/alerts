@@ -15,7 +15,7 @@ env:
     - PRODUCT_COMPONENT
     - SLACK_DEPLOY_NOTIFICATION
     - SLACK_ALERT_CHANNEL
-    - ALERTS_SECRETS_NAME
+    - ALERTS_SECRET_NAME
     - DB_READ_ENDPOINT
     - DB_WRITE_ENDPOINT
 
@@ -60,10 +60,11 @@ phases:
       - cicd/gen_env_vars.py --env $ENVIRONMENT --clean-branch $CLEAN_BRANCH --conf cicd/$PRODUCT_COMPONENT/config.ini > env.txt
       - echo loading config..
       - set -a ; source env.txt ; set +a
-      - ALERTS_SECRETS_NAME=$(aws cloudformation describe-stacks --stack-name $BASE_STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='AlertsSecrets'].OutputValue" --output text)
+      - ALERTS_SECRET_NAME_ARN=$(aws cloudformation describe-stacks --stack-name $BASE_STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='AlertsSecret'].OutputValue" --output text)
+      - ALERTS_SECRET_NAME=$(echo $ALERTS_SECRET_NAME_ARN | cut -d':' -f7)
       - DB_READ_ENDPOINT=$(aws cloudformation describe-stacks --stack-name $DATABASE_STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='ReadEndpoint'].OutputValue" --output text)
       - DB_WRITE_ENDPOINT=$(aws cloudformation describe-stacks --stack-name $DATABASE_STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='WriteEndpoint'].OutputValue" --output text)
-      - echo ALERTS_SECRETS_NAME=$ALERTS_SECRETS_NAME
+      - echo ALERTS_SECRET_NAME=$ALERTS_SECRET_NAME
       - echo DB_READ_ENDPOINT=$DB_READ_ENDPOINT
       - echo DB_WRITE_ENDPOINT=$DB_WRITE_ENDPOINT
     finally:
