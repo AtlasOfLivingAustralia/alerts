@@ -218,6 +218,7 @@ Resources:
               EnvironmentVariables: !Sub |
                 [
                   { "name":"ALERTS_SECRET_NAME", "value":"#{ExportConfigNS.ALERTS_SECRET_NAME}" },
+                  { "name":"AWS_ACCOUNT_ID", "value":"${AWS::AccountId}" },
                   { "name":"CLEAN_BRANCH", "value":"${pCleanBranch}" },
                   { "name":"DB_READ_ENDPOINT", "value":"#{ExportConfigNS.DB_READ_ENDPOINT}" },
                   { "name":"DB_WRITE_ENDPOINT", "value":"#{ExportConfigNS.DB_WRITE_ENDPOINT}" },
