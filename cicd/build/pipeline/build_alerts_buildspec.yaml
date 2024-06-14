@@ -48,6 +48,6 @@ phases:
       - export REPO=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ALERTS_ECR_REPOSITORY_NAME
       - echo REPO=$REPO
       - echo tagging
-      - docker tag ala-alerts:latest $REPO:$CLEAN_BRANCH
+      - docker tag ala-alerts:latest $REPO:$CLEAN_BRANCH-$CODEBUILD_BUILD_NUMBER
       - echo Pushing the Docker image to Amazon ECR...
       - docker push $REPO:$CLEAN_BRANCH
