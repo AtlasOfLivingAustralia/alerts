@@ -52,3 +52,6 @@ phases:
       - docker tag ala-alerts:latest $REPO:latest
       - echo Pushing the Docker image to Amazon ECR...
       - docker push $REPO:$CLEAN_BRANCH-$CODEBUILD_BUILD_NUMBER
+      - echo Deleting the previous Docker image with the latest tag...
+      - aws ecr batch-delete-image --repository-name $ALERTS_ECR_REPOSITORY_NAME --image-ids imageTag=latest
+      - docker push $REPO:latest
