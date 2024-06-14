@@ -59,7 +59,7 @@ phases:
       - echo loading config..
       - set -a ; source env.txt ; set +a
       - ALERTS_SECRET_NAME_ARN=$(aws cloudformation describe-stacks --stack-name $BASE_STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='AlertsSecret'].OutputValue" --output text)
-      - ALERTS_SECRET_NAME=$(echo $ALERTS_SECRET_NAME_ARN | cut -d':' -f7)
+      - ALERTS_SECRET_NAME=$(echo $ALERTS_SECRET_NAME_ARN | cut -d':' -f7 | rev | cut -d'-' -f2- | rev)
       - DB_READ_ENDPOINT=$(aws cloudformation describe-stacks --stack-name $DATABASE_STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='ReadEndpoint'].OutputValue" --output text)
       - DB_WRITE_ENDPOINT=$(aws cloudformation describe-stacks --stack-name $DATABASE_STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='WriteEndpoint'].OutputValue" --output text)
       - echo ALERTS_SECRET_NAME=$ALERTS_SECRET_NAME
