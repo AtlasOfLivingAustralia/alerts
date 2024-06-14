@@ -40,7 +40,7 @@ phases:
 #      - aws s3 rm s3://ala-alerts-builds/devbuilds/$CLEAN_BRANCH/ --recursive
 #      - aws s3 cp build/libs/*.war s3://ala-alerts-builds/devbuilds/$CLEAN_BRANCH/
       - echo Logging in to Amazon ECR...
-      - aws ecr get-login-password | docker login -u AWS --password-stdin "https://$(aws sts get-caller-identity --query 'Account' --output text).dkr.ecr.ap-southeast-2.amazonaws.com"
+      - aws ecr get-login-password | docker login -u AWS --password-stdin "https://$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
       - rm -rf build/libs/*-plain.war
       - echo Building the Docker image...
       - docker build -t ala-alerts .
