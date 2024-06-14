@@ -49,5 +49,6 @@ phases:
       - echo REPO=$REPO
       - echo tagging
       - docker tag ala-alerts:latest $REPO:$CLEAN_BRANCH-$CODEBUILD_BUILD_NUMBER
+      - docker tag ala-alerts:latest $REPO:latest
       - echo Pushing the Docker image to Amazon ECR...
       - docker push $REPO:$CLEAN_BRANCH-$CODEBUILD_BUILD_NUMBER

@@ -32,9 +32,10 @@ phases:
     commands:
       - echo Build started on $(date)
       - aws eks --region ap-southeast-2 update-kubeconfig --name $EKS_CLUSTER_NAME
+      - export REPO=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ALERTS_ECR_REPOSITORY_NAME
       - printf "$(kubectl config current-context)\n"
       - cd helm
-      - helm upgrade --install ala-alerts . --set image.tag=$CLEAN_BRANCH
+      - helm upgrade --install ala-alerts . --set image.repository=$REPO --set image.tag=latest
 
   post_build:
     commands:
