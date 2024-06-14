@@ -16,6 +16,7 @@ env:
     - SLACK_DEPLOY_NOTIFICATION
     - SLACK_ALERT_CHANNEL
     - ALERTS_SECRET_NAME
+    - ALERTS_ECR_REPOSITORY_NAME
     - DB_READ_ENDPOINT
     - DB_WRITE_ENDPOINT
 
@@ -64,6 +65,7 @@ phases:
       - DB_READ_ENDPOINT=$(aws cloudformation describe-stacks --stack-name $DATABASE_STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='ReadEndpoint'].OutputValue" --output text)
       - DB_WRITE_ENDPOINT=$(aws cloudformation describe-stacks --stack-name $DATABASE_STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='WriteEndpoint'].OutputValue" --output text)
       - echo ALERTS_SECRET_NAME=$ALERTS_SECRET_NAME
+      - echo ALERTS_ECR_REPOSITORY_NAME=$ALERTS_ECR_REPOSITORY_NAME
       - echo DB_READ_ENDPOINT=$DB_READ_ENDPOINT
       - echo DB_WRITE_ENDPOINT=$DB_WRITE_ENDPOINT
     finally:
