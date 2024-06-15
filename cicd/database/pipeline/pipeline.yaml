@@ -14,9 +14,6 @@ Parameters:
   pCleanBranch:
     Type: String
     Description: The clean branch, can be used in resource names
-  pDatabaseStackName:
-    Type: String
-    Description: The name of the database stack
   pEnvironment:
     Type: String
     Description: The AWS environment this belongs to
@@ -200,7 +197,7 @@ Resources:
               RoleArn:
                    Fn::ImportValue:
                      Fn::Sub: '${pBootstrapStackName}-CloudFormationServiceRoleArn'
-              StackName: !Ref pDatabaseStackName
+              StackName: '#{ExportConfigNS.DATABASE_STACK_NAME}'
             InputArtifacts:
               - Name: 'ExportConfigArtifact'
             Namespace: DatabaseCloudFormationOutNS
@@ -252,7 +249,7 @@ Resources:
               Provider: CloudFormation
             Configuration:
               ActionMode: DELETE_ONLY
-              StackName: !Ref pDatabaseStackName
+              StackName: '#{ExportConfigNS.DATABASE_STACK_NAME}'
               RoleArn:
                 Fn::ImportValue:
                   Fn::Sub: '${pBootstrapStackName}-CloudFormationServiceRoleArn'

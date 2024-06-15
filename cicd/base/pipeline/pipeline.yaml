@@ -2,9 +2,6 @@ AWSTemplateFormatVersion: "2010-09-09"
 Description: Code pipeline for the alerts service
 
 Parameters:
-  pBaseStackName:
-    Type: String
-    Description: The name of the stack that contains the alerts base resources
   pAutoDeploy:
     Type: String
     Description: Sets the pipeline to auto deploy on repo changes
@@ -200,7 +197,7 @@ Resources:
               RoleArn:
                    Fn::ImportValue:
                      Fn::Sub: '${pBootstrapStackName}-CloudFormationServiceRoleArn'
-              StackName: !Ref pBaseStackName
+              StackName: '#{ExportConfigNS.BASE_STACK_NAME}'
             InputArtifacts:
               - Name: 'ExportConfigArtifact'
             Namespace: BaseCloudFormationOutNS
@@ -252,7 +249,7 @@ Resources:
               Provider: CloudFormation
             Configuration:
               ActionMode: DELETE_ONLY
-              StackName: !Ref pBaseStackName
+              StackName: '#{ExportConfigNS.BASE_STACK_NAME}'
               RoleArn:
                 Fn::ImportValue:
                   Fn::Sub: '${pBootstrapStackName}-CloudFormationServiceRoleArn'
