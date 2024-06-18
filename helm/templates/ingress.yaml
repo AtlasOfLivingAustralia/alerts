@@ -10,14 +10,13 @@ metadata:
     {{- include "ala-alerts.labels" . | nindent 4 }}
 spec:
   rules:
-    - host: {{ .Values.ingress.host }}
-      http:
-        paths:
-          - pathType: Prefix
-            path: "/"
-            backend:
-              service:
-                name: {{ include "ala-alerts.fullname" . }}
-                port:
-                  number: 8080
+  - http:
+      paths:
+      - pathType: ImplementationSpecific
+        path: "/"
+        backend:
+          service:
+            name: {{ include "ala-alerts.fullname" . }}
+            port:
+              number: 8080
 {{- end }}

@@ -49,11 +49,6 @@ ingress:
   annotations:
     kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/scheme: internet-facing
-#  hosts:
-#    - host: alerts.ala.org.au????
-#      paths:
-#        - path: /
-#          pathType: ImplementationSpecific
   tls: []
 
 resources:
