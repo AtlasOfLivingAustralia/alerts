@@ -6,17 +6,22 @@ metadata:
   annotations:
     kubernetes.io/ingress.class: {{ .Values.ingress.className }}
     alb.ingress.kubernetes.io/scheme: internet-facing
-  labels:
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/healthcheck-protocol: HTTP
+    alb.ingress.kubernetes.io/healthcheck-port: traffic-port
+{{/*    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}, {"HTTP":80}]'*/}}
+{{/*    alb.ingress.kubernetes.io/certificate-arn: {{ .Values.ingress.certificate}}*/}}
     {{- include "ala-alerts.labels" . | nindent 4 }}
 spec:
+  ingressClassName: alb
   rules:
-  - http:
-      paths:
-      - pathType: ImplementationSpecific
-        path: "/"
-        backend:
-          service:
-            name: {{ include "ala-alerts.fullname" . }}
-            port:
-              number: 8080
+    - http:
+        paths:
+        - pathType: Prefix
+          path: "/"
+          backend:
+            service:
+              name: {{ include "ala-alerts.fullname" . }}
+              port:
+                number: 8080
 {{- end }}

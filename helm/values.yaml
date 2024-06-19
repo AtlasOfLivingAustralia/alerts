@@ -5,10 +5,10 @@
 replicaCount: 1
 
 image:
-  repository: 748909248546.dkr.ecr.ap-southeast-2.amazonaws.com/ala-alerts
+  repository: ""
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "ci-code-pipeline"
+  tag: "latest"
 
 imagePullSecrets: []
 nameOverride: ""
@@ -46,9 +46,11 @@ service:
 ingress:
   enabled: true
   className: "alb"
+#  certificate: ""
   annotations:
     kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
   tls: []
 
 resources:
