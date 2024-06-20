@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: deployment-{{ include "ala-alerts.fullname" . }}
+  name: {{ include "ala-alerts.fullname" . }}
   labels:
     {{- include "ala-alerts.labels" . | nindent 4 }}
 spec:
