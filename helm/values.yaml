@@ -40,14 +40,14 @@ securityContext: {}
   # runAsUser: 1000
 
 service:
-  type: NodePort
-  port: 8080
-  targetPort: 8080
+  type: LoadBalancer
+  port: 80
+  targetPort: 8000
 
 ingress:
   enabled: true
   className: "alb"
-#  certificate: ""
+  certificateArn: "arn:aws:acm:ap-southeast-2:748909248546:certificate/969309c3-9c24-4fc8-9e16-10334e82bbd4"
   annotations:
     kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/scheme: internet-facing
@@ -102,3 +102,6 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+rds:
+  externalName: "mysql-rds"

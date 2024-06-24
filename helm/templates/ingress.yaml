@@ -4,13 +4,15 @@ kind: Ingress
 metadata:
   name: ingress-{{ include "ala-alerts.fullname" . }}
   annotations:
-{{/*    kubernetes.io/ingress.class: {{ .Values.ingress.className }}*/}}
+    kubernetes.io/ingress.class: {{ .Values.ingress.className }}
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
-{{/*    alb.ingress.kubernetes.io/healthcheck-protocol: HTTP*/}}
-{{/*    alb.ingress.kubernetes.io/healthcheck-port: traffic-port*/}}
-{{/*    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}, {"HTTP":80}]'*/}}
-{{/*    alb.ingress.kubernetes.io/certificate-arn: {{ .Values.ingress.certificate}}*/}}
+    alb.ingress.kubernetes.io/healthcheck-protocol: HTTP
+    alb.ingress.kubernetes.io/healthcheck-port: traffic-port
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+    alb.ingress.kubernetes.io/certificate-arn: {{ .Values.ingress.certificateArn }}
+    alb.ingress.kubernetes.io/ssl-redirect: '443'
+    alb.ingress.kubernetes.io/success-codes: 200,404,301,302
     {{- include "ala-alerts.labels" . | nindent 4 }}
 spec:
   ingressClassName: {{ .Values.ingress.className }}
@@ -18,10 +20,10 @@ spec:
     - http:
         paths:
         - pathType: Prefix
-          path: "/"
+          path: /
           backend:
             service:
               name: service-{{ include "ala-alerts.fullname" . }}
               port:
-                number: 8080
+                number: {{ .Values.service.port }}
 {{- end }}
