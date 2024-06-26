@@ -16,23 +16,25 @@ package au.org.ala.alerts
 import au.org.ala.web.AlaSecured
 import grails.gorm.transactions.Transactional
 import grails.util.Holders
-import org.apache.commons.lang3.time.DateParser
 
-import java.text.DateFormat
 import java.text.SimpleDateFormat
-import java.time.LocalDate
+import groovyx.net.http.HTTPBuilder
+import groovy.json.JsonSlurper
+import java.nio.file.Files
 
 @AlaSecured(value = 'ROLE_ADMIN', redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to view that page.")
 class AdminController {
 
     def authService
     def notificationService
+    def diffService
     def emailService
     def queryService
     def userService
     def messageSource
     def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
 
+    def subscriptionsPerPage = grailsApplication.config.biosecurity?.subscriptionsPerPage? grailsApplication.config.biosecurity.subscriptionsPerPage.toInteger() : 10
     def index() {}
 
     @Transactional
@@ -62,7 +64,7 @@ class AdminController {
             try {
                 sendMail {
                     to user.email.toString()
-                    from grailsApplication.config.postie.emailInfoAddressTitle + "<" + grailsApplication.config.postie.emailInfoSender + ">"
+                    from grailsApplication.config.mail.details.infoAddressTitle + "<" + grailsApplication.config.mail.details.infoSender + ">"
                     subject params.emailSubject
                     body(view: "/email/htmlEmail",
                             plugin: "email-confirmation",
@@ -109,7 +111,7 @@ class AdminController {
                     log.info "Sending email to: " + email
                     sendMail {
                         to email.toString()
-                        from grailsApplication.config.postie.emailInfoAddressTitle + "<" + grailsApplication.config.postie.emailInfoSender + ">"
+                        from grailsApplication.config.mail.details.infoAddressTitle + "<" + grailsApplication.config.mail.details.infoSender + ">"
                         subject params.emailSubject
                         body(view: "/email/htmlEmail",
                                 plugin: "email-confirmation",
@@ -221,32 +223,6 @@ class AdminController {
         }
     }
 
-    @Transactional
-    def unsubscribeUser(String id) {}
-
-    /**
-     * Used to check if server can send emails externally.
-     * Sends to email address of logged-in user
-     *
-     */
-    @Transactional
-    def sendTestEmail() {
-        def msg
-        User user = userService.getUser()
-        if (user) {
-            def query = Query.get(1)
-            def frequency = Frequency.get(1)
-            def queryResult = QueryResult.findByQuery(query) ?: new QueryResult(query: query, frequency: frequency)
-            emailService.sendGroupEmail(query, [user.email], queryResult, [], frequency, 0, "", "", [:], [:])
-            msg = "Email was sent to ${user.email} - check tomcat logs for ERROR message with value \"Error sending email to addresses:\""
-        } else {
-            msg = "User was not found or not logged in"
-        }
-
-        log.debug "#sendTestEmail - msg = ${msg}"
-        flash.message = msg
-        redirect(action: "index")
-    }
 
     /**
      * Utility method to fix broken unsubscribe links in email, where the unsubscribe link
@@ -290,15 +266,47 @@ class AdminController {
         redirect(action: 'index')
     }
 
-    @Transactional
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
     def biosecurity() {
-        List queries = queryService.getALLBiosecurityQuery()
-        List subscribers = queries.collect {queryService.getSubscribers(it.id)}
-        SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-dd")
-
-        render view: "/admin/biosecurity", model: [queries: queries, subscribers: subscribers, date: sdf.format(new Date())]
+        int total = queryService.countBiosecurityQuery()
+        List<Query> queries = queryService.getBiosecurityQuery(0, subscriptionsPerPage)
+        render view: "/admin/biosecurity", model: [total: total, queries: queries, subscriptionsPerPage: subscriptionsPerPage]
     }
 
+    /**
+     * For Ajax call to render more biosecurity queries (subscription)
+     * @param offset
+     * @param limit
+     * @return
+     */
+    def getMoreBioSecurityQuery(int startIdx) {
+        List queries = queryService.getBiosecurityQuery(startIdx, subscriptionsPerPage)
+        render view: "/admin/_bioSecuritySubscriptions", model: [queries: queries, startIdx: startIdx ]
+    }
+
+    /**
+     * For Ajax call to render one biosecurity queries (subscription)
+     * @param id
+     * @return
+     */
+    def getBioSecurityQuery(int id) {
+        def query = queryService.findBiosecurityQueryById(id)
+        def queryLog = queryService.getQueryLogs(query)
+        //For be compatible with the method rendering a list of queries AKA subscriptions, we need to convert the single query to a list
+        render view: "/admin/_bioSecuritySubscriptions", model: [queries: [query], startIdx: 0 ]
+    }
+
+    def countBioSecurityQuery() {
+        int total = queryService.countBiosecurityQuery()
+        render (contentType: 'application/json') {
+            count total
+        }
+    }
+
+    /**
+     * This function is used to subscribe a user to a species list or a query (an existing subscription of a list)
+     * @return
+     */
     @Transactional
     def subscribeBioSecurity() {
         if ((!params.listid || params.listid.allWhitespace) && !params.queryid) {
@@ -306,6 +314,16 @@ class AdminController {
         } else if (!params.useremails || params.useremails.allWhitespace) {
             flash.message = messageSource.getMessage("biosecurity.view.error.emptyemails", null, "User emails can't be empty.", siteLocale)
         } else {
+            //If params contains listid, it is for subscribing to a species list
+            if (params.listid) {
+                boolean queryExists = queryService.speciesListExists(params.listid.trim())
+                if (!queryExists) {
+                    flash.message = messageSource.getMessage("biosecurity.view.error.invalidListId", [params.listid.trim()] as Object[], "List with id: {0} is not found in the system.", siteLocale)
+                    redirect(controller: "admin", action: "biosecurity")
+                    return
+                }
+            }
+
             String[] emails = ((String)params.useremails).split(';')
             Map usermap = emails?.collectEntries{[it.trim(), userService.getUserByEmailOrCreate(it.trim())]}
             def invalidEmails = []
@@ -327,25 +345,49 @@ class AdminController {
         redirect(controller: "admin", action: "biosecurity")
     }
 
-    // Not transactional
-    def testBiosecurity() {
-        def date = params.date
+    /**
+     * It is a preview page for BioSecurity alert
+     * DO NOT update database in this function
+     * @return
+     */
+    @AlaSecured
+    def previewBiosecurityAlert() {
+        log.info("Building preview page for BioSecurity alert")
+        def date = params.date //only from preview
         def query = Query.get(params.queryid)
 
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd")
-        def processedJson = notificationService.processQueryBiosecurity(query, sdf.parse(date))
+        Date since =  sdf.parse(date)
+        Date now = new Date()
+
+        def processedJson = notificationService.processQueryBiosecurity(query, since, now)
 
         def frequency = 'weekly'
         QueryResult qr = notificationService.getQueryResult(query, Frequency.findByName(frequency))
         qr.lastResult = notificationService.gzipResult(processedJson)
-        //notificationService.refreshProperties(qr, processedJson)
+        //this logic only applies on preview page
+        qr.previousCheck = qr.lastChecked
+        qr.lastChecked = since
+        query.lastChecked = since
+
 
         def records = emailService.retrieveRecordForQuery(qr.query, qr)
         def userAssertions = queryService.isBioSecurityQuery(qr.query) ? emailService.getBiosecurityAssertions(qr.query, records as List) : [:]
         def speciesListInfo = emailService.getSpeciesListInfo(qr.query)
 
-        String urlPrefix = "${grailsApplication.config.security.cas.appServerName}${grailsApplication.config.getProperty('security.cas.contextPath', '')}"
+        String urlPrefix = "${grailsApplication.config.getProperty("grails.serverURL")}${grailsApplication.config.getProperty('security.cas.contextPath', '')}"
         def localeSubject = messageSource.getMessage("emailservice.update.subject", [query.name] as Object[], siteLocale)
+
+        //Get unsubscribe token
+        def unsubscribeOneUrl
+
+        def alaUser = authService.userDetails()
+        def user = userService.getUserByEmail(alaUser?.email)
+        def unsubscribeToken = notificationService.getUnsubscribeToken(user, query)
+        if (user && unsubscribeToken) {
+            unsubscribeOneUrl = urlPrefix + "/unsubscribe?token=${unsubscribeToken}"
+        }
+        int maxRecords = grailsApplication.config.getProperty("biosecurity.query.maxRecords", Integer, 500)
         render(view: query.emailTemplate,
 //                plugin: "email-confirmation",
                 model: [title: localeSubject,
@@ -356,44 +398,110 @@ class AdminController {
                         userAssertions: userAssertions,
                         listcode: queryService.isMyAnnotation(query) ? "biocache.view.myannotation.list" : "biocache.view.list",
                         stopNotification: urlPrefix + '/notification/myAlerts',
-                        records: records,
+                        records: records.take(maxRecords),
                         frequency: messageSource.getMessage('frequency.' + frequency, null, siteLocale),
                         totalRecords: records.size(),
                         unsubscribeAll: urlPrefix + "/unsubscribe?token=test",
-                        unsubscribeOne: urlPrefix + "/unsubscribe?token=test"
+                        unsubscribeOne: unsubscribeOneUrl
+                ])
+    }
+
+    @Transactional
+    def previewBlogAlerts() {
+        String urlPrefix = "${grailsApplication.config.security.cas.appServerName}${grailsApplication.config.getProperty('security.cas.contextPath', '')}"
+        Query query = Query.findByName(messageSource.getMessage("query.ala.blog.title", null,
+                new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()))
+
+        def unsubscribeOneUrl = ""
+        def records = []
+        if (query) {
+            QueryResult qs = QueryResult.findByQuery(query)
+            if(qs) {
+                def http = new HTTPBuilder(query.baseUrl)
+                try {
+                    http.get(path: query.queryPath) { resp, json ->
+                        if (json) {
+                            records = json
+                        }
+                    }
+                } catch (Exception ex) {
+                    // Handle any exceptions
+                    log.error("An error fetching data from ${query.baseUrl}, Using records in databae. : ${ex.message}")
+                    def lastResult = diffService.decompressZipped(qs?.lastResult)
+                    def jsonSlurper = new JsonSlurper()
+                    records = jsonSlurper.parseText(lastResult)
+                }
+            }
+
+            //Get unsubscribe token
+            def alaUser = authService.userDetails()
+            def user = userService.getUserByEmail(alaUser?.email)
+            def unsubscribeToken = notificationService.getUnsubscribeToken(user, query)
+            if (user && unsubscribeToken) {
+                unsubscribeOneUrl = grailsApplication.config.grails.serverURL + "/unsubscribe?token=${unsubscribeToken}"
+            }
+        }
+
+        render(view: query.emailTemplate,
+//                plugin: "email-confirmation",
+                model: [
+                        query: query,
+                        stopNotification: urlPrefix + '/notification/myAlerts',
+                        records: records.take(5),
+                        totalRecords: records.size(),
+                        unsubscribeOne: unsubscribeOneUrl,
                 ])
     }
 
     // Not transactional
     def csvAllBiosecurity() {
         def date = params.date
+        String outputFile = "occurrence_alerts_${date}.csv"
 
-        queryService.getALLBiosecurityQuery().each { query ->
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd")
-            def processedJson = notificationService.processQueryBiosecurity(query, sdf.parse(date))
+        def tempFilePath = Files.createTempFile(outputFile, ".csv")
+        def tempFile = tempFilePath.toFile()
+        tempFile.withWriter { writer ->
+            try {
+                queryService.getALLBiosecurityQuery().each { query ->
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd")
+                    def processedJson = notificationService.processQueryBiosecurity(query, sdf.parse(date), new Date())
 
-            def frequency = 'weekly'
-            QueryResult qr = notificationService.getQueryResult(query, Frequency.findByName(frequency))
-            qr.lastResult = notificationService.gzipResult(processedJson)
-            //notificationService.refreshProperties(qr, processedJson)
+                    def frequency = 'weekly'
+                    QueryResult qr = notificationService.getQueryResult(query, Frequency.findByName(frequency))
+                    qr.lastResult = notificationService.gzipResult(processedJson)
+                    //notificationService.refreshProperties(qr, processedJson)
 
-            def records = emailService.retrieveRecordForQuery(qr.query, qr)
-            def userAssertions = queryService.isBioSecurityQuery(qr.query) ? emailService.getBiosecurityAssertions(qr.query, records as List) : [:]
-            def speciesListInfo = emailService.getSpeciesListInfo(qr.query)
+                    def records = emailService.retrieveRecordForQuery(qr.query, qr)
+                    //def userAssertions = queryService.isBioSecurityQuery(qr.query) ? emailService.getBiosecurityAssertions(qr.query, records as List) : [:]
+                    def speciesListInfo = emailService.getSpeciesListInfo(qr.query)
 
-            String urlPrefix = "${grailsApplication.config.security.cas.appServerName}${grailsApplication.config.getProperty('security.cas.contextPath', '')}"
-            def localeSubject = messageSource.getMessage("emailservice.update.subject", [query.name] as Object[], siteLocale)
-
-            if (records) {
-                records.each { record ->
-                    response.outputStream << date
-                    response.outputStream << ','
-                    response.outputStream << record.uuid
-                    response.outputStream << ','
-                    response.outputStream << speciesListInfo.name
-                    response.outputStream << '\n'
+                    //String urlPrefix = "${grailsApplication.config.security.cas.appServerName}${grailsApplication.config.getProperty('security.cas.contextPath', '')}"
+                    // def localeSubject = messageSource.getMessage("emailservice.update.subject", [query.name] as Object[], siteLocale)
+                    log.debug("${records.size()}  records were found in ${query.name}")
+                    if (records) {
+                        records.each { record ->
+                            writer << "${date},${record.uuid},${speciesListInfo.name}\n"
+                        }
+                    }
                 }
+            }catch (Exception e) {
+                log.error("Error in generating CSV file: ${e.message}")
             }
+        }
+
+        response.setContentType("application/octet-stream")
+        response.setHeader("Content-Disposition", "attachment; filename=occurrence_alerts_${date}.csv")
+        def outputStream = response.outputStream
+
+        try {
+            BufferedReader reader = Files.newBufferedReader(tempFilePath)
+            String line
+            while ((line = reader.readLine()) != null) {
+                outputStream.println(line)
+            }
+            reader.close()
+        } finally {
+            outputStream.close()
         }
     }
 

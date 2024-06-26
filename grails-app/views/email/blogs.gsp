@@ -1,276 +1,247 @@
 <%@ page contentType="text/html"%>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional //EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html><head><title></title><meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <style type="text/css">
-    /* Mobile-specific Styles */
-    @media only screen and (max-device-width: 480px) {
-        table[class=w0], td[class=w0] { width: 0 !important; }
-        table[class=w10], td[class=w10], img[class=w10] { width:10px !important; }
-        table[class=w15], td[class=w15], img[class=w15] { width:5px !important; }
-        table[class=w30], td[class=w30], img[class=w30] { width:10px !important; }
-        table[class=w60], td[class=w60], img[class=w60] { width:10px !important; }
-        table[class=w125], td[class=w125], img[class=w125] { width:80px !important; }
-        table[class=w130], td[class=w130], img[class=w130] { width:55px !important; }
-        table[class=w140], td[class=w140], img[class=w140] { width:90px !important; }
-        table[class=w160], td[class=w160], img[class=w160] { width:180px !important; }
-        table[class=w170], td[class=w170], img[class=w170] { width:100px !important; }
-        table[class=w180], td[class=w180], img[class=w180] { width:80px !important; }
-        table[class=w195], td[class=w195], img[class=w195] { width:80px !important; }
-        table[class=w220], td[class=w220], img[class=w220] { width:80px !important; }
-        table[class=w240], td[class=w240], img[class=w240] { width:180px !important; }
-        table[class=w255], td[class=w255], img[class=w255] { width:185px !important; }
-        table[class=w275], td[class=w275], img[class=w275] { width:135px !important; }
-        table[class=w280], td[class=w280], img[class=w280] { width:135px !important; }
-        table[class=w300], td[class=w300], img[class=w300] { width:140px !important; }
-        table[class=w325], td[class=w325], img[class=w325] { width:95px !important; }
-        table[class=w360], td[class=w360], img[class=w360] { width:140px !important; }
-        table[class=w410], td[class=w410], img[class=w410] { width:180px !important; }
-        table[class=w470], td[class=w470], img[class=w470] { width:200px !important; }
-        table[class=w580], td[class=w580], img[class=w580] { width:280px !important; }
-        table[class=w640], td[class=w640], img[class=w640] { width:300px !important; }
-        table[class*=hide], td[class*=hide], img[class*=hide], p[class*=hide], span[class*=hide] { display:none !important; }
-        table[class=h0], td[class=h0] { height: 0 !important; }
-        p[class=footer-content-left] { text-align: center !important; }
-        #headline p { font-size: 30px !important; }
-        .article-content, #left-sidebar{ -webkit-text-size-adjust: 90% !important; -ms-text-size-adjust: 90% !important; }
-        .header-content, .footer-content-left {-webkit-text-size-adjust: 80% !important; -ms-text-size-adjust: 80% !important;}
-        img { height: auto; line-height: 100%;}
+<%@ page import="java.text.SimpleDateFormat" %>
+<%@ page import="org.apache.commons.lang3.StringUtils" %>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="x-apple-disable-message-reformatting">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${title}</title>
+  <style>
+
+  .ala-color {
+    color: #C44D34 !important;
+  }
+
+  .default-font {
+    vertical-align: top;
+    font-family: 'Lato', Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1.42;
+    letter-spacing: -0.4px;
+  }
+
+  .large-white-font {
+    font-weight: 700;
+    font-size: 24px; /* Adjust the font size as needed */
+    color: #ffffff; /* Adjust the color as needed */
+  }
+
+  .padding {
+    padding: 20px 10px 20px 10px;
+  }
+
+  body {
+    background-color: #f4f4f4;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+  }
+
+  .main-shadow-div {
+    mso-table-lspace: 0pt;
+    mso-table-rspace: 0pt;
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 620px;
+    margin: 20px auto 0px;
+  }
+
+  .center-white-div{
+    display: flex;
+    vertical-align: top;
+    justify-content: center;
+    align-items: center;
+    background-color: #ffffff;
+    padding: 20px 20px 10px 20px;
+  }
+
+  .background-image-div {
+    vertical-align: top;
+    background-image: url("${grailsApplication.config.grails.serverURL+'/assets/email/banner-ocean.png'}");
+    background-position: top center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-color: #003A70;
+    color: #ffffff;
+    text-align: center;
+  }
+
+  img {
+    border: 0;
+    line-height: 100%;
+    outline: 0;
+  }
+
+  .blog-thumbnail-div {
+    padding: 10px 0px 10px 0px;
+    align-items: center;
+    max-width: 130px;
+  }
+
+  .blog-div {
+    padding: 20px 20px 20px 20px;
+    background-color: white;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+  }
+
+  .blog-title-font {
+    font-size: 15px;
+    line-height: 1.42;
+    font-weight: 700;
+    letter-spacing: -0.2px;
+    text-align: left;
+  }
+  .blog-content-font {
+    font-size: 13px;
+    line-height: 1.42;
+    font-weight: 300;
+    letter-spacing: -0.2px;
+    text-align: left;
+  }
+
+  /*.blog-content-div {*/
+  /*  padding: 10px 20px 10px 20px;*/
+  /*}*/
+
+  .info-div {
+    padding: 20px 70px 14px 70px;
+    background-color: #C44D34;
+    font-size: 14px;
+    line-height: 1.43;
+    letter-spacing: -0.2px;
+    color: #ffffff;
+    text-align: center;
+  }
+
+  .button-div {
+    padding: 20px 20px 20px 20px;
+    background-color: white;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+  }
+
+  .record-button {
+    background-color: #C44D34;
+    cursor: pointer;
+    border: 0;
+    border-radius: 10px;
+    color: white;
+    padding: 11px 19px;
+    text-align: center;
+    display: inline-block;
+    font-size: 16px;
+  }
+
+  .normal-font-color {
+    color: #000000;
+    background-color: #ffffff;
+  }
+
+  @media only screen and (min-width:812px) and (orientation: landscape){
+    .main-shadow-div {
+      width: 620px !important;
     }
-    /* Client-specific Styles */
-    #outlook a { padding: 0; }
-    /* Force Outlook to provide a "view in browser" button. */
-    body { width: 100% !important; }
-    .ReadMsgBody { width: 100%; }
-    .ExternalClass { width: 100%; display: block !important; }
-    /* Reset Styles */
-    body { background-color: #c7c7c7; margin: 0; padding: 0; }
-    img { outline: none; text-decoration: none; display: block; }
-    br, strong br, b br, em br, i br { line-height: 100%; }
-    h1, h2, h3, h4, h5, h6 { line-height: 100% !important; -webkit-font-smoothing: antialiased; }
-    h1 a, h2 a, h3 a, h4 a, h5 a, h6 a { color: blue !important; }
-    h1 a:active, h2 a:active, h3 a:active, h4 a:active, h5 a:active, h6 a:active { color: red !important; }
-    h1 a:visited, h2 a:visited, h3 a:visited, h4 a:visited, h5 a:visited, h6 a:visited { color: purple !important; }
-    table td, table tr { border-collapse: collapse; }
-    .yshortcuts, .yshortcuts a, .yshortcuts a:link, .yshortcuts a:visited, .yshortcuts a:hover, .yshortcuts a span { color: black; text-decoration: none !important; border-bottom: none !important; background: none !important; }
-    /* Body text color for the New Yahoo. This example sets the font of Yahoo's Shortcuts to black. */
-    code { white-space: normal; word-break: break-all; }
-    #background-table { background-color: #c7c7c7; }
-    /* Webkit Elements */
-    #top-bar { border-radius: 6px 6px 0px 0px; -moz-border-radius: 6px 6px 0px 0px; -webkit-border-radius: 6px 6px 0px 0px; -webkit-font-smoothing: antialiased; background-color: #3d464c; color: #888888; }
-    #top-bar a { font-weight: bold; color: #eeeeee; text-decoration: none; }
-    #footer { border-radius: 0px 0px 6px 6px; -moz-border-radius: 0px 0px 6px 6px; -webkit-border-radius: 0px 0px 6px 6px; -webkit-font-smoothing: antialiased; }
-    /* Fonts and Content */
-    body, td { font-family: 'Helvetica Neue', Arial, Helvetica, Geneva, sans-serif; }
-    .header-content, .footer-content-left, .footer-content-right { -webkit-text-size-adjust: none; -ms-text-size-adjust: none; }
-    /* Prevent Webkit and Windows Mobile platforms from changing default font sizes on header and footer. */
-    .header-content { font-size: 12px; color: #888888; }
-    .header-content a { font-weight: bold; color: #eeeeee; text-decoration: none; }
-    #headline p { color: #999999; font-family: 'Helvetica Neue', Arial, Helvetica, Geneva, sans-serif; font-size: 36px; text-align: center; margin-top: 0px; margin-bottom: 30px; }
-    #headline p a { color: #999999; text-decoration: none; }
-    .article-title { font-size: 18px; line-height: 24px; color: #666; font-weight: bold; margin-top: 0px; margin-bottom: 18px; font-family: 'Helvetica Neue', Arial, Helvetica, Geneva, sans-serif; }
-    .article-title a { color: #666; text-decoration: none; }
-    .article-title.with-meta { margin-bottom: 0; }
-    .article-meta { font-size: 13px; line-height: 20px; color: #ccc; font-weight: bold; margin-top: 0; }
-    .article-heading { font-size: 16px; line-height: 20px; color: #444444; margin-top: 0px; margin-bottom: 18px; font-family: 'Helvetica Neue', Arial, Helvetica, Geneva, sans-serif; }
-    .article-heading a { color: #2f82de; text-decoration: none; }
-    .article-content { font-size: 13px; line-height: 18px; color: #444444; margin-top: 0px; margin-bottom: 18px; font-family: 'Helvetica Neue', Arial, Helvetica, Geneva, sans-serif; }
-    .article-content a { color: #2f82de; font-weight: bold; text-decoration: none; }
-    .article-content img { max-width: 100% }
-    .article-content ol, .article-content ul { margin-top: 0px; margin-bottom: 18px; margin-left: 19px; padding: 0; }
-    .article-content li { font-size: 13px; line-height: 18px; color: #444444; }
-    .article-content li a { color: #2f82de; text-decoration: underline; }
-    .article-content p { margin-bottom: 15px; }
-    .footer-content-left { font-size: 12px; line-height: 15px; color: #888888; margin-top: 0px; margin-bottom: 15px; }
-    .footer-content-left a { color: #eeeeee; font-weight: bold; text-decoration: none; }
-    .footer-content-right { font-size: 11px; line-height: 16px; color: #888888; margin-top: 0px; margin-bottom: 15px; }
-    .footer-content-right a { color: #eeeeee; font-weight: bold; text-decoration: none; }
-    #footer { background-color: #3d464c; color: #CCC; }
-    #footer a { color: #eeeeee; text-decoration: none; font-weight: bold; }
-    #permission-reminder { white-space: normal; }
-    #street-address { color: #ffffff; white-space: normal; }
-</style>
-<!--[if gte mso 9]>
-  <style _tmplitem="430">
-    .article-content ol, .article-content ul { margin: 0 0 0 24px; padding: 0; list-style-position: inside; }
+  }
+
+  @media only screen and (max-width: 375px) {
+    .main-shadow-div {
+      width: 100%; /* Set width to 100% to make it full-width on mobile phones */
+    }
+  }
   </style>
-<![endif]-->
 </head>
 <body>
-<table width="100%" cellpadding="0" cellspacing="0" border="0" id="background-table">
-    <tbody>
-    <tr>
-        <td align="center" bgcolor="#c7c7c7">
-            <table class="w640" style="margin:0 10px;" width="640" cellpadding="0" cellspacing="0" border="0">
-                <tbody>
-                <tr>
-                    <td class="w640" width="640" height="20"></td>
-                </tr>
-                <tr>
-                    <td class="w640" width="640">
-                        <table id="top-bar" class="w640" width="640" cellpadding="0" cellspacing="0" border="0" bgcolor="#c7c7c7">
-                            <tbody>
-                            <tr>
-                                <td class="w15" width="15"></td>
-                                <td class="w325" width="350" valign="middle" align="left">
-                                    <table class="w325" width="350" cellpadding="0" cellspacing="0" border="0">
-                                        <tbody>
-                                        <tr>
-                                            <td class="w325" width="350" height="8"></td>
-                                        </tr>
-                                        </tbody>
-                                    </table>
-                                    <div class="header-content"><a href="http://www.ala.org.au/">visit the Atlas website</a></div>
-                                    <table class="w325" width="350" cellpadding="0" cellspacing="0" border="0">
-                                        <tbody>
-                                        <tr>
-                                            <td class="w325" width="350" height="8"></td>
-                                        </tr>
-                                        </tbody>
-                                    </table>
-                                </td>
-                                <td class="w30" width="30"></td>
-                                <td class="w255" width="255" valign="middle" align="right">
-                                    <div class="header-content"><a href="http://twitter.com/atlaslivingaust">follow on Twitter</a></div>
-                                </td>
-                                <td class="w15" width="15"></td>
-                            </tr>
-                            </tbody>
-                        </table>
-                    </td>
-                </tr>
-                <tr>
-                    <td id="header" class="w640" width="640" align="center" bgcolor="#3d464c" style="border-top:2px solid #c7c7c7;">
-                        <div align="left" style="text-align:left;padding: 10px;">
-                            <a href="http://www.ala.org.au/" title="visit the ALA website"><img src="https://www.ala.org.au/app/uploads/2019/01/logo-300x45.png" alt="ALA logo" width="300" height="45" style="display: block; margin: 5px 15px;"></a>
-                        </div>
-                    </td>
-                </tr>
+    <div class="main-shadow-div default-font">
+      <div class="center-white-div">
+        <a href="https://www.ala.org.au" style="text-decoration: none;">
+          <img src="${grailsApplication.config.grails.serverURL + '/assets/email/logo-dark.png'}" height="60" alt="" >
+        </a>
+      </div>
+      <div class="background-image-div padding ">
+        <div class="default-font large-white-font">Latest ALA Blog Updates</div>
+        <br>
+        <div class="default-font">
+          <b>${new SimpleDateFormat("dd MMMM yyyy").format(new Date())}</b>
+        </div>
+      </div>
 
-                <tr>
-                    <td class="w640" width="640" height="30" bgcolor="#ffffff"></td>
-                </tr>
-                <tr id="simple-content-row">
-                    <td class="w640" width="640" bgcolor="#ffffff">
-                        <table class="w640" width="640" cellpadding="0" cellspacing="0" border="0">
-                            <tbody>
-                            <tr>
-                                <td class="w30" width="30"></td>
-                                <td class="w580" width="580">
-                                    <repeater>
-                                        <layout label="Text with right-aligned image">
-                                            <table class="w580" width="580" cellpadding="0" cellspacing="0" border="0">
-                                                <tbody>
-                                                <tr>
-                                                    <td class="w580" width="580">
-                                                        <p align="left" class="article-title">
-                                                            <singleline label="Title">
-                                                                ALA Blog
-                                                            </singleline>
-                                                        </p>
-                                                    </td>
-                                                </tr>
-                                                <g:each in="${records}" var="blog">
-                                                    <tr>
-                                                        <td class="w580" width="580">
-                                                            <p align="left" class="article-heading">
-                                                                <singleline label="Title">
-                                                                    <a href="${blog.link}">${raw(blog.title.rendered)}</a>
-                                                                </singleline>
-                                                            </p>
-                                                            <table cellpadding="0" cellspacing="0" border="0" align="right">
-                                                                <tbody>
-                                                                <tr>
-                                                                    <td class="w30" width="15"></td>
-                                                                    <td><g:if test="${blog.thumbnail}"><img src="${blog.thumbnail}" alt="${raw(blog.title.rendered)}"></g:if></td>
-                                                                </tr>
-                                                                <tr>
-                                                                    <td class="w30" width="15" height="5"></td>
-                                                                    <td></td>
-                                                                </tr>
-                                                                </tbody>
-                                                            </table>
-                                                            <div align="left" class="article-content">
-                                                                <multiline>
-                                                                    ${raw(blog.excerpt.rendered)}
-                                                                </multiline>
-                                                            </div>
-                                                            <div align="left" class="article-content"> </div>
-                                                        </td>
-                                                    </tr>
-                                                </g:each>
-                                                </tbody>
-                                            </table>
-                                        </layout>
-                                    </repeater>
-                                </td>
-                                <td class="w30" width="30">
-                                </td>
-                            </tr>
-                            </tbody>
-                        </table>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="w640" width="640" height="15" bgcolor="#ffffff">
-                        <div align="left" class="article-content" style="margin:10px 30px;">
-                            <multiline>
-                                For all the latest blog posts, visit the <a href="http://www.ala.org.au/blogs-news/">ALA Blog</a>
-                            </multiline>
-                        </div>
-                    </td>
-                </tr>
+      <g:each status="i" in="${records}" var="blog">
+        <div class="blog-div" >
+          <div style="display: inline-flex; flex-direction: row; justify-content: space-between; flex-grow: 1; ">
+%{--            <div name="thumbnail-image" class="blog-thumbnail-div" style="width: 30%;">--}%
+%{--              <g:if test="${blog?._links?.'wp:featuredmedia'}">--}%
+%{--                <%--}%
+%{--                  if (blog._links['wp:featuredmedia'].size() > 0) {--}%
+%{--                    // Choose the first one. Need to be updated if we have multiple images--}%
+%{--                    def featuredMedia = blog._links['wp:featuredmedia'][0]--}%
+%{--                    def imageUrl = "${featuredMedia?.href}"--}%
+%{--                    def url = new URL(imageUrl)--}%
+%{--                    def connection = url.openConnection() as HttpURLConnection--}%
+%{--                    int responseCode = connection.responseCode--}%
+%{--                    if (responseCode == 404) {--}%
+%{--                      // Handle the case where the image URL returns a 404 status code--}%
+%{--                       out <<  "<img src=\"${grailsApplication.config.grails.serverURL + '/assets/email/no-img-av-ALAsilver.png'}\" height='80' alt='Sorry, no image availabe' > "--}%
+%{--                    } else {--}%
+%{--                      // Handle the case where the image URL returns a different status code--}%
+%{--                      out << "<img src=\"${imageUrl}\" alt=\"${raw(blog.title.rendered)}\">"--}%
+%{--                    }--}%
+%{--                  }--}%
+%{--                %>--}%
+%{--              </g:if>--}%
+%{--              <g:else>--}%
+%{--                <i class="bi bi-images"></i>--}%
+%{--              </g:else>--}%
+%{--            </div>--}%
+            <div style="width: 100%;">
+              <a class="blog-title-font ala-color" href="${blog.link}" ><b>${raw(blog.title.rendered)}</b></a>
+              <div class="blog-content-font">${raw(blog.excerpt.rendered)}</div>
+            </div>
+          </div>
+        </div>
+      </g:each>
 
-                <tr>
-                    <td class="w640" width="640">
-                        <table id="footer" class="w640" width="640" cellpadding="0" cellspacing="0" border="0" bgcolor="#c7c7c7">
-                            <tbody>
-                            <tr>
-                                <td class="w30" width="30"></td>
-                                <td class="w580 h0" width="360" height="10"></td>
-                                <td class="w0" width="60"></td>
-                                <td class="w0" width="160"></td>
-                                <td class="w30" width="30"></td>
-                            </tr>
-                            <tr>
-                                <td class="w30" width="40" style="padding-left: 20px; padding-top: 10px;">
-                                    <a href="http://creativecommons.org/licenses/by/3.0/au/"
-                                       title="External link to Creative Commons"><img
-                                            src="https://www.ala.org.au/app/themes/pvtl/images/cc-by.png"
-                                            width="80" height="15" alt=""></a>
-                                </td>
-                                <td class="w580" width="520" valign="top"  style="padding-left: 10px; padding-top: 10px;">
-                                    <p style="font-size:11px;padding-left:5px;">This content is licensed under a <a
-                                            href="http://creativecommons.org/licenses/by/3.0/au/"
-                                            title="External link to Creative Commons" class="external">Creative Commons Attribution
-                                        3.0 Australia License</a>. </p>
-                                </td>
-                                <td class="hide w0" width="160" valign="top">
+      <div class="button-div" >
+        <a href="${grailsApplication.config.ala.baseURL + '/blog'}">
+          <button class="record-button" ><strong>All ALA news & updates</strong>
+          </button>
+        </a>
+      </div>
 
-                                </td>
-                                <td class="w30" width="30"></td>
-                            </tr>
-                            <tr>
-                                <td class="w30" width="30"></td>
-                                <td class="w580 h0" width="360" height="15"></td>
-                                <td class="w0" width="60"></td>
-                                <td class="w0" width="160"></td>
-                                <td class="w30" width="30"></td>
-                            </tr>
-                            </tbody>
-                        </table>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="w640" width="640" height="60"></td>
-                </tr>
-                </tbody>
-            </table>
-        </td>
-    </tr>
-    </tbody>
-</table>
+      <div class="info-div" >
+        <p>The Atlas of Living Australia acknowledges Australia's Traditional Owners and pays respect to the past and present Elders of the nation's Aboriginal and Torres Strait Islander communities.</p>
+        <p>
+          We honour and celebrate the spiritual, cultural and customary connections of Traditional Owners to Country and the biodiversity that forms part of that Country.</p>
+      </div>
 
-<g:render template="/email/unsubscribe"/>
+      <div class="info-div normal-font-color">
+        <div>
+          <img src="${grailsApplication.config.grails.serverURL}/assets/email/ncris.png" alt="Affiliated orgs" usemap="#orgsMap"  height="80" >
+          <map name="orgsMap">
+            <area shape="rect" coords="0,0,100,100" href="https://www.education.gov.au/ncris" alt="NCRIS">
+            <area shape="rect" coords="100,0,180,100" href="https://csiro.au" alt="CSIRO">
+            <area shape="rect" coords="180,0,300,100" href="https://www.gbif.org/" alt="GBIF">
+          </map>
+          <p>You are receiving this email because you opted in to ALA blog alerts.
+            <div>
+              <p>Our mailing address is: </p>
+              Atlas of Living Australia <br/> GPO Box 1700<br/> Canberra, ACT 2601<br/>Australia
+            </div>
+            <br>
+            Don't want to receive these emails? You can <a href="${unsubscribeOne}" style="color: #C44D34;">unsubscribe</a>.
+          </p>
+        </div>
+      </div>
+    </div>
 
-</body>
+  </body>
 </html>
