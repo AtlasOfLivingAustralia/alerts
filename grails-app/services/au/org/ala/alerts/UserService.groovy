@@ -109,8 +109,8 @@ class UserService {
                         if (userDetails) {
                             // update email
                             boolean update = false
-                            if (user.email != userDetails.userName) {
-                                user.email = userDetails.userName
+                            if (user.email != userDetails.email) {
+                                user.email = userDetails.email
                                 log.debug "Updating email address for user ${user.userId}: ${userDetails.userName}"
                                 update = true
                             }
@@ -226,6 +226,20 @@ class UserService {
         user
     }
 
+    /**
+     * Get user by sequence id
+     * @param id
+     * @return
+     */
+    User getUserBySequeceId(Long id) {
+        User.get(id)
+    }
+
+    /**
+     * Get user by userId
+     * @param userId ALA user id
+     * @return
+     */
     User getUserById(String userId) {
         User.findByUserId(userId)
     }

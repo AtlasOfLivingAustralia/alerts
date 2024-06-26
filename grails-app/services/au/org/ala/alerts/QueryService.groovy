@@ -1,11 +1,12 @@
 package au.org.ala.alerts
 
 import grails.util.Holders
+import groovy.sql.Sql
 import org.apache.http.entity.ContentType
-import org.grails.web.json.JSONObject
 import org.springframework.dao.DataIntegrityViolationException
-
 import grails.gorm.transactions.Transactional
+
+
 
 @Transactional
 class QueryService {
@@ -16,7 +17,7 @@ class QueryService {
 
     def grailsApplication, notificationService, alertsWebService, webService
 
-    def messageSource
+    def messageSource, dataSource
     def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
 
     Notification getNotificationForUser(Query query, User user) {
@@ -68,12 +69,19 @@ class QueryService {
         Integer fireWhenNotZeroValue = -1
         queryResult.propertyValues.each { pv ->
             if (pv.propertyPath.fireWhenNotZero) {
-                fireWhenNotZeroValue = pv.currentValue.toInteger()
+                // true is 1, false is 0
+                fireWhenNotZeroValue = pv?.currentValue? pv?.currentValue.toInteger() : -1
             }
         }
         fireWhenNotZeroValue
     }
 
+    /**
+     * Voilate the constraints, cannot delete
+     * @param queryInstance
+     * @return
+     * @throws DataIntegrityViolationException
+     */
     def deleteQuery(Query queryInstance) throws DataIntegrityViolationException {
         def propertyPaths = PropertyPath.findAllByQuery(queryInstance)
         def queryResults = QueryResult.findAllByQuery(queryInstance)
@@ -208,7 +216,7 @@ class QueryService {
                 baseUrlForUI  : grailsApplication.config.biocache.baseURL,
                 name          : 'New records for ' + taxonName,
                 name          : messageSource.getMessage("query.service.occurrences.name", [taxonName] as Object[], siteLocale),
-                resourceName  : grailsApplication.config.postie.defaultResourceName,
+                resourceName  : grailsApplication.config.mail.details.defaultResourceName,
                 updateMessage : messageSource.getMessage("query.service.occurrences.update.msg", [taxonName] as Object[], siteLocale),
                 description   : messageSource.getMessage("query.service.occurrences.desc", [taxonName] as Object[], siteLocale),
                 queryPath     : '/occurrences/taxon/' + taxonGuid + '?fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc&pageSize=20&facets=basis_of_record',
@@ -226,7 +234,7 @@ class QueryService {
                 baseUrl       : grailsApplication.config.biocacheService.baseURL,
                 baseUrlForUI  : grailsApplication.config.biocache.baseURL,
                 name          : messageSource.getMessage("query.service.occurrences.recorded.name", [taxonName, regionName] as Object[], siteLocale),
-                resourceName  : grailsApplication.config.postie.defaultResourceName,
+                resourceName  : grailsApplication.config.mail.details.defaultResourceName,
                 updateMessage : messageSource.getMessage("query.service.occurrences.recorded.update.msg", [taxonName, regionName] as Object[], siteLocale),
                 description   : messageSource.getMessage("query.service.occurrences.recorded.desc", [taxonName, regionName] as Object[], siteLocale),
                 queryPath     : '/occurrences/taxon/' + taxonGuid + '?fq=' + layerId + ':%22' + regionName.encodeAsURL() + '%22&fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc&pageSize=20&facets=basis_of_record',
@@ -244,7 +252,7 @@ class QueryService {
                 baseUrl       : grailsApplication.config.biocacheService.baseURL,
                 baseUrlForUI  : grailsApplication.config.biocache.baseURL,
                 name          : messageSource.getMessage("query.service.occurrences.recorded.name", [speciesGroup, regionName] as Object[], siteLocale),
-                resourceName  : grailsApplication.config.postie.defaultResourceName,
+                resourceName  : grailsApplication.config.mail.details.defaultResourceName,
                 updateMessage : messageSource.getMessage("query.service.occurrences.recorded.update.msg", [speciesGroup, regionName] as Object[], siteLocale),
                 description   : messageSource.getMessage("query.service.occurrences.recorded.desc", [speciesGroup, regionName] as Object[], siteLocale),
                 queryPath     : '/occurrences/search?q=' + layerId + ':%22' + regionName.encodeAsURL() + '%22&fq=species_group:' + speciesGroup + '&fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc&pageSize=20&facets=basis_of_record',
@@ -262,7 +270,7 @@ class QueryService {
                 baseUrl       : grailsApplication.config.biocacheService.baseURL,
                 baseUrlForUI  : grailsApplication.config.biocache.baseURL,
                 name          : messageSource.getMessage("query.service.occurrences.name", [regionName] as Object[], siteLocale),
-                resourceName  : grailsApplication.config.postie.defaultResourceName,
+                resourceName  : grailsApplication.config.mail.details.defaultResourceName,
                 updateMessage : messageSource.getMessage("query.service.occurrences.update.msg", [regionName] as Object[], siteLocale),
                 description   : messageSource.getMessage("query.service.occurrences.desc", [regionName] as Object[], siteLocale),
                 queryPath     : '/occurrences/search?q=' + layerId + ':%22' + regionName.encodeAsURL() + '%22&fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc&pageSize=20&facets=basis_of_record',
@@ -279,7 +287,7 @@ class QueryService {
         new Query([
                 baseUrl       : grailsApplication.config.biocacheService.baseURL,
                 baseUrlForUI  : grailsApplication.config.biocache.baseURL,
-                resourceName  : grailsApplication.config.postie.defaultResourceName,
+                resourceName  : grailsApplication.config.mail.details.defaultResourceName,
                 name          : messageSource.getMessage("query.myannotations.title", null, siteLocale),
                 updateMessage : messageSource.getMessage("myannotations.update.message", null, siteLocale),
                 description   : messageSource.getMessage("query.myannotations.descr", null, siteLocale),
@@ -294,15 +302,28 @@ class QueryService {
         '/occurrences/search?fq=assertion_user_id:' + userId + '&dir=desc&pageSize=300'
     }
 
+    /**
+     * Deprecated
+     * ___DATEPARAM___
+     * @param listid
+     * @return
+     */
     Query createBioSecurityQuery(String listid) {
-        String queryPathForUITemplate = grailsApplication.config.getProperty("biosecurity.queryurl.template", String, "/occurrences/search?q=species_list_uid:___LISTIDPARAM___&fq=decade:2020&fq=country:Australia&fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&fq=occurrence_date:[___LASTYEARPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc&disableAllQualityFilters=true")
+        def sList = getSpeciesListName(listid)
+        String speciesListName = sList.name
+        //differentiate non-authoritative / authoritative list
+        String queryPathForUITemplate = grailsApplication.config.getProperty("biosecurity.query.template.nonAuthoritativeList", String, "/occurrences/search?q=species_list:___LISTIDPARAM___&fq=decade:2020&fq=country:Australia&fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&fq=occurrence_date:[___LASTYEARPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc&disableAllQualityFilters=true")
+        if (sList.isAuthoritative) {
+            queryPathForUITemplate = grailsApplication.config.getProperty("biosecurity.query.template.authoritativeList", String, "/occurrences/search?q=species_list_uid:___LISTIDPARAM___&fq=decade:2020&fq=country:Australia&fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&fq=occurrence_date:[___LASTYEARPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc&disableAllQualityFilters=true")
+        }
+
         String queryPathForUI = queryPathForUITemplate.replaceAll("___LISTIDPARAM___", listid)
-        String speciesListName = getSpeciesListName(listid)
+
         new Query([
                 baseUrl       : grailsApplication.config.biocacheService.baseURL,
                 baseUrlForUI  : grailsApplication.config.biocache.baseURL,
                 name          : messageSource.getMessage("query.biosecurity.title", null, siteLocale) + ' ' + speciesListName,
-                resourceName  : grailsApplication.config.postie.defaultResourceName,
+                resourceName  : grailsApplication.config.mail.details.defaultResourceName,
                 updateMessage : 'more.biosecurity.update.message',
                 description   : messageSource.getMessage("query.biosecurity.descr", null, siteLocale) + ' ' + speciesListName,
                 queryPath     : queryPathForUI + '&pageSize=20&facets=basis_of_record',
@@ -335,9 +356,48 @@ class QueryService {
         }
     }
 
+    // return the number of biosecurity queries
+    def countBiosecurityQuery() {
+        return Query.countByEmailTemplate('/email/biosecurity')
+    }
+
     // get all biosecurity queries
     def getALLBiosecurityQuery() {
         return Query.findAllByEmailTemplate('/email/biosecurity')
+    }
+
+    // get biosecurity queries with offset and limit
+    def getBiosecurityQuery(int offset,int limit) {
+        def criteria = Query.createCriteria()
+        List<Query> queries = criteria.list(max: limit, offset: offset) {
+            eq('emailTemplate', '/email/biosecurity')
+            order('id', 'desc')
+        }
+
+        def results = queries.collect{ query ->
+            QueryResult qr = !query.queryResults.isEmpty() ? query.queryResults.last() : null
+            if (qr) {
+                query.lastChecked = qr.lastChecked
+            }
+            query
+        }
+
+        return results.toList()
+    }
+
+
+    def findBiosecurityQueryById(id) {
+        Query subscription = Query.get(id)
+        QueryResult qr = QueryResult.findByQuery(subscription)
+        if (qr) {
+            subscription.lastChecked = qr.lastChecked
+        }
+        return subscription
+    }
+
+    def getQueryLogs(query) {
+        def queryResult = QueryResult.findByQuery(query)
+        return queryResult?.retrieveLogs()
     }
 
     // get all subscribers to the specified query
@@ -351,15 +411,90 @@ class QueryService {
                   group by u""", [query: query]) : []
     }
 
-    def getSpeciesListName(String listid) {
+    boolean speciesListExists(String listid) {
+        boolean exists = false
         try {
             def resp = webService.get(grailsApplication.config.getProperty('lists.baseURL') + "/ws/speciesListInternal/" + listid, [:], ContentType.APPLICATION_JSON, true, false)
+            //If the list exists, the response will contain the listName, otherwise it returns all lists
             if (resp?.resp?.listName) {
-                return '\"' + resp?.resp?.listName + '\"'
+                exists = true
             }
+
+        } catch (Exception ex) {
+            log.error(ex.message)
+        }
+        return exists
+    }
+
+    def getSpeciesListName(String listid) {
+        def info = [id: listid, name: listid, isAuthoritative: false]
+        try {
+            def resp = webService.get(grailsApplication.config.getProperty('lists.baseURL') + "/ws/speciesListInternal/" + listid, [:], ContentType.APPLICATION_JSON, true, false)
+
+            if (resp?.resp?.listName) {
+               info.name = resp?.resp?.listName
+            }
+            info.isAuthoritative =resp?.resp?.isAuthoritative
         } catch (Exception ex) {
             log.error("Failed to get species list detail from " + listURL, ex)
         }
-        listid
+
+        info
+    }
+
+    def searchBiosecuritySubscriptions(keywords) {
+        def sql = new Sql(dataSource)
+        def result = null
+        try {
+            // Execute a raw SQL for full-text match query
+            String query = "SELECT * FROM query WHERE MATCH(name) AGAINST ('${keywords}*' IN BOOLEAN MODE ) AND email_template = '/email/biosecurity' LIMIT 10 "
+            result = sql.rows(query)
+        } catch(Exception e) {
+            // Handle any exceptions
+            log.error(e.message)
+        }
+        finally {
+            // Close the SQL connection
+            sql.close()
+        }
+        result
+    }
+
+    // delete a query (also remove all subscriptions)
+    def wipe(id) {
+        def result = ['status': 1, 'message': 'Runtime error, check logs']
+        if (id) {
+            def query = Query.findById(id)
+            if (query) {
+                //Manually delete all related PropertyPath and PropertyValue, since the cascade delete does not work
+                PropertyPath.findAllByQuery(query).each { PropertyPath pp->
+                    log.debug("Deleting property path of : ${id}")
+                    PropertyValue.findAllByPropertyPath(pp).each { PropertyValue pv ->
+                        pv.delete(flush: true)
+                    }
+                    pp.delete(flush: true)
+                }
+
+               query.delete()
+                result['status'] = 0
+                result['message'] = "Query ${id} removed"
+            } else {
+                result['status'] = 0
+                result['message'] = "Query ${id} not found"
+            }
+        } else {
+            result['status'] = 1
+            result['message'] = "Query id not provided"
+        }
+        result
+    }
+
+    def getLastCheckedDate(Query query) {
+        def lastCheckedDate = null
+        def queryResult = QueryResult.findByQuery(query)
+        if (queryResult) {
+            lastCheckedDate = queryResult.lastChecked
+        }
+        lastCheckedDate
     }
 }

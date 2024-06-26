@@ -1,5 +1,6 @@
 package au.org.ala.alerts
 
+import grails.util.Environment
 import grails.util.Holders
 import org.grails.web.json.JSONArray
 import java.text.SimpleDateFormat
@@ -12,7 +13,6 @@ class EmailService {
     def diffService
     def queryService
     def grailsApplication
-    def alertsWebService
     def messageSource
     def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
     // this is the date format of 'created' in user assertions
@@ -46,10 +46,10 @@ class EmailService {
         def emailModel = generateEmailModel(notification, queryResult)
         def user = notification.user
         def localeSubject = messageSource.getMessage("emailservice.update.subject", [notification.query.name] as Object[], siteLocale)
-        if (grailsApplication.config.postie.enableEmail && !user.locked) {
+        if (grailsApplication.config.getProperty("mail.enabled", Boolean, false) && !user.locked) {
             log.info "Sending email to ${user.email} for ${notification.query.name}"
             sendMail {
-                from grailsApplication.config.postie.emailAlertAddressTitle + "<" + grailsApplication.config.postie.emailSender + ">"
+                from grailsApplication.config.mail.details.alertAddressTitle + "<" + grailsApplication.config.mail.details.sender + ">"
                 subject localeSubject
                 bcc user.email
                 body(view: notification.query.emailTemplate,
@@ -57,7 +57,7 @@ class EmailService {
                         model: emailModel
                 )
             }
-        } else if (grailsApplication.config.postie.enableEmail && user.locked) {
+        } else if (grailsApplication.config.getProperty("mail.enabled", Boolean, false) && user.locked) {
             log.warn "Email not sent to locked user: ${user.email}"
         } else {
             log.info("Email would have been sent to: " + user.email)
@@ -118,18 +118,26 @@ class EmailService {
         def userAssertions = queryService.isBioSecurityQuery(query) ? getBiosecurityAssertions(query, records as List) : [:]
         def speciesListInfo = getSpeciesListInfo(query)
 
-        Integer totalRecords = queryService.fireWhenNotZeroProperty(queryResult)
-        if (grailsApplication.config.getProperty("postie.enableEmail", Boolean, false)) {
-            log.info "Sending group email for ${query.name} to ${recipients.collect { it.email }}"
+        //todo review this. fireWhenNotZeroProperty is returning an Integer of true or false,
+        //Nothing to do with the total records
+        Integer fireWhenNotZero = queryService.fireWhenNotZeroProperty(queryResult)
+        int totalRecords = records.size()
+
+        int maxRecords = grailsApplication.config.getProperty("biosecurity.query.maxRecords", Integer, 500)
+
+
+        if (grailsApplication.config.getProperty("mail.enabled", Boolean, false)) {
+            def emails = recipients.collect { it.email }
+            log.info "Sending emails for ${query.name} to ${emails.size() <= 2 ? emails.join('; ') : emails.take(2).join('; ') + ' and ' + emails.size() +' other users.'}"
             recipients.each { recipient ->
                 if (!recipient.locked) {
-                    sendGroupEmail(query, [recipient.email], queryResult, records, frequency, totalRecords, recipient.userUnsubToken as String, recipient.notificationUnsubToken as String, speciesListInfo, userAssertions)
+                    sendGroupEmail(query, [recipient.email], queryResult, records.take(maxRecords), frequency, totalRecords, recipient.userUnsubToken as String, recipient.notificationUnsubToken as String, speciesListInfo, userAssertions)
                 } else {
                     log.warn "Email not sent to locked user: ${recipient}"
                 }
             }
         } else {
-            log.info("Email would have been sent to: ${recipients*.email.join(',')} for ${query.name}")
+            log.info("Email would have been sent to: ${recipients*.email.join(',')} for ${query.name}.")
             log.debug("message:" + query.updateMessage)
             log.debug("moreInfo:" + queryResult.queryUrlUIUsed)
             log.debug("stopNotification:" + grailsApplication.config.security.cas.appServerName + grailsApplication.config.security.cas.contextPath + '/notification/myAlerts')
@@ -137,15 +145,23 @@ class EmailService {
             log.debug("frequency:" + frequency)
             log.debug("totalRecords:" + (totalRecords >= 0 ? totalRecords : records.size()))
         }
+        log.info("Email with ${totalRecords} record(s) sent for ${query.name}.")
+        def status = ["status": 0, "message": "Emails were dispatched to the Mail service."]
     }
 
     public void sendGroupEmail(Query query, subsetOfAddresses, QueryResult queryResult, records, Frequency frequency, int totalRecords, String userUnsubToken, String notificationUnsubToken, Map speciesListInfo, Map userAssertions) {
         String urlPrefix = "${grailsApplication.config.security.cas.appServerName}${grailsApplication.config.getProperty('security.cas.contextPath', '')}"
         def localeSubject = messageSource.getMessage("emailservice.update.subject", [query.name] as Object[], siteLocale)
+        // pass the last check date to template
+        query.lastChecked = queryResult.previousCheck
+        String title = query.name
+        if (Environment.current == Environment.DEVELOPMENT || Environment.current == Environment.TEST) {
+            title = "[${Environment.current}] " + query.name
+        }
         try {
             sendMail {
-                from grailsApplication.config.postie.emailAlertAddressTitle + "<" + grailsApplication.config.postie.emailSender + ">"
-                subject query.name
+                from grailsApplication.config.mail.details.alertAddressTitle + "<" + grailsApplication.config.mail.details.sender + ">"
+                subject title
                 bcc subsetOfAddresses
                 body(view: query.emailTemplate,
                     plugin: "email-confirmation",
@@ -201,28 +217,21 @@ class EmailService {
      * @param query
      * @return a Map contains list name and list URL
      */
-    private Map getSpeciesListInfo(Query query) {
+
+    Map getSpeciesListInfo(Query query) {
         // if it's biosecurity query, we try to get list details
         if (query.emailTemplate == '/email/biosecurity') {
             // species list name already in query name, we just need to parse it
             String matchStr = messageSource.getMessage("query.biosecurity.title", null, siteLocale) + ' '
             int idx = query.name.indexOf(matchStr)
             String listname = ""
-            String listURL = ""
+            String listid = query.listId
+            String listURL =  grailsApplication.config.getProperty("lists.baseURL") + '/speciesListItem/list/' + listid
             if (idx != -1) {
                 listname = query.name.substring(idx + matchStr.length())
             }
 
-            matchStr = "q=species_list_uid:"
-            idx = query.queryPath.indexOf(matchStr)
-            if (idx != -1) {
-                def stoppos = query.queryPath.indexOf("&", idx)
-                if (stoppos != -1) {
-                    def listid = query.queryPath.substring(idx + matchStr.length(), stoppos)
-                    listURL = grailsApplication.config.getProperty("lists.baseURL") + '/speciesListItem/list/' + listid
-                }
-            }
-            return [name : listname, url: listURL]
+            return [name : listname, url: listURL, drId: listid]
         }
 
         [:]
