@@ -30,7 +30,7 @@ class NotificationService {
     QueryResult getQueryResult(Query query, Frequency frequency) {
         QueryResult qr = QueryResult.findByQueryAndFrequency(query, frequency)
         if (qr == null) {
-            qr = new QueryResult([query: query, frequency: frequency])
+            qr = new QueryResult([query: query, frequency: frequency, lastChecked: new Date()])
         }
         qr
     }
@@ -139,7 +139,7 @@ class NotificationService {
         qcr.frequency = frequency
         qcr.urlChecked = urlString
         qcr.query = query
-        qcr.queryResult = QueryResult.findByQueryAndFrequency(query, frequency)
+        qcr.queryResult = lastQueryResult
 
         log.debug("[QUERY " + query.id + "] Querying URL: " + urlString)
 
@@ -201,7 +201,7 @@ class NotificationService {
             qcr.queryResult.hasChanged = hasPropertiesChanged(query, propertyPaths, previousJson, processedJson)
 
         } catch (Exception e) {
-            log.error("[QUERY " + query.id + "] There was a problem checking the URL :" + urlString, e)
+            log.error("[QUERY " + query.id + "] There was a problem checking the URL :" + urlString, e.message)
             qcr.errored = true
         }
         qcr.timeTaken = System.currentTimeMillis() - start
@@ -339,45 +339,40 @@ class NotificationService {
 
         log.debug("[QUERY " + queryResult?.query?.id ?: 'NULL' + "] Refreshing properties for query: " + queryResult.query.name + " : " + queryResult.frequency)
 
-        try {
-
             queryResult.query.propertyPaths.each { propertyPath ->
                 //read the value from the request
                 def latestValue = null
-
                 try {
                     latestValue = JsonPath.read(json, propertyPath.jsonPath)
-                } catch (Exception e) {
-                    //expected behaviour for missing properties
-                }
-
-                // handle paged results
-                if (latestValue instanceof List && json.size() > 1) {
-                    latestValue = []
-                    json.each {
-                        latestValue.addAll(JsonPath.read(it, propertyPath.jsonPath))
+                    // handle paged results
+                    if (latestValue instanceof List && json.size() > 1) {
+                        latestValue = []
+                        json.each {
+                            latestValue.addAll(JsonPath.read(it, propertyPath.jsonPath))
+                        }
+                        // this is not dynamic and will only work for species-lists paging
+                        if (json[0].lists) {
+                            json[0].lists = latestValue
+                        }
                     }
-                    // this is not dynamic and will only work for species-lists paging
-                    if (json[0].lists) {
-                        json[0].lists = latestValue
+
+                    def currentValue = null
+                    if (latestValue != null && latestValue instanceof List) {
+                        currentValue = latestValue.size().toString()
+                    } else {
+                        currentValue = latestValue
                     }
+
+                    //get property value for this property path
+                    PropertyValue propertyValue = getPropertyValue(propertyPath, queryResult)
+                    //add to the map
+                    propertyPaths.put(propertyPath, [previous: propertyValue.currentValue, current: currentValue])
+                }catch(Exception e) {
+                    log.warn("Warning! cannot read ${propertyPath.name} : [${propertyPath.jsonPath}] the supplied JSON of : Query ${queryResult?.query?.id} : [${queryResult?.query?.name}]")
+                    log.warn(e.message)
                 }
 
-                def currentValue = null
-                if (latestValue != null && latestValue instanceof List) {
-                    currentValue = latestValue.size().toString()
-                } else {
-                    currentValue = latestValue
-                }
-
-                //get property value for this property path
-                PropertyValue propertyValue = getPropertyValue(propertyPath, queryResult)
-                //add to the map
-                propertyPaths.put(propertyPath, [previous:  propertyValue.currentValue, current: currentValue])
             }
-        } catch (Exception e) {
-            log.error("[QUERY " + queryResult?.query?.id ?: 'NULL' + "] There was a problem reading the supplied JSON.", e)
-        }
 
         propertyPaths
     }
@@ -660,6 +655,7 @@ class NotificationService {
         PropertyValue pv = PropertyValue.findByPropertyPathAndQueryResult(pp, queryResult)
         if (pv == null) {
             pv = new PropertyValue([propertyPath: pp, queryResult: queryResult])
+            pv.save()
         }
         pv
     }
@@ -696,10 +692,10 @@ class NotificationService {
             if (qcr.queryResult.hasChanged) {
                 checkedAndUpdatedCount++
             }
+            writer.write(" -----------------${qcr.errored?" ERROR " : "" }----------------\n")
             writer.write(query.id + ": " + query.toString())
             writer.write("\nUpdated (" + frequency.name + "):" + qcr.queryResult.hasChanged)
             writer.write("\nTime taken: " + qcr.timeTaken / 1000 + ' secs \n')
-            writer.write(("-" * 80) + "\n")
             writer.flush()
         }
         log.debug("Queries checked: " + checkedCount + ", updated: " + checkedAndUpdatedCount)

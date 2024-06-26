@@ -120,7 +120,7 @@ class EmailService {
 
         //todo review this. fireWhenNotZeroProperty is returning an Integer of true or false,
         //Nothing to do with the total records
-        //Integer totalRecords = queryService.fireWhenNotZeroProperty(queryResult)
+        Integer fireWhenNotZero = queryService.fireWhenNotZeroProperty(queryResult)
         int totalRecords = records.size()
 
         int maxRecords = grailsApplication.config.getProperty("biosecurity.query.maxRecords", Integer, 500)

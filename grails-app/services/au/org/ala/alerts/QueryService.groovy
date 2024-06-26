@@ -69,6 +69,7 @@ class QueryService {
         Integer fireWhenNotZeroValue = -1
         queryResult.propertyValues.each { pv ->
             if (pv.propertyPath.fireWhenNotZero) {
+                // true is 1, false is 0
                 fireWhenNotZeroValue = pv?.currentValue? pv?.currentValue.toInteger() : -1
             }
         }

@@ -36,3 +36,10 @@ Run [smtp4dev](https://github.com/rnwood/smtp4dev) via Docker:
 Emails will be sent on SMTP port 2525 (configure sending emails via `mail.enabled=true`, `grails.mail.port=2525` and `grails.mail.server=localhost`. Note: emails will not be delivered externally so you don't have to worry about spamming users.
 
 You can view all sent emails via the smtp4dev UI on http://localhost:3000/, inlcuding HTML emails which are nicely displayed.
+
+
+### 4.2.0 Release
+
+Change logs
+DB schema update:
+``` ALTER TABLE alerts.query_result MODIFY logs TEXT NULL; ```

@@ -223,7 +223,7 @@
       <div class="background-image-div padding ">
         <div class="default-font large-white-font">Biosecurity Alerts</div>
         <div class="default-font">
-          <b>${new SimpleDateFormat("dd-MMMM-yyyy").format(new Date())}</b>
+          <b>${new SimpleDateFormat("dd MMMM yyyy").format(new Date())}</b>
         </div>
         <div class="light-wight-font small-padding" >
           Alerts service for new ALA records listing potential invasive species
@@ -317,7 +317,7 @@
 %{--      </div>--}%
 
       <div class="info-div">
-        <p>If you notice a record has been misidentified, we encourage you to use your expertise to improve the quality of Australia’s biosecurity data.</p>
+        <p>If you notice a record has been misidentified, we encourage you to use your expertise to improve the quality of Australia's biosecurity data.</p>
         <p>Please either annotate the record in the provider platform itself or notify us at <a href="mailto:biosecurity@ala.org.au" style="color: #f2f2f2; font-weight: 700;">biosecurity@ala.org.au</a> for assistance.</p>
       </div>
 
@@ -335,7 +335,11 @@
             <area shape="rect" coords="100,0,180,100" href="https://csiro.au" alt="CSIRO">
             <area shape="rect" coords="180,0,300,100" href="https://www.gbif.org/" alt="GBIF">
           </map>
-          <p>You are receiving this email because you opted in to ALA blog alerts.
+          <p>You are receiving this email because you opted in to ALA alerts.
+             <div>
+               <p>Our mailing address is: </p>
+               Atlas of Living Australia <br/> GPO Box 1700<br/> Canberra, ACT 2601<br/>Australia
+            </div>
             <br>
             Don't want to receive these emails? You can <a href="${unsubscribeOne}" style="color: #C44D34;">unsubscribe</a>.
           </p>
