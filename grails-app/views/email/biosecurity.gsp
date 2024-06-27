@@ -1,163 +1,351 @@
 <%@ page contentType="text/html"%>
-<html>
-  <head>
-    <title><g:message code="alert.title" args="[query.resourceName]" /></title>
-    <style type="text/css">
-    body { font-family:Arial,serif; font-size: 14px; color: #212121; }
-    table.container { width: 640px; border-collapse: collapse;}
-    table tr.top-row { border-top: 1px solid #CCC; padding-top: 10px; }
-    table tr:last-child { border-bottom: 1px solid #CCC; }
-    table.container td { padding: 5px; }
-    table.container h1 { margin: 10px 0px; font-size: 18px;}
-    table.content { border-collapse: collapse; padding:2px; }
-    table.content td { border: 0px solid #CCC; padding:4px; }
-    table.content td:first-child { color: #424242; }
-    table.content td.normalseparator { border-left-style:hidden; border-right-style:hidden; }
-    table.content td.lastseparator { border-left-style:hidden; border-right-style:hidden; border-bottom-style: hidden; }
-    table.content td:first-child { text-align: left; }
-    table.content img { max-width:200px; max-height:200px; }
-    td.imageCol { padding:0; margin:0; }
-    .box { display: flex; }
-    </style>
-  </head>
-  <body>
-  <table class="container">
-    <tr>
-      <td>
-        <div>
-          <a href="https://www.ala.org.au/" title="Visit the ALA website"><asset:image
-              src="biosecurity-banner-v3.png" alt="ALA logo" absolute="true" width="1000" height="167"/></a>
-        </div>
-      </td>
-    </tr>
-    <tr><td><h1><g:message code="biosecurity.alert.title" args="[grailsApplication.config.getProperty('skin.orgNameLong'), grailsApplication.config.getProperty('skin.orgNameShort')]"/></h1></td></tr>
-    <tr><td>
-      <p><g:message code="${message}" default="${message}" args="${[moreInfo, totalRecords + message(code:'email.records.summary'), speciesListInfo.url, speciesListInfo.name]}"/></p>
-      <g:if test="${records && records.size() >= 20}">
-        <p><g:message code="email.displaying.max.msg" default="Showing first 20 records"/> - <a href="${moreInfo}">view all ${totalRecords} records</a></p>
-      </g:if>
-    </td></tr>
-    <g:if test="${records}">
-      <tr><td>
-        <table class="content">
-          <tbody>
-          <g:each status="i" in="${records}" var="oc">
-            <g:set var="link" value="${query.baseUrlForUI}/occurrences/${oc.uuid}"/>
-            <tr><td>Record ID</td><td><a href="${link}">${oc.uuid}</a></td></tr>
-            <tr><td>Scientific name </td><td><em>${oc.scientificName ?:"N/A"}</em></td></tr>
-            <g:if test="${oc.scientificName && oc.raw_scientificName && oc.scientificName != oc.raw_scientificName}">
-              <tr><td>Scientific name (raw)</td><td><em>${oc.raw_scientificName}</em></td></tr>
-            </g:if>
-            <g:if test="${oc.vernacularName}">
-              <tr><td><g:message code="email.biosecurity.label.vernacularname" default="Vernacular name"/></td><td>${oc.vernacularName}</td></tr>
-            </g:if>
-            <g:if test="${oc.speciesGroups}">
-              <tr><td>Species groups</td><td>${raw(oc.speciesGroups?.join(" → "))}</td></tr>
-            </g:if>
-            <g:if test="${oc.dataResourceName}">
-              <tr><td>Dataset</td><td>${oc.dataResourceName}</td></tr>
-            </g:if>
-            <tr>
-              <td>Date</td>
-              <g:if test="${oc.eventDate}">
-                <td>${g.formatDate(date: new Date(oc.eventDate), format: "yyyy-MM-dd")}</td>
-              </g:if>
-              <g:elseif test="${oc.year}">
-                <g:if test="${oc.month && oc.day}">
-                  <td>${oc.year}-${oc.month}-${oc.day}</td>
-                </g:if>
-                <g:elseif test="${oc.month}">
-                  <td>${oc.year}-${oc.month}</td>
-                </g:elseif>
-                <g:else>
-                  <td><g:message code="email.biosecurity.label.year" default="Year"/>: ${oc.year}</td>
-                </g:else>
-              </g:elseif>
-              <g:else>
-                <td></td>
-              </g:else>
-            </tr>
+<%@ page import="java.text.SimpleDateFormat" %>
+<%@ page import="org.apache.commons.lang3.StringUtils" %>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="x-apple-disable-message-reformatting">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${title}</title>
+  <style>
 
-            <g:if test="${userAssertions.containsKey(oc.uuid) && userAssertions.get(oc.uuid)}">
-              <tr>
-                <td><g:message code="email.biosecurity.userassertion" default="Biosecurity annotation"/></td>
-                <td>
-                  <g:each in="${userAssertions.get(oc.uuid)}" var="comment">
-                    ${comment}
-                  </g:each>
-                </td>
-              </tr>
-            </g:if>
+  .ala-color {
+    color: #C44D34 !important;
+  }
 
-            <tr>
-              <td>Locality</td>
-              <g:if test="${oc.locality && oc.stateProvince}">
-                <td>${oc.locality}; ${oc.stateProvince}</td>
-              </g:if>
-              <g:elseif test="${oc.locality}">
-                <td>${oc.locality}</td>
-              </g:elseif>
-              <g:elseif test="${oc.stateProvince}">
-                <td>${oc.stateProvince}</td>
-              </g:elseif>
-              <g:else>
-                <td></td>
-              </g:else>
-            </tr>
+  .default-font {
+    vertical-align: top;
+    font-family: 'Lato', Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1.42;
+    letter-spacing: -0.4px;
+    text-align: center;
+    color: #ffffff;
+  }
 
-            <g:if test="${oc.recordNumber}">
-              <tr>
-                <td><g:message code="email.biosecurity.label.originalRecord" default="Original source record"/></td>
-                <g:if test="${oc.recordNumber.startsWith("http")}">
-                  <td><a href="${oc.recordNumber}">${oc.recordNumber}</a></td>
-                </g:if>
-                <g:else>
-                  <td>${oc.recordNumber}</td>
-                </g:else>
-              </tr>
-            </g:if>
+  .large-white-font {
+    font-weight: 700;
+    font-size: 24px; /* Adjust the font size as needed */
+    color: #ffffff; /* Adjust the color as needed */
+  }
 
-            <g:if test="${oc.thumbnailUrl || oc.smallImageUrl || oc.latLong}">
-              <tr valign="top">
-                <td class="imageCol">
-                  Map and image
-                </td>
-                <td class="">
-                  <g:if test="${oc.latLong}">
-                    <img src="https://maps.googleapis.com/maps/api/staticmap?center=${oc.latLong}&markers=|${oc.latLong}&zoom=5&size=300x300&maptype=roadmap&key=${grailsApplication.config.getProperty('google.apikey')}" alt="location preview map"/>
-                  </g:if>
-                  <g:if test="${oc.thumbnailUrl || oc.smallImageUrl }">&nbsp;&nbsp;
-                    <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}">
-                      <img src="${oc.thumbnailUrl ?: oc.smallImageUrl}" alt="${message(code: "biocache.alt.image.for.record")}"/>
-                    </a>
-                  </g:if>
-                </td>
-              </tr>
-            </g:if>
+  .medium-weight-font {
+    vertical-align: top;
+    font-size: 22px;
+    font-weight: 500;
+    line-height: 1.42;
+    letter-spacing: -0.4px;
+    color: #000000;
+    text-align: center;
+  }
 
-            <tr><td colspan="2" class="${i == records.size() - 1 ? 'lastseparator' : 'normalseparator'}"><br/></td></tr>
-          </g:each>
-          </tbody>
-        </table>
-      </td></tr>
-    </g:if>
-    <tr><td><h4>Please check with the relevant team before forwarding this email outside of the department.</h4></td></tr>
-    <tr><td>This email has been generated as part of ALA's national biosecurity alert system. To find out more about this program, read <a
-            href="${grailsApplication.config.getProperty('biosecurity.moreinfo.link', String, 'missing')}">ALA helps to stop pests in their tracks</a> or email
-            <a href="mailto:support@ala.org.au">support@ala.org.au</a>.</td></tr>
-    <tr><td><g:render template="/email/unsubscribe"/></td></tr>
-    <tr><td>
-      <h4>The ALA is made possible by contributions from its partners, is supported by <a href="https://www.education.gov.au/national-collaborative-research-infrastructure-strategy-ncris">NCRIS</a>, is hosted by <a href="https://csiro.au/">CSIRO</a>, and is the Australian node of <a href="https://www.gbif.org/en/">GBIF</a>.</h4>
-      <div class="box">
-        <div style="margin-left: 5px"><a href="https://www.education.gov.au/national-collaborative-research-infrastructure-strategy-ncris"><img src="https://www.ala.org.au/app/uploads/2019/06/NCRIS_150px-150x109.jpg" alt="NCRIS logo" width="150" height="109" /></a></div>
-        <div style="margin-left: 78px; margin-right: 64px;"><a href="https://csiro.au/"><img src="https://www.ala.org.au/app/uploads/2019/07/CSIRO_Solid_RGB-150x150.png" alt="CSIRO logo" width="109" height="109" /></a></div>
-        <div style="margin-right: 5px"><a href="https://www.gbif.org/en/"><img src="https://www.ala.org.au/app/uploads/2019/06/GBIF_109px.png" alt="GBIF logo" width="207" height="109" /></a></div>
+  .light-wight-font {
+    vertical-align: top;
+    line-height: 1.42;
+    font-size: 16px;
+    font-weight: 400;
+    letter-spacing: -0.4px;
+    color: #ffffff;
+    text-align: center;
+  }
+
+  .species-summary-font {
+    vertical-align: top;
+    padding: 0;
+    line-height: 1.56;
+    font-size: 13px;
+    font-weight: 300;
+    color: #212121;
+    text-align: left;
+  }
+
+  .text-left {
+    text-align: left !important;
+  }
+
+  .padding {
+    padding: 20px 10px 20px 10px;
+  }
+
+  .small-padding {
+    padding: 15px 20px 15px 20px;
+  }
+
+  .large-padding {
+    padding: 40px 30px 40px 30px;
+  }
+
+  body {
+    background-color: #f4f4f4;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+  }
+
+  .main-shadow-div {
+    mso-table-lspace: 0pt;
+    mso-table-rspace: 0pt;
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 620px;
+    margin: 20px auto 0px;
+  }
+
+  .center-white-div{
+    display: flex;
+    vertical-align: top;
+    justify-content: center;
+    align-items: center;
+    background-color: #ffffff;
+    padding: 20px 20px 10px 20px;
+  }
+
+  .background-image-div {
+    vertical-align: top;
+    background-image: url("${grailsApplication.config.grails.serverURL+'/assets/email/biosecurity-alert-header.png'}");
+    background-position: top center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-color: #C44D34;
+  }
+
+  img {
+    border: 0;
+    line-height: 100%;
+    outline: 0;
+  }
+
+  .species-thumbnail-img {
+    vertical-align: top;
+    border: 0;
+    line-height: 100%;
+    outline: 0;
+    -ms-interpolation-mode: bicubic;
+    display: block;
+    color: #212121;
+    border-radius: 6px;
+    /*max-width: 125px;*/
+    height: 118px;
+    width: 128px;
+    margin-left: 2px;
+  }
+
+  .species-thumbnail-div {
+    vertical-align: top;
+    max-width: 130px;
+    width:130px;
+    height: 118px;
+    border-radius: 6px;
+  }
+
+  .missing-species-thumbnail-div {
+    vertical-align: top;
+    max-width: 130px;
+    width:130px;
+    height: 118px;
+    border-radius: 6px;
+    background-image: url("${grailsApplication.config.grails.serverURL + '/assets/email/no-img-gray-bg.png'}");
+  }
+
+  .map-div {
+    vertical-align: top;
+    width:130px;
+    height: 118px;
+    border-radius: 6px;
+  }
+
+  .species-div {
+    padding: 20px 20px 20px 20px;
+    background-color: white;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+  }
+
+  .info-div {
+    padding: 20px 70px 14px 70px;
+    background-color: #C44D34;
+    font-size: 14px;
+    line-height: 1.43;
+    letter-spacing: -0.2px;
+    color: #ffffff;
+  }
+
+  .normal-font-color {
+    color: #000000;
+    background-color: #ffffff;
+  }
+
+  .reversed-font-color {
+    color: #ffffff;
+    background-color: #000000;
+  }
+
+  .record-button {
+    background-color: #C44D34;
+    cursor: pointer;
+    border: 0;
+    border-radius: 10px;
+    color: white;
+    padding: 11px 19px;
+    text-align: center;
+    display: inline-block;
+    font-size: 16px;
+  }
+
+  @media only screen and (min-width:812px) and (orientation: landscape){
+    .main-shadow-div {
+      width: 620px !important;
+    }
+  }
+
+  @media only screen and (max-width: 375px) {
+    .main-shadow-div {
+      width: 100%; /* Set width to 100% to make it full-width on mobile phones */
+    }
+  }
+  </style>
+</head>
+<body>
+    <div class="main-shadow-div default-font">
+      <div class="center-white-div">
+        <a href="https://www.ala.org.au" style="text-decoration: none;">
+          <img src="${grailsApplication.config.grails.serverURL + '/assets/email/logo-dark.png'}" height="60" alt="" >
+        </a>
       </div>
-    </td></tr>
-    <tr><td>
-      <h4>Acknowledgement of Traditional Owners and Country</h4>
-      <p>The Atlas of Living Australia acknowledges Australia’s Traditional Owners and pays respect to the past and present Elders of the nation’s Aboriginal and Torres Strait Islander communities. We honour and celebrate the spiritual, cultural and customary connections of Traditional Owners to country and the biodiversity that forms part of that country.</p>
-    </td></tr>
-  </table>
+      <div class="background-image-div padding ">
+        <div class="default-font large-white-font">Biosecurity Alerts</div>
+        <div class="default-font">
+          <b>${new SimpleDateFormat("dd MMMM yyyy").format(new Date())}</b>
+        </div>
+        <div class="light-wight-font small-padding" >
+          Alerts service for new ALA records listing potential invasive species
+        </div>
+      </div>
+      <div class="large-padding medium-weight-font">
+        <div> ${totalRecords} new ${totalRecords == 1 ? 'record' : 'records'} for
+        </div>
+        <div title="${speciesListInfo.name}">
+          <strong>${StringUtils.abbreviate(speciesListInfo.name, 40)}, <a href="${speciesListInfo.url}">${speciesListInfo.drId}</a></strong>
+        </div>
+        <div><i>since ${new SimpleDateFormat("dd MMM yyyy").format(query.lastChecked)}</i></div>
+      </div>
+
+      <g:each status="i" in="${records}" var="oc">
+        <g:set var="link" value="${query.baseUrlForUI}/occurrences/${oc.uuid}"/>
+        <div class="species-div" >
+          <div style="width: 50%; display: inline-flex; ">
+            <table  style="width: 100%;" >
+              <tbody>
+              <tr>
+                <td class="text-left" >
+                  <a href="${link}" class="default-font ala-color text-left" >${i+1}. <em>${oc.scientificName ?:"N/A"}</em></a>
+                </td>
+              </tr>
+              <tr>
+                <td class="species-summary-font">
+                  <g:if test="${oc.scientificName && oc.raw_scientificName && oc.scientificName != oc.raw_scientificName}">
+                    Supplied as:<em>${oc.raw_scientificName}</em><br>
+                  </g:if>
+                  <g:if test="${oc.vernacularName}">
+                    Common name: ${oc.vernacularName}<br>
+                  </g:if>
+                  <g:if test="${oc.locality && oc.stateProvince}">
+                    <strong>${oc.locality}; ${oc.stateProvince}</strong>><br>
+                  </g:if>
+                  <g:elseif test="${oc.locality}">
+                    <strong>${oc.locality}</strong><br>
+                  </g:elseif>
+                  <g:elseif test="${oc.stateProvince}">
+                    <strong>${oc.stateProvince}</strong><br>
+                  </g:elseif>
+                  <g:if test="${oc.latLong}">
+                    Coordinates: ${oc.latLong} <br>
+                  </g:if>
+                  <g:if test="${oc.eventDate}">
+                    Time & date: ${new SimpleDateFormat('yyyy-MM-dd HH:mm').format(oc.eventDate)} <br>
+                  </g:if>
+                  <g:if test="${oc.dataResourceName}">
+                    Source: ${oc.dataResourceName} <br>
+                  </g:if>
+
+                </td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+          <div style="width: 50%; display: inline-flex; flex-direction: row; justify-content: space-between ">
+            <table>
+              <tr>
+                <td>
+                  <div class="map-div">
+                      <g:if test="${oc.latLong}">
+                        <a href="https://www.google.com/maps/place/${oc.latLong}/@${oc.latLong},7z" target="_blank"> <img class="species-thumbnail-img" src="https://maps.googleapis.com/maps/api/staticmap?center=${oc.latLong}&markers=|${oc.latLong}&zoom=5&size=130x118&maptype=roadmap&key=${grailsApplication.config.getProperty('google.apikey')}" alt="location preview map" /></a>
+                      </g:if>
+                  </div>
+                </td>
+                <td>
+                  <div class="species-thumbnail-div" >
+                    <g:if test="${oc.thumbnailUrl || oc.smallImageUrl }">
+                      <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}">
+                        <div class="species-thumbnail-div" style="background-image:url('${oc.thumbnailUrl ?: oc.smallImageUrl}');background-size: cover; background-position: center; "></div>
+                      </a>
+                    </g:if>
+                    <g:else>
+                      <div class="missing-species-thumbnail-div" > </div>
+                    </g:else>
+                  </div>
+                </td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </g:each>
+
+%{--      <div class="species-div" >--}%
+%{--        <a href="${moreInfo}">--}%
+%{--          <button class="record-button" ><strong>View records in ALA</strong>--}%
+%{--          </button>--}%
+%{--        </a>--}%
+%{--      </div>--}%
+
+      <div class="info-div">
+        <p>If you notice a record has been misidentified, we encourage you to use your expertise to improve the quality of Australia's biosecurity data.</p>
+        <p>Please either annotate the record in the provider platform itself or notify us at <a href="mailto:biosecurity@ala.org.au" style="color: #f2f2f2; font-weight: 700;">biosecurity@ala.org.au</a> for assistance.</p>
+      </div>
+
+      <div class="info-div reversed-font-color" >
+        <p>The Atlas of Living Australia acknowledges Australia's Traditional Owners and pays respect to the past and present Elders of the nation's Aboriginal and Torres Strait Islander communities.</p>
+        <p>
+          We honour and celebrate the spiritual, cultural and customary connections of Traditional Owners to Country and the biodiversity that forms part of that Country.</p>
+      </div>
+
+      <div class="info-div normal-font-color">
+        <div>
+          <img src="${grailsApplication.config.grails.serverURL}/assets/email/ncris.png" alt="Affiliated orgs" usemap="#orgsMap"  height="80" >
+          <map name="orgsMap">
+            <area shape="rect" coords="0,0,100,100" href="https://www.education.gov.au/ncris" alt="NCRIS">
+            <area shape="rect" coords="100,0,180,100" href="https://csiro.au" alt="CSIRO">
+            <area shape="rect" coords="180,0,300,100" href="https://www.gbif.org/" alt="GBIF">
+          </map>
+          <p>You are receiving this email because you opted in to ALA alerts.
+             <div>
+               <p>Our mailing address is: </p>
+               Atlas of Living Australia <br/> GPO Box 1700<br/> Canberra, ACT 2601<br/>Australia
+            </div>
+            <br>
+            Don't want to receive these emails? You can <a href="${unsubscribeOne}" style="color: #C44D34;">unsubscribe</a>.
+          </p>
+        </div>
+      </div>
+    </div>
+
   </body>
 </html>

@@ -1,5 +1,28 @@
 ---
+# mail.enabled: true will send email via a mail server depending on the mail.ses.enabled
+
+# Set mail.ses.enabled true will use AWS SES, it requires the AWS credentials to be set in the environment variables
+# Set false will use the default grails mail plugin, we need to config the mail server and port in grails.mail
+# In dev, email will be posted to Postie docker container, which can be accessed via http://localhost:3000
+
+mail:
+    enabled: true
+    ses:
+        enabled: false
+    details:
+        sender: "alerts@ala.org.au"
+        alertAddressTitle: "Atlas alerts"
+        infoSender: "alerts@ala.org.au"
+        infoAddressTitle: "Atlas of Living Australia"
+        defaultResourceName: "Atlas of Living Australia"
+        # forceAllAlertsGetSent results in emails getting sent regardless if data has changed - only use in DEV env
+        forceAllAlertsGetSent: false
+
 grails:
+    #default mail service
+    mail:
+        port: 2525
+        server: localhost
     profile: web
     cache:
         clearAtStartup: true
@@ -115,15 +138,6 @@ security:
         adminRole: ROLE_ADMIN
         uriFilterPattern: ["/","/alaAdmin/*","/testAuth/*","/query/*","/admin/*","/admin/user/*","/admin/user/debug/*","/admin/debug/all","/notification/myAlerts","/notification/changeFrequency","/notification/addMyAlert","/notification/addMyAlert/*","/notification/deleteMyAlert/*","/notification/deleteMyAlert/*","/notification/deleteMyAlertWR/*","/webservice/*","/webservice/createTaxonAlert","/webservice/taxonAlerts","/webservice/createRegionAlert","/webservice/regionAlerts","/webservice/deleteTaxonAlert/*","/webservice/create*","/webservice/createSpeciesGroupRegionAlert","/ws/*","/ws/createTaxonAlert","/ws/taxonAlerts","/ws/createRegionAlert","/ws/regionAlerts","/ws/deleteTaxonAlert/*","/ws/createTaxonRegionAlert","/ws/createSpeciesGroupRegionAlert","/admin/runChecksNow"]
 
-postie:
-    emailSender: "atlas-alerts@ala.org.au"
-    emailAlertAddressTitle: "Atlas alerts"
-    emailInfoAddressTitle: "Atlas of Living Australia"
-    emailInfoSender: "atlas-alerts@ala.org.au"
-    defaultResourceName: "Atlas of Living Australia"
-    enableEmail: false
-    # forceAllAlertsGetSent results in emails getting sent regardless if data has changed - only use in DEV env
-    forceAllAlertsGetSent: false
 ala:
     baseURL: "https://www.ala.org.au"
     userDetailsURL: "https://auth.ala.org.au/userdetails/userDetails/getUserListFull"
@@ -156,6 +170,11 @@ useBlogsAlerts: true
 useCitizenScienceAlerts: true
 biosecurity:
     cronExpression: '0 30 9 ? * WED'
+    query:
+        template:
+            authoritativeList: /occurrences/search?q=species_list_uid:___LISTIDPARAM___&fq=decade:2020&fq=country:Australia&fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&fq=occurrence_date:[___LASTYEARPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc&disableAllQualityFilters=true
+            nonAuthoritativeList: /occurrences/search?q=species_list:___LISTIDPARAM___&fq=decade:2020&fq=country:Australia&fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&fq=occurrence_date:[___LASTYEARPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc&disableAllQualityFilters=true
+        maxRecords: 500
     moreinfo:
         link: https://www.ala.org.au/blogs-news/ala-helps-to-stop-pests-in-their-tracks/
     dir: /data/alerts/emails
@@ -172,7 +191,7 @@ biosecurity:
         lgaField: cl10923
         shape: cl11033:"Namadgi" OR cl11033:"Tidbinbilla" OR cl11033:"Bimberi"
         #shape: spatialObject:9223660
-        eventDateAge: 29
+        eventDateAge: 150
         firstLoadedDateAge: 8
 
 environments:
@@ -182,16 +201,41 @@ environments:
             mail:
                 host: "localhost"
                 port: 1025
-                username: postie.emailSender
+                #username: postie.emailSender
         security:
             cas:
                 appServerName: "http://localhost:8080"
+        userdetails:
+            web:
+                url: https://aws-auth-test-2023.test.ala.org.au/userdetails/
+            api:
+                url: https://api.test.ala.org.au/userdetails/cognito/
+        mail:
+            details:
+                sender: "alerts-test@ala.org.au"
+                alertAddressTitle: "Atlas alerts [Dev]"
+                infoAddressTitle: "Atlas of Living Australia [Dev]"
+                infoSender: "alerts-test@ala.org.au"
     test:
         grails:
             serverURL: "http://dev.ala.org.au:8080"
+            mail:
+                host: "localhost"
+                port: 25
         security:
             cas:
                 appServerName: "https://auth.ala.org.au"
+        userdetails:
+            web:
+                url: https://aws-auth-test-2023.test.ala.org.au/userdetails/
+            api:
+                url: https://api.test.ala.org.au/userdetails/cognito/
+        mail:
+            details:
+                sender: "alerts-test@ala.org.au"
+                alertAddressTitle: "Atlas alerts [Test]"
+                infoAddressTitle: "Atlas of Living Australia [Test]"
+                infoSender: "alerts-test@ala.org.au"
     production:
         grails:
             serverURL: "https://auth.ala.org.au/alerts"
@@ -201,6 +245,11 @@ environments:
         security:
             cas:
                 appServerName: "https://auth.ala.org.au"
+        userdetails:
+            web:
+                url: https://auth.ala.org.au/userdetails/
+            api:
+                url: https://api.ala.org.au/userdetails/cognito/
 
 ---
 hibernate:
@@ -229,7 +278,7 @@ dataSource:
         validationQueryTimeout: 10 # seconds (default: -1 i.e. disabled)
         validationInterval: 30000 # milliseconds, default is 30000 (30 seconds)
         removeAbandoned: true # # default: false
-        removeAbandonedTimeout: 300 # seconds (default: 60)
+        removeAbandonedTimeout: 3600 # seconds (default: 60), must be > quartz job duration
         logAbandoned: true # adds some overhead to every borrow from the pool, disable if it becomes a performance issue
         logValidationErrors: true # default: false, logs validation errors at SEVERE
         # NOTE: removeAbandoned: true OR testWhileIdle: true enables the Pool Cleaner. There is a bug with the
@@ -259,9 +308,11 @@ environments:
             username: sa
             password:
             url: jdbc:h2:mem:testDb;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE
+        userDetails:
+            url: https://aws-auth-test-2023.test.ala.org.au/userdetails/
     production:
         dataSource:
-            dbCreate: none
+            dbCreate: update
 
 myannotation:
     enabled: false
@@ -270,8 +321,7 @@ webservice:
     jwt: true
     jwt-scopes: "openid users/read"
 
-userDetails:
-    url: https://aws-auth-dev.ala.org.au/userdetails/
+
 
 security:
     cas:

@@ -8,7 +8,7 @@
         <meta name="layout" content="${grailsApplication.config.skin.layout}" />
 
         <meta name="breadcrumb" content="${message(code:"my.alerts.breadcrumbs")}" />
-        <meta name="breadcrumbParent" content="${grailsApplication.config.security.cas.casServerName}/userdetails/myprofile, ${message(code:"my.alerts.breadcrumb.parent")}" />
+        <meta name="breadcrumbParent" content="${grailsApplication.config.userDetails.web.url}/myprofile, ${message(code:"my.alerts.breadcrumb.parent")}" />
         <g:set var="userPrefix" value="${adminUser ? user.email : message(code:"my.alerts.my") }"/>
         <title><g:message code="my.alerts.title" args="[userPrefix]" /> | ${grailsApplication.config.skin.orgNameLong}</title>
 

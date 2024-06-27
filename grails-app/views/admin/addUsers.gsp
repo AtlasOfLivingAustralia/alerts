@@ -13,7 +13,7 @@
       <nav id="breadcrumb">
         <ol>
           <li><a href="${grailsApplication.config.ala?.baseURL?:'http://www.ala.org.au'}">Home</a></li>
-          <li><a href="${grailsApplication.config.security.cas.appServerName}/userdetails/myprofile">My Profile</a></li>
+          <li><a href="${grailsApplication.config.userDetails.web.url}/myprofile">My Profile</a></li>
           <li class="last">My email alerts</li>
         </ol>
       </nav>

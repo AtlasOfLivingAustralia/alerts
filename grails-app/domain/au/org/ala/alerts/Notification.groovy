@@ -15,6 +15,6 @@ class Notification {
     }
 
     String toString() {
-        "Query: " + query.id + " for user ID: " + user.id + ", Email: " + user.email
+        "Query: " + query.id + " for user ID : " + user.id + ",ALA ID: ${userId}  Email: " + user.email
     }
 }
