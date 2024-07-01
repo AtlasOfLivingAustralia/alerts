@@ -173,12 +173,20 @@ class UserService {
         if (user == null) {
             log.debug "User is not in user table - creating new record for " + userDetails
             user = new User([email: userDetails.email, userId: userDetails.userId, locked: userDetails.locked, frequency: Frequency.findByName("weekly")])
-            user.save(flush: true, failOnError: true)
+            if (!user.save(flush: true, failOnError: true)) {
+                user.errors.allErrors.each {
+                    log.error(it)
+                }
+            }
             // new user gets "Blogs and News" weekly by default (opt out)
             def notificationInstance = new Notification()
             notificationInstance.query = Query.findByName(messageSource.getMessage("query.ala.blog.title", null, siteLocale))
             notificationInstance.user = user
-            notificationInstance.save(flush: true)
+            if (!notificationInstance.save(flush: true)) {
+                notificationInstance.errors.allErrors.each {
+                    log.error(it)
+                }
+            }
         }
         user
     }
@@ -221,7 +229,11 @@ class UserService {
         if (userDetails?.userId && userDetails?.email) {
             log.debug "User is not in user table - creating new record for " + userDetails
             user = new User([email: userDetails.email, userId: userDetails.userId, locked: userDetails.locked, frequency: Frequency.findByName("weekly")])
-            user.save(flush: true, failOnError: true)
+            if (!user.save(flush: true, failOnError: true)) {
+                user.errors.allErrors.each {
+                    log.error(it)
+                }
+            }
         }
         user
     }

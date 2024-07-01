@@ -71,7 +71,7 @@ class BootStrap {
                     idJsonPath: 'uuid'
             ])).save()
             new PropertyPath([name: "totalRecords", jsonPath: "totalRecords", query: newAssertions, fireWhenNotZero: true]).save()
-            new PropertyPath([name: "last_assertion_record", jsonPath: "occurrences[0].rowKey", query: newAssertions]).save()
+            new PropertyPath([name: "last_assertion_record", jsonPath: "occurrences[0].uuid", query: newAssertions]).save()
         }
 
         title = messageSource.getMessage("query.new.records.title", null, siteLocale)
@@ -92,7 +92,7 @@ class BootStrap {
                     idJsonPath: 'uuid'
             ])).save()
             new PropertyPath([name: "totalRecords", jsonPath: "totalRecords", query: newRecords, fireWhenNotZero: true]).save()
-            new PropertyPath([name: "last_loaded_record", jsonPath: "occurrences[0].rowKey", query: newRecords]).save()
+            new PropertyPath([name: "last_loaded_record", jsonPath: "occurrences[0].uuid", query: newRecords]).save()
         }
 
         title = messageSource.getMessage("query.new.images.title", null, siteLocale)
@@ -114,7 +114,7 @@ class BootStrap {
                     idJsonPath: 'uuid'
             ])).save()
             new PropertyPath([name: "totalRecords", jsonPath: "totalRecords", query: newRecordsWithImages, fireWhenNotZero: true]).save()
-            new PropertyPath([name: "last_loaded_record", jsonPath: "occurrences[0].rowKey", query: newRecordsWithImages]).save()
+            new PropertyPath([name: "last_loaded_record", jsonPath: "occurrences[0].uuid", query: newRecordsWithImages]).save()
         }
 
         title = messageSource.getMessage("query.citizen.records.title", null, siteLocale)
@@ -137,7 +137,7 @@ class BootStrap {
                     idJsonPath: 'uuid'
             ])).save()
             new PropertyPath([name: "totalRecords", jsonPath: "totalRecords", query: newCitizenScienceRecords, fireWhenNotZero: true]).save()
-            new PropertyPath([name: "last_loaded_record", jsonPath: "occurrences[0].rowKey", query: newCitizenScienceRecords]).save()
+            new PropertyPath([name: "last_loaded_record", jsonPath: "occurrences[0].uuid", query: newCitizenScienceRecords]).save()
         }
 
         title = messageSource.getMessage("query.citizen.records.imgs.title", null, siteLocale)
@@ -159,7 +159,7 @@ class BootStrap {
                     idJsonPath: 'uuid'
             ])).save()
             new PropertyPath([name: "totalRecords", jsonPath: "totalRecords", query: newCitizenScienceRecordsWithImages, fireWhenNotZero: true]).save()
-            new PropertyPath([name: "last_loaded_record", jsonPath: "occurrences[0].rowKey", query: newCitizenScienceRecordsWithImages]).save()
+            new PropertyPath([name: "last_loaded_record", jsonPath: "occurrences[0].uuid", query: newCitizenScienceRecordsWithImages]).save()
         }
 
         title = messageSource.getMessage("query.spatial.layers.title", null, siteLocale)
