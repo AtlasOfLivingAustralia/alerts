@@ -168,14 +168,10 @@ class DiffService {
                         records.addAll(oldRecordsMap.findAll { !curRecordsMap.containsKey(it.value.uuid) }.values())
                     }
                 } else {
-                    log.warn "queryResult last or previous objects contains HTML and not JSON - ${last} || ${previous}"
+                    log.warn "queryId: " + queryResult.query.id + ", queryResult:" + queryResult.id + " last or previous objects contains HTML and not JSON"
                 }
             } catch (Exception ex) {
-                log.info "last = ${decompressZipped(queryResult.lastResult)}"
-                log.info "previousResult = ${decompressZipped(queryResult.previousResult)}"
-                log.info "JsonPath arg = ${queryResult.query.recordJsonPath + "." + queryResult.query.idJsonPath}"
-                log.error "JsonPath error: ${ex}"
-                log.info "JsonPath exception stacktrace.", ex
+                log.error "queryId: " + queryResult.query.id + ", JsonPath error: ${ex}"
             }
         }
         records

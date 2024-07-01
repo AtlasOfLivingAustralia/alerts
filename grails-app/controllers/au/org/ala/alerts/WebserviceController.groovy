@@ -648,6 +648,7 @@ class WebserviceController {
         }
     }
 
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
     def searchBiosecuritySubscriptions() {
        def results =  queryService.searchBiosecuritySubscriptions(params.q)
        render results as JSON

@@ -116,11 +116,25 @@ class QueryService {
         Query retrievedQuery = Query.findByBaseUrlAndQueryPath(newQuery.baseUrl, newQuery.queryPath)
         if (retrievedQuery == null) {
             try {
-                newQuery = newQuery.save(true)
+                if (!newQuery.save(validate: true, flush: true)) {
+                    newQuery.errors.allErrors.each {
+                        log.error(it)
+                    }
+                }
                 newQueryCreated = true
                 if (setPropertyPath) {
-                    new PropertyPath([name: "totalRecords", jsonPath: "totalRecords", query: newQuery, fireWhenNotZero: true]).save(true)
-                    new PropertyPath([name: "last_loaded_record", jsonPath: "occurrences[0].uuid", query: newQuery]).save(true)
+                    PropertyPath pp = new PropertyPath([name: "totalRecords", jsonPath: "totalRecords", query: newQuery, fireWhenNotZero: true])
+                    if (!pp.save(validate: true, flush: true)) {
+                        pp.errors.allErrors.each {
+                            log.error(it)
+                        }
+                    }
+                    pp = new PropertyPath([name: "last_loaded_record", jsonPath: "occurrences[0].uuid", query: newQuery])
+                    if (!pp.save(validate: true, flush: true)) {
+                        pp.errors.allErrors.each {
+                            log.error(it)
+                        }
+                    }
                 }
             } catch (Exception ex) {
                 log.error("Error occurred when saving Query: " + ex.toString())
@@ -134,7 +148,11 @@ class QueryService {
         if (!exists) {
 
             Notification n = new Notification([query: newQuery, user: user])
-            n.save(true)
+            if (!n.save(validate: true, flush: true)) {
+                n.errors.allErrors.each {
+                    log.error(it)
+                }
+            }
 
             if (n.hasErrors()) {
                 n.errors.allErrors.each { e -> log.error(e) }
