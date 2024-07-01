@@ -708,6 +708,18 @@ class NotificationService {
         def checkedAndUpdatedCount = 0
         log.debug("Starting the running of all queries enabled.....")
 
+        // TODO: placeholder to toggle between one of the several test types that are required
+        //  readOnlyTest == true to run a test that does not update the database
+        //  readOnlyTest == false to run all queries twice
+        //   - look for exceptions
+        //   - look for emails of 0 records
+        //   - look for emails on the 2nd run that should not be triggered again
+        //  readOnlyTest == false to run all queries with modified date ranges
+        //   - look for q/fq that return nothing or are wrong, e.g. obsolete taxonId or qid
+        //   - look for services that are not finding results
+        //   - look for queries that return no email on their first run when they should
+        boolean readOnlyTest = true
+
         for (Frequency frequency : Frequency.findAll()) {
             def queries = Query.executeQuery(
                 """select q from Query q
@@ -723,31 +735,34 @@ class NotificationService {
 
                 try {
                     long timeTaken = System.currentTimeMillis()
-//                    QueryCheckResult qcr = checkStatusDontUpdate(query, frequency)
-//                    boolean hasUpdated = qcr.queryResult.hasChanged
+
+                    boolean hasFireProperty = query.propertyPaths.any { it.fireWhenChange || it.fireWhenNotZero }
+
                     QueryCheckResult qcr
-                    boolean hasUpdated = checkStatus(query, frequency)
+                    boolean hasUpdated
+                    if (readOnlyTest) {
+                        qcr = checkStatusDontUpdate(query, frequency)
+                        hasUpdated = qcr.queryResult.hasChanged
+
+                        writer.write("\n" + (qcr.errored ? "ERROR:" : "") + query.id + " " + frequency.name + ":" + hasUpdated + "(diff=" + !hasFireProperty + ")" + ":" + ": " + query.toString() + " " + qcr.timeTaken / 1000 + "s")
+                    } else {
+                        hasUpdated = checkStatus(query, frequency)
+
+                        // these query and queryResult read/write methods are called by the scheduled jobs
+                        Integer totalRecords = null
+                        QueryResult queryResult = QueryResult.findByQueryAndFrequency(query, frequency)
+                        def records = emailService.retrieveRecordForQuery(query, queryResult)
+                        Integer fireWhenNotZero = queryService.fireWhenNotZeroProperty(queryResult)
+                        totalRecords = records.size()
+
+                        writer.write("\n" + query.id + " " + frequency.name + ":" + hasUpdated + "(diff=" + !hasFireProperty + ")" + ":" + totalRecords + ": " + query.toString() + " " + (System.currentTimeMillis() - timeTaken) / 1000 + "s")
+                    }
 
                     checkedCount++
-//                    if (qcr.queryResult.hasChanged) {
                     if (hasUpdated) {
                         checkedAndUpdatedCount++
                     }
 
-                    // this is found within the email functions, run it to test it
-                    Integer totalRecords = null
-                    QueryResult queryResult = QueryResult.findByQueryAndFrequency(query, frequency)
-                    def records = emailService.retrieveRecordForQuery(query, queryResult)
-                    Integer fireWhenNotZero = queryService.fireWhenNotZeroProperty(queryResult)
-                    totalRecords = records.size()
-
-                    boolean hasFireProperty = query.propertyPaths.any { it.fireWhenChange || it.fireWhenNotZero }
-
-                    if (qcr) {
-                        writer.write("\n" + (qcr.errored ? "ERROR:" : "") + query.id + " " + frequency.name + ":" + hasUpdated + "(diff=" + !hasFireProperty + ")" + ":" + totalRecords + ": " + query.toString() + " " + qcr.timeTaken / 1000 + "s")
-                    } else {
-                        writer.write("\n" + query.id + " " + frequency.name + ":" + hasUpdated + "(diff=" + !hasFireProperty + ")" + ":" + totalRecords + ": " + query.toString() + " " + (System.currentTimeMillis() - timeTaken) / 1000 + "s")
-                    }
                     writer.flush()
                 } catch (err) {
                     writer.write("\nERROR:" + query.id + " " + frequency.name + ": " + ": " + query.toString() + ": " + err.getMessage())
