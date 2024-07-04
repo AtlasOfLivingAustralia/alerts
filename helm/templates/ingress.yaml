@@ -13,6 +13,7 @@ metadata:
     alb.ingress.kubernetes.io/certificate-arn: {{ .Values.ingress.certificateArn }}
     alb.ingress.kubernetes.io/ssl-redirect: '443'
     alb.ingress.kubernetes.io/success-codes: 200,404,301,302
+    alb.ingress.kubernetes.io/hostname: {{ .Values.ingress.hostname }}
     {{- include "ala-alerts.labels" . | nindent 4 }}
 spec:
   ingressClassName: {{ .Values.ingress.className }}

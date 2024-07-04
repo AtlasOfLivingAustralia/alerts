@@ -35,7 +35,7 @@ phases:
       - export REPO=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ALERTS_ECR_REPOSITORY_NAME
       - printf "$(kubectl config current-context)\n"
       - cd helm
-      - helm upgrade --install ala-alerts . --set image.repository=$REPO --set image.tag=latest --set rds.externalName=$DB_WRITE_ENDPOINT
+      - helm upgrade --install ala-alerts . --set image.repository=$REPO --set image.tag=latest --set ingress.hostname=$CLEAN_BRANCH.dev.ala.org.au --set rds.externalName=$DB_WRITE_ENDPOINT
 
   post_build:
     commands:

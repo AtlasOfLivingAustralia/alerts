@@ -26,7 +26,13 @@ spec:
             - name: config-volume
               mountPath: /data/alerts/config/alerts-config.properties
               subPath: alerts-config.properties
+            - name: logback-volume
+              mountPath: /data/alerts/config/logback.xml
+              subPath: logback.xml
       volumes:
         - name: config-volume
           secret:
             secretName: alerts-config-secret
+        - name: logback-volume
+          configMap:
+            name: logback-config

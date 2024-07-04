@@ -48,6 +48,7 @@ ingress:
   enabled: true
   className: "alb"
   certificateArn: "arn:aws:acm:ap-southeast-2:748909248546:certificate/969309c3-9c24-4fc8-9e16-10334e82bbd4"
+  hostname: alerts.dev.ala.org.au
   annotations:
     kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/scheme: internet-facing
