@@ -5,7 +5,7 @@
 replicaCount: 1
 
 image:
-  repository: ""
+  repository: "748909248546.dkr.ecr.ap-southeast-2.amazonaws.com/alerts-feature-component-breakout"
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: "latest"
@@ -40,7 +40,6 @@ securityContext: {}
   # runAsUser: 1000
 
 service:
-  type: LoadBalancer
   port: 80
   targetPort: 8000
 
@@ -49,10 +48,10 @@ ingress:
   className: "alb"
   certificateArn: "arn:aws:acm:ap-southeast-2:748909248546:certificate/969309c3-9c24-4fc8-9e16-10334e82bbd4"
   hostname: alerts.dev.ala.org.au
-  annotations:
-    kubernetes.io/ingress.class: alb
-    alb.ingress.kubernetes.io/scheme: internet-facing
-    alb.ingress.kubernetes.io/target-type: ip
+#  annotations:
+#    kubernetes.io/ingress.class: alb
+#    alb.ingress.kubernetes.io/scheme: internet-facing
+#    alb.ingress.kubernetes.io/target-type: ip
   tls: []
 
 resources:
@@ -105,4 +104,5 @@ tolerations: []
 affinity: {}
 
 rds:
-  externalName: "mysql-rds"
+#  externalName: "mysql-rds"
+  externalName: "alerts-ci-code-pipeline-cluster.cluster-ch1znchb8ne9.ap-southeast-2.rds.amazonaws.com"

@@ -24,7 +24,7 @@ spec:
           path: /
           backend:
             service:
-              name: service-{{ include "ala-alerts.fullname" . }}
+              name: {{ include "ala-alerts.fullname" . }}-service
               port:
                 number: {{ .Values.service.port }}
 {{- end }}

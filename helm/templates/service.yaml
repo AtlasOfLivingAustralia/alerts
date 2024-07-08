@@ -1,11 +1,11 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: service-{{ include "ala-alerts.fullname" . }}
+  name: {{ include "ala-alerts.fullname" . }}-service
   labels:
     {{- include "ala-alerts.labels" . | nindent 4 }}
 spec:
-  type: {{ .Values.service.type }}
+  type: LoadBalancer
   ports:
     - port: {{ .Values.service.port }}
       targetPort: {{ .Values.service.targetPort}}
