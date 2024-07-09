@@ -13,18 +13,19 @@ metadata:
     alb.ingress.kubernetes.io/certificate-arn: {{ .Values.ingress.certificateArn }}
     alb.ingress.kubernetes.io/ssl-redirect: '443'
     alb.ingress.kubernetes.io/success-codes: 200,404,301,302
-    alb.ingress.kubernetes.io/hostname: {{ .Values.ingress.hostname }}
+    external-dns.alpha.kubernetes.io/hostname: {{ .Values.ingress.hostname }}
     {{- include "ala-alerts.labels" . | nindent 4 }}
 spec:
   ingressClassName: {{ .Values.ingress.className }}
   rules:
-    - http:
+    - host:  {{ .Values.ingress.hostname }}
+      http:
         paths:
         - pathType: Prefix
           path: /
           backend:
             service:
-              name: {{ include "ala-alerts.fullname" . }}-service
+              name: svc-{{ include "ala-alerts.fullname" . }}
               port:
                 number: {{ .Values.service.port }}
 {{- end }}
