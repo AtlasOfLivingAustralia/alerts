@@ -4,6 +4,8 @@ env:
   shell: bash
   variables:
     JAVA_TOOL_OPTIONS: -Dhttps.protocols=TLSv1.2
+  secrets-manager:
+    DB_PASSWORD: $ALERTS_SECRET_NAME:db-password
 
 phases:
   install:
@@ -30,9 +32,12 @@ phases:
     commands:
       - echo Build started on $(date)
       - aws eks --region ap-southeast-2 update-kubeconfig --name $EKS_CLUSTER_NAME
+      - export REPO=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ALERTS_ECR_REPOSITORY_NAME
+      - kubectl config set-context --current --namespace=alerts
       - printf "$(kubectl config current-context)\n"
       - cd helm
-      - helm upgrade --install ala-alerts . --set image.tag=$CLEAN_BRANCH
+      - export CERTIFICATE_ARN=$(aws acm list-certificates --region ap-southeast-2 --query "CertificateSummaryList[?DomainName=='*.dev.ala.org.au' && Status=='ISSUED'].CertificateArn" --output text)
+      - helm upgrade --install ala-alerts . -n alerts --set image.repository=$REPO --set image.tag=latest --set ingress.hostname=alerts.dev.ala.org.au --set rds.externalName=$DB_WRITE_ENDPOINT --set ingress.certificateArn=$CERTIFICATE_ARN
 
   post_build:
     commands:

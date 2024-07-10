@@ -10,20 +10,19 @@ env:
     DEBIAN_FRONTEND: "noninteractive"
   exported-variables:
     - CODEBUILD_BUILD_NUMBER
-    - BASE_STACK_FILE_PFIX
     - PRODUCT_NAME
     - PRODUCT_COMPONENT
     - SLACK_DEPLOY_NOTIFICATION
     - SLACK_ALERT_CHANNEL
+    - ALERTS_ECR_REPOSITORY_NAME
 
 phases:
 
   install:
-    runtime-versions:
-      python: 3.9
     commands:
       - echo Running on $(lsb_release -d | cut -f2)
       - echo aws-cli version $(aws --version)
+      - pip install jinja2
       - export CUR_PIPELINE_FINGERPRINT=$(md5sum cicd/$PRODUCT_COMPONENT/pipeline/pipeline.yaml | awk '{print $1}')
       - # This next bit checks if the running pipeline is out of sync with the pipeline in the
       - # current code revision. If it is it re-launches itself! For a normal branch commit the
@@ -56,6 +55,12 @@ phases:
       - cicd/gen_env_vars.py --env $ENVIRONMENT --clean-branch $CLEAN_BRANCH --conf cicd/$PRODUCT_COMPONENT/config.ini > env.txt
       - echo loading config..
       - set -a ; source env.txt ; set +a
+      # import stack export from the base cloudformation stack
+      - echo importing stack output...
+      - ALERTS_ECR_REPOSITORY_NAME=$(aws cloudformation describe-stacks --stack-name $BASE_STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='AlertsRepositoryName'].OutputValue" --output text)
+      - ALERTS_SECRETS=$(aws cloudformation describe-stacks --stack-name $BASE_STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='AlertsSecrets'].OutputValue" --output text)
+      - echo ALERTS_ECR_REPOSITORY_NAME=$ALERTS_ECR_REPOSITORY_NAME
+      - echo ALERTS_SECRETS=$ALERTS_SECRETS
     finally:
       - #echo This always runs
 
@@ -63,18 +68,6 @@ phases:
     commands:
       - echo Entered the build phase...
       # package templates and generate the template configs
-      - |
-          for i in cicd/$PRODUCT_COMPONENT/app/*.yaml; do
-            stack=$(echo $i | sed 's/.yaml$//')
-            aws cloudformation package --template-file $stack.yaml \
-                                       --s3-bucket $ARTIFACTS_BUCKET \
-                                       --s3-prefix $PRODUCT_NAME/$PRODUCT_COMPONENT/$CLEAN_BRANCH-$CODEBUILD_BUILD_NUMBER \
-                                       --output-template-file ${stack}.yaml \
-                                       --region $REGION
-
-            echo Generating the template config for $stack
-            cicd/gen_template_config.py  --template ${stack}_template_config.j2 > ${stack}_template_config.json
-          done
     finally:
       - #echo This always runs
 
@@ -82,9 +75,3 @@ phases:
   post_build:
     commands:
       - #echo Entered the post_build phase...
-
-artifacts:
-  files:
-    - cicd/$PRODUCT_COMPONENT/app/*
-  name: BuildTemplateConfigArtifact
-  discard-paths: no

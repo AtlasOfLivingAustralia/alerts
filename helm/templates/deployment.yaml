@@ -19,16 +19,35 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
-            - name: http
-              containerPort: 8080
-              protocol: TCP
+            - containerPort: 8000
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
             - name: config-volume
               mountPath: /data/alerts/config/alerts-config.properties
               subPath: alerts-config.properties
+            - name: logback-volume
+              mountPath: /data/alerts/config/logback.xml
+              subPath: logback.xml
+            - name: logback-groovy-volume
+              mountPath: /data/alerts/config/logback.groovy
+              subPath: logback.groovy
+            - name: system-message-volume
+              mountPath: /data/alerts/config/system-message.json
+              subPath: system-message.json
       volumes:
         - name: config-volume
           secret:
             secretName: alerts-config-secret
+        - name: logback-volume
+          configMap:
+            name: logback-config
+            optional: true
+        - name: logback-groovy-volume
+          configMap:
+            name: logback-groovy-config
+            optional: true
+        - name: system-message-volume
+          configMap:
+            name: system-message-config
+            optional: true

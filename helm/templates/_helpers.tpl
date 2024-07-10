@@ -46,7 +46,7 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 Selector labels
 */}}
 {{- define "ala-alerts.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "ala-alerts.name" . }}
+app.kubernetes.io/name: {{ include "ala-alerts.fullname" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 

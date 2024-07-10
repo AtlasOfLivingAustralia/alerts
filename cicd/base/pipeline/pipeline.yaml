@@ -2,9 +2,6 @@ AWSTemplateFormatVersion: "2010-09-09"
 Description: Code pipeline for the alerts service
 
 Parameters:
-  pBaseStackName:
-    Type: String
-    Description: The name of the stack that contains the alerts base resources
   pAutoDeploy:
     Type: String
     Description: Sets the pipeline to auto deploy on repo changes
@@ -17,9 +14,6 @@ Parameters:
   pCleanBranch:
     Type: String
     Description: The clean branch, can be used in resource names
-  pEksClusterName:
-    Type: String
-    Description: The name of the EKS cluster
   pEnvironment:
     Type: String
     Description: The AWS environment this belongs to
@@ -74,7 +68,7 @@ Resources:
       Environment:
         Type: LINUX_CONTAINER
         ComputeType: BUILD_GENERAL1_SMALL
-        Image: aws/codebuild/standard:5.0
+        Image: aws/codebuild/standard:7.0
         EnvironmentVariables:
           - Name: ARTIFACTS_BUCKET
             Value:
@@ -84,48 +78,6 @@ Resources:
         Type: CODEPIPELINE
         BuildSpec: !Sub cicd/${pProductComponent}/pipeline/export_config_buildspec.yaml
       TimeoutInMinutes: 5
-
-  BuildAlerts:
-    Type: AWS::CodeBuild::Project
-    Properties:
-      Name: !Sub
-        - ${pProductName}-${pProductComponent}-build-alerts-${ResourceName}
-        - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
-      Description: Build the alerts project
-      ServiceRole:
-               Fn::ImportValue:
-                 Fn::Sub: ${pBootstrapStackName}-CodeBuildServiceRoleArn
-      Artifacts:
-        Type: CODEPIPELINE
-      Environment:
-        Type: LINUX_CONTAINER
-        ComputeType: BUILD_GENERAL1_SMALL
-        Image: aws/codebuild/standard:5.0
-      Source:
-        Type: CODEPIPELINE
-        BuildSpec: !Sub cicd/${pProductComponent}/pipeline/build_alerts_buildspec.yaml
-      TimeoutInMinutes: 30
-
-  DeployAlerts:
-    Type: AWS::CodeBuild::Project
-    Properties:
-      Name: !Sub
-              - ${pProductName}-${pProductComponent}-deploy-alerts-${ResourceName}
-              - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
-      Description: Deploy alerts
-      ServiceRole:
-               Fn::ImportValue:
-                 Fn::Sub: ${pBootstrapStackName}-CodeBuildServiceRoleArn
-      Artifacts:
-        Type: CODEPIPELINE
-      Environment:
-        Type: LINUX_CONTAINER
-        ComputeType: BUILD_GENERAL1_SMALL
-        Image: aws/codebuild/standard:5.0
-      Source:
-        Type: CODEPIPELINE
-        BuildSpec: !Sub cicd/${pProductComponent}/pipeline/deploy_alerts_buildspec.yaml
-      TimeoutInMinutes: 20
 
   DeployNotification:
     Type: AWS::CodeBuild::Project
@@ -142,7 +94,7 @@ Resources:
       Environment:                         
         Type: LINUX_CONTAINER              
         ComputeType: BUILD_GENERAL1_SMALL  
-        Image: aws/codebuild/standard:5.0  
+        Image: aws/codebuild/standard:7.0  
       Source:                             
         Type: CODEPIPELINE
         BuildSpec: !Sub cicd/${pProductComponent}/pipeline/deploy_notification_buildspec.yaml
@@ -245,65 +197,12 @@ Resources:
               RoleArn:
                    Fn::ImportValue:
                      Fn::Sub: '${pBootstrapStackName}-CloudFormationServiceRoleArn'
-              StackName: !Ref pBaseStackName
+              StackName: '#{ExportConfigNS.BASE_STACK_NAME}'
             InputArtifacts:
               - Name: 'ExportConfigArtifact'
             Namespace: BaseCloudFormationOutNS
             OutputArtifacts: [ ]
             RunOrder: 2
-
-          - Name: BuildAlerts
-            ActionTypeId:
-              Owner: AWS
-              Category: Build
-              Version: 1
-              Provider: CodeBuild
-            Configuration:
-              ProjectName: !Ref BuildAlerts
-              EnvironmentVariables: !Sub |
-                [
-                  { "name":"ALERTS_ECR_REPOSITORY", "value":"#{BaseCloudFormationOutNS.AlertsRepositoryArn}" },
-                  { "name":"CLEAN_BRANCH", "value":"${pCleanBranch}" },
-                  { "name":"COMMIT_ID", "value":"#{CheckoutSrcNS.CommitId}" },
-                  { "name":"ENVIRONMENT", "value":"${pEnvironment}" },
-                  { "name":"PIPELINE_FINGERPRINT", "value":"#{variables.PIPELINE_FINGERPRINT}" },
-                  { "name":"SRC_BRANCH", "value":"${pGitHubBranch}" }
-                ]
-            InputArtifacts:
-              - Name: 'SourceArtifact'
-            RunOrder: 3
-
-          - Name: Approval
-            ActionTypeId:
-              Owner: AWS
-              Category: Approval
-              Version: 1
-              Provider: Manual
-            Configuration:
-              CustomData: Approval required to deploy build to eks
-            RunOrder: 4
-
-          - Name: DeployAlerts
-            ActionTypeId:
-              Owner: AWS
-              Category: Build
-              Version: 1
-              Provider: CodeBuild
-            Configuration:
-              ProjectName: !Ref DeployAlerts
-              EnvironmentVariables: !Sub |
-                [
-                  { "name":"ALERTS_ECR_REPOSITORY", "value":"#{BaseCloudFormationOutNS.AlertsRepositoryArn}" },
-                  { "name":"CLEAN_BRANCH", "value":"${pCleanBranch}" },
-                  { "name":"COMMIT_ID", "value":"#{CheckoutSrcNS.CommitId}" },
-                  { "name":"EKS_CLUSTER_NAME", "value":"${pEksClusterName}" },
-                  { "name":"ENVIRONMENT", "value":"${pEnvironment}" },
-                  { "name":"PIPELINE_FINGERPRINT", "value":"#{variables.PIPELINE_FINGERPRINT}" },
-                  { "name":"SRC_BRANCH", "value":"${pGitHubBranch}" }
-                ]
-            InputArtifacts:
-              - Name: 'SourceArtifact'
-            RunOrder: 5
 
           - Name: DeployNotification
             ActionTypeId:
@@ -329,7 +228,7 @@ Resources:
             Namespace: DeployNotificationNS
             InputArtifacts:
               - Name: 'SourceArtifact'
-            RunOrder: 6
+            RunOrder: 3
 
       - Name: Teardown
         Actions:
@@ -350,7 +249,7 @@ Resources:
               Provider: CloudFormation
             Configuration:
               ActionMode: DELETE_ONLY
-              StackName: !Ref pBaseStackName
+              StackName: '#{ExportConfigNS.BASE_STACK_NAME}'
               RoleArn:
                 Fn::ImportValue:
                   Fn::Sub: '${pBootstrapStackName}-CloudFormationServiceRoleArn'
@@ -377,26 +276,6 @@ Resources:
                    Fn::ImportValue:
                      Fn::Sub: '${pBootstrapStackName}-CloudFormationServiceRoleArn'
             RunOrder: 4
-
-  BuildAlertsCodeBuildLogGroup:
-    Type: AWS::Logs::LogGroup
-    DeletionPolicy: Delete
-    Properties:
-      LogGroupName: !Sub /aws/codebuild/${BuildAlerts}
-      RetentionInDays: 30
-      Tags:
-        - Key: Name
-          Value: !Ref AWS::StackName
-
-  DeployAlertsCodeBuildLogGroup:
-    Type: AWS::Logs::LogGroup
-    DeletionPolicy: Delete
-    Properties:
-      LogGroupName: !Sub /aws/codebuild/${DeployAlerts}
-      RetentionInDays: 30
-      Tags:
-        - Key: Name
-          Value: !Ref AWS::StackName
 
   ExportConfigCodeBuildLogGroup:
     Type: AWS::Logs::LogGroup

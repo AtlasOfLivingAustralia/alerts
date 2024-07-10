@@ -40,13 +40,16 @@ phases:
 #      - aws s3 rm s3://ala-alerts-builds/devbuilds/$CLEAN_BRANCH/ --recursive
 #      - aws s3 cp build/libs/*.war s3://ala-alerts-builds/devbuilds/$CLEAN_BRANCH/
       - echo Logging in to Amazon ECR...
-      - aws ecr get-login-password | docker login -u AWS --password-stdin "https://$(aws sts get-caller-identity --query 'Account' --output text).dkr.ecr.ap-southeast-2.amazonaws.com"
+      - aws ecr get-login-password | docker login -u AWS --password-stdin "https://$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
       - rm -rf build/libs/*-plain.war
       - echo Building the Docker image...
       - docker build -t ala-alerts .
       - echo Tagging the Docker image...
-      - echo $ALERTS_ECR_REPOSITORY:$CLEAN_BRANCH
+      - export REPO=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ALERTS_ECR_REPOSITORY_NAME
+      - echo REPO=$REPO
       - echo tagging
-      - docker tag ala-alerts:latest $ALERTS_ECR_REPOSITORY:$CLEAN_BRANCH
+      - docker tag ala-alerts:latest $REPO:$CLEAN_BRANCH-$CODEBUILD_BUILD_NUMBER
+      - docker tag ala-alerts:latest $REPO:latest
       - echo Pushing the Docker image to Amazon ECR...
-      - docker push $ALERTS_ECR_REPOSITORY:$CLEAN_BRANCH
+      - docker push $REPO:$CLEAN_BRANCH-$CODEBUILD_BUILD_NUMBER
+      - docker push $REPO:latest

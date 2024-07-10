@@ -52,7 +52,7 @@ Resources:
         - Key: Branch
           Value: !Ref pCleanBranch
 
-  AlertsSecrets:
+  AlertsSecret:
     Type: 'AWS::SecretsManager::Secret'
     Properties:
       Name: !Sub 
@@ -74,3 +74,11 @@ Outputs:
   AlertsRepositoryArn:
     Description: The ECR repository ARN for the Alerts service
     Value: !GetAtt AlertsRepository.Arn
+
+  AlertsRepositoryName:
+    Description: The ECR repository ARN for the Alerts service
+    Value: !Ref AlertsRepository
+
+  AlertsSecret:
+    Description: The Secrets name for alerts 
+    Value: !Ref AlertsSecret

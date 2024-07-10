@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: Code pipeline for the alerts database
+Description: Code pipeline for the alerts service
 
 Parameters:
   pAutoDeploy:
@@ -14,6 +14,9 @@ Parameters:
   pCleanBranch:
     Type: String
     Description: The clean branch, can be used in resource names
+  pEksClusterName:
+    Type: String
+    Description: The name of the EKS cluster
   pEnvironment:
     Type: String
     Description: The AWS environment this belongs to
@@ -78,6 +81,27 @@ Resources:
         Type: CODEPIPELINE
         BuildSpec: !Sub cicd/${pProductComponent}/pipeline/export_config_buildspec.yaml
       TimeoutInMinutes: 5
+
+  DeployAlerts:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Sub
+              - ${pProductName}-${pProductComponent}-deploy-alerts-${ResourceName}
+              - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
+      Description: Deploy alerts
+      ServiceRole:
+               Fn::ImportValue:
+                 Fn::Sub: ${pBootstrapStackName}-CodeBuildServiceRoleArn
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/standard:7.0
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: !Sub cicd/${pProductComponent}/pipeline/deploy_alerts_buildspec.yaml
+      TimeoutInMinutes: 20
 
   DeployNotification:
     Type: AWS::CodeBuild::Project
@@ -157,7 +181,7 @@ Resources:
             Namespace: CheckoutSrcNS
             OutputArtifacts:
               - Name: 'SourceArtifact'
-      - Name: Deploy_Infrastructure
+      - Name: Deploy_Infrastructure_Build
         Actions:
           - Name: ExportConfig
             ActionTypeId:
@@ -183,25 +207,26 @@ Resources:
               - Name: ExportConfigArtifact
             RunOrder: 1
 
-          - Name: DeployDatabaseCFStack
+          - Name: DeployAlerts
             ActionTypeId:
               Owner: AWS
-              Category: Deploy
+              Category: Build
               Version: 1
-              Provider: CloudFormation
+              Provider: CodeBuild
             Configuration:
-              TemplatePath: !Sub 'ExportConfigArtifact::cicd/${pProductComponent}/app/#{ExportConfigNS.DATABASE_STACK_FILE_PFIX}.yaml'
-              ActionMode: !If [ IsDev, REPLACE_ON_FAILURE, CREATE_UPDATE ]
-              TemplateConfiguration: !Sub 'ExportConfigArtifact::cicd/${pProductComponent}/app/#{ExportConfigNS.DATABASE_STACK_FILE_PFIX}_template_config.json'
-              Capabilities: CAPABILITY_IAM,CAPABILITY_AUTO_EXPAND,CAPABILITY_NAMED_IAM
-              RoleArn:
-                   Fn::ImportValue:
-                     Fn::Sub: '${pBootstrapStackName}-CloudFormationServiceRoleArn'
-              StackName: '#{ExportConfigNS.DATABASE_STACK_NAME}'
+              ProjectName: !Ref DeployAlerts
+              EnvironmentVariables: !Sub |
+                [
+                  { "name":"ALERTS_SECRET_NAME", "value":"#{ExportConfigNS.ALERTS_SECRET_NAME}" },
+                  { "name":"AWS_ACCOUNT_ID", "value":"${AWS::AccountId}" },
+                  { "name":"ALERTS_ECR_REPOSITORY_NAME", "value":"#{ExportConfigNS.ALERTS_ECR_REPOSITORY_NAME}" },
+                  { "name":"CLEAN_BRANCH", "value":"${pCleanBranch}" },
+                  { "name":"DB_READ_ENDPOINT", "value":"#{ExportConfigNS.DB_READ_ENDPOINT}" },
+                  { "name":"DB_WRITE_ENDPOINT", "value":"#{ExportConfigNS.DB_WRITE_ENDPOINT}" },
+                  { "name":"EKS_CLUSTER_NAME", "value":"${pEksClusterName}" }
+                ]
             InputArtifacts:
-              - Name: 'ExportConfigArtifact'
-            Namespace: DatabaseCloudFormationOutNS
-            OutputArtifacts: [ ]
+              - Name: 'SourceArtifact'
             RunOrder: 2
 
           - Name: DeployNotification
@@ -228,32 +253,10 @@ Resources:
             Namespace: DeployNotificationNS
             InputArtifacts:
               - Name: 'SourceArtifact'
-            RunOrder: 6
+            RunOrder: 3
 
       - Name: Teardown
         Actions:
-          - Name: Approval
-            ActionTypeId:
-              Owner: AWS
-              Category: Approval
-              Version: 1
-              Provider: Manual
-            Configuration:
-              CustomData: Approval required to tear down this stack
-            RunOrder: 1
-          - Name: TeardownDatabaseStack
-            ActionTypeId:
-              Owner: AWS
-              Category: Deploy
-              Version: 1
-              Provider: CloudFormation
-            Configuration:
-              ActionMode: DELETE_ONLY
-              StackName: '#{ExportConfigNS.DATABASE_STACK_NAME}'
-              RoleArn:
-                Fn::ImportValue:
-                  Fn::Sub: '${pBootstrapStackName}-CloudFormationServiceRoleArn'
-            RunOrder: 2
           - Name: ApprovalForPipelineTeardown
             ActionTypeId:
               Owner: AWS
@@ -262,7 +265,7 @@ Resources:
               Provider: Manual
             Configuration:
               CustomData: Approval required to tear down this stack
-            RunOrder: 3
+            RunOrder: 1
           - Name: TeardownCodePipeline
             ActionTypeId:
               Owner: AWS
@@ -273,9 +276,19 @@ Resources:
               ActionMode: DELETE_ONLY
               StackName: !Ref AWS::StackName
               RoleArn:
-                Fn::ImportValue:
-                  Fn::Sub: '${pBootstrapStackName}-CloudFormationServiceRoleArn'
-            RunOrder: 4
+                   Fn::ImportValue:
+                     Fn::Sub: '${pBootstrapStackName}-CloudFormationServiceRoleArn'
+            RunOrder: 2
+
+  DeployAlertsCodeBuildLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Delete
+    Properties:
+      LogGroupName: !Sub /aws/codebuild/${DeployAlerts}
+      RetentionInDays: 30
+      Tags:
+        - Key: Name
+          Value: !Ref AWS::StackName
 
   ExportConfigCodeBuildLogGroup:
     Type: AWS::Logs::LogGroup

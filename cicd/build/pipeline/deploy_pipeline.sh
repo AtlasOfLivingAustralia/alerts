@@ -137,21 +137,16 @@ aws cloudformation deploy \
     --region $REGION \
     --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
     --parameter-overrides \
-        pArtifactsBucket=$ARTIFACTS_BUCKET \
         pAutoDeploy=$AUTO_DEPLOY \
+        pBootstrapStackName=$BOOTSTRAP_STACK_NAME \
+        pBucketsStackName=$BUCKETS_STACK_NAME \
         pCleanBranch=$clean_branch \
-        pCloudFormationServiceRole=$CLOUDFORMATION_SERVICE_ROLE \
-        pCodeBuildServiceRole=$CODEBUILD_SERVICE_ROLE \
-        pCodePipelineServiceRole=$CODEPIPELINE_SERVICE_ROLE \
-        pCodestarConnection=$CODESTAR_CONNECTION \
-        pAlertsEcrRepository=$ALERTS_ECR_REPOSITORY \
         pEnvironment=$environment \
-        pEksClusterName=$EKS_CLUSTER_NAME \
         pGitHubBranch=$branch \
         pGitHubOwner=$GITHUB_OWNER \
         pGitHubRepositoryName=$GITHUB_REPO_NAME \
         pPipelineFingerprint=$PIPELINE_MD5 \
+        pProductComponent=$PRODUCT_COMPONENT \
         pProductName=$PRODUCT_NAME \
         pRestartExecutionOnUpdate=$RESTART_PIPELINE_ON_UPDATE \
-        pAlertsStackName=$ALERTS_STACK_NAME-$clean_branch \
 
