@@ -62,6 +62,7 @@ Resources:
       GenerateSecretString: 
         GenerateStringKey: db-password
         PasswordLength: 12
+        ExcludeCharacters: "/@\" "
         SecretStringTemplate: |
           {
             "db-password": ""
