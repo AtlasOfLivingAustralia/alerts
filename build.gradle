@@ -136,6 +136,7 @@ dependencies {
     //Using AWS SES as email provider
     implementation 'org.grails.plugins:mail:4.0.0'
     implementation 'au.org.ala:ala-mail:1.0.0-SNAPSHOT'
+    implementation group: 'com.amazonaws', name: 'aws-java-sdk-sts', version: "1.12.759"
 
     implementation 'org.grails.plugins:schwartz-monitor:2.0.1.ALA-SNAPSHOT'
     implementation 'org.grails.plugins:quartz:2.0.13'
