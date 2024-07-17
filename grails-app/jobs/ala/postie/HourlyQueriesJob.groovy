@@ -10,7 +10,7 @@ class HourlyQueriesJob {
 
     def execute() {
         log.info("****** Starting hourly update ****** " + new Date())
-        notificationService.checkQueryForFrequency('hourly')
+        notificationService.execQueryForFrequency('hourly')
         log.info("****** Finished hourly update ******" + new Date())
     }
 }

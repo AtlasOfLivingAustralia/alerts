@@ -36,6 +36,7 @@
             <li><g:link controller="admin" action="debugAllAlerts">Debug all alerts</g:link> - Dry-run of all alerts to determine if emails will be triggered on the next schedule. </li>
 
             <li><g:link controller="admin" action="deleteOrphanAlerts">Delete orphaned queries</g:link> - Remove queries no longer associated with Alert Notification/Subscription.</li>
+            <li class="admin"><a href="${request.contextPath}/admin/summarizeQuery">Summary of queries</a> - List of Queries and Their Results, and Comparison</li>
         </ul>
         <h4>Fix empty/invalid notification_token</h4>
         <ul>

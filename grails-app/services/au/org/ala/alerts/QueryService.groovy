@@ -38,6 +38,11 @@ class QueryService {
         n
     }
 
+    /**
+     * return true if a query does not have a propertyPath with fireWhenChange AND fireWhenNotZero set to true
+     * @param query
+     * @return
+     */
     Boolean checkChangeByDiff(Query query) {
         !hasAFireProperty(query) && (query.idJsonPath || isMyAnnotation(query))
     }
@@ -65,12 +70,22 @@ class QueryService {
         queryPath.substring(queryPath.indexOf('assertion_user_id:') + 'assertion_user_id:'.length(), queryPath.indexOf('&dir=desc'))
     }
 
-    Integer fireWhenNotZeroProperty(QueryResult queryResult) {
-        Integer fireWhenNotZeroValue = -1
+    /**
+     * When fireWhenNotZero is true,  it should has a digit propertyVale, e.g. totalNumber
+     * It is supposed to be totalNumber of NEW records
+     * NOT SAFE
+     *
+     * @param queryResult
+     * @return the last valid number in propertyValues. Assume 'totalNumber' is the last propertyPath with 'fireWhenNotZero' set to 'true
+     *
+     *
+     */
+    Integer totalNumberWhenNotZeroPropertyEnabled(QueryResult queryResult) {
+        Integer fireWhenNotZeroValue = 0
         queryResult.propertyValues.each { pv ->
             if (pv.propertyPath.fireWhenNotZero) {
                 // true is 1, false is 0
-                fireWhenNotZeroValue = pv?.currentValue? pv?.currentValue.toInteger() : -1
+                fireWhenNotZeroValue = pv?.currentValue? pv?.currentValue.toInteger() : 0
             }
         }
         fireWhenNotZeroValue
@@ -413,10 +428,24 @@ class QueryService {
         return subscription
     }
 
-    def getQueryLogs(query) {
-        def queryResult = QueryResult.findByQuery(query)
-        return queryResult?.retrieveLogs()
-    }
+    /**
+     *  Todo review, no need
+     **/
+//    def getQueryLogs(query, String frequency= null) {
+//        def logs = []
+//        if (frequency) {
+//           query.queryResults?.each { qr ->
+//                if (qr.frequency.isFrequency(frequency)) {
+//                    logs = logs + qr.retrieveLogs()
+//                }
+//            }
+//        } else {
+//            query.queryResults?.each { qr ->
+//                  logs = logs + qr.retrieveLogs()
+//            }
+//        }
+//        return logs
+//    }
 
     // get all subscribers to the specified query
     def getSubscribers(Long queryId) {
@@ -514,5 +543,28 @@ class QueryService {
             lastCheckedDate = queryResult.lastChecked
         }
         lastCheckedDate
+    }
+
+    /**
+     * List all queries grouped by email template
+     */
+    def summarize() {
+        List<Query> queries =  Query.createCriteria().list {
+            ne("name", "My Annotations")
+        }
+
+        List<Query> annotations =  Query.createCriteria().list {
+            eq("name", "My Annotations")
+            createAlias("notifications", "n")
+            createAlias("n.user", "u")
+            order("u.email")
+        }
+
+        Map<String, List<Query>> groupedByTemplate = queries.groupBy { it.emailTemplate }.collectEntries { key, value ->
+            [ (key.replace("/email/", "")) : value.sort { it.name }]
+        }
+        groupedByTemplate['annotations'] = annotations
+
+        return groupedByTemplate
     }
 }
