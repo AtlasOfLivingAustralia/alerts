@@ -279,6 +279,7 @@ class AdminController {
      * @param limit
      * @return
      */
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
     def getMoreBioSecurityQuery(int startIdx) {
         List queries = queryService.getBiosecurityQuery(startIdx, subscriptionsPerPage)
         render view: "/admin/_bioSecuritySubscriptions", model: [queries: queries, startIdx: startIdx ]
@@ -289,6 +290,7 @@ class AdminController {
      * @param id
      * @return
      */
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
     def getBioSecurityQuery(int id) {
         def query = queryService.findBiosecurityQueryById(id)
         def queryLog = queryService.getQueryLogs(query)
@@ -296,6 +298,7 @@ class AdminController {
         render view: "/admin/_bioSecuritySubscriptions", model: [queries: [query], startIdx: 0 ]
     }
 
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
     def countBioSecurityQuery() {
         int total = queryService.countBiosecurityQuery()
         render (contentType: 'application/json') {
@@ -307,6 +310,7 @@ class AdminController {
      * This function is used to subscribe a user to a species list or a query (an existing subscription of a list)
      * @return
      */
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
     @Transactional
     def subscribeBioSecurity() {
         if ((!params.listid || params.listid.allWhitespace) && !params.queryid) {
@@ -350,7 +354,7 @@ class AdminController {
      * DO NOT update database in this function
      * @return
      */
-    @AlaSecured
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
     def previewBiosecurityAlert() {
         log.info("Building preview page for BioSecurity alert")
         def date = params.date //only from preview
@@ -406,6 +410,7 @@ class AdminController {
                 ])
     }
 
+
     @Transactional
     def previewBlogAlerts() {
         String urlPrefix = "${grailsApplication.config.security.cas.appServerName}${grailsApplication.config.getProperty('security.cas.contextPath', '')}"
@@ -453,7 +458,7 @@ class AdminController {
                 ])
     }
 
-    // Not transactional
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
     def csvAllBiosecurity() {
         def date = params.date
         String outputFile = "occurrence_alerts_${date}.csv"
@@ -517,6 +522,7 @@ class AdminController {
         redirect(controller: "admin", action: "biosecurity")
     }
 
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
     @Transactional
     def unsubscribeAlert() {
         if (!params.useremail || params.useremail.allWhitespace) {
