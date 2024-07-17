@@ -15,11 +15,15 @@ class QueryResult {
     byte[] previousResult
     String logs
 
-    String[] retrieveLogs() {
+    String[] getLog() {
         return logs ? logs.split("\n") : []
     }
 
-    void appendLogs(String log) {
+    void newLog(String log) {
+        logs = log
+    }
+
+    void addLog(String log) {
         logs = logs ? logs + "\n" + log : log
     }
 

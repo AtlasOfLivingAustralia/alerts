@@ -205,6 +205,9 @@ environments:
         security:
             cas:
                 appServerName: "http://localhost:8080"
+        quartz:
+            autoStartup : false
+
         userdetails:
             web:
                 url: https://aws-auth-test-2023.test.ala.org.au/userdetails/

@@ -11,6 +11,7 @@ class NotificationController {
     def emailService
     def userService
     def authService
+    def diffService
 
     static allowedMethods = [save: "POST", update: "POST", delete: "POST"]
 
@@ -102,13 +103,32 @@ class NotificationController {
         return null
     }
 
+    /**
+     * todo check if it works?
+     */
     def checkNow = {
         Notification notification = Notification.get(params.id)
-        boolean sendUpdateEmail = notificationService.checkStatus(notification.query)
+        // no such method
+        boolean sendUpdateEmail = notificationService.executeQuery(notification.query)
         if (sendUpdateEmail) {
             emailService.sendNotificationEmail(notification)
         }
         redirect(action: "show", params: params)
+    }
+
+    /**
+     * Debug the algorithm used to detect changes in the latest result
+     *
+     */
+    def evaluateChangeDetectionAlgorithm = {
+        def query = Query.get(params.queryId)
+        def queryResult = query?.queryResults?.find { queryResult ->
+            queryResult.id == params.queryResultId.toLong()
+        }
+        boolean hasChanged = notificationService.hasChanged(queryResult)
+        def records = notificationService.collectUpdatedRecords(queryResult)
+        def results = ["hasChanged": hasChanged, "records": records]
+        render results as JSON
     }
 
     def index = {

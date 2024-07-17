@@ -641,7 +641,7 @@ class WebserviceController {
     def getQueryLogs() {
         def query = Query.get(params.id)
         if (query) {
-            def logs = queryService.getQueryLogs(query)
+            def logs = query.getLogs(params.frequency)
             render logs as JSON
         } else {
             render([status: 1, message: "Query not found"] as JSON)

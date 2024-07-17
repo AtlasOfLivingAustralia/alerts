@@ -23,10 +23,14 @@ class DiffService {
     def queryService
 
     Boolean hasChangedJsonDiff(QueryResult queryResult) {
-        if (queryResult.lastResult != null && queryResult.previousResult != null) {
-            String last = decompressZipped(queryResult.lastResult)
-            String previous = decompressZipped(queryResult.previousResult)
-            hasChangedJsonDiff(previous, last, queryResult.query)
+        if (queryResult.lastResult != null) {
+            if (queryResult.previousResult != null) {
+                String last = decompressZipped(queryResult.lastResult)
+                String previous = decompressZipped(queryResult.previousResult)
+                hasChangedJsonDiff(previous, last, queryResult.query)
+            } else {
+                true
+            }
         } else {
             false
         }
@@ -38,7 +42,6 @@ class DiffService {
 
     Boolean hasChangedJsonDiff(String previous, String current, Query query, Boolean debugDiff = false) {
         if (current != null && previous != null) {
-
             try {
                 if (!queryService.isMyAnnotation(query)) {
                     def ids1 = JsonPath.read(current, query.recordJsonPath + "." + query.idJsonPath)

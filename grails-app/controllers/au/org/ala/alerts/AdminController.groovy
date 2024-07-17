@@ -14,6 +14,7 @@
 package au.org.ala.alerts
 
 import au.org.ala.web.AlaSecured
+import grails.converters.JSON
 import grails.gorm.transactions.Transactional
 import grails.util.Holders
 
@@ -133,7 +134,7 @@ class AdminController {
         log.info("Run checks....")
         if (params.frequency) {
             log.info('Manual start of ' + params.frequency + ' checks')
-            notificationService.checkQueryForFrequency(params.frequency)
+            notificationService.execQueryForFrequency(params.frequency)
         }
         response.setContentType("text/plain")
         response.setStatus(200)
@@ -293,7 +294,7 @@ class AdminController {
     @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
     def getBioSecurityQuery(int id) {
         def query = queryService.findBiosecurityQueryById(id)
-        def queryLog = queryService.getQueryLogs(query)
+       // def queryLog = queryService.getQueryLogs(query, "weekly")
         //For be compatible with the method rendering a list of queries AKA subscriptions, we need to convert the single query to a list
         render view: "/admin/_bioSecuritySubscriptions", model: [queries: [query], startIdx: 0 ]
     }
@@ -375,7 +376,7 @@ class AdminController {
         query.lastChecked = since
 
 
-        def records = emailService.retrieveRecordForQuery(qr.query, qr)
+        def records = notificationService.retrieveRecordForQuery(qr.query, qr)
         def userAssertions = queryService.isBioSecurityQuery(qr.query) ? emailService.getBiosecurityAssertions(qr.query, records as List) : [:]
         def speciesListInfo = emailService.getSpeciesListInfo(qr.query)
 
@@ -476,7 +477,7 @@ class AdminController {
                     qr.lastResult = notificationService.gzipResult(processedJson)
                     //notificationService.refreshProperties(qr, processedJson)
 
-                    def records = emailService.retrieveRecordForQuery(qr.query, qr)
+                    def records = notificationService.retrieveRecordForQuery(qr.query, qr)
                     //def userAssertions = queryService.isBioSecurityQuery(qr.query) ? emailService.getBiosecurityAssertions(qr.query, records as List) : [:]
                     def speciesListInfo = emailService.getSpeciesListInfo(qr.query)
 
@@ -538,5 +539,52 @@ class AdminController {
             }
         }
         redirect(controller: "admin", action: "biosecurity")
+    }
+
+    def query(){
+        def queries = queryService.summarize()
+        render view: "/admin/query", model: [queries: queries]
+    }
+
+    /**
+     * Experimental
+     * Run a task to execute the query for a specific frequency
+     * Database will be updated, but won't sending any notification
+     * @return
+     */
+    def runTask(){
+        def frequency = params.frequency
+        if (frequency) {
+            notificationService.execQueryForFrequency('daily', false)
+        }
+        render([success: true] as JSON)
+    }
+
+    /**
+     * Rerun the last check of a query for a given frequency without sending any notifications
+     * @param queryId
+     * @param frequency
+     * @return
+     */
+    def runQueryWithLastCheckDate(){
+        def id = params.queryId
+        def frequency = params.frequency
+        if (id && frequency) {
+            Query query = Query.get(id)
+            Frequency fre = Frequency.findByName(frequency)
+            if (query && fre) {
+                notificationService.executeQuery(query, fre, true)
+                //Fetch again, since DB was updated
+                QueryResult queryResult = notificationService.getQueryResult(query, fre)
+                boolean hasChanged = notificationService.hasChanged(queryResult)
+                def records = notificationService.collectUpdatedRecords(queryResult)
+                def results = ["hasChanged": hasChanged, "records": records]
+                render results as JSON
+            } else {
+                render([status: 1, message: "Cannot find query: ${id}"] as JSON)
+            }
+        } else {
+            render([status: 1, message: "Missing queryId or frequency"] as JSON)
+        }
     }
 }
