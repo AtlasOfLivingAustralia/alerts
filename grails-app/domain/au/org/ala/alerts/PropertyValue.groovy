@@ -11,4 +11,8 @@ class PropertyValue {
         currentValue nullable: true
         previousValue nullable: true
     }
+
+    String toString() {
+        "name: ${propertyPath?.name}, currentValue: ${currentValue}, previousValue: ${previousValue}"
+    }
 }

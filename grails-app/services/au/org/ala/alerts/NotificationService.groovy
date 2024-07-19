@@ -9,8 +9,10 @@ import org.grails.web.json.JSONArray
 import org.grails.web.json.JSONElement
 import org.grails.web.json.JSONObject
 import grails.gorm.transactions.Transactional
-import java.text.SimpleDateFormat
 import java.util.zip.GZIPOutputStream
+import java.text.SimpleDateFormat
+import groovy.time.TimeCategory
+
 
 @Transactional
 class NotificationService {
@@ -24,6 +26,7 @@ class NotificationService {
     def queryService
     def grailsApplication
     def webService
+    def dateFormatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
 
     QueryResult getQueryResult(Query query, Frequency frequency) {
         QueryResult qr = QueryResult.findByQueryAndFrequency(query, frequency)
@@ -48,23 +51,26 @@ class NotificationService {
     }
 
     /**
-     * CORE method of finding if there are new records for a given query and frequency.
-     * Execute the query Check the status of queries for this given frequency.
+     * CORE method of searching if there are new records for a given query and frequency.
+     * EXCEPT BioSecurity Query which is handled elsewhere.
      *
      * @param query
      * @param frequency
+     * @param runLastCheck It will set the date range from N days before the previous check date, based on the given frequency, to the last check date
+     * @param dryRun If true, the method will not update the database
      * @return true if the result has changed
      */
-    boolean executeQuery(Query query, Frequency frequency, boolean runLastCheck=false) {
+    QueryResult executeQuery(Query query, Frequency frequency, boolean runLastCheck=false, boolean dryRun=false) {
 
         QueryResult qr = getQueryResult(query, frequency)
-        qr.newLog("Checking: ${frequency?.name} - [${query.id}] - ${query.name}.")
+        Date startTime = new Date()
+        qr.newLog("Checking: ${frequency?.name} - [${query.id}] - ${query.name} - ${dateFormatter.format(startTime)}.")
         //def url = new URL("http://biocache.ala.org.au/ws/occurrences/search?q=*:*&pageSize=1")
         def urls = buildQueryUrl(query, frequency, runLastCheck)
 
         def urlString = urls.first()
         def urlStringForUI = urls.last()
-        qr.addLog("Querying URL: ${urlString}")
+        qr.addLog("${urlString}")
         log.debug("[QUERY " + query.id + "] Querying URL: " + urlString)
 
         try {
@@ -139,23 +145,29 @@ class NotificationService {
             qr.queryUrlUIUsed = urlStringForUI
 
             log.debug("[QUERY " + query.id + "] Has changed?: " + qr.hasChanged)
-            if (qr.hasChanged) {
-                qr.lastChanged = new Date()
-            }
-
             qr.addLog("Completed. ${qr.hasChanged ? 'Changed' : 'No change'}")
-            qr.hasChanged
+
         } catch (Exception e) {
             log.error("[QUERY " + query.id + "] URL: " + urlString + " " + e.getMessage(), e)
             qr.addLog("Failed: ${e.getMessage()}")
+            qr.succeed = false
         } finally {
-            if (!qr.save(validate: true, flush: true)) {
-                qr.errors.allErrors.each {
-                    log.error(it)
+            Date endTime = new Date()
+            if (qr.hasChanged) {
+                qr.lastChanged = endTime
+            }
+            def duration = TimeCategory.minus(endTime, startTime)
+            qr.addLog("Time cost: ${duration}")
+            if(!dryRun) {
+                if (!qr.save(validate: true, flush: true)) {
+                    qr.errors.allErrors.each {
+                        log.error(it)
+                    }
                 }
             }
         }
 
+        qr
     }
 
     /**
@@ -165,6 +177,7 @@ class NotificationService {
      * @param frequency
      * @return
      */
+    @Deprecated
     QueryCheckResult checkStatusDontUpdate(Query query, Frequency frequency) {
 
         //get the previous result
@@ -680,11 +693,9 @@ class NotificationService {
      */
     //@NotTransactional
     private def refreshProperties(QueryResult queryResult, json) {
-
         log.debug("[QUERY " + queryResult?.query?.id ?: 'NULL' + "] Refreshing properties for query: " + queryResult.query.name + " : " + queryResult.frequency)
 
         try {
-
                 queryResult.query.propertyPaths.each { propertyPath ->
 
                     //read the value from the request
@@ -715,11 +726,6 @@ class NotificationService {
 
                     queryResult.addToPropertyValues(propertyValue)
                 }
-//                if (!queryResult.save(flush: true)) {
-//                    queryResult.errors.allErrors.each {
-//                        log.error(it)
-//                    }
-//                }
 
         } catch (Exception e) {
             log.error("[QUERY " + queryResult?.query?.id ?: 'NULL' + "] There was a problem reading the supplied JSON.", e)
@@ -747,6 +753,7 @@ class NotificationService {
         pv
     }
 
+    @Deprecated
     def checkQueryById(queryId, freqStr) {
 
         log.debug("[QUERY " + queryId + "] Running query...")
@@ -811,7 +818,7 @@ class NotificationService {
 
                         writer.write("\n" + (qcr.errored ? "ERROR:" : "") + query.id + " " + frequency.name + ":" + hasUpdated + "(diff=" + !hasFireProperty + ")" + ":" + ": " + query.toString() + " " + qcr.timeTaken / 1000 + "s")
                     } else {
-                        hasUpdated = executeQuery(query, frequency)
+                        hasUpdated = executeQuery(query, frequency)?.hasChanged
 
                         // these query and queryResult read/write methods are called by the scheduled jobs
                         Integer totalRecords = null
@@ -840,6 +847,7 @@ class NotificationService {
         log.debug("Queries checked: " + checkedCount + ", updated: " + checkedAndUpdatedCount)
     }
 
+    @Deprecated
     def debugQueriesForUser(User user, PrintWriter writer) {
         log.debug("Checking queries for user: " + user)
         def checkedCount = 0
@@ -948,22 +956,26 @@ class NotificationService {
             // save QueryResult
             refreshProperties(qr, processedJson)
 
+            if (qr.hasChanged) {
+                def users = queryService.getSubscribers(query.id)
+                def recipients = users.collect { user ->
+                    def notificationUnsubToken = user.notifications.find { it.query.id == query.id }?.unsubscribeToken
+                    [email: user.email, userUnsubToken: user.unsubscribeToken, notificationUnsubToken: notificationUnsubToken]
+                }
 
-            def users = queryService.getSubscribers(query.id)
-            def recipients = users.collect { user ->
-                def notificationUnsubToken = user.notifications.find { it.query.id == query.id }?.unsubscribeToken
-                [email: user.email, userUnsubToken: user.unsubscribeToken, notificationUnsubToken: notificationUnsubToken]
+                def emails = recipients.collect { it.email }
+                result.logs << "Sending emails to ${emails.size() <= 2 ? emails.join('; ') : emails.take(2).join('; ') + ' and ' + (emails.size() - 2) + ' other users.'}"
+
+                if (!users.isEmpty()) {
+                    def emailStatus = emailService.sendGroupNotification(qr, Frequency.findByName('weekly'), recipients)
+
+                    result.status = emailStatus.status
+                    result.logs << emailStatus.message
+                }
+            } else {
+                result.logs << "No emails will be sent because no changes were detected."
             }
 
-            def emails = recipients.collect { it.email }
-            result.logs << "Sending emails to ${emails.size() <= 2 ? emails.join('; ') : emails.take(2).join('; ') + ' and ' + (emails.size() - 2) + ' other users.'}"
-
-            if (!users.isEmpty()) {
-                def emailStatus = emailService.sendGroupNotification(qr, Frequency.findByName('weekly'), recipients)
-
-                result.status = emailStatus.status
-                result.logs << emailStatus.message
-            }
             result.logs << "Completed!"
             result.message = "Completion of Subscription check: ${query?.id}. ${query?.name}."
 
@@ -973,7 +985,7 @@ class NotificationService {
         } finally {
             log.info("[Status: ${result.status}] - ${result.message}")
 
-        qr.addLog(result.logs.join("\n"))
+            qr.addLog(result.logs.join("\n"))
 
             if (!qr.save(validate: true, flush: true,failOnError: true)){
                 qr.errors.allErrors.each {
@@ -1024,7 +1036,7 @@ class NotificationService {
             // biosecurity queries are handled elsewhere
             if (!queryService.isBioSecurityQuery(query)) {
                 log.debug("Running query: " + query.name)
-                boolean hasUpdated = executeQuery(query, frequency)
+                boolean hasUpdated = executeQuery(query, frequency)?.hasChanged
                 Boolean forceUpdate = grailsApplication.config.getProperty('mail.details.forceAllAlertsGetSent', Boolean, false)
 
                 if (forceUpdate || hasUpdated && sendEmails) {
@@ -1077,7 +1089,7 @@ class NotificationService {
 
         queries.each { query ->
             log.debug("Running query: " + query.name)
-            boolean hasUpdated = executeQuery(query, user.frequency)
+            boolean hasUpdated = executeQuery(query, user.frequency)?.hasChanged
             if (hasUpdated && sendEmails) {
                 log.debug("Query has been updated. Sending emails to...." + user)
                 //send separate emails for now

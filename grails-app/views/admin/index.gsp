@@ -33,10 +33,10 @@
             <li><g:link controller="query" action="list">View list of alert types</g:link>  - View the list of all available custom and default alerts.</li>
             <li class="controller"><g:link controller="admin" action="notificationReport">
                 View each alert type with counts for users</g:link> - View the list of all available custom and default alerts with user subscription count.</li>
-            <li><g:link controller="admin" action="debugAllAlerts">Debug all alerts</g:link> - Dry-run of all alerts to determine if emails will be triggered on the next schedule. </li>
 
             <li><g:link controller="admin" action="deleteOrphanAlerts">Delete orphaned queries</g:link> - Remove queries no longer associated with Alert Notification/Subscription.</li>
-            <li class="admin"><a href="${request.contextPath}/admin/summarizeQuery">Summary of queries</a> - List of Queries and Their Results, and Comparison</li>
+            <li><g:link controller="admin" action="dryRunAllQueriesForFrequency" params="[frequency: 'daily']" target="_blank">Debug daily alerts</g:link> - Dry-run of daily alerts to determine if emails will be triggered on the next schedule. </li>
+            <li class="admin"><a href="${request.contextPath}/admin/query">Or visit this debug page</a> - Test and debug queries</li>
         </ul>
         <h4>Fix empty/invalid notification_token</h4>
         <ul>
