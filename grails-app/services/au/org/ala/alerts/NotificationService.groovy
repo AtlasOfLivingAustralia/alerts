@@ -513,7 +513,8 @@ class NotificationService {
                 offset += max
 
             }
-            return ([occurrences: occurrences.values(), totalRecords: occurrences.values().size()] as JSON).toString()
+
+            return ([occurrences: occurrences.values().sort { a, b -> a.eventDate <=> b.eventDate}, totalRecords: occurrences.values().size()] as JSON).toString()
         } else {
             return ([occurrences: [], totalRecords: 0] as JSON).toString()
         }
@@ -943,6 +944,8 @@ class NotificationService {
             def todayNDaysAgo = DateUtils.addDays(since, -1 * grailsApplication.config.getProperty("biosecurity.legacy.eventDateAge", Integer, 150))
             def firstLoadedDate = sdf.format(since)
             def occuranceDate = sdf.format(todayNDaysAgo)
+
+            //Demo purpose. Those URLs are not used in Biosecurity queries
             String queryPath = query.queryPathForUI
             String modifiedPath = queryPath.replaceAll('___DATEPARAM___', firstLoadedDate).replaceAll('___LASTYEARPARAM___', occuranceDate)
             qr.queryUrlUIUsed = query.baseUrlForUI + modifiedPath

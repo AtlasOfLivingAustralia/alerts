@@ -270,7 +270,7 @@
                     Coordinates: ${oc.latLong} <br>
                   </g:if>
                   <g:if test="${oc.eventDate}">
-                    Time & date: ${new SimpleDateFormat('yyyy-MM-dd HH:mm').format(oc.eventDate)} <br>
+                    Time & date: ${new SimpleDateFormat('dd-MM-yyyy HH:mm').format(oc.eventDate)} <br>
                   </g:if>
                   <g:if test="${oc.dataResourceName}">
                     Source: ${oc.dataResourceName} <br>
@@ -287,7 +287,7 @@
                 <td>
                   <div class="map-div">
                       <g:if test="${oc.latLong}">
-                        <a href="https://www.google.com/maps/place/${oc.latLong}/@${oc.latLong},7z" target="_blank"> <img class="species-thumbnail-img" src="https://maps.googleapis.com/maps/api/staticmap?center=${oc.latLong}&markers=|${oc.latLong}&zoom=5&size=130x118&maptype=roadmap&key=${grailsApplication.config.getProperty('google.apikey')}" alt="location preview map" /></a>
+                        <a href="https://www.google.com/maps/place/${oc.latLong}/@${oc.latLong},7z" target="_blank"> <img class="species-thumbnail-img" src="https://maps.googleapis.com/maps/api/staticmap?center=${oc.latLong}&markers=|${oc.latLong}&zoom=12&size=130x118&maptype=roadmap&key=${grailsApplication.config.getProperty('google.apikey')}" alt="location preview map" /></a>
                       </g:if>
                   </div>
                 </td>
