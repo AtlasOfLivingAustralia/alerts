@@ -26,7 +26,7 @@
 </head>
 <body>
     <div>
-        <a class="btn btn-primary" href = "/admin/runTask?frequency=daily" target="_blank">Run daily task</a>
+        <a class="btn btn-primary" href = "/admin/dryRunAllQueriesForFrequency?frequency=daily" target="_blank">Dry Run daily task (No DB updates, No emails)</a>
     </div>
     <div>
         <ul class="nav nav-tabs" id="myTab" role="tablist">
@@ -94,6 +94,7 @@
                                                     <div>
                                                         <a class="btn btn-primary" href = "/notification/evaluateChangeDetectionAlgorithm?queryId=${query.id}&queryResultId=${queryResult.id}" target="_blank">Evaluate the latest result</a>
                                                         <g:if test="${queryType != 'biosecurity'}">
+                                                            <a class="btn btn-primary" href = "/admin/dryRunQuery?queryId=${query.id}&frequency=${queryResult.frequency?.name}" target="_blank">Dry run (no DB update, no emails)</a>
                                                             <a class="btn btn-primary" href = "/admin/runQueryWithLastCheckDate?queryId=${query.id}&frequency=${queryResult.frequency?.name}" target="_blank">Run the last check (no emails)</a>
                                                         </g:if>
                                                     </div>

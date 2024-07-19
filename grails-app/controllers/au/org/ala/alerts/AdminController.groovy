@@ -547,20 +547,6 @@ class AdminController {
     }
 
     /**
-     * Experimental
-     * Run a task to execute the query for a specific frequency
-     * Database will be updated, but won't sending any notification
-     * @return
-     */
-    def runTask(){
-        def frequency = params.frequency
-        if (frequency) {
-            notificationService.execQueryForFrequency('daily', false)
-        }
-        render([success: true] as JSON)
-    }
-
-    /**
      * Rerun the last check of a query for a given frequency without sending any notifications
      * @param queryId
      * @param frequency
@@ -573,11 +559,11 @@ class AdminController {
             Query query = Query.get(id)
             Frequency fre = Frequency.findByName(frequency)
             if (query && fre) {
-                notificationService.executeQuery(query, fre, true)
+                QueryResult qs = notificationService.executeQuery(query, fre, true)
                 //Fetch again, since DB was updated
-                QueryResult queryResult = notificationService.getQueryResult(query, fre)
-                boolean hasChanged = notificationService.hasChanged(queryResult)
-                def records = notificationService.collectUpdatedRecords(queryResult)
+                //QueryResult queryResult = notificationService.getQueryResult(query, fre)
+                boolean hasChanged = notificationService.hasChanged(qs)
+                def records = notificationService.collectUpdatedRecords(qs)
                 def results = ["hasChanged": hasChanged, "records": records]
                 render results as JSON
             } else {
@@ -585,6 +571,66 @@ class AdminController {
             }
         } else {
             render([status: 1, message: "Missing queryId or frequency"] as JSON)
+        }
+    }
+
+    /**
+     * Rerun a query for a given frequency without updating database and sending any notifications
+     * @param queryId
+     * @param frequency
+     * @return
+     */
+    def dryRunQuery(){
+        def id = params.queryId
+        def frequency = params.frequency
+        if (id && frequency) {
+            Query query = Query.get(id)
+            Frequency fre = Frequency.findByName(frequency)
+            if (query && fre) {
+                QueryResult queryResult = notificationService.executeQuery(query, fre, false, true)
+                def records = notificationService.collectUpdatedRecords(queryResult)
+                def results = ["status": queryResult.succeed, "hasChanged": queryResult.hasChanged, "logs": queryResult.getLog(), "records": records, "details": queryResult.brief()]
+                render results as JSON
+            } else {
+                render([status: 1, message: "Cannot find query: ${id}"] as JSON)
+            }
+        } else {
+            render([status: 1, message: "Missing queryId or frequency"] as JSON)
+        }
+    }
+
+    /**
+     * Experimental
+     * Run a task to execute the query for a specific frequency
+     * Database will be updated, but won't sending any notification
+     * @return
+     */
+    def dryRunAllQueriesForFrequency(){
+        def freq = params.frequency
+        Frequency frequency = Frequency.findByName(freq)
+        def queries = Query.executeQuery(
+                """select q from Query q
+                  inner join q.notifications n
+                  inner join n.user u
+                  where u.frequency = :frequency
+                  group by q""", [frequency: frequency])
+        int total = queries.size()
+
+        response.setContentType("text/plain")
+        def writer= response.getWriter()
+
+        queries.eachWithIndex { query, index ->
+            QueryResult queryResult = notificationService.executeQuery(query, Frequency.findByName(frequency), false, true)
+            def records = notificationService.collectUpdatedRecords(queryResult)
+            def results = ["POS": "${index+1}/${total}", "status": queryResult.succeed, "hasChanged": queryResult.hasChanged, "logs": queryResult.getLog(), "brief": queryResult.brief()]
+
+            writer.write("${results["POS"]}. ${query.id} - ${query.name} - ${frequency}\n")
+            writer.write("Status: ${results["status"]}, Changed:${results["hasChanged"]} \n")
+            writer.write("Logs: ${results["logs"]}\n")
+            writer.write("Brief: ${results["brief"]}\n")
+            writer.write(("-" * 80) + "\n")
+            writer.flush()
+            log.info("Query ${query.id} has been executed for frequency ${frequency}")
         }
     }
 }

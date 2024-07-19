@@ -109,7 +109,7 @@ class NotificationController {
     def checkNow = {
         Notification notification = Notification.get(params.id)
         // no such method
-        boolean sendUpdateEmail = notificationService.executeQuery(notification.query)
+        boolean sendUpdateEmail = notificationService.executeQuery(notification.query)?.hasChanged
         if (sendUpdateEmail) {
             emailService.sendNotificationEmail(notification)
         }

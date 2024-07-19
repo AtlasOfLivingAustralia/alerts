@@ -89,7 +89,8 @@ class NotificationServiceSpec extends Specification {
 
         when:
         // check if any change (totalRecords > 0 in returned Json) since last run
-        def changed = service.executeQuery(annotations, hourly)
+        QueryResult qs =  service.executeQuery(annotations, hourly)
+        def changed = qs.hasChanged
 
         def urls = service.buildQueryUrl(annotations, hourly)
         def json = IOUtils.toString(new URL(urls.first()).newReader())
