@@ -4,6 +4,7 @@ import com.jayway.jsonpath.JsonPath
 
 import java.text.SimpleDateFormat
 import java.util.zip.GZIPInputStream
+import java.util.zip.GZIPOutputStream
 
 class QueryResult {
 
@@ -124,5 +125,15 @@ class QueryResult {
         } else {
             null
         }
+    }
+
+    byte[] compress(String json) {
+        //store the last result from the webservice call
+        ByteArrayOutputStream bout = new ByteArrayOutputStream()
+        GZIPOutputStream gzout = new GZIPOutputStream(bout)
+        gzout.write(json.toString().getBytes())
+        gzout.flush()
+        gzout.finish()
+        bout.toByteArray()
     }
 }

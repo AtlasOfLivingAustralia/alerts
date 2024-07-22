@@ -29,6 +29,9 @@ class UrlMappings {
         "/admin/subscribeBioSecurity"(controller: 'admin', action: 'subscribeBioSecurity')
         "/admin/unsubscribeAllUsers"(controller: 'admin', action: 'unsubscribeAllUsers')
         "/admin/deleteQuery"(controller: 'admin', action: 'deleteQuery')
+        "/biosecurity/csv"(controller: 'admin', action: 'listBiosecurityAuditCSV')
+        "/biosecurity/csv/download"(controller: 'admin', action: 'downloadBiosecurityAuditCSV')
+
 
         "/$controller/$action?/$id?(.$format)?"{
             constraints {

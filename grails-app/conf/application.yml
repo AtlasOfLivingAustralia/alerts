@@ -177,7 +177,20 @@ biosecurity:
         maxRecords: 500
     moreinfo:
         link: https://www.ala.org.au/blogs-news/ala-helps-to-stop-pests-in-their-tracks/
-    dir: /data/alerts/emails
+    csv:
+        # if a header name does not match the property defined in Biocache, we need to give a mapping, separated by ':'
+        headers: > 
+            recordID:uuid,scientificName,taxonConceptID,decimalLatitude,decimalLongitude,eventDate,occurrenceStatus,dataResourceName,multimedia,media_id,
+            vernacularName,taxonConceptID_new,kingdom,phylum,class:classs,order,family,genus,species,subspecies,
+            cl22,cl10923,cl1048,cl966,cl21,firstLoadedDate,basisOfRecord,match,
+            search_term,correct_name,provided_name,common_name,state,lga,shape,list_name,
+            cw_state,shape_feature,creator,license,mimetype,width,height,image_url,download_path,date_sent
+        local:
+            enabled: false
+            directory: /data/alerts/csv
+        s3:
+            enabled: true
+            bucket: alerts
     legacy:
         aus: cl927:*
         act: cl927:"Australian Capital Territory" OR cl927:"Jervis Bay Territory"
@@ -207,7 +220,10 @@ environments:
                 appServerName: "http://localhost:8080"
         quartz:
             autoStartup : false
-
+        biosecurity:
+            csv:
+                local:
+                    enabled: true
         userdetails:
             web:
                 url: https://aws-auth-test-2023.test.ala.org.au/userdetails/
