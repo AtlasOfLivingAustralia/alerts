@@ -41,6 +41,7 @@ class WebserviceController {
     def queryService
     def userService
     def notificationService
+    def biosecurityService
     def messageSource
     def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
 
@@ -753,7 +754,7 @@ class WebserviceController {
      */
     @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
     def triggerBiosecurityAlerts () {
-        def result = notificationService.biosecurityAlerts()
+        def result = biosecurityService.biosecurityAlerts()
         render(result as JSON)
     }
 
@@ -775,7 +776,7 @@ class WebserviceController {
                 lastChecked = DateUtils.addDays(new Date(), -7 )
             }
 
-            def result = notificationService.triggerBiosecuritySubscription(query, lastChecked)
+            def result = biosecurityService.triggerBiosecuritySubscription(query, lastChecked)
             render(result as JSON)
 
         } else {
@@ -801,7 +802,7 @@ class WebserviceController {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd")
             Date since = sdf.parse(localDateString)
 
-            def result = notificationService.triggerBiosecuritySubscription(query, since)
+            def result = biosecurityService.triggerBiosecuritySubscription(query, since)
             render(result as JSON)
 
         } else {

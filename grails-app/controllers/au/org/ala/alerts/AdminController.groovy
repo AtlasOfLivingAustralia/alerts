@@ -22,12 +22,14 @@ import java.text.SimpleDateFormat
 import groovyx.net.http.HTTPBuilder
 import groovy.json.JsonSlurper
 import java.nio.file.Files
+import java.nio.file.Paths
 
 @AlaSecured(value = 'ROLE_ADMIN', redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to view that page.")
 class AdminController {
 
     def authService
     def notificationService
+    def biosecurityService
     def diffService
     def emailService
     def queryService
@@ -365,7 +367,7 @@ class AdminController {
         Date since =  sdf.parse(date)
         Date now = new Date()
 
-        def processedJson = notificationService.processQueryBiosecurity(query, since, now)
+        def processedJson = biosecurityService.processQueryBiosecurity(query, since, now)
 
         def frequency = 'weekly'
         QueryResult qr = notificationService.getQueryResult(query, Frequency.findByName(frequency))
@@ -470,7 +472,7 @@ class AdminController {
             try {
                 queryService.getALLBiosecurityQuery().each { query ->
                     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd")
-                    def processedJson = notificationService.processQueryBiosecurity(query, sdf.parse(date), new Date())
+                    def processedJson = bioSecurityService.processQueryBiosecurity(query, sdf.parse(date), new Date())
 
                     def frequency = 'weekly'
                     QueryResult qr = notificationService.getQueryResult(query, Frequency.findByName(frequency))
@@ -576,6 +578,8 @@ class AdminController {
 
     /**
      * Rerun a query for a given frequency without updating database and sending any notifications
+     * NOTE: Biosecurity excluded
+     *
      * @param queryId
      * @param frequency
      * @return
@@ -632,5 +636,26 @@ class AdminController {
             writer.flush()
             log.info("Query ${query.id} has been executed for frequency ${frequency}")
         }
+    }
+
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
+    def listBiosecurityAuditCSV() {
+        def result  = biosecurityService.listAuditCSV()
+        render(view: 'biosecurityCSV', model: result)
+    }
+
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
+    def downloadBiosecurityAuditCSV(String filename) {
+        def BASE_DIRECTORY = grailsApplication.config.biosecurity.csv.local.directory
+        def file = new File(BASE_DIRECTORY, filename)
+        if (!file.exists() || file.isDirectory()) {
+            render(status: 404, text: "File not found")
+            return
+        }
+
+        def saveToFile = Paths.get(filename).collect { it.toString() }.join("_")
+        response.contentType = 'application/octet-stream'
+        response.setHeader('Content-Disposition', "attachment; filename=\"${saveToFile}\"")
+        response.outputStream << file.bytes
     }
 }

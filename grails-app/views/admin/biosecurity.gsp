@@ -378,6 +378,7 @@
                             <label for="quick-submit"  style="visibility: hidden;">control</label>
                             <button type="submit" id="quick-submit" form="create-security-alert" class="btn btn-primary"><g:message code="biosecurity.view.body.button.subscribe" default="Subscribe"/></button>
                         </div>
+
                     </div>
                 </g:form>
 
@@ -401,6 +402,13 @@
                     </div>
                     <div class="col-sm-2" >
                         <button class="btn btn-info" onclick="triggerSubscriptions()">Check & Notify </button>
+                    </div>
+                </div>
+                <p></p>
+                <div class="row" style="text-align: right">
+                    <div class="col-sm-8" >This function is for experimental purposes</div>
+                    <div class="col-sm-4" >
+                        <a class="btn btn-info" href="${createLink(controller: 'admin', action: 'listBiosecurityAuditCSV')}" target="_blank">Check auditing CSV files</a>
                     </div>
                 </div>
 
