@@ -7,7 +7,7 @@ import java.text.SimpleDateFormat
 
 class EmailService {
 
-    static transactional = true
+    //static transactional = true
 
     def notificationService
     def diffService

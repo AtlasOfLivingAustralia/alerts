@@ -1,6 +1,7 @@
 package au.org.ala.alerts
 
 import com.jayway.jsonpath.JsonPath
+import grails.gorm.transactions.NotTransactional
 import org.apache.http.entity.ContentType
 import grails.converters.JSON
 import org.apache.commons.io.IOUtils
@@ -8,27 +9,27 @@ import org.apache.commons.lang.time.DateUtils
 import org.grails.web.json.JSONArray
 import org.grails.web.json.JSONElement
 import org.grails.web.json.JSONObject
-import grails.gorm.transactions.Transactional
+
+import javax.transaction.Transactional
 import java.util.zip.GZIPOutputStream
 import java.text.SimpleDateFormat
 import groovy.time.TimeCategory
+import org.hibernate.FlushMode
 
-
-@Transactional
 class NotificationService {
 
-    static transactional = true
-
+    //static transactional = true
     int PAGING_MAX = 1000
 
+    def sessionFactory
     def emailService
     def diffService
     def queryService
     def grailsApplication
-    def webService
     def dateFormatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
     def biosecurityService
 
+    @Transactional
     QueryResult getQueryResult(Query query, Frequency frequency) {
         QueryResult qr = QueryResult.findByQueryAndFrequency(query, frequency)
         if (qr == null) {
@@ -61,7 +62,11 @@ class NotificationService {
      * @param dryRun If true, the method will not update the database
      * @return true if the result has changed
      */
+
     QueryResult executeQuery(Query query, Frequency frequency, boolean runLastCheck=false, boolean dryRun=false) {
+
+        def session = sessionFactory.currentSession
+        session.setFlushMode(FlushMode.MANUAL) // Set the flush mode to MANUAL
 
         QueryResult qr = getQueryResult(query, frequency)
         Date startTime = new Date()
@@ -124,17 +129,6 @@ class NotificationService {
             //update the stored properties
             refreshProperties(qr, processedJson)
 
-            // todo: more tests needed
-            // because the next step save won't work if refreshProperties save QR,
-            // unless we retrieve qr again
-            //
-//            // When qr is not yet saved, use the unsaved object. Unsure why qr is retrieved here so not removing it.
-//            QueryResult qCurrent = qr
-//            qr = QueryResult.findById(qr.id)
-//            if (qr == null) {
-//                qr = qCurrent
-//            }
-
             // set check time
             qr.previousCheck = qr.lastChecked
             // store the last result from the webservice call
@@ -160,15 +154,22 @@ class NotificationService {
             def duration = TimeCategory.minus(endTime, startTime)
             qr.addLog("Time cost: ${duration}")
             if(!dryRun) {
-                if (!qr.save(validate: true, flush: true)) {
-                    qr.errors.allErrors.each {
-                        log.error(it)
+                QueryResult.withTransaction {
+                    if (!qr.save(validate: true, flush: true)) {
+                        qr.errors.allErrors.each {
+                            log.error(it)
+                        }
                     }
                 }
             }
+            else {
+                // if dryRun, evict the object to avoid being persistent
+                session.evict(qr)
+            }
         }
-
-        qr
+        // No futher update to this queryResult anymore.
+        //Create a clone copy, avoiding be persistent
+        return qr
     }
 
     /**
@@ -329,6 +330,7 @@ class NotificationService {
      * @param queryResult
      * @return
      */
+    //@NotTransactional
     Boolean hasChanged(QueryResult queryResult) {
         Boolean changed = false
 
@@ -539,7 +541,7 @@ class NotificationService {
      * @param json
      * @return
      */
-    //@NotTransactional
+    @NotTransactional
     def refreshProperties(QueryResult queryResult, json) {
         log.debug("[QUERY " + queryResult?.query?.id ?: 'NULL' + "] Refreshing properties for query: " + queryResult.query.name + " : " + queryResult.frequency)
 
@@ -564,14 +566,6 @@ class NotificationService {
                     } else {
                         propertyValue.currentValue = latestValue
                     }
-
-
-                    if (!propertyValue.save(flush: true)) {
-                        propertyValue.errors.allErrors.each {
-                            log.error(it)
-                        }
-                    }
-
                     queryResult.addToPropertyValues(propertyValue)
                 }
 
@@ -583,20 +577,7 @@ class NotificationService {
     PropertyValue getPropertyValue(PropertyPath pp, QueryResult queryResult) {
         PropertyValue pv = queryResult.id == null ? null : PropertyValue.findByPropertyPathAndQueryResult(pp, queryResult)
         if (pv == null) {
-            if (queryResult.id == null) {
-                // must save QueryResult first
-                if (!queryResult.save(flush: true)) {
-                    queryResult.errors.allErrors.each {
-                        log.error(it)
-                    }
-                }
-            }
             pv = new PropertyValue([propertyPath: pp, queryResult: queryResult])
-            if (!pv.save(flush: true)) {
-                pv.errors.allErrors.each {
-                    log.error(it)
-                }
-            }
         }
         pv
     }
@@ -622,6 +603,7 @@ class NotificationService {
     }
 
     // used in debug all alerts
+    @Deprecated
     def checkAllQueries(PrintWriter writer) {
         //iterate through all queries
         def checkedCount = 0
@@ -737,9 +719,11 @@ class NotificationService {
         frequency = Frequency.findByName(frequencyName)
         if (frequency) {
             frequency.lastChecked = now
-            if (!frequency.save(validate: true, flush: true)) {
-                frequency.errors.allErrors.each {
-                    log.error(it)
+            Frequency.withTransaction {
+                if (!frequency.save(validate: true, flush: true)) {
+                    frequency.errors.allErrors.each {
+                        log.error(it)
+                    }
                 }
             }
         } else {
@@ -825,6 +809,7 @@ class NotificationService {
         }
     }
 
+    @Transactional
     def addAlertForUser(User user, Long queryId) {
         log.debug('add my alert :  ' + queryId + ' for user : ' + user)
         def notificationInstance = new Notification()
@@ -844,6 +829,7 @@ class NotificationService {
         }
     }
 
+    @Transactional
     def deleteAlertForUser(User user, Long queryId) {
         log.debug('Deleting my alert :  ' + queryId + ' for user : ' + user)
         def query = Query.findById(queryId)
@@ -893,6 +879,7 @@ class NotificationService {
 
     // update user to new frequency
     // there are some special work if user is subscribed to 'My Annotation' alert
+    @Transactional
     def updateFrequency(User user, String newFrequency) {
         def oldFrequency = user.frequency
         user.frequency = Frequency.findByName(newFrequency)
@@ -948,6 +935,7 @@ class NotificationService {
      * @param queryResult
      * @return
      */
+    //@NotTransactional
     def collectUpdatedRecords(queryResult) {
         if  (queryResult.query?.recordJsonPath) {
             // return all of the new records if query is configured to fire on a non-zero value OR if previous value does not exist.

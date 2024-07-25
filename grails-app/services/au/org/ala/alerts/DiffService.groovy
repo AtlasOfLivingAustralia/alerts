@@ -16,12 +16,15 @@ package au.org.ala.alerts
 import com.jayway.jsonpath.JsonPath
 
 import java.util.zip.GZIPInputStream
+import grails.gorm.transactions.NotTransactional
+
 
 class DiffService {
 
-    static transactional = true
+    //static transactional = true
     def queryService
 
+    @NotTransactional
     Boolean hasChangedJsonDiff(QueryResult queryResult) {
         if (queryResult.lastResult != null) {
             if (queryResult.previousResult != null) {

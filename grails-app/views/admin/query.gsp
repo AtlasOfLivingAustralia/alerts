@@ -29,7 +29,7 @@
         <div class="panel panel-default">
             <div class="panel-heading">Dry run tests. No DB updates, No emails sent </div>
             <div class="panel-body">
-                <a class="btn btn-primary" href = "/admin/dryRunAllQueriesForFrequency?frequency=daily" target="_blank">Dry run daily tasks</a>
+                <a class="btn btn-info" href = "/admin/dryRunAllQueriesForFrequency?frequency=daily" target="_blank">Dry run daily tasks</a>
             </div>
         </div>
      </div>
@@ -46,16 +46,18 @@
                 <div class="tab-pane fade ${i == 0 ? 'active in' : ''}" id="tab-${queryType}-content" role="tabpanel" aria-labelledby="tab-${queryType}-content">
                     <ul>
                         <g:each var="query" in="${queries[queryType]}">
-                            <li><a href="javascript:void(0);" class="toggle-more-query-details" data-target="#more-${query.id}"  title="Query ID:${query.id}">
-
-                                   <g:if test="${query.name == 'My Annotations'}">
+                            <li>
+                                <g:link controller="query" action="wipe" params="[id: query.id]" target="_blank"><i class="fa fa-trash" aria-hidden="true"></i></g:link>
+                                <span class="badge badge-light">${query.id}</span>
+                                <a href="javascript:void(0);" class="toggle-more-query-details" data-target="#more-${query.id}"  title="Query ID:${query.id}">
+                                 <g:if test="${query.name == 'My Annotations'}">
                                        <%
                                                def users = query.notifications.collect { it.user?.email }.join(', ')
                                        %>
                                        ${users?:"No users"}
                                    </g:if>
                                    <g:else>
-                                       ${query.name}
+                                         ${query.name}
                                    </g:else>
                                  </a>
                             </li>
@@ -72,13 +74,12 @@
     %{--                                    </g:if>--}%
     %{--                                <div>--}%
                                     <div>
-                                       <g:if test="${query.queryResults}">
-
+                                       <g:if test="${query.queryResults?.size() > 0}">
                                             <ul>
-                                                <g:each var="queryResult" in="${query.queryResults}">
+                                                <g:each var="queryResult" in="${query.queryResults.sort { it.frequency?.name }}">
                                                     <div>
-                                                         <b title="Query Result ID:${queryResult.id}">${queryResult.frequency?.name} subscribers: </b> <span class="badge badge-primary">${query.countSubscribers(queryResult.frequency?.name)}</span>
-                                                        - Last checked:  <a href = "/ws/getQueryLogs?id=${query.id}&frequency=${queryResult.frequency?.name}" target="_blank"><i class="fa fa-info-circle" aria-hidden="true"></i> ${queryResult?.lastChecked}  </a>
+                                                        [${queryResult.id}] <b title="Query Result ID:${queryResult.id}"> ${queryResult.frequency?.name} subscribers: </b> <span class="badge badge-primary">${query.countSubscribers(queryResult.frequency?.name)}</span>
+                                                        - Last checked: <g:link controller="ws" action="getQueryLogs" params="[id: query.id, frequency: queryResult.frequency?.name]" target="_blank"> <i class="fa fa-info-circle" aria-hidden="true"></i>${queryResult?.lastChecked}</g:link>
                                                     </div>
                                                     <div>
                                                         <g:if test="${queryResult.hasChanged}">
@@ -97,10 +98,20 @@
                                                         </g:each>
                                                     </div>
                                                     <div>
-                                                        <a class="btn btn-primary" href = "/notification/evaluateChangeDetectionAlgorithm?queryId=${query.id}&queryResultId=${queryResult.id}" target="_blank">Evaluate the latest result</a>
+                                                        <g:link class="btn btn-info"  controller="notification" action="evaluateChangeDetectionAlgorithm" params="[queryId: query.id, queryResultId: queryResult.id]" target="_blank">
+                                                            Evaluate the latest check in DB
+                                                        </g:link>
                                                         <g:if test="${queryType != 'biosecurity'}">
-                                                            <a class="btn btn-primary" href = "/admin/dryRunQuery?queryId=${query.id}&frequency=${queryResult.frequency?.name}" target="_blank">Dry run (no DB update, no emails)</a>
-                                                            <a class="btn btn-primary" href = "/admin/runQueryWithLastCheckDate?queryId=${query.id}&frequency=${queryResult.frequency?.name}" target="_blank">Run the last check (no emails)</a>
+                                                            <g:link class="btn btn-info"  controller="admin" action="emailMeLastCheck" params="[queryId: query.id, frequency: queryResult.frequency?.name]" target="_blank">
+                                                                Email me the latest check result (No DB updates)
+                                                            </g:link>
+                                                            <g:link class="btn btn-info"  controller="admin" action="dryRunQuery" params="[queryId: query.id, frequency: queryResult.frequency?.name]" target="_blank">
+                                                                Dry run (no DB updates, no emails)
+                                                            </g:link>
+                                                            <br>
+                                                            <g:link class="btn btn-primary"  controller="admin" action="runQueryWithLastCheckDate" params="[queryId: query.id, frequency: queryResult.frequency?.name]" target="_blank">
+                                                                Run the last check (DB updates, no emails)
+                                                            </g:link>
                                                         </g:if>
                                                     </div>
                                                     <hr>
@@ -108,6 +119,13 @@
                                             </ul>
 
                                         </g:if>
+                                        <g:else>
+                                            <g:if test="${queryType != 'biosecurity'}">
+                                                <g:link class="btn btn-info"  controller="admin" action="initFirstCheckAndEmailMe" params="[queryId: query.id, frequency: 'weekly']" target="_blank">
+                                                    Init the first query and mail me the latest check result (DB updates)
+                                                </g:link>
+                                            </g:if>
+                                        </g:else>
                                     </div>
 
                                 </div>

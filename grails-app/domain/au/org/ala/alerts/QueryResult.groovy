@@ -75,7 +75,7 @@ class QueryResult {
     }
 
     String toString() {
-        "Last checked: " + lastChecked
+        "${frequency.name}: ${lastChanged ? 'Changed' : 'No Change'} on ${lastChecked}"
     }
 
     Map brief() {
