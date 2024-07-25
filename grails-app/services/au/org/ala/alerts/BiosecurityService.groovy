@@ -1,11 +1,13 @@
 package au.org.ala.alerts;
 
 import com.jayway.jsonpath.JsonPath
-import grails.converters.JSON;
+import grails.converters.JSON
 import org.apache.commons.lang.time.DateUtils
 import org.apache.http.entity.ContentType
 
-import java.nio.file.Files;
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
 import java.text.SimpleDateFormat;
 
@@ -117,6 +119,7 @@ class BiosecurityService {
 
             result.logs << "Completed!"
             result.message = "Completion of Subscription check: ${query?.id}. ${query?.name}."
+            result.status = 0
 
         } catch (Exception e) {
             log.error("Failed to trigger subscription [ ${query?.id}  ${query?.name} ]", e)
@@ -375,11 +378,13 @@ class BiosecurityService {
         def BASE_DIRECTORY = grailsApplication.config.biosecurity.csv.local.directory
 
         def result = []
-        dir.eachFileRecurse { file ->
-            if (file.isFile() && !file.isHidden())
-            def filePath = file.absolutePath.replace(BASE_DIRECTORY, '')
-            if(filePath) {
-                result << filePath
+        def folder = Paths.get(dir.absolutePath)
+        Files.walk(folder).each { Path file ->
+            if (Files.isRegularFile(file) && !Files.isHidden(file)) {
+                def filePath = file.toString().replace(BASE_DIRECTORY, '')
+                if(filePath) {
+                    result << filePath
+                }
             }
         }
         return result

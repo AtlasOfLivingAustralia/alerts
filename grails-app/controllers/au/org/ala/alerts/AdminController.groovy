@@ -164,7 +164,6 @@ class AdminController {
         notificationService.checkAllQueries(response.getWriter())
     }
 
-    @Transactional
     def debugAlertEmail() {
         def frequency = params.frequency ?: 'weekly'
         def qcr = notificationService.checkQueryById(params.id, params.frequency ?: 'weekly')
@@ -172,7 +171,7 @@ class AdminController {
         render(view: qcr.query.emailTemplate, model: model)
     }
 
-    @Transactional
+
     def debugAlert() {
         [alerts: [
                 hourly : notificationService.checkQueryById(params.id, params.frequency ?: 'hourly'),
@@ -183,13 +182,11 @@ class AdminController {
         ]
     }
 
-    @Transactional
     def deleteOrphanAlerts() {
-        int noDeleted = queryService.deleteOrphanedQueries()
-        render(view: 'index', model: [message: """Removed ${noDeleted} queries from system"""])
+        def result = queryService.deleteOrphanedQueries()
+        render(view: 'index', model: [message: "Removed ${result['OrphanQuery']} queries, and ${result['OrphanNotification']} orphaned notifications."])
     }
 
-    @Transactional
     def showUsersAlerts() {
         User user = User.findByUserId(params.userId)
         if (user) {
@@ -513,20 +510,28 @@ class AdminController {
         }
     }
 
-    @Transactional
+    /**
+     * todo - check if it is not used
+     * @return
+     */
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
     def unsubscribeAllUsers() {
         queryService.unsubscribeAllUsers(Long.valueOf(params.queryid))
         redirect(controller: "admin", action: "biosecurity")
     }
 
-    @Transactional
+    /**
+     * todo - redirect to which page?
+      * @return
+     */
+
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
     def deleteQuery() {
         queryService.deleteQuery(Long.valueOf(params.queryid))
         redirect(controller: "admin", action: "biosecurity")
     }
 
     @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
-    @Transactional
     def unsubscribeAlert() {
         if (!params.useremail || params.useremail.allWhitespace) {
             flash.message = messageSource.getMessage("unsubscribeusers.controller.error.emptyemail", null, "User email can't be empty.", siteLocale)
@@ -543,12 +548,17 @@ class AdminController {
         redirect(controller: "admin", action: "biosecurity")
     }
 
+    /**
+     * Page for debugging and testing all queries
+     * @return
+     */
     def query(){
         def queries = queryService.summarize()
         render view: "/admin/query", model: [queries: queries]
     }
 
     /**
+     * Database UPDATED, No email sent
      * Rerun the last check of a query for a given frequency without sending any notifications
      * @param queryId
      * @param frequency
@@ -562,8 +572,6 @@ class AdminController {
             Frequency fre = Frequency.findByName(frequency)
             if (query && fre) {
                 QueryResult qs = notificationService.executeQuery(query, fre, true)
-                //Fetch again, since DB was updated
-                //QueryResult queryResult = notificationService.getQueryResult(query, fre)
                 boolean hasChanged = notificationService.hasChanged(qs)
                 def records = notificationService.collectUpdatedRecords(qs)
                 def results = ["hasChanged": hasChanged, "records": records]
@@ -577,6 +585,68 @@ class AdminController {
     }
 
     /**
+     * NO Database update, Email sent to current user
+     * Run the last check and email the result to current user
+     * @return
+     */
+    def emailMeLastCheck(){
+        def id = params.queryId
+        def frequency = params.frequency
+        if (id && frequency) {
+            Query query = Query.get(id)
+            Frequency fre = Frequency.findByName(frequency)
+            if (query && fre) {
+                QueryResult qs = notificationService.executeQuery(query, fre, true, true)
+                boolean hasChanged = notificationService.hasChanged(qs)
+                def records = notificationService.collectUpdatedRecords(qs)
+                User currentUser = userService.getUser()
+                def recipient =
+                    [email: currentUser.email, userUnsubToken: currentUser.unsubscribeToken, notificationUnsubToken: '']
+                emailService.sendGroupNotification(qs, fre, [recipient])
+                def results = ["hasChanged": hasChanged, "records": records, "recipient": currentUser.email]
+                render results as JSON
+            } else {
+                render([status: 1, message: "Cannot find query: ${id}"] as JSON)
+            }
+        } else {
+            render([status: 1, message: "Missing queryId or frequency"] as JSON)
+        }
+    }
+
+    /**
+     * Database updates, Email sent to current user
+     *
+     * Test only. Test if a QueryResult [Weekly - hard coded]can be initiated and sent to the current user
+     *
+     * @return
+     */
+    def initFirstCheckAndEmailMe(){
+        def id = params.queryId
+        def frequency = params.frequency
+        if (id && frequency) {
+            Query query = Query.get(id)
+            Frequency fre = Frequency.findByName(frequency)
+            if (query && fre) {
+                QueryResult qs = notificationService.executeQuery(query, fre, false, false)
+                boolean hasChanged = notificationService.hasChanged(qs)
+                def records = notificationService.collectUpdatedRecords(qs)
+                User currentUser = userService.getUser()
+                def recipient =
+                        [email: currentUser.email, userUnsubToken: currentUser.unsubscribeToken, notificationUnsubToken: '']
+                emailService.sendGroupNotification(qs, fre, [recipient])
+                def results = ["hasChanged": hasChanged, "records": records, "recipient": currentUser.email]
+                render results as JSON
+            } else {
+                render([status: 1, message: "Cannot find query: ${id}"] as JSON)
+            }
+        } else {
+            render([status: 1, message: "Missing queryId or frequency"] as JSON)
+        }
+    }
+
+    /**
+     * NO Database update, No emails sent
+     *
      * Rerun a query for a given frequency without updating database and sending any notifications
      * NOTE: Biosecurity excluded
      *
@@ -604,10 +674,10 @@ class AdminController {
     }
 
     /**
-     * Experimental
+     * No database updated, No email sent
+     *
      * Run a task to execute the query for a specific frequency
-     * Database will be updated, but won't sending any notification
-     * @return
+     *
      */
     def dryRunAllQueriesForFrequency(){
         def freq = params.frequency

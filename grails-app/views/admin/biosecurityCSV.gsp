@@ -10,7 +10,7 @@
 <body>
     <g:if test="${status == 0}">
         <g:each  var="file"  in="${files}">
-            <a href="${createLink(controller: 'admin', action: 'downloadBiosecurityAuditCSV', params: [filename: file])}"> ${file}</a>
+            <a href="${createLink(controller: 'admin', action: 'downloadBiosecurityAuditCSV', params: [filename: file])}"> ${file}</a> <br/>
         </g:each>
     </g:if>
     <g:else>

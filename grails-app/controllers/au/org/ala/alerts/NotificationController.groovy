@@ -1,17 +1,16 @@
 package au.org.ala.alerts
 
 import grails.converters.JSON
+import grails.gorm.transactions.NotTransactional
 import grails.gorm.transactions.Transactional
 import io.micronaut.http.HttpStatus
 
-@Transactional
 class NotificationController {
 
     def notificationService
     def emailService
     def userService
     def authService
-    def diffService
 
     static allowedMethods = [save: "POST", update: "POST", delete: "POST"]
 
@@ -81,7 +80,10 @@ class NotificationController {
         def notificationInstance = Notification.findByUserAndQuery(user, query)
         if (notificationInstance) {
             log.debug('Deleting my notification :  ' + params.id)
-            notificationInstance.each { it.delete(flush: true) }
+            Notification.withTransaction {
+                notificationInstance.each { it.delete(flush: true) }
+            }
+
         } else {
             log.error('*** Unable to find  my notification - no delete :  ' + params.id)
         }
@@ -117,9 +119,10 @@ class NotificationController {
     }
 
     /**
-     * Debug the algorithm used to detect changes in the latest result
+     * Debug the algorithm used to detect changes in the latest result / previous result
      *
      */
+
     def evaluateChangeDetectionAlgorithm = {
         def query = Query.get(params.queryId)
         def queryResult = query?.queryResults?.find { queryResult ->

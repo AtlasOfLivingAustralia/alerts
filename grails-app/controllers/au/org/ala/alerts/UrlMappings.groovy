@@ -33,17 +33,17 @@ class UrlMappings {
         "/biosecurity/csv/download"(controller: 'admin', action: 'downloadBiosecurityAuditCSV')
 
 
+        "/ws/alerts/user/$userId"(controller: 'webservice', action: 'getUserAlerts')
+        "/ws/noauth/$action"(controller: 'webservice')
+        "/ws/$action?/$id?"(controller: 'webservice')
+
+        "/"(controller: 'notification', action: 'index')
+
         "/$controller/$action?/$id?(.$format)?"{
             constraints {
                 // apply constraints here
             }
         }
-
-        "/ws/alerts/user/$userId"(controller: 'webservice', action: 'getUserAlerts')
-        "/ws/$action"(controller: 'webservice')
-        "/ws/noauth/$action"(controller: 'webservice')
-
-        "/"(controller: 'notification', action: 'index')
 
         // 13/4/16 existing production config puts all ws/.* requests through CAS (even /ws/noauth!), which is fine if
         // they are always invoked via javascript (and have the CAS cookie), but doesn't work when invoked from a service.

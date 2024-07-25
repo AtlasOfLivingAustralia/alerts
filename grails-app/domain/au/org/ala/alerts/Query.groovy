@@ -44,6 +44,12 @@ class Query {
         notifications cascade: 'all-delete-orphan'
     }
 
+    Query() {
+        this.notifications = []
+        this.queryResults = []
+        this.propertyPaths = []
+    }
+
     String toString() {
         return name
     }
