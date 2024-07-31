@@ -8,7 +8,6 @@ import org.apache.http.entity.ContentType
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.nio.file.StandardCopyOption
 import java.text.SimpleDateFormat;
 
 
@@ -18,7 +17,7 @@ class BiosecurityService {
     def grailsApplication
     def emailService
     def webService
-    def diffService
+    def biosecurityCSVService
 
     def biosecurityAlerts() {
         def results = []
@@ -97,7 +96,7 @@ class BiosecurityService {
             qr.queryUrlUIUsed = query.baseUrlForUI + modifiedPath
 
             if (qr.hasChanged) {
-                generateAuditCSV(qr)
+                biosecurityCSVService.generateAuditCSV(qr)
                 def users = queryService.getSubscribers(query.id)
                 def recipients = users.collect { user ->
                         def notificationUnsubToken = user.notifications.find { it.query.id == query.id }?.unsubscribeToken
@@ -166,7 +165,14 @@ class BiosecurityService {
 
             }
 
-            return ([occurrences: occurrences.values().sort { a, b -> a.eventDate <=> b.eventDate}, totalRecords: occurrences.values().size()] as JSON).toString()
+            def finalResults =  occurrences.values().collect { record ->
+                record["dateSent"] = new SimpleDateFormat("dd/MM/yyyy").format(to)
+                record["listName"] = query.name
+                record["listId"] = drId
+                return record
+            }
+
+            return ([occurrences: finalResults.sort { a, b -> a.eventDate <=> b.eventDate}, totalRecords: finalResults.size()] as JSON).toString()
         } else {
             return ([occurrences: [], totalRecords: 0] as JSON).toString()
         }
@@ -228,6 +234,11 @@ class BiosecurityService {
                 def get = JSON.parse(new URL(url).text)
                 get?.occurrences?.each { occurrence ->
                     occurrences[occurrence.uuid] = occurrence
+                    //extra info should be added here
+                    occurrence['fq']= searchTerm + fq + legacyFq
+                    if (listItem.kvpValues?.size()>0) {
+                        occurrence['kvs'] = listItem.kvpValues.collect { kv -> "${kv.key}:${kv.value}" }.join(',')
+                    }
                 }
             } catch (Exception e) {
                 log.error("failed to get occurrences at URL: " + url)
@@ -293,72 +304,6 @@ class BiosecurityService {
         fq
     }
 
-    void generateAuditCSV(QueryResult qs) {
-        def task = {
-            def records = diffService.getNewRecords(qs)
-
-            String outputFile = sanitizeFileName("${new SimpleDateFormat("yyyy-MM-dd").format(qs.lastChecked)}.csv")
-
-            def tempFilePath = Files.createTempFile(outputFile, ".csv")
-            def tempFile = tempFilePath.toFile()
-            String rawHeader = "recordID:uuid,scientificName,taxonConceptID,decimalLatitude,decimalLongitude,eventDate,occurrenceStatus,dataResourceName,multimedia,media_id," +
-                    "vernacularName,taxonConceptID_new,kingdom,phylum,class:classs,order,family,genus,species,subspecies," +
-                    "firstLoadedDate,basisOfRecord,match," +
-                    "search_term,correct_name,provided_name,common_name,state"
-            if (grailsApplication.config.biosecurity.csv.headers) {
-                rawHeader = grailsApplication.config.biosecurity.csv.headers
-            }
-
-            def headers = []
-            def fields = []
-            def headersAndFields = rawHeader.split(',')
-            headersAndFields.each { entry ->
-                def parts = entry.trim().split(':', 2)  // Split on ':' with a limit of 2 parts
-                headers << parts[0]  // Add the part before ':' to the first array
-                if (parts.size() > 1) {
-                    fields << parts[1]  // Add the part after ':' to the second array if it exists
-                } else {
-                    // If there's no ':' in the entry, add the same value to the second array
-                    fields << parts[0]
-                }
-            }
-
-            tempFile.withWriter { writer ->
-                writer.write(headers.join(",")+ "\n")
-                records.each { record ->
-                    def values = fields.collect { field ->
-                        record."${field}" ?: ""  // Use "" if the property is null
-                    }
-                    writer.write(values.join(","))
-                    writer.write("\n")
-                }
-            }
-
-            if (grailsApplication.config.biosecurity.csv.local.enabled) {
-                String destinationFolder = new File(grailsApplication.config.biosecurity.csv.local.directory, sanitizeFileName("${qs.query?.id}_${qs.query.name}")).absolutePath
-                File destinationFile = new File(destinationFolder, outputFile)
-                moveToDestination(tempFile, destinationFile)
-            }
-        }
-
-        Thread.start(task)
-    }
-
-    void moveToDestination(File source, File destination) {
-        File destDir = new File(destination.parent)
-        if (!destDir.exists()) {
-            destDir.mkdirs()
-        }
-            //copy source file to destination
-        Files.move(source.toPath(), destination.toPath(), StandardCopyOption.REPLACE_EXISTING)
-    }
-
-    def sanitizeFileName(String fileName) {
-        // Define a pattern for illegal characters
-        def pattern = /[^a-zA-Z0-9\.\-\_]/
-        return fileName.replaceAll(pattern, '_')
-    }
-
     def listAuditCSV() {
         def BASE_DIRECTORY = grailsApplication.config.biosecurity.csv.local.directory
         if (grailsApplication.config.biosecurity.csv.local.enabled) {
@@ -367,8 +312,8 @@ class BiosecurityService {
                 return [status: 1, message: "Directory not found"]
             }
 
-            def fileList = listFilesRecursively(dir)
-            return [status:0, files: fileList]
+            def foldersAndFiles = listFilesRecursively(dir)
+            return [status:0, foldersAndFiles: foldersAndFiles]
         } else {
             return [status: 1,  message: "We does support download CSV from S3 here"]
         }
@@ -376,17 +321,13 @@ class BiosecurityService {
 
     private List<Map> listFilesRecursively(File dir) {
         def BASE_DIRECTORY = grailsApplication.config.biosecurity.csv.local.directory
-
-        def result = []
-        def folder = Paths.get(dir.absolutePath)
-        Files.walk(folder).each { Path file ->
-            if (Files.isRegularFile(file) && !Files.isHidden(file)) {
-                def filePath = file.toString().replace(BASE_DIRECTORY, '')
-                if(filePath) {
-                    result << filePath
-                }
-            }
+        def rootDir = new File(BASE_DIRECTORY)
+        def foldersAndFiles = rootDir.listFiles().findAll { it.isDirectory() }.collect { folder ->
+            [
+                    name: folder.name,
+                    files: folder.listFiles().findAll { it.isFile() }.collect { file -> file.name }
+            ]
         }
-        return result
+        return foldersAndFiles
     }
 }

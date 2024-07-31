@@ -3,7 +3,7 @@
 <%@ page import="org.apache.commons.lang3.StringUtils" %>
 <html xmlns="http://www.w3.org/1999/xhtml" >
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="format-detection" content="telephone=no">
   <meta name="x-apple-disable-message-reformatting">
@@ -203,9 +203,16 @@
 %{--                <i class="bi bi-images"></i>--}%
 %{--              </g:else>--}%
 %{--            </div>--}%
+              <%
+                // Simulate the data you get from the controller
+                String title= blog.title.rendered.replaceAll(/&#8211;/, "-")
+                        .replaceAll(/&#8212;/, "-").replaceAll(/&#8217;/, "'")
+                String excerpt = blog.excerpt.rendered.replaceAll(/&#8211;/, "-")
+                        .replaceAll(/&#8212;/, "-").replaceAll(/&#8217;/, "'")
+              %>
             <div style="width: 100%;">
-              <a class="blog-title-font ala-color" href="${blog.link}" ><b>${raw(blog.title.rendered)}</b></a>
-              <div class="blog-content-font">${raw(blog.excerpt.rendered)}</div>
+              <a class="blog-title-font ala-color" href="${blog.link}" ><b>${raw(title)}</b></a>
+              <div class="blog-content-font">${raw(excerpt)}</div>
             </div>
           </div>
         </div>

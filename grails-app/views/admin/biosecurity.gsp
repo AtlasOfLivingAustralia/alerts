@@ -69,7 +69,7 @@
                                 let logs = data.logs
                                 popup.removeAttr('hidden');
                                 popup.attr('data-content', "<li>" + logs.map(item => item).join('</li><li>') + '</li>');
-                                popup.before("Last checked on ")
+                                //popup.before("Last checked on ")
                                 popup.html( formatToLocaleDate(localDateTo) + "<i class='fa fa-check' aria-hidden='true' style='color: red;padding-left: 15px;'></i>")
                                 initializePopoverAgain();
                                 //Hide possible info
@@ -383,19 +383,6 @@
                 </g:form>
 
                 <p></p>
-                <g:if test="${queries}">
-                    <form target="_blank" action="${request.contextPath}/admin/csvAllBiosecurity" method="post">
-                    <div class="row" style="text-align: right">
-                        <div class="col-sm-10" >
-                            Download CSV list of all occurrences from all alerts since: <input type="date" class="form" name="date" value="${today}"/>
-                        </div>
-                        <div class="col-sm-2">
-                         <button type="submit" class="btn  btn-info">Download CSV</button>
-                        </div>
-                    </div>
-                    </form>
-                </g:if>
-                <p></p>
                 <div class="row" style="text-align: right">
                     <div class="col-sm-10" >
                         Search for new records of all subscriptions and notify to subscribers
@@ -410,6 +397,21 @@
                     <div class="col-sm-2" >
                         <a class="btn btn-info" href="${createLink(controller: 'admin', action: 'listBiosecurityAuditCSV')}" target="_blank">CSV Auditing</a>
                     </div>
+                </div>
+                <p></p>
+                <div>
+                <g:if test="${queries}">
+                    <form target="_blank" action="${request.contextPath}/admin/csvAllBiosecurity" method="post">
+                        <div class="row" style="text-align: right">
+                            <div class="col-sm-10" >
+                                Download CSV list of all occurrences from all alerts since: <input type="date" class="form" name="date" value="${today}"/>
+                            </div>
+                            <div class="col-sm-2">
+                                <button type="submit" class="btn  btn-info">Download CSV</button>
+                            </div>
+                        </div>
+                    </form>
+                </g:if>
                 </div>
 
             </div>

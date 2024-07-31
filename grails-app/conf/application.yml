@@ -179,17 +179,17 @@ biosecurity:
         link: https://www.ala.org.au/blogs-news/ala-helps-to-stop-pests-in-their-tracks/
     csv:
         # if a header name does not match the property defined in Biocache, we need to give a mapping, separated by ':'
-        headers: > 
-            recordID:uuid,scientificName,taxonConceptID,decimalLatitude,decimalLongitude,eventDate,occurrenceStatus,dataResourceName,multimedia,media_id,
-            vernacularName,taxonConceptID_new,kingdom,phylum,class:classs,order,family,genus,species,subspecies,
-            cl22,cl10923,cl1048,cl966,cl21,firstLoadedDate,basisOfRecord,match,
-            search_term,correct_name,provided_name,common_name,state,lga,shape,list_name,
-            cw_state,shape_feature,creator,license,mimetype,width,height,image_url,download_path,date_sent
+#        headers: >
+#            recordID:uuid,scientificName,taxonConceptID,decimalLatitude,decimalLongitude,eventDate,occurrenceStatus,dataResourceName,multimedia,media_id,
+#            vernacularName,taxonConceptID_new,kingdom,phylum,class:classs,order,family,genus,species,subspecies,
+#            cl22,cl10923,cl1048,cl966,cl21,firstLoadedDate,basisOfRecord,match,
+#            search_term,correct_name,provided_name,common_name,state,lga,shape,list_name,
+#            cw_state,shape_feature,creator,license,mimetype,width,height,image_url,download_path,date_sent
         local:
-            enabled: false
+            enabled: true
             directory: /data/alerts/csv
         s3:
-            enabled: true
+            enabled: false
             bucket: alerts
     legacy:
         aus: cl927:*
