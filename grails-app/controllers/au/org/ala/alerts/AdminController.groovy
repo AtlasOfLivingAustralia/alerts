@@ -30,6 +30,8 @@ class AdminController {
     def authService
     def notificationService
     def biosecurityService
+    def biosecurityCSVService
+    def queryResultService
     def diffService
     def emailService
     def queryService
@@ -462,33 +464,39 @@ class AdminController {
     def csvAllBiosecurity() {
         def date = params.date
         String outputFile = "occurrence_alerts_${date}.csv"
+        log.info("Generate CSV for Biosecurity queries staring from ${date}")
+        def queries =  queryService.getALLBiosecurityQuery()
 
+        //Get all CSV files for each Biosecurity query
+        List<String> csvFiles  = []
+        queries.each { query ->
+            log.info("Generate CSV for Biosecurity query: ${query.name}")
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd")
+            def processedJson = biosecurityService.processQueryBiosecurity(query, sdf.parse(date), new Date())
+
+            def frequency = 'weekly'
+            QueryResult qr = notificationService.getQueryResult(query, Frequency.findByName(frequency))
+            qr.lastResult = notificationService.gzipResult(processedJson)
+            File tempCSV = biosecurityCSVService.createTempCSV(qr)
+            csvFiles.add(tempCSV.path)
+        }
+
+         //aggregate all CSV files into one
+        log.info("Aggregate CSV files into one file")
         def tempFilePath = Files.createTempFile(outputFile, ".csv")
         def tempFile = tempFilePath.toFile()
         tempFile.withWriter { writer ->
             try {
-                queryService.getALLBiosecurityQuery().each { query ->
-                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd")
-                    def processedJson = bioSecurityService.processQueryBiosecurity(query, sdf.parse(date), new Date())
-
-                    def frequency = 'weekly'
-                    QueryResult qr = notificationService.getQueryResult(query, Frequency.findByName(frequency))
-                    qr.lastResult = notificationService.gzipResult(processedJson)
-                    //notificationService.refreshProperties(qr, processedJson)
-
-                    def records = notificationService.retrieveRecordForQuery(qr.query, qr)
-                    //def userAssertions = queryService.isBioSecurityQuery(qr.query) ? emailService.getBiosecurityAssertions(qr.query, records as List) : [:]
-                    def speciesListInfo = emailService.getSpeciesListInfo(qr.query)
-
-                    //String urlPrefix = "${grailsApplication.config.security.cas.appServerName}${grailsApplication.config.getProperty('security.cas.contextPath', '')}"
-                    // def localeSubject = messageSource.getMessage("emailservice.update.subject", [query.name] as Object[], siteLocale)
-                    log.debug("${records.size()}  records were found in ${query.name}")
-                    if (records) {
-                        records.each { record ->
-                            writer << "${date},${record.uuid},${speciesListInfo.name}\n"
+                csvFiles.eachWithIndex {  csvFile, index ->
+                    new File(csvFile).withReader('UTF-8') { reader ->
+                        reader.eachLine { line, lineNumber ->
+                            if (index == 0 || lineNumber > 1) { // Write header from the first file and skip headers from the rest
+                                writer.writeLine(line)
+                            }
                         }
                     }
                 }
+
             }catch (Exception e) {
                 log.error("Error in generating CSV file: ${e.message}")
             }
@@ -727,5 +735,29 @@ class AdminController {
         response.contentType = 'application/octet-stream'
         response.setHeader('Content-Disposition', "attachment; filename=\"${saveToFile}\"")
         response.outputStream << file.bytes
+    }
+
+    /**
+     * params.id is the QueryResult id
+     * @return
+     */
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
+    def downloadLastBiosecurityResult() {
+        // Gorm object QueryResult does not fetch Query object, so we need to fetch it manually
+        QueryResult qs = queryResultService.get(params.id)
+        if (qs) {
+            File tempFile = biosecurityCSVService.createTempCSV(qs)
+            if (!tempFile.exists() || tempFile.isDirectory()) {
+                render(status: 404, text: "File not found")
+                return
+            }
+
+            def saveToFile = tempFile.name
+            response.contentType = 'application/octet-stream'
+            response.setHeader('Content-Disposition', "attachment; filename=\"${saveToFile}\"")
+            response.outputStream << tempFile.bytes
+        } else {
+            render(status: 200, text: "QueryResult not found")
+        }
     }
 }
