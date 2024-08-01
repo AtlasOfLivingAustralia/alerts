@@ -78,7 +78,7 @@
                                             <ul>
                                                 <g:each var="queryResult" in="${query.queryResults.sort { it.frequency?.name }}">
                                                     <div>
-                                                        [${queryResult.id}] <b title="Query Result ID:${queryResult.id}"> ${queryResult.frequency?.name} subscribers: </b> <span class="badge badge-primary">${query.countSubscribers(queryResult.frequency?.name)}</span>
+                                                        [<g:link controller="queryResult" action="getDetails" params="[id: queryResult.id]" target="_blank">${queryResult.id}</g:link>] <b title="Query Result ID:${queryResult.id}"> ${queryResult.frequency?.name} subscribers: </b> <span class="badge badge-primary">${query.countSubscribers(queryResult.frequency?.name)}</span>
                                                         - Last checked: <g:link controller="ws" action="getQueryLogs" params="[id: query.id, frequency: queryResult.frequency?.name]" target="_blank"> <i class="fa fa-info-circle" aria-hidden="true"></i>${queryResult?.lastChecked}</g:link>
                                                     </div>
                                                     <div>
