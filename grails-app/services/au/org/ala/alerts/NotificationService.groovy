@@ -544,9 +544,10 @@ class NotificationService {
     @NotTransactional
     def refreshProperties(QueryResult queryResult, json) {
         log.debug("[QUERY " + queryResult?.query?.id ?: 'NULL' + "] Refreshing properties for query: " + queryResult.query.name + " : " + queryResult.frequency)
-
         try {
                 queryResult.query.propertyPaths.each { propertyPath ->
+                    //Used to read the ID from the JSON, if needed
+                    String idJsonPath = queryResult.query.idJsonPath?: 'id'
 
                     //read the value from the request
                     def latestValue = null
@@ -562,8 +563,16 @@ class NotificationService {
                     propertyValue.previousValue = propertyValue.currentValue
 
                     if (latestValue != null && latestValue instanceof List) {
-                        propertyValue.currentValue = latestValue.size().toString()
-                    } else {
+                        //Assume that the size of the list is the total number of records
+                        //We need to decide to store the total number or the first?/last? ID (Assume it is defined in idJsonPath)
+                        //depends on the propertyPath e.g. fireWhenNotZero, fireWhenChange etc
+                        if (propertyPath.fireWhenNotZero ) {
+                            propertyValue.currentValue = latestValue.size().toString()
+                        } else if (propertyPath.fireWhenChange){
+                            //idJsonPath is defined in query represents the 'id' of the record
+                            propertyValue.currentValue = latestValue.first()[idJsonPath]?.toString()
+                        }
+                     } else {
                         propertyValue.currentValue = latestValue
                     }
                     queryResult.addToPropertyValues(propertyValue)
