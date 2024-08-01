@@ -205,10 +205,8 @@
 %{--            </div>--}%
               <%
                 // Simulate the data you get from the controller
-                String title= blog.title.rendered.replaceAll(/&#8211;/, "-")
-                        .replaceAll(/&#8212;/, "-").replaceAll(/&#8217;/, "'")
-                String excerpt = blog.excerpt.rendered.replaceAll(/&#8211;/, "-")
-                        .replaceAll(/&#8212;/, "-").replaceAll(/&#8217;/, "'")
+                String title= blog.title.rendered.replaceAll(/&#8211;|&#8212;|–|—/, "-")
+                String excerpt = blog.excerpt.rendered.replaceAll(/&#8211;|&#8212;|–|—/, "-")
               %>
             <div style="width: 100%;">
               <a class="blog-title-font ala-color" href="${blog.link}" ><b>${raw(title)}</b></a>
