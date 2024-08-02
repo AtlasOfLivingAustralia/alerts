@@ -103,14 +103,14 @@
                                                         </g:link>
                                                         <g:if test="${queryType != 'biosecurity'}">
                                                             <g:link class="btn btn-info"  controller="admin" action="emailMeLastCheck" params="[queryId: query.id, frequency: queryResult.frequency?.name]" target="_blank">
-                                                                Email me the latest check result (No DB updates)
+                                                                Email me the latest check result (Query fired, No DB update)
                                                             </g:link>
                                                             <g:link class="btn btn-info"  controller="admin" action="dryRunQuery" params="[queryId: query.id, frequency: queryResult.frequency?.name]" target="_blank">
-                                                                Dry run (no DB updates, no emails)
+                                                                Dry run (no DB update, no emails)
                                                             </g:link>
                                                             <br>
                                                             <g:link class="btn btn-primary"  controller="admin" action="runQueryWithLastCheckDate" params="[queryId: query.id, frequency: queryResult.frequency?.name]" target="_blank">
-                                                                Run the last check (DB updates, no emails)
+                                                                Run the last check (DB update, no emails)
                                                             </g:link>
                                                         </g:if>
                                                         <g:else>
