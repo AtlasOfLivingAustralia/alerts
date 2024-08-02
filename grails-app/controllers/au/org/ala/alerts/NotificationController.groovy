@@ -128,7 +128,12 @@ class NotificationController {
         def queryResult = query?.queryResults?.find { queryResult ->
             queryResult.id == params.queryResultId.toLong()
         }
-        notificationService.refreshProperties(queryResult, queryResult.decompress(queryResult.lastResult))
+        //NOTE: this is a hack since the lastResult will be copied into the previousResult in RefreshProperties method
+        //We need to hack the current result with previousResult.
+        def lastResult = queryResult.decompress(queryResult.lastResult)
+        queryResult.lastResult = queryResult.previousResult
+
+        notificationService.refreshProperties(queryResult, lastResult)
         boolean hasChanged = notificationService.hasChanged(queryResult)
         def records = notificationService.collectUpdatedRecords(queryResult)
         def results = ["hasChanged": hasChanged, "brief": queryResult.brief(),  "records": records]
