@@ -4,12 +4,7 @@ import com.jayway.jsonpath.JsonPath
 import grails.converters.JSON
 import org.apache.commons.lang.time.DateUtils
 import org.apache.http.entity.ContentType
-
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
-import java.text.SimpleDateFormat;
-
+import java.text.SimpleDateFormat
 
 class BiosecurityService {
     def notificationService

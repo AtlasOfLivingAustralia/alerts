@@ -20,11 +20,8 @@ import grails.gorm.transactions.NotTransactional
 
 
 class DiffService {
-
-    //static transactional = true
     def queryService
 
-    @NotTransactional
     Boolean hasChangedJsonDiff(QueryResult queryResult) {
         if (queryResult.lastResult != null) {
             if (queryResult.previousResult != null) {
@@ -133,12 +130,15 @@ class DiffService {
 
         def records = []
 
-        if (queryResult.lastResult != null && queryResult.previousResult != null) {
-            try {
-                //decompress both and compare lists
-                String last = decompressZipped(queryResult.lastResult)
-                String previous = decompressZipped(queryResult.previousResult)
+        if (queryResult.lastResult != null ) {
+            String last = decompressZipped(queryResult.lastResult)
+            String previous = "{}"
+            // If previous result is null, assign an empty Json object
+            if ( queryResult.previousResult != null) {
+                revious = decompressZipped(queryResult.previousResult)
+            }
 
+            try {
                 if (!last.startsWith("<") && !previous.startsWith("<")) {
                     // Don't try and process 401, 301, 500, etc., responses that contain HTML
                     if (!queryService.isMyAnnotation(queryResult.query)) {
