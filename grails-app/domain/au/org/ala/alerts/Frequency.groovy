@@ -1,6 +1,10 @@
 package au.org.ala.alerts
 
 class Frequency {
+    transient static String HOURLY  = 'hourly'
+    transient static String DAILY  = 'daily'
+    transient static String WEEKLY  = 'weekly'
+    transient static String MONTHLY  = 'monthly'
 
     String name
     Integer periodInSeconds = 86400l   //default to daily
@@ -14,5 +18,9 @@ class Frequency {
         version false
     }
 
-    public String toString() { name }
+    boolean isFrequency(String frequency) {
+        name == frequency
+    }
+
+    String toString() { name }
 }

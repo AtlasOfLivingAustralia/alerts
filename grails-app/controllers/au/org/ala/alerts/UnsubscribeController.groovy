@@ -3,7 +3,7 @@ package au.org.ala.alerts
 import grails.gorm.transactions.Transactional
 import io.micronaut.http.HttpStatus
 
-@Transactional
+
 class UnsubscribeController {
 
     static allowedMethods = [index: "GET", unsubscribe: "POST"]
@@ -24,6 +24,7 @@ class UnsubscribeController {
         }
     }
 
+    @Transactional
     def unsubscribe() {
         Map userAndNotifications = findUserAndNotificationsForToken(params.token)
 

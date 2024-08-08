@@ -14,6 +14,7 @@
 package au.org.ala.alerts
 
 import au.org.ala.web.AlaSecured
+import grails.converters.JSON
 import grails.gorm.transactions.Transactional
 import grails.util.Holders
 
@@ -21,12 +22,16 @@ import java.text.SimpleDateFormat
 import groovyx.net.http.HTTPBuilder
 import groovy.json.JsonSlurper
 import java.nio.file.Files
+import java.nio.file.Paths
 
 @AlaSecured(value = 'ROLE_ADMIN', redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to view that page.")
 class AdminController {
 
     def authService
     def notificationService
+    def biosecurityService
+    def biosecurityCSVService
+    def queryResultService
     def diffService
     def emailService
     def queryService
@@ -133,7 +138,7 @@ class AdminController {
         log.info("Run checks....")
         if (params.frequency) {
             log.info('Manual start of ' + params.frequency + ' checks')
-            notificationService.checkQueryForFrequency(params.frequency)
+            notificationService.execQueryForFrequency(params.frequency)
         }
         response.setContentType("text/plain")
         response.setStatus(200)
@@ -161,7 +166,6 @@ class AdminController {
         notificationService.checkAllQueries(response.getWriter())
     }
 
-    @Transactional
     def debugAlertEmail() {
         def frequency = params.frequency ?: 'weekly'
         def qcr = notificationService.checkQueryById(params.id, params.frequency ?: 'weekly')
@@ -169,7 +173,7 @@ class AdminController {
         render(view: qcr.query.emailTemplate, model: model)
     }
 
-    @Transactional
+
     def debugAlert() {
         [alerts: [
                 hourly : notificationService.checkQueryById(params.id, params.frequency ?: 'hourly'),
@@ -180,13 +184,11 @@ class AdminController {
         ]
     }
 
-    @Transactional
     def deleteOrphanAlerts() {
-        int noDeleted = queryService.deleteOrphanedQueries()
-        render(view: 'index', model: [message: """Removed ${noDeleted} queries from system"""])
+        def result = queryService.deleteOrphanedQueries()
+        render(view: 'index', model: [message: "Removed ${result['OrphanQuery']} queries, and ${result['OrphanNotification']} orphaned notifications."])
     }
 
-    @Transactional
     def showUsersAlerts() {
         User user = User.findByUserId(params.userId)
         if (user) {
@@ -279,6 +281,7 @@ class AdminController {
      * @param limit
      * @return
      */
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
     def getMoreBioSecurityQuery(int startIdx) {
         List queries = queryService.getBiosecurityQuery(startIdx, subscriptionsPerPage)
         render view: "/admin/_bioSecuritySubscriptions", model: [queries: queries, startIdx: startIdx ]
@@ -289,13 +292,15 @@ class AdminController {
      * @param id
      * @return
      */
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
     def getBioSecurityQuery(int id) {
         def query = queryService.findBiosecurityQueryById(id)
-        def queryLog = queryService.getQueryLogs(query)
+       // def queryLog = queryService.getQueryLogs(query, "weekly")
         //For be compatible with the method rendering a list of queries AKA subscriptions, we need to convert the single query to a list
         render view: "/admin/_bioSecuritySubscriptions", model: [queries: [query], startIdx: 0 ]
     }
 
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
     def countBioSecurityQuery() {
         int total = queryService.countBiosecurityQuery()
         render (contentType: 'application/json') {
@@ -307,6 +312,7 @@ class AdminController {
      * This function is used to subscribe a user to a species list or a query (an existing subscription of a list)
      * @return
      */
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
     @Transactional
     def subscribeBioSecurity() {
         if ((!params.listid || params.listid.allWhitespace) && !params.queryid) {
@@ -350,7 +356,7 @@ class AdminController {
      * DO NOT update database in this function
      * @return
      */
-    @AlaSecured
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
     def previewBiosecurityAlert() {
         log.info("Building preview page for BioSecurity alert")
         def date = params.date //only from preview
@@ -360,7 +366,7 @@ class AdminController {
         Date since =  sdf.parse(date)
         Date now = new Date()
 
-        def processedJson = notificationService.processQueryBiosecurity(query, since, now)
+        def processedJson = biosecurityService.processQueryBiosecurity(query, since, now)
 
         def frequency = 'weekly'
         QueryResult qr = notificationService.getQueryResult(query, Frequency.findByName(frequency))
@@ -371,7 +377,7 @@ class AdminController {
         query.lastChecked = since
 
 
-        def records = emailService.retrieveRecordForQuery(qr.query, qr)
+        def records = notificationService.retrieveRecordForQuery(qr.query, qr)
         def userAssertions = queryService.isBioSecurityQuery(qr.query) ? emailService.getBiosecurityAssertions(qr.query, records as List) : [:]
         def speciesListInfo = emailService.getSpeciesListInfo(qr.query)
 
@@ -405,6 +411,7 @@ class AdminController {
                         unsubscribeOne: unsubscribeOneUrl
                 ])
     }
+
 
     @Transactional
     def previewBlogAlerts() {
@@ -453,37 +460,43 @@ class AdminController {
                 ])
     }
 
-    // Not transactional
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
     def csvAllBiosecurity() {
         def date = params.date
         String outputFile = "occurrence_alerts_${date}.csv"
+        log.info("Generate CSV for Biosecurity queries staring from ${date}")
+        def queries =  queryService.getALLBiosecurityQuery()
 
+        //Get all CSV files for each Biosecurity query
+        List<String> csvFiles  = []
+        queries.each { query ->
+            log.info("Generate CSV for Biosecurity query: ${query.name}")
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd")
+            def processedJson = biosecurityService.processQueryBiosecurity(query, sdf.parse(date), new Date())
+
+            def frequency = 'weekly'
+            QueryResult qr = notificationService.getQueryResult(query, Frequency.findByName(frequency))
+            qr.lastResult = notificationService.gzipResult(processedJson)
+            File tempCSV = biosecurityCSVService.createTempCSV(qr)
+            csvFiles.add(tempCSV.path)
+        }
+
+         //aggregate all CSV files into one
+        log.info("Aggregate CSV files into one file")
         def tempFilePath = Files.createTempFile(outputFile, ".csv")
         def tempFile = tempFilePath.toFile()
         tempFile.withWriter { writer ->
             try {
-                queryService.getALLBiosecurityQuery().each { query ->
-                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd")
-                    def processedJson = notificationService.processQueryBiosecurity(query, sdf.parse(date), new Date())
-
-                    def frequency = 'weekly'
-                    QueryResult qr = notificationService.getQueryResult(query, Frequency.findByName(frequency))
-                    qr.lastResult = notificationService.gzipResult(processedJson)
-                    //notificationService.refreshProperties(qr, processedJson)
-
-                    def records = emailService.retrieveRecordForQuery(qr.query, qr)
-                    //def userAssertions = queryService.isBioSecurityQuery(qr.query) ? emailService.getBiosecurityAssertions(qr.query, records as List) : [:]
-                    def speciesListInfo = emailService.getSpeciesListInfo(qr.query)
-
-                    //String urlPrefix = "${grailsApplication.config.security.cas.appServerName}${grailsApplication.config.getProperty('security.cas.contextPath', '')}"
-                    // def localeSubject = messageSource.getMessage("emailservice.update.subject", [query.name] as Object[], siteLocale)
-                    log.debug("${records.size()}  records were found in ${query.name}")
-                    if (records) {
-                        records.each { record ->
-                            writer << "${date},${record.uuid},${speciesListInfo.name}\n"
+                csvFiles.eachWithIndex {  csvFile, index ->
+                    new File(csvFile).withReader('UTF-8') { reader ->
+                        reader.eachLine { line, lineNumber ->
+                            if (index == 0 || lineNumber > 1) { // Write header from the first file and skip headers from the rest
+                                writer.writeLine(line)
+                            }
                         }
                     }
                 }
+
             }catch (Exception e) {
                 log.error("Error in generating CSV file: ${e.message}")
             }
@@ -505,19 +518,28 @@ class AdminController {
         }
     }
 
-    @Transactional
+    /**
+     * todo - check if it is not used
+     * @return
+     */
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
     def unsubscribeAllUsers() {
         queryService.unsubscribeAllUsers(Long.valueOf(params.queryid))
         redirect(controller: "admin", action: "biosecurity")
     }
 
-    @Transactional
+    /**
+     * todo - redirect to which page?
+      * @return
+     */
+
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
     def deleteQuery() {
         queryService.deleteQuery(Long.valueOf(params.queryid))
         redirect(controller: "admin", action: "biosecurity")
     }
 
-    @Transactional
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
     def unsubscribeAlert() {
         if (!params.useremail || params.useremail.allWhitespace) {
             flash.message = messageSource.getMessage("unsubscribeusers.controller.error.emptyemail", null, "User email can't be empty.", siteLocale)
@@ -532,5 +554,210 @@ class AdminController {
             }
         }
         redirect(controller: "admin", action: "biosecurity")
+    }
+
+    /**
+     * Page for debugging and testing all queries
+     * @return
+     */
+    def query(){
+        def queries = queryService.summarize()
+        render view: "/admin/query", model: [queries: queries]
+    }
+
+    /**
+     * Database UPDATED, No email sent
+     * Rerun the last check of a query for a given frequency without sending any notifications
+     * @param queryId
+     * @param frequency
+     * @return
+     */
+    def runQueryWithLastCheckDate(){
+        def id = params.queryId
+        def frequency = params.frequency
+        if (id && frequency) {
+            Query query = Query.get(id)
+            Frequency fre = Frequency.findByName(frequency)
+            if (query && fre) {
+                QueryResult qs = notificationService.executeQuery(query, fre, true)
+                boolean hasChanged = notificationService.hasChanged(qs)
+                def records = notificationService.collectUpdatedRecords(qs)
+                def results = ["hasChanged": hasChanged, "records": records]
+                render results as JSON
+            } else {
+                render([status: 1, message: "Cannot find query: ${id}"] as JSON)
+            }
+        } else {
+            render([status: 1, message: "Missing queryId or frequency"] as JSON)
+        }
+    }
+
+    /**
+     * NO Database update, Email sent to current user
+     * Run the last check and email the result to current user
+     * @return
+     */
+    def emailMeLastCheck(){
+        def id = params.queryId
+        def frequency = params.frequency
+        if (id && frequency) {
+            Query query = Query.get(id)
+            Frequency fre = Frequency.findByName(frequency)
+            if (query && fre) {
+                QueryResult qs = notificationService.executeQuery(query, fre, true, true)
+                boolean hasChanged = notificationService.hasChanged(qs)
+                def records = notificationService.collectUpdatedRecords(qs)
+                User currentUser = userService.getUser()
+                def recipient =
+                    [email: currentUser.email, userUnsubToken: currentUser.unsubscribeToken, notificationUnsubToken: '']
+                emailService.sendGroupNotification(qs, fre, [recipient])
+                def results = ["hasChanged": hasChanged, "records": records, "recipient": currentUser.email]
+                render results as JSON
+            } else {
+                render([status: 1, message: "Cannot find query: ${id}"] as JSON)
+            }
+        } else {
+            render([status: 1, message: "Missing queryId or frequency"] as JSON)
+        }
+    }
+
+    /**
+     * Database updates, Email sent to current user
+     *
+     * Test only. Test if a QueryResult [Weekly - hard coded]can be initiated and sent to the current user
+     *
+     * @return
+     */
+    def initFirstCheckAndEmailMe(){
+        def id = params.queryId
+        def frequency = params.frequency
+        if (id && frequency) {
+            Query query = Query.get(id)
+            Frequency fre = Frequency.findByName(frequency)
+            if (query && fre) {
+                QueryResult qs = notificationService.executeQuery(query, fre, false, false)
+                boolean hasChanged = notificationService.hasChanged(qs)
+                def records = notificationService.collectUpdatedRecords(qs)
+                User currentUser = userService.getUser()
+                def recipient =
+                        [email: currentUser.email, userUnsubToken: currentUser.unsubscribeToken, notificationUnsubToken: '']
+                emailService.sendGroupNotification(qs, fre, [recipient])
+                def results = ["hasChanged": hasChanged, "records": records, "recipient": currentUser.email]
+                render results as JSON
+            } else {
+                render([status: 1, message: "Cannot find query: ${id}"] as JSON)
+            }
+        } else {
+            render([status: 1, message: "Missing queryId or frequency"] as JSON)
+        }
+    }
+
+    /**
+     * NO Database update, No emails sent
+     *
+     * Rerun a query for a given frequency without updating database and sending any notifications
+     * NOTE: Biosecurity excluded
+     *
+     * @param queryId
+     * @param frequency
+     * @return
+     */
+    def dryRunQuery(){
+        def id = params.queryId
+        def frequency = params.frequency
+        if (id && frequency) {
+            Query query = Query.get(id)
+            Frequency fre = Frequency.findByName(frequency)
+            if (query && fre) {
+                QueryResult queryResult = notificationService.executeQuery(query, fre, false, true)
+                def records = notificationService.collectUpdatedRecords(queryResult)
+                def results = ["status": queryResult.succeed, "hasChanged": queryResult.hasChanged, "logs": queryResult.getLog(), "records": records, "details": queryResult.brief()]
+                render results as JSON
+            } else {
+                render([status: 1, message: "Cannot find query: ${id}"] as JSON)
+            }
+        } else {
+            render([status: 1, message: "Missing queryId or frequency"] as JSON)
+        }
+    }
+
+    /**
+     * No database updated, No email sent
+     *
+     * Run a task to execute the query for a specific frequency
+     *
+     */
+    def dryRunAllQueriesForFrequency(){
+        def freq = params.frequency
+        Frequency frequency = Frequency.findByName(freq)
+        def queries = Query.executeQuery(
+                """select q from Query q
+                  inner join q.notifications n
+                  inner join n.user u
+                  where u.frequency = :frequency
+                  group by q""", [frequency: frequency])
+        int total = queries.size()
+
+        response.setContentType("text/plain")
+        def writer= response.getWriter()
+
+        queries.eachWithIndex { query, index ->
+            QueryResult queryResult = notificationService.executeQuery(query, Frequency.findByName(frequency), false, true)
+            def records = notificationService.collectUpdatedRecords(queryResult)
+            def results = ["POS": "${index+1}/${total}", "status": queryResult.succeed, "hasChanged": queryResult.hasChanged, "logs": queryResult.getLog(), "brief": queryResult.brief()]
+
+            writer.write("${results["POS"]}. ${query.id} - ${query.name} - ${frequency}\n")
+            writer.write("Status: ${results["status"]}, Changed:${results["hasChanged"]} \n")
+            writer.write("Logs: ${results["logs"]}\n")
+            writer.write("Brief: ${results["brief"]}\n")
+            writer.write(("-" * 80) + "\n")
+            writer.flush()
+            log.info("Query ${query.id} has been executed for frequency ${frequency}")
+        }
+    }
+
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
+    def listBiosecurityAuditCSV() {
+        def result  = biosecurityService.listAuditCSV()
+        render(view: 'biosecurityCSV', model: result)
+    }
+
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
+    def downloadBiosecurityAuditCSV(String filename) {
+        def BASE_DIRECTORY = grailsApplication.config.biosecurity.csv.local.directory
+        def file = new File(BASE_DIRECTORY, filename)
+        if (!file.exists() || file.isDirectory()) {
+            render(status: 404, text: "File not found")
+            return
+        }
+
+        def saveToFile = Paths.get(filename).collect { it.toString() }.join("_")
+        response.contentType = 'application/octet-stream'
+        response.setHeader('Content-Disposition', "attachment; filename=\"${saveToFile}\"")
+        response.outputStream << file.bytes
+    }
+
+    /**
+     * params.id is the QueryResult id
+     * @return
+     */
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
+    def downloadLastBiosecurityResult() {
+        // Gorm object QueryResult does not fetch Query object, so we need to fetch it manually
+        QueryResult qs = queryResultService.get(params.id)
+        if (qs) {
+            File tempFile = biosecurityCSVService.createTempCSV(qs)
+            if (!tempFile.exists() || tempFile.isDirectory()) {
+                render(status: 404, text: "File not found")
+                return
+            }
+
+            def saveToFile = tempFile.name
+            response.contentType = 'application/octet-stream'
+            response.setHeader('Content-Disposition', "attachment; filename=\"${saveToFile}\"")
+            response.outputStream << tempFile.bytes
+        } else {
+            render(status: 200, text: "QueryResult not found")
+        }
     }
 }

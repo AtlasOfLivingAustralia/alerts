@@ -20,6 +20,7 @@ import grails.converters.JSON
 import grails.plugin.cache.Cacheable
 import grails.util.Holders
 import grails.util.Environment
+import au.org.ala.alerts.Query
 
 import grails.gorm.transactions.Transactional
 
@@ -40,7 +41,17 @@ class UserService {
         def notificationInstanceList = Notification.findAllByUser(user)
 
         //split into custom and non-custom...
-        def enabledQueries = notificationInstanceList.collect { it.query }
+        //in case some queries which were removed
+        def enabledQueries = notificationInstanceList.findAll { it?.query != null }
+                .collect { it.query }
+                .findAll { query ->
+                    try {
+                        Query.get(query.id) != null
+                    } catch (Exception e) {
+                        false
+                    }
+                }
+
         def enabledIds = enabledQueries.collect { it.id }
 
         // all standard queries + 'my annotations' queries

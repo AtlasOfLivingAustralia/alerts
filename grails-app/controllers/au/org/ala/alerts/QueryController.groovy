@@ -6,7 +6,6 @@ import grails.gorm.transactions.Transactional
 import grails.util.Holders
 import org.springframework.dao.DataIntegrityViolationException
 
-@Transactional
 class QueryController {
 
     static allowedMethods = [save: "POST", update: "POST", update: "PUT", delete: ["POST"]]
@@ -74,11 +73,13 @@ class QueryController {
         [queryInstanceList: Query.list(params), queryInstanceTotal: Query.count()]
     }
 
+    @Transactional
     @AlaSecured(value = 'ROLE_ADMIN', redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to view that page.")
     def create() {
         [queryInstance: new Query(params)]
     }
 
+    @Transactional
     @AlaSecured(value = 'ROLE_ADMIN', redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to view that page.")
     def save() {
         def queryInstance = new Query(params)
@@ -114,6 +115,7 @@ class QueryController {
         [queryInstance: queryInstance]
     }
 
+    @Transactional
     @AlaSecured(value = 'ROLE_ADMIN', redirectController = 'admin', redirectAction = 'index', message = "You don't have permission to update that record.")
     def update() {
         def queryInstance = Query.get(params.id)

@@ -12,7 +12,7 @@ class MonthlyQueriesJob {
     def execute() {
         // execute task
         log.info("****** Scheduled monthly update ****** " + new Date())
-        notificationService.checkQueryForFrequency('monthly')
+        notificationService.execQueryForFrequency('monthly')
         log.info("****** Scheduled monthly update finished ******" + new Date())
     }
 }

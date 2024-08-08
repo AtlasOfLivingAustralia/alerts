@@ -6,12 +6,12 @@ class BiosecurityQueriesJob {
     //  static triggers = {
     //  }
 
-    def notificationService
+    def biosecurityService
 
     def execute() {
         // execute task
         log.info("****** Scheduled biosecurity update ****** " + new Date())
-        notificationService.biosecurityAlerts()
+        biosecurityService.biosecurityAlerts()
         log.info("****** Scheduled biosecurity update finished ******" + new Date())
     }
 }

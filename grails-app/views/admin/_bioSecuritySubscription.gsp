@@ -27,6 +27,12 @@
                     <span name="showLastCheckDetails_${query.id}" style="cursor: pointer; text-decoration: underline;"  data-toggle="popover" data-placement="bottom" data-content="${logs.collect {'<li>' + it + '</li>'  }.join()}" >
                         ${new java.text.SimpleDateFormat('dd MMM yyyy HH:mm').format(query.lastChecked)}
                     </span>
+                    <g:if test="${query.queryResults.find{it.frequency.name=='weekly'}?.id}">
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        <g:link controller="admin" action="downloadLastBiosecurityResult" params="[id:  query.queryResults.find{it.frequency.name=='weekly'}?.id]" target="_blank">
+                            <span><i class="fa fa-download"></i>CSV</span>
+                        </g:link>
+                    </g:if>
                 </g:if>
                 <g:else>
                     <span hidden  name="showLastCheckDetails_${query.id}" style="cursor: pointer; text-decoration: underline;"  data-toggle="popover" data-placement="bottom" >

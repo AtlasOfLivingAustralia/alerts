@@ -1,5 +1,10 @@
 package au.org.ala.alerts
+
+import com.jayway.jsonpath.JsonPath
+
 import java.text.SimpleDateFormat
+import java.util.zip.GZIPInputStream
+import java.util.zip.GZIPOutputStream
 
 class QueryResult {
 
@@ -14,12 +19,17 @@ class QueryResult {
     byte[] lastResult
     byte[] previousResult
     String logs
+    transient boolean succeed = true
 
-    String[] retrieveLogs() {
+    String[] getLog() {
         return logs ? logs.split("\n") : []
     }
 
-    void appendLogs(String log) {
+    void newLog(String log) {
+        logs = log
+    }
+
+    void addLog(String log) {
         logs = logs ? logs + "\n" + log : log
     }
 
@@ -65,6 +75,65 @@ class QueryResult {
     }
 
     String toString() {
-        "Last checked: " + lastChecked
+        "${frequency?.name}: ${lastChanged ? 'Changed' : 'No Change'} on ${lastChecked}"
+    }
+
+    Map brief() {
+        [queryId: query?.id, query: query?.name, frequency: frequency?.name, queryResultId: id, lastChecked: lastChecked, hasChanged: hasChanged, lastChanged: lastChanged,
+         property: displayProperties()
+        ]
+    }
+
+    Map details() {
+        [queryId: query?.id, query: query?.name, frequency: frequency?.name, queryResultId: id, lastChecked: lastChecked, hasChanged: hasChanged, lastChanged: lastChanged,
+         property: displayProperties(),
+         currentResult: lastResult ? decompress(lastResult) : null, previousResult: previousResult ? decompress(previousResult) : null
+        ]
+    }
+
+    private def displayProperties() {
+        def propertyPaths = []
+        query?.propertyPaths.each { propertyPath ->
+            propertyPaths.add(propertyPath.toString())
+        }
+
+        def propertyValue = []
+        propertyValues.each { pv ->
+            propertyValue.add(pv.toString())
+        }
+
+        ["Properties in Query", propertyPaths, "Property Values in Query Result", propertyValue]
+    }
+
+    String decompress(byte[] zipped) {
+        if (zipped) {
+            GZIPInputStream input = new GZIPInputStream(new ByteArrayInputStream(zipped))
+            StringBuffer sb = new StringBuffer()
+            Reader decoder = new InputStreamReader(input, "UTF-8");
+            BufferedReader buffered = new BufferedReader(decoder);
+            try {
+                def currentLine = buffered.readLine()
+                while (currentLine != null) {
+                    sb.append(currentLine)
+                    currentLine = buffered.readLine()
+                }
+            } catch (Exception e) {
+                log.error(e.getMessage() + ", zipped content length " + zipped.length, e)
+            }
+            buffered.close()
+            sb.toString()
+        } else {
+            null
+        }
+    }
+
+    byte[] compress(String json) {
+        //store the last result from the webservice call
+        ByteArrayOutputStream bout = new ByteArrayOutputStream()
+        GZIPOutputStream gzout = new GZIPOutputStream(bout)
+        gzout.write(json.toString().getBytes())
+        gzout.flush()
+        gzout.finish()
+        bout.toByteArray()
     }
 }
