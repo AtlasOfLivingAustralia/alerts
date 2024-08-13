@@ -492,7 +492,7 @@ class QueryService {
         def result = null
         try {
             // Execute a raw SQL for full-text match query
-            String query = "SELECT * FROM query WHERE MATCH(name) AGAINST ('${keywords}*' IN BOOLEAN MODE ) AND email_template = '/email/biosecurity' LIMIT 10 "
+            String query = "SELECT * FROM query WHERE name LIKE '%${keywords}%' AND email_template = '/email/biosecurity' LIMIT 10 "
             result = sql.rows(query)
         } catch(Exception e) {
             // Handle any exceptions

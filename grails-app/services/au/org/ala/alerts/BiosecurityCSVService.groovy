@@ -10,6 +10,26 @@ class BiosecurityCSVService {
     def diffService
     def grailsApplication
 
+    def list() {
+        def BASE_DIRECTORY = grailsApplication.config.biosecurity.csv.local.directory
+        if (grailsApplication.config.biosecurity.csv.local.enabled) {
+            def dir = new File(BASE_DIRECTORY)
+            if (!dir.exists() || !dir.isDirectory()) {
+                return [status: 1, message: "Directory not found"]
+            }
+
+            def foldersAndFiles = listFilesRecursively(dir)
+            return [status:0, foldersAndFiles: foldersAndFiles]
+        } else {
+            return [status: 1,  message: "We does support download CSV from S3 here"]
+        }
+    }
+
+    /**
+     * Called by cron job to generate CSV files when Notification service finds  new records
+     *
+     * @param qs
+     */
     void generateAuditCSV(QueryResult qs) {
         def task = {
             def records = diffService.getNewRecords(qs)
@@ -28,6 +48,11 @@ class BiosecurityCSVService {
         Thread.start(task)
     }
 
+    /**
+     * Main logic to create a temp CSV file from query result
+     * @param qs
+     * @return
+     */
     File createTempCSV(QueryResult qs) {
         def records = diffService.getNewRecords(qs)
 
@@ -35,14 +60,15 @@ class BiosecurityCSVService {
 
         def tempFilePath = Files.createTempFile(outputFile, ".csv")
         def tempFile = tempFilePath.toFile()
-        String rawHeader = "recordID:uuid,scientificName,taxonConceptID,decimalLatitude,decimalLongitude,eventDate,occurrenceStatus,dataResourceName,multimedia,media_id:image," +
+        String rawHeader = "recordID:uuid, recordLink:occurrenceLink, scientificName,taxonConceptID,decimalLatitude,decimalLongitude,eventDate,occurrenceStatus,dataResourceName,multimedia,media_id:image," +
                 "vernacularName,taxonConceptID_new,kingdom,phylum,class:classs,order,family,genus,species,subspecies," +
                 "firstLoadedDate:firstLoaded,basisOfRecord,match," +
-                "search_term,correct_name,provided_name,common_name,state:stateProvince,lga,shape,list_id:listId,list_name:listName,cw_state,shape_feature,creator:collector," +
+                "search_term,correct_name:scientificName,provided_name:providedName,common_name:vernacularName,state:stateProvince,lga,shape,list_id:listId,list_name:listName,cw_state,shape_feature,creator:collector," +
                 "license,mimetype,width,height," +
                 "image_url:smallImageUrl," + // TBC , multiple image urls
-                "date_sent:dateSent," +// TBC
-                "fq, kvs"
+                "date_sent:dateSent,"+
+                "cl" // TBC
+                //"fq, kvs"
         if (grailsApplication.config.biosecurity.csv.headers) {
             rawHeader = grailsApplication.config.biosecurity.csv.headers
         }
@@ -52,26 +78,15 @@ class BiosecurityCSVService {
         // lga:               location -> verbatimLocality
         // firstLoadedDate    firstLoaded
 
-        // Not available in biocache_ws.ala.org.au/occurrences/search
-        // match and search_term, for example: matched: scientificName,  search_term: Paratrechina longicornis for the record: 160dfd59-29d0-4f0d-b277-23d69e13343a
-        // We are not able to identify the record exactly matched with which search term and value.
-        // We can only collection info from the query, for example:
-        // q=(genus:"Austropuccinia+psidii")+OR+(species:"Austropuccinia+psidii")+OR+(subspecies:"Austropuccinia+psidii")+OR+(scientificName:"Austropuccinia+psidii")+OR+(raw_scientificName:"Austropuccinia+psidii")
-
-        //Need to be clarified:
-        // correct_name,provided_name,common_name, state,shape,list_name,cw_state,shape_feature,
 
         // state ?== stateProvince
         // ? cs_state
-
-        // Need to collect data from query itself ?
-        // shape, shape_feature, list_name
-
 
         def headers = []
         def fields = []
         def headersAndFields = rawHeader.split(',')
         headersAndFields.each { entry ->
+
             def parts = entry.trim().split(':', 2)  // Split on ':' with a limit of 2 parts
             headers << parts[0]  // Add the part before ':' to the first array
             if (parts.size() > 1) {
@@ -86,8 +101,9 @@ class BiosecurityCSVService {
             writer.write(headers.join(",")+ "\n")
             records.each { record ->
                 def values = fields.collect { field ->
+                    def value = ""
                     if(record.containsKey(field)) {
-                        def value = record[field]
+                        value = record[field]
                         //if value is a list, convert it to a string. e.g. collectors, images
                         if (value instanceof List) {
                             value = "\"${value.join(";")}\""  // Join the list with ';' and wrap it in double quotes
@@ -108,11 +124,19 @@ class BiosecurityCSVService {
                                     break
                             }
                         }
-
                     } else {
-                        record."${field}" ?: ""  // Use "" if the property is null
+                        //special cases
+                        if(field == "lga") {
+                            if (record.containsKey("locality") && record.containsKey("stateProvince")) {
+                                value = record["location"]+";"+record["stateProvince"]
+                            } else if (record.containsKey("locality")) {
+                                value = record["locality"]
+                            } else if (record.containsKey("stateProvince")) {
+                                value = record["stateProvince"]
+                            }
+                        }
                     }
-
+                    return value
                 }
                 writer.write(values.join(","))
                 writer.write("\n")
@@ -135,5 +159,17 @@ class BiosecurityCSVService {
         // Define a pattern for illegal characters
         def pattern = /[^a-zA-Z0-9\.\-\_]/
         return fileName.replaceAll(pattern, '_')
+    }
+
+    private List<Map> listFilesRecursively(File dir) {
+        def BASE_DIRECTORY = grailsApplication.config.biosecurity.csv.local.directory
+        def rootDir = new File(BASE_DIRECTORY)
+        def foldersAndFiles = rootDir.listFiles().findAll { it.isDirectory() }.collect { folder ->
+            [
+                    name: folder.name,
+                    files: folder.listFiles().findAll { it.isFile() }.collect { file -> file.name }
+            ]
+        }
+        return foldersAndFiles
     }
 }
