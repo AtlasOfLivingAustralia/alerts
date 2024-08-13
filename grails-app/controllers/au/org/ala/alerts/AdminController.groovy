@@ -716,13 +716,13 @@ class AdminController {
         }
     }
 
-    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true, redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to view that page.")
     def listBiosecurityAuditCSV() {
-        def result  = biosecurityService.listAuditCSV()
+        def result  = biosecurityCSVService.list()
         render(view: 'biosecurityCSV', model: result)
     }
 
-    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true,redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to view that page.")
     def downloadBiosecurityAuditCSV(String filename) {
         def BASE_DIRECTORY = grailsApplication.config.biosecurity.csv.local.directory
         def file = new File(BASE_DIRECTORY, filename)

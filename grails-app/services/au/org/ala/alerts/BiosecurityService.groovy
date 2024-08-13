@@ -159,7 +159,7 @@ class BiosecurityService {
                 offset += max
 
             }
-
+            //Extra infos for CSV
             def finalResults =  occurrences.values().collect { record ->
                 record["dateSent"] = new SimpleDateFormat("dd/MM/yyyy").format(to)
                 record["listName"] = query.name
@@ -230,15 +230,33 @@ class BiosecurityService {
                 get?.occurrences?.each { occurrence ->
                     occurrences[occurrence.uuid] = occurrence
                     //extra info should be added here
-                    occurrence['fq']= searchTerm + fq + legacyFq
+                    occurrence['providedName'] = name
+                    occurrence['occurrenceLink'] = grailsApplication.config.getProperty('biocache.baseURL') + '/occurrences/' + occurrence.uuid
+                    //occurrence['fq']= searchTerm + fq + legacyFq
                     if (listItem.kvpValues?.size()>0) {
-                        occurrence['kvs'] = listItem.kvpValues.collect { kv -> "${kv.key}:${kv.value}" }.join(',')
+                        //Do not join, let CSV generate handle it
+                        occurrence['kvs'] = listItem.kvpValues.collect { kv -> "${kv.key}:${kv.value}" }
                     }
+                    fetchExtraInfo(occurrence.uuid, occurrence)
                 }
             } catch (Exception e) {
                 log.error("failed to get occurrences at URL: " + url)
                 log.error(e.message)
             }
+        }
+    }
+
+    def fetchExtraInfo(def uuid, def occurrence) {
+        try {
+            def url = grailsApplication.config.getProperty('biocacheService.baseURL') + '/occurrences/' + uuid
+            def record = JSON.parse(new URL(url).text)
+            occurrence['firstLoaded'] = record.raw?.firstLoaded
+            //Do not join, let CSV generate handle it
+            occurrence['cl'] = record.processed?.cl?.collect { "${it.key}:${it.value}" }
+
+        } catch (Exception e) {
+            log.error("failed to get extra info for uuid: " + uuid)
+            log.error(e.message)
         }
     }
 
@@ -299,30 +317,4 @@ class BiosecurityService {
         fq
     }
 
-    def listAuditCSV() {
-        def BASE_DIRECTORY = grailsApplication.config.biosecurity.csv.local.directory
-        if (grailsApplication.config.biosecurity.csv.local.enabled) {
-            def dir = new File(BASE_DIRECTORY)
-            if (!dir.exists() || !dir.isDirectory()) {
-                return [status: 1, message: "Directory not found"]
-            }
-
-            def foldersAndFiles = listFilesRecursively(dir)
-            return [status:0, foldersAndFiles: foldersAndFiles]
-        } else {
-            return [status: 1,  message: "We does support download CSV from S3 here"]
-        }
-    }
-
-    private List<Map> listFilesRecursively(File dir) {
-        def BASE_DIRECTORY = grailsApplication.config.biosecurity.csv.local.directory
-        def rootDir = new File(BASE_DIRECTORY)
-        def foldersAndFiles = rootDir.listFiles().findAll { it.isDirectory() }.collect { folder ->
-            [
-                    name: folder.name,
-                    files: folder.listFiles().findAll { it.isFile() }.collect { file -> file.name }
-            ]
-        }
-        return foldersAndFiles
-    }
 }

@@ -283,12 +283,17 @@
                 source: function(query, process) {
                     // Fetch options from another URL based on the input value
                     $.ajax({
-                        url: '${request.contextPath}/ws/searchBiosecuritySubscriptions?q="' + query, // Replace with your URL
+                        url: '${request.contextPath}/ws/searchBiosecuritySubscriptions?q=' + query, // Replace with your URL
                         dataType: 'json',
                         success: function(data) {
                             process(data);
                         },
                         error: function(xhr, status, error) {
+                            if (xhr.status == 401) {
+                                alert.error('Authentication expired. Please login again.');
+                            } else {
+                                console.error('Failed to find queries. Please refresh pages and try again.');
+                            }
                             console.error('Failed to fetch options:', error);
                         }
                     });
