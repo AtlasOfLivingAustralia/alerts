@@ -770,7 +770,7 @@ class AdminController {
                 return
             }
 
-            def saveToFile = tempFile.name
+            def saveToFile = biosecurityCSVService.sanitizeFileName(qs.query?.name + "-" + (qs.lastChecked?new SimpleDateFormat("yyyy-MM-dd").format(qs.lastChecked):"") + ".csv")
             response.contentType = 'application/octet-stream'
             response.setHeader('Content-Disposition', "attachment; filename=\"${saveToFile}\"")
             response.outputStream << tempFile.bytes
