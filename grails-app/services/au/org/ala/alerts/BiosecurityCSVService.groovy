@@ -56,7 +56,7 @@ class BiosecurityCSVService {
     File createTempCSV(QueryResult qs) {
         def records = diffService.getNewRecords(qs)
 
-        String outputFile = sanitizeFileName("${new SimpleDateFormat("yyyy-MM-dd").format(qs.lastChecked)}.csv")
+        String outputFile = sanitizeFileName("${new SimpleDateFormat("yyyy-MM-dd").format(qs.lastChecked)}")
 
         def tempFilePath = Files.createTempFile(outputFile, ".csv")
         def tempFile = tempFilePath.toFile()
@@ -130,12 +130,13 @@ class BiosecurityCSVService {
                             //read from cl (context layer)
                             def cls = record["cl"]
                             //LGA2023
-                            def layerId="LGA2023"
+                            def layerId= grailsApplication.config.biosecurity.csv.lga ?:"LGA2023"
                             if(cls) {
-                                value = cls.find {
+                                String matched = cls.find {
                                     def (k, v) = it.split(':') // Split the string into key and value
                                     k.toLowerCase() == layerId.toLowerCase()
-                                }?.split(':')[1]
+                                }
+                                value = matched?.split(':')?.with { it.size() > 1 ? it[1] : "" }
                             }
                         }
                     }
@@ -190,7 +191,7 @@ class BiosecurityCSVService {
         Files.move(source.toPath(), destination.toPath(), StandardCopyOption.REPLACE_EXISTING)
     }
 
-    private String sanitizeFileName(String fileName) {
+    String sanitizeFileName(String fileName) {
         // Define a pattern for illegal characters
         def pattern = /[^a-zA-Z0-9\.\-\_]/
         return fileName.replaceAll(pattern, '_')

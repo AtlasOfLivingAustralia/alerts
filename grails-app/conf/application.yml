@@ -191,6 +191,9 @@ biosecurity:
         s3:
             enabled: false
             bucket: alerts
+        # read lga from the layer
+        lga: LGA2023
+
     legacy:
         aus: cl927:*
         act: cl927:"Australian Capital Territory" OR cl927:"Jervis Bay Territory"
