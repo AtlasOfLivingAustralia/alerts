@@ -28,7 +28,7 @@
                 var folderName = $(this).data('folder');
                 $('#files-' + folderName).toggle();
 
-                var icon = $(this).find('i.fa');
+                var icon = $(this).find('i.fa.folder');
                 icon.toggleClass('fa-folder fa-folder-open-o');
             });
         });
@@ -38,7 +38,7 @@
     <g:if test="${status == 0}">
         <g:each in="${foldersAndFiles}" var="folder">
             <div class="folder" data-folder="${folder.name}">
-                <i class="fa fa-folder folder-icon" aria-hidden="true"></i> ${folder.name}
+                <i class="fa fa-folder folder-icon folder" aria-hidden="true"></i> ${folder.name}  <a href="${createLink(controller: 'admin', action: 'aggregateBiosecurityAuditCSV', params: [folderName:folder.name])}"><i class="fa fa-cloud-download" aria-hidden="true"></i></a>
             </div>
             <div class="file-list" id="files-${folder.name}">
                 <g:each in="${folder.files}" var="file">

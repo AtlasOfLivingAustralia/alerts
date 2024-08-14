@@ -723,11 +723,29 @@ class AdminController {
     }
 
     @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true,redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to view that page.")
+    def aggregateBiosecurityAuditCSV(String folderName) {
+        def BASE_DIRECTORY = grailsApplication.config.biosecurity.csv.local.directory
+        def folder = new File(BASE_DIRECTORY, folderName)
+        if (!folder.exists() || !folder.isDirectory()) {
+            render(status: 404, text: "Data not found")
+            return
+        }
+
+        // Get a list of all CSV files in the folder
+        String mergedCSVFile = biosecurityCSVService.aggregateCSVFiles(folderName)
+
+        def saveToFile = folderName +".csv"
+        response.contentType = 'application/octet-stream'
+        response.setHeader('Content-Disposition', "attachment; filename=\"${saveToFile}\"")
+        response.outputStream << new File(mergedCSVFile).bytes
+    }
+
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true,redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to view that page.")
     def downloadBiosecurityAuditCSV(String filename) {
         def BASE_DIRECTORY = grailsApplication.config.biosecurity.csv.local.directory
         def file = new File(BASE_DIRECTORY, filename)
         if (!file.exists() || file.isDirectory()) {
-            render(status: 404, text: "File not found")
+            render(status: 404, text: "Data not found")
             return
         }
 
