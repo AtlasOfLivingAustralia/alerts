@@ -31,6 +31,7 @@ class UrlMappings {
         "/admin/deleteQuery"(controller: 'admin', action: 'deleteQuery')
         "/biosecurity/csv"(controller: 'admin', action: 'listBiosecurityAuditCSV')
         "/biosecurity/csv/download"(controller: 'admin', action: 'downloadBiosecurityAuditCSV')
+        "/biosecurity/csv/aggregate"(controller: 'admin', action: 'aggregateBiosecurityAuditCSV')
 
 
         "/ws/alerts/user/$userId"(controller: 'webservice', action: 'getUserAlerts')

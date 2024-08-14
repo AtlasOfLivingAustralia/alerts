@@ -146,7 +146,39 @@ class BiosecurityCSVService {
         tempFile
     }
 
-    void moveToDestination(File source, File destination) {
+    /**
+     *
+     * @param folderName Assure folder exists
+     * @return
+     */
+    String aggregateCSVFiles(String folderName) {
+        def BASE_DIRECTORY = grailsApplication.config.biosecurity.csv.local.directory
+        def folder = new File(BASE_DIRECTORY, folderName)
+        Collection<File> csvFiles = folder.listFiles().findAll { it.isFile() && it.name.endsWith('.csv') }
+
+        log.info("Aggregate CSV files into one file")
+        def tempFilePath = Files.createTempFile("merged_", ".csv")
+        def tempFile = tempFilePath.toFile()
+        tempFile.withWriter { writer ->
+            try {
+                csvFiles.eachWithIndex {  csvFile, index ->
+                    csvFile.withReader('UTF-8') { reader ->
+                        reader.eachLine { line, lineNumber ->
+                            if (index == 0 || lineNumber > 1) { // Write header from the first file and skip headers from the rest
+                                writer.writeLine(line)
+                            }
+                        }
+                    }
+                }
+            }catch (Exception e) {
+                log.error("Error in generating CSV file: ${e.message}")
+            }
+        }
+
+        return tempFile.absolutePath
+    }
+
+    private void moveToDestination(File source, File destination) {
         File destDir = new File(destination.parent)
         if (!destDir.exists()) {
             destDir.mkdirs()
@@ -155,7 +187,7 @@ class BiosecurityCSVService {
         Files.move(source.toPath(), destination.toPath(), StandardCopyOption.REPLACE_EXISTING)
     }
 
-    def sanitizeFileName(String fileName) {
+    private String sanitizeFileName(String fileName) {
         // Define a pattern for illegal characters
         def pattern = /[^a-zA-Z0-9\.\-\_]/
         return fileName.replaceAll(pattern, '_')
