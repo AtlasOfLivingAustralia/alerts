@@ -127,12 +127,15 @@ class BiosecurityCSVService {
                     } else {
                         //special cases
                         if(field == "lga") {
-                            if (record.containsKey("locality") && record.containsKey("stateProvince")) {
-                                value = record["location"]+";"+record["stateProvince"]
-                            } else if (record.containsKey("locality")) {
-                                value = record["locality"]
-                            } else if (record.containsKey("stateProvince")) {
-                                value = record["stateProvince"]
+                            //read from cl (context layer)
+                            def cls = record["cl"]
+                            //LGA2023
+                            def layerId="LGA2023"
+                            if(cls) {
+                                value = cls.find {
+                                    def (k, v) = it.split(':') // Split the string into key and value
+                                    k.toLowerCase() == layerId.toLowerCase()
+                                }?.split(':')[1]
                             }
                         }
                     }
