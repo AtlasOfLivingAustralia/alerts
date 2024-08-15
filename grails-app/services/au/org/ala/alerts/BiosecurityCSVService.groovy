@@ -142,7 +142,8 @@ class BiosecurityCSVService {
                                     def (k, v) = it.split(':') // Split the string into key and value
                                     k.toLowerCase() == layerId.toLowerCase()
                                 }
-                                value = matched?.split(':')?.with { it.size() > 1 ? it[1] : "" }
+                                //assure return "" if matched is null
+                                value = matched?.split(':')?.with { it.size() > 1 ? it[1] : "" } ?: ""
                             }
                         }
                     }
