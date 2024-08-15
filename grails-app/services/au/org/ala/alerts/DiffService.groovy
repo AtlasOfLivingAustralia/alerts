@@ -14,11 +14,11 @@
 package au.org.ala.alerts
 
 import com.jayway.jsonpath.JsonPath
-
 import java.util.zip.GZIPInputStream
-import grails.gorm.transactions.NotTransactional
 
-
+/**
+ * Service to compare JSON results stored in QueryResult
+ */
 class DiffService {
     def queryService
 

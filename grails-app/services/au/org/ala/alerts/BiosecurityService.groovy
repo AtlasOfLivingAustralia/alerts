@@ -1,3 +1,17 @@
+/*
+ *   Copyright (c) 2024.  Atlas of Living Australia
+ *   All Rights Reserved.
+ *   The contents of this file are subject to the Mozilla Public
+ *   License Version 1.1 (the "License"); you may not use this file
+ *   except in compliance with the License. You may obtain a copy of
+ *   the License at http://www.mozilla.org/MPL/
+ *   Software distributed under the License is distributed on an "AS
+ *   IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ *   implied. See the License for the specific language governing
+ *   rights and limitations under the License.
+ *
+ */
+
 package au.org.ala.alerts;
 
 import com.jayway.jsonpath.JsonPath
@@ -6,6 +20,9 @@ import org.apache.commons.lang.time.DateUtils
 import org.apache.http.entity.ContentType
 import java.text.SimpleDateFormat
 
+/**
+ * Process Biosecurity alerts
+ */
 class BiosecurityService {
     def notificationService
     def queryService
@@ -196,14 +213,6 @@ class BiosecurityService {
         def todayNDaysAgo = DateUtils.addDays(since, -1 * grailsApplication.config.getProperty("biosecurity.legacy.eventDateAge", Integer, 150))
         def firstLoadedDate = '&fq=' + URLEncoder.encode('firstLoadedDate:[' + utcFrom + ' TO ' + utcTo + ' ]', 'UTF-8')
         def dateRange = '&fq=' + URLEncoder.encode('eventDate:[' + sdf.format(todayNDaysAgo) + ' TO ' + utcTo + ' ]', 'UTF-8')
-
-        // legacy date range filter
-//        SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-dd")
-//        def today = date // 2023-10-14
-//        def todayMinus8 = DateUtils.addDays(today, -1 * grailsApplication.config.getProperty("biosecurity.legacy.firstLoadedDateAge", Integer, 8)) // 2023-10-06
-//        def todayNDaysAgo = DateUtils.addDays(today, -1 * grailsApplication.config.getProperty("biosecurity.legacy.eventDateAge", Integer, 29)) // 2023-9-15
-//        def firstLoadedDate = '&fq=' + URLEncoder.encode('firstLoadedDate:[' + sdf.format(todayMinus8) + 'T00:00:00Z TO ' + sdf.format(today) + 'T00:00:00Z]', 'UTF-8')
-//        def dateRange = '&fq=' + URLEncoder.encode('eventDate:[' + sdf.format(todayNDaysAgo) + 'T00:00:00Z TO ' + sdf.format(today) + 'T00:00:00Z]', 'UTF-8')
 
         //Build fq for anything in fq of KVP
         def fq = buildFq(listItem)

@@ -10,8 +10,6 @@
     .folder {
         cursor: pointer;
         margin: 10px 0;
-        /*font-weight: bold;*/
-
     }
 
     .folder-icon {
@@ -38,7 +36,10 @@
     <g:if test="${status == 0}">
         <g:each in="${foldersAndFiles}" var="folder">
             <div class="folder" data-folder="${folder.name}">
-                <i class="fa fa-folder folder-icon folder" aria-hidden="true"></i> ${folder.name}  <a href="${createLink(controller: 'admin', action: 'aggregateBiosecurityAuditCSV', params: [folderName:folder.name])}"><i class="fa fa-cloud-download" aria-hidden="true"></i></a>
+                <i class="fa fa-folder folder-icon folder" aria-hidden="true"></i> ${folder.name}
+                <a href="${createLink(controller: 'admin', action: 'aggregateBiosecurityAuditCSV', params: [folderName:folder.name])}">
+                    <i class="fa fa-cloud-download" aria-hidden="true" title="Download as one CSV file for the date."></i>
+                </a>
             </div>
             <div class="file-list" id="files-${folder.name}">
                 <g:each in="${folder.files}" var="file">

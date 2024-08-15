@@ -6,38 +6,13 @@ import org.grails.web.json.JSONArray
 import java.text.SimpleDateFormat
 
 class EmailService {
-
-    //static transactional = true
-
     def notificationService
-    def diffService
     def queryService
     def grailsApplication
     def messageSource
     def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
     // this is the date format of 'created' in user assertions
     def dateformat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-    /**
-     * relocated to  NotifiationService
-     *
-     * Returns a list of records
-     * @param query
-     * @param queryResult
-     * @return
-     */
-//    def retrieveRecordForQuery(query, queryResult) {
-//        if  (query.recordJsonPath) {
-//            // return all of the new records if query is configured to fire on a non-zero value OR if previous value does not exist.
-//            if (queryService.firesWhenNotZero(query) || queryResult.previousResult ==  null) {
-//                diffService.getNewRecords(queryResult)
-//            // return diff of new and old records for all other cases
-//            } else {
-//                diffService.getNewRecordsFromDiff(queryResult)
-//            }
-//        } else {
-//            []
-//        }
-//    }
 
     /**
      * Todo check if it is only for testing purpose

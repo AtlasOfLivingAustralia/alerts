@@ -17,8 +17,6 @@
             $('.toggle-more-query-details').click(function () {
                 var target = $(this).data('target');
                 $(target).collapse('toggle');
-                //var isExpanded = $(target).hasClass('show');
-                //$(this).text(isExpanded ? $(this).text().replace('Show Less', 'Show More') : $(this).text().replace('Show More', 'Show Less'));
             });
         });
     </script>
