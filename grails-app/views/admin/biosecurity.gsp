@@ -69,7 +69,6 @@
                                 let logs = data.logs
                                 popup.removeAttr('hidden');
                                 popup.attr('data-content', "<li>" + logs.map(item => item).join('</li><li>') + '</li>');
-                                //popup.before("Last checked on ")
                                 popup.html( formatToLocaleDate(localDateTo) + "<i class='fa fa-check' aria-hidden='true' style='color: red;padding-left: 15px;'></i>")
                                 initializePopoverAgain();
                                 //Hide possible info

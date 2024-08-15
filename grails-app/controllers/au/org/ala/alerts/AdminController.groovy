@@ -146,7 +146,6 @@ class AdminController {
         null
     }
 
-    @Transactional
     def debugAlertsForUser() {
         User user = User.findByUserId(params.userId)
         if (user) {
@@ -160,7 +159,6 @@ class AdminController {
         }
     }
 
-    @Transactional
     def debugAllAlerts() {
         response.setContentType("text/plain")
         notificationService.checkAllQueries(response.getWriter())
@@ -313,7 +311,6 @@ class AdminController {
      * @return
      */
     @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
-    @Transactional
     def subscribeBioSecurity() {
         if ((!params.listid || params.listid.allWhitespace) && !params.queryid) {
             flash.message = messageSource.getMessage("biosecurity.view.error.emptyspeciesid", null, "Species list uid can't be empty.", siteLocale)
@@ -412,8 +409,11 @@ class AdminController {
                 ])
     }
 
-
-    @Transactional
+    /**
+     * It is a preview page for Blog alert
+     * DO NOT update database in this function
+     * @return
+     */
     def previewBlogAlerts() {
         String urlPrefix = "${grailsApplication.config.security.cas.appServerName}${grailsApplication.config.getProperty('security.cas.contextPath', '')}"
         Query query = Query.findByName(messageSource.getMessage("query.ala.blog.title", null,
@@ -519,7 +519,6 @@ class AdminController {
     }
 
     /**
-     * todo - check if it is not used
      * @return
      */
     @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
@@ -529,7 +528,6 @@ class AdminController {
     }
 
     /**
-     * todo - redirect to which page?
       * @return
      */
 

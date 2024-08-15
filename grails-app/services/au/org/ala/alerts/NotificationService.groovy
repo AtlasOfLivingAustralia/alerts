@@ -2,7 +2,6 @@ package au.org.ala.alerts
 
 import com.jayway.jsonpath.JsonPath
 import grails.gorm.transactions.NotTransactional
-import org.apache.http.entity.ContentType
 import grails.converters.JSON
 import org.apache.commons.io.IOUtils
 import org.apache.commons.lang.time.DateUtils
@@ -18,16 +17,13 @@ import org.hibernate.FlushMode
 
 class NotificationService {
 
-    //static transactional = true
     int PAGING_MAX = 1000
-
     def sessionFactory
     def emailService
     def diffService
     def queryService
     def grailsApplication
     def dateFormatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
-    def biosecurityService
 
     @Transactional
     QueryResult getQueryResult(Query query, Frequency frequency) {
@@ -84,14 +80,7 @@ class NotificationService {
 
             if (!urlString.contains("___MAX___")) {
                 // queries without paging
-                if (queryService.isBioSecurityQuery(query)) {
-                    //biosecurity query is handled elsewhere
-                    //todo: check to make sure it is never called.
-                    Date since = qr.lastChecked ?: DateUtils.addDays(new Date(), -1 * grailsApplication.config.getProperty("biosecurity.legacy.firstLoadedDateAge", Integer, 7))
-                    Date to = new Date()
-                    processedJson = biosecurityService.processQueryBiosecurity(query, since, to)
-                } else {
-                    // standard query
+                if (!queryService.isBioSecurityQuery(query)) {
                     processedJson = processQueryReturnedJson(query, IOUtils.toString(new URL(urlString).newReader()))
                 }
             } else {
@@ -167,8 +156,7 @@ class NotificationService {
                 session.evict(qr)
             }
         }
-        // No futher update to this queryResult anymore.
-        //Create a clone copy, avoiding be persistent
+
         return qr
     }
 
@@ -275,6 +263,7 @@ class NotificationService {
 
     /**
      * if runLastCheck is true, the date range will start from the previous check data to the last check date
+     *
      * @param query
      * @param frequency
      * @param runLastCheck
@@ -336,12 +325,10 @@ class NotificationService {
 
         //if there is a fireWhenNotZero or fireWhenChange ignore  idJsonPath
         log.debug("[QUERY " + queryResult.query.id + "] Checking query: " + queryResult.query.name)
-        /**
-         * PropertyValues in a Biocache Query 'usually' has two properties: totalRecords and last_loaded_records (uuid)
-         * Both have the possible null value
-         *
-         * The following check is determined by the last propertyValue, since it overwrites the previous one
-         */
+
+         // PropertyValues in a Biocache Query 'usually' has two properties: totalRecords and last_loaded_records (uuid)
+         //Both have the possible null value
+         //The following check is determined by the last propertyValue, since it overwrites the previous one
 
         queryResult.propertyValues.each { pv ->
             log.debug("[QUERY " + queryResult.query.id + "] " +
@@ -591,6 +578,9 @@ class NotificationService {
         pv
     }
 
+    /**
+     * We are now using the original query code for testing, instead of using a duplicated version.
+     */
     @Deprecated
     def checkQueryById(queryId, freqStr) {
 
@@ -611,7 +601,9 @@ class NotificationService {
         qcr
     }
 
-    // used in debug all alerts
+    /**
+     * We are now using the original query code for testing, instead of using a duplicated version.
+     */
     @Deprecated
     def checkAllQueries(PrintWriter writer) {
         //iterate through all queries
@@ -687,6 +679,9 @@ class NotificationService {
     }
 
     @Deprecated
+    /**
+     * We are now using the original query code for testing, instead of using a duplicated version.
+     */
     def debugQueriesForUser(User user, PrintWriter writer) {
         log.debug("Checking queries for user: " + user)
         def checkedCount = 0

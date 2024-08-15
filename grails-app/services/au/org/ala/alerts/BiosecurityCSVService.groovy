@@ -1,11 +1,26 @@
+/*
+ *   Copyright (c) 2024.  Atlas of Living Australia
+ *   All Rights Reserved.
+ *   The contents of this file are subject to the Mozilla Public
+ *   License Version 1.1 (the "License"); you may not use this file
+ *   except in compliance with the License. You may obtain a copy of
+ *   the License at http://www.mozilla.org/MPL/
+ *   Software distributed under the License is distributed on an "AS
+ *   IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ *   implied. See the License for the specific language governing
+ *   rights and limitations under the License.
+ *
+ */
 package au.org.ala.alerts
-
-import groovy.json.JsonOutput
 
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import java.text.SimpleDateFormat
 
+/**
+ * Provide CSV related functionalities  for Biosecurity
+
+ */
 class BiosecurityCSVService {
     def diffService
     def grailsApplication
@@ -50,8 +65,8 @@ class BiosecurityCSVService {
 
     /**
      * Main logic to create a temp CSV file from query result
-     * @param qs
-     * @return
+     * @param QueryResult
+     * @return File object
      */
     File createTempCSV(QueryResult qs) {
         def records = diffService.getNewRecords(qs)
@@ -67,20 +82,11 @@ class BiosecurityCSVService {
                 "license,mimetype,width,height," +
                 "image_url:smallImageUrl," + // TBC , multiple image urls
                 "date_sent:dateSent,"+
-                "cl" // TBC
+                "cl"
                 //"fq, kvs"
         if (grailsApplication.config.biosecurity.csv.headers) {
             rawHeader = grailsApplication.config.biosecurity.csv.headers
         }
-        // Not available in biocache_ws.ala.org.au/occurrences/search, but in https://biocache-ws.ala.org.au/ws/occurrences/#id
-        // occurrenceStatus:  processed -> occurrenceStatus
-        // clxxxx:            processed -> cl -> clxxxx
-        // lga:               location -> verbatimLocality
-        // firstLoadedDate    firstLoaded
-
-
-        // state ?== stateProvince
-        // ? cs_state
 
         def headers = []
         def fields = []
@@ -153,7 +159,7 @@ class BiosecurityCSVService {
     /**
      *
      * @param folderName Assure folder exists
-     * @return
+     * @return absolute path of the aggregated CSV file
      */
     String aggregateCSVFiles(String folderName) {
         def BASE_DIRECTORY = grailsApplication.config.biosecurity.csv.local.directory
@@ -174,7 +180,7 @@ class BiosecurityCSVService {
                         }
                     }
                 }
-            }catch (Exception e) {
+            } catch (Exception e) {
                 log.error("Error in generating CSV file: ${e.message}")
             }
         }
@@ -182,6 +188,11 @@ class BiosecurityCSVService {
         return tempFile.absolutePath
     }
 
+    /**
+     * Move file from source to destination
+     * @param source
+     * @param destination
+     */
     private void moveToDestination(File source, File destination) {
         File destDir = new File(destination.parent)
         if (!destDir.exists()) {
@@ -191,12 +202,22 @@ class BiosecurityCSVService {
         Files.move(source.toPath(), destination.toPath(), StandardCopyOption.REPLACE_EXISTING)
     }
 
+    /**
+     * Sanitize file name
+     * @param fileName
+     * @return sanitized file name
+     */
     String sanitizeFileName(String fileName) {
         // Define a pattern for illegal characters
         def pattern = /[^a-zA-Z0-9\.\-\_]/
         return fileName.replaceAll(pattern, '_')
     }
 
+    /**
+     * List all files in the directory recursively
+     * @param dir
+     * @return Key value pair of folder and files
+     * */
     private List<Map> listFilesRecursively(File dir) {
         def BASE_DIRECTORY = grailsApplication.config.biosecurity.csv.local.directory
         def rootDir = new File(BASE_DIRECTORY)

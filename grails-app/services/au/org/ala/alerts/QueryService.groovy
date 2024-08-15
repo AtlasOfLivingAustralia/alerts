@@ -426,24 +426,6 @@ class QueryService {
         return subscription
     }
 
-    /**
-     *  Todo review, no need
-     **/
-//    def getQueryLogs(query, String frequency= null) {
-//        def logs = []
-//        if (frequency) {
-//           query.queryResults?.each { qr ->
-//                if (qr.frequency.isFrequency(frequency)) {
-//                    logs = logs + qr.retrieveLogs()
-//                }
-//            }
-//        } else {
-//            query.queryResults?.each { qr ->
-//                  logs = logs + qr.retrieveLogs()
-//            }
-//        }
-//        return logs
-//    }
 
     // get all subscribers to the specified query
     def getSubscribers(Long queryId) {

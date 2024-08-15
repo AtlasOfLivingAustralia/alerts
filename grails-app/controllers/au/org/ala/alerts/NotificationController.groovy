@@ -1,8 +1,6 @@
 package au.org.ala.alerts
 
 import grails.converters.JSON
-import grails.gorm.transactions.NotTransactional
-import grails.gorm.transactions.Transactional
 import io.micronaut.http.HttpStatus
 
 class NotificationController {
