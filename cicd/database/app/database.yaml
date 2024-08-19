@@ -230,13 +230,13 @@ Resources:
   ErrorLogGroup:
     Type: AWS::Logs::LogGroup
     Properties: 
-      LogGroupName: !Sub /aws/rds/cluster/${pDbInstanceName}-cluster/error
+      LogGroupName: !Sub aws/rds/cluster/${pDbInstanceName}-cluster/error
       RetentionInDays: 30
 
   SlowQueryLogGroup:
     Type: AWS::Logs::LogGroup
     Properties: 
-      LogGroupName: !Sub /aws/rds/cluster/${pDbInstanceName}-cluster/slowquery
+      LogGroupName: !Sub aws/rds/cluster/${pDbInstanceName}-cluster/slowquery
       RetentionInDays: 30
 
 
