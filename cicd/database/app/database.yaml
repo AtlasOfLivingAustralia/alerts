@@ -72,6 +72,9 @@ Conditions:
   IsDev: !Equals
             - !Ref pEnvironment
             - development
+  IsProd: !Equals
+            - !Ref pEnvironment
+            - production
   RestoreFromSnapshot: !Not
                           - !Equals
                               - !Ref pRdsSnapshotRestore
@@ -134,8 +137,11 @@ Resources:
 
   DbCluster:
     Type: "AWS::RDS::DBCluster"
-    UpdateReplacePolicy: Snapshot
-    DeletionPolicy: Snapshot
+    UpdateReplacePolicy: !If [ IsProd, "Snapshot", "Delete" ]
+    DeletionPolicy: !If [ IsProd, "Snapshot", "Delete" ]
+    DependsOn:
+         - SlowQueryLogGroup
+         - ErrorLogGroup
     Properties:
       BacktrackWindow: !Ref pBacktrackWindow
       BackupRetentionPeriod: !Ref pBackupRetention
@@ -231,7 +237,6 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties: 
       LogGroupName: !Sub /aws/rds/cluster/${pDbInstanceName}-cluster/error
-      
       RetentionInDays: 30
 
   SlowQueryLogGroup:
