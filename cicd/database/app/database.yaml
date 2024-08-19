@@ -60,6 +60,7 @@ Parameters:
   pRdsSnapshotRestore:
     Description: The snapshot to restore from
     Type: String
+    Default: false
   pVpcStackName:
     Description: The name of the Bedrock VPC stack
     Type: String
