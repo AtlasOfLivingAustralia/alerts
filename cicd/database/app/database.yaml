@@ -57,6 +57,10 @@ Parameters:
     AllowedValues:
       - true
       - false
+  pRdsSnapshotRestore:
+    Description: The snapshot to restore from
+    Type: String
+    Default: false
   pVpcStackName:
     Description: The name of the Bedrock VPC stack
     Type: String
@@ -68,6 +72,13 @@ Conditions:
   IsDev: !Equals
             - !Ref pEnvironment
             - development
+  IsProd: !Equals
+            - !Ref pEnvironment
+            - production
+  RestoreFromSnapshot: !Not
+                          - !Equals
+                              - !Ref pRdsSnapshotRestore
+                              - false
 
 Resources:
 
@@ -126,11 +137,15 @@ Resources:
 
   DbCluster:
     Type: "AWS::RDS::DBCluster"
-    UpdateReplacePolicy: Snapshot
-    DeletionPolicy: Snapshot
+    UpdateReplacePolicy: !If [ IsProd, "Snapshot", "Delete" ]
+    DeletionPolicy: !If [ IsProd, "Snapshot", "Delete" ]
+    DependsOn:
+         - SlowQueryLogGroup
+         - ErrorLogGroup
     Properties:
       BacktrackWindow: !Ref pBacktrackWindow
       BackupRetentionPeriod: !Ref pBackupRetention
+      CopyTagsToSnapshot: true
       DatabaseName: !Sub ${pProductName}${pEnvironment}
       DBClusterIdentifier: !Sub ${pDbInstanceName}-cluster
       DBClusterParameterGroupName: !Ref ClusterParamGrp
@@ -149,7 +164,7 @@ Resources:
       Port: 3306
       PreferredBackupWindow: 16:00-17:00
       PreferredMaintenanceWindow: tue:17:00-tue:19:00
-      #SnapshotIdentifier: !Ref RdsSnapshot
+      SnapshotIdentifier: !If [ RestoreFromSnapshot, !Ref pRdsSnapshotRestore, !Ref "AWS::NoValue" ]
       Tags:
         - Key: Name
           Value: Alerts DB Cluster
