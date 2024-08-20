@@ -150,4 +150,6 @@ aws cloudformation deploy \
         pProductComponent=$PRODUCT_COMPONENT \
         pProductName=$PRODUCT_NAME \
         pRestartExecutionOnUpdate=$RESTART_PIPELINE_ON_UPDATE \
+        pAlertsConfigFile=$ALERTS_CONFIG_FILE \
+        pAlertsConfigTemplate=$ALERTS_CONFIG_TEMPLATE \
 

@@ -226,7 +226,9 @@ Resources:
                   { "name":"CLEAN_BRANCH", "value":"${pCleanBranch}" },
                   { "name":"DB_READ_ENDPOINT", "value":"#{ExportConfigNS.DB_READ_ENDPOINT}" },
                   { "name":"DB_WRITE_ENDPOINT", "value":"#{ExportConfigNS.DB_WRITE_ENDPOINT}" },
-                  { "name":"EKS_CLUSTER_NAME", "value":"${pEksClusterName}" }
+                  { "name":"EKS_CLUSTER_NAME", "value":"${pEksClusterName}" },
+                  { "name":"ALERTS_CONFIG_FILE", "value":"#{ExportConfigNS.ALERTS_CONFIG_FILE}" },
+                  { "name":"ALERTS_CONFIG_TEMPLATE", "value":"#{ExportConfigNS.ALERTS_CONFIG_TEMPLATE}" },
                 ]
             InputArtifacts:
               - Name: 'SourceArtifact'
