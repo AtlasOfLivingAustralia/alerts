@@ -397,13 +397,13 @@
                 </div>
                 <p></p>
                 <div class="row" style="text-align: right">
-                    <div class="col-sm-10" >CSV files generated for each Biosecurity Alert [Experimental purpose]</div>
+                    <div class="col-sm-10" >Download CSV list of all occurrences from all biosecurity alerts sent (scheduled and manual)</div>
                     <div class="col-sm-2" >
-                        <a class="btn btn-info" href="${createLink(controller: 'admin', action: 'listBiosecurityAuditCSV')}" target="_blank">CSV Auditing</a>
+                        <a class="btn btn-info" href="${createLink(controller: 'admin', action: 'listBiosecurityAuditCSV')}" target="_blank">Reporting</a>
                     </div>
                 </div>
                 <p></p>
-                <div>
+%{--                <div>
                 <g:if test="${queries}">
                     <form target="_blank" action="${request.contextPath}/admin/csvAllBiosecurity" method="post">
                         <div class="row" style="text-align: right">
@@ -416,7 +416,7 @@
                         </div>
                     </form>
                 </g:if>
-                </div>
+                </div>--}%
 
             </div>
         </div>

@@ -106,7 +106,7 @@ class EmailService {
         int totalRecords = records.size()
         int maxRecords = grailsApplication.config.getProperty("biosecurity.query.maxRecords", Integer, 500)
 
-        if (queryResult.hasChanged || Environment.current == Environment.DEVELOPMENT || Environment.current == Environment.TEST) {
+        if (queryResult.hasChanged || Environment.current == Environment.DEVELOPMENT ) {
             if (grailsApplication.config.getProperty("mail.enabled", Boolean, false)) {
                 def emails = recipients.collect { it.email }
                 log.info "Sending emails for ${query.name} to ${emails.size() <= 2 ? emails.join('; ') : emails.take(2).join('; ') + ' and ' + emails.size() + ' other users.'}"

@@ -731,7 +731,9 @@ class AdminController {
 
         // Get a list of all CSV files in the folder
         String mergedCSVFile = biosecurityCSVService.aggregateCSVFiles(folderName)
-
+        if (folderName == "/" || folderName.isEmpty()) {
+            folderName = "biosecurity_alerts"
+        }
         def saveToFile = folderName +".csv"
         response.contentType = 'application/octet-stream'
         response.setHeader('Content-Disposition', "attachment; filename=\"${saveToFile}\"")
