@@ -113,8 +113,8 @@ class BiosecurityCSVService {
                         case "lga":
                             //read from cl (context layer)
                             def cls = record["cl"]
-                            //LGA2023
-                            def layerId= grailsApplication.config.biosecurity.csv.lga ?:"LGA2023"
+                            //LGA2023 is the default layer id
+                            def layerId =  grailsApplication.config.getProperty('biosecurity.csv.lga', 'LGA2023')
                             if(cls) {
                                 String matched = cls.find {
                                     def (k, v) = it.split(':') // Split the string into key and value

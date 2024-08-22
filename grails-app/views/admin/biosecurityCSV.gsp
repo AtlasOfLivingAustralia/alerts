@@ -53,7 +53,7 @@
 <body>
     <div>
         <h2>All Biosecurity Alerts Data</h2>
-        Download a comprehensive CSV file detailing all occurrence records from every biosecurity alert sent. This includes both scheduled and manual sends.
+        Download a comprehensive CSV file detailing all occurrence records from every biosecurity alert sent. This includes both scheduled and manually triggered emails
         <br/>
         <a class="btn btn-primary " href="${createLink(controller: 'admin', action: 'aggregateBiosecurityAuditCSV', params: [folderName:'/'])}">
         <i class="fa fa-cloud-download" aria-hidden="true" ></i>  Download Full CSV Report

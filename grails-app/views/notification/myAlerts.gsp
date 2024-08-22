@@ -21,10 +21,13 @@
                       <h1><g:message code="my.alerts.h1" args="[userPrefix]" /></h1>
                   </div>
                   <div>
-                      ${request.isUserInRole("ROLE_ADMIN") ?
-                              "<a href=${createLink(controller: 'admin', action: 'index', )} class='btn btn-primary'>Admin</a>" : "" }
-                      ${request.isUserInRole("ROLE_BIOSECURITY_ADMIN") ?
-                              "<a href=${createLink(controller: 'admin', action: 'biosecurity', )} class='btn btn-primary'>Biosecurity Admin</a>" : "" }
+                      <% if (request.isUserInRole("ROLE_ADMIN")) { %>
+                      <a href="${createLink(controller: 'admin', action: 'index')}" class="btn btn-primary">Admin</a>
+                      <% } %>
+
+                      <% if (request.isUserInRole("ROLE_BIOSECURITY_ADMIN")) { %>
+                      <a href="${createLink(controller: 'admin', action: 'biosecurity')}" class="btn btn-primary">Biosecurity Admin</a>
+                      <% } %>
                   </div>
               </div>
           </header>
