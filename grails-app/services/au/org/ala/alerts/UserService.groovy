@@ -20,7 +20,7 @@ import grails.converters.JSON
 import grails.plugin.cache.Cacheable
 import grails.util.Holders
 import grails.util.Environment
-import au.org.ala.alerts.Query
+
 
 import grails.gorm.transactions.Transactional
 
@@ -36,7 +36,6 @@ class UserService {
     def getUserAlertsConfig(User user) {
 
         log.debug('getUserAlertsConfig - Viewing my alerts :  ' + user)
-
         //enabled alerts
         def notificationInstanceList = Notification.findAllByUser(user)
 

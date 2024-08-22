@@ -30,6 +30,24 @@
                 icon.toggleClass('fa-folder fa-folder-open-o');
             });
         });
+
+        function deleteFile(filename) {
+            $.ajax({
+                url: "${createLink(controller: 'admin', action: 'deleteBiosecurityAuditCSV')}",
+                type: 'POST',
+                data: {
+                    filename: filename
+                },
+                success: function(response) {
+                    // Assuming the response is a JSON object with a message
+                    alert(response.message);
+                    location.reload();
+                },
+                error: function(xhr, status, error) {
+                    alert("Error: " + xhr.responseText);
+                }
+            });
+        }
     </script>
 </head>
 <body>
@@ -56,7 +74,12 @@
                 </div>
                 <div class="file-list" id="files-${folder.name}">
                     <g:each in="${folder.files}" var="file">
-                        <div><a href="${createLink(controller: 'admin', action: 'downloadBiosecurityAuditCSV', params: [filename:folder.name +'/' + file])}"><i class="fa fa-download" aria-hidden="true"></i>  ${file}</a></div>
+                        <div>
+                            <a href="${createLink(controller: 'admin', action: 'downloadBiosecurityAuditCSV', params: [filename:folder.name +'/' + file])}"><i class="fa fa-download" aria-hidden="true"></i>  ${file}</a>
+                            <a href="#" onclick="deleteFile('${folder.name}/${file}'); return false;">
+                                <i class="fa fa-trash-o" aria-hidden="true"></i>
+                            </a>
+                        </div>
                     </g:each>
                 </div>
             </g:each>

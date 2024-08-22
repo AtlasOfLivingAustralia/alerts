@@ -11,15 +11,22 @@
         <meta name="breadcrumbParent" content="${grailsApplication.config.userDetails.web.url}/myprofile, ${message(code:"my.alerts.breadcrumb.parent")}" />
         <g:set var="userPrefix" value="${adminUser ? user.email : message(code:"my.alerts.my") }"/>
         <title><g:message code="my.alerts.title" args="[userPrefix]" /> | ${grailsApplication.config.skin.orgNameLong}</title>
-
         <asset:stylesheet href="alerts.css"/>
     </head>
     <body>
       <div id="content">
           <header id="page-header">
-            <div class="inner row-fluid">
-              <h1><g:message code="my.alerts.h1" args="[userPrefix]" /></h1>
-            </div>
+              <div class="inner row-fluid">
+                  <div class="content">
+                      <h1><g:message code="my.alerts.h1" args="[userPrefix]" /></h1>
+                  </div>
+                  <div>
+                      ${request.isUserInRole("ROLE_ADMIN") ?
+                              "<a href=${createLink(controller: 'admin', action: 'index', )} class='btn btn-primary'>Admin</a>" : "" }
+                      ${request.isUserInRole("ROLE_BIOSECURITY_ADMIN") ?
+                              "<a href=${createLink(controller: 'admin', action: 'biosecurity', )} class='btn btn-primary'>Biosecurity Admin</a>" : "" }
+                  </div>
+              </div>
           </header>
           <g:if test="${flash.message}">
               <div class="alert alert-info">${flash.message}</div>
