@@ -731,7 +731,9 @@ class AdminController {
 
         // Get a list of all CSV files in the folder
         String mergedCSVFile = biosecurityCSVService.aggregateCSVFiles(folderName)
-
+        if (folderName == "/" || folderName.isEmpty()) {
+            folderName = "biosecurity_alerts"
+        }
         def saveToFile = folderName +".csv"
         response.contentType = 'application/octet-stream'
         response.setHeader('Content-Disposition', "attachment; filename=\"${saveToFile}\"")
@@ -775,5 +777,26 @@ class AdminController {
         } else {
             render(status: 200, text: "QueryResult not found")
         }
+    }
+
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
+    def deleteBiosecurityAuditCSV(String filename) {
+        Map message = [status : 1, message: ""]
+        def BASE_DIRECTORY = grailsApplication.config.biosecurity.csv.local.directory
+        def file = new File(BASE_DIRECTORY, filename)
+        if (!file.exists() || file.isDirectory()) {
+            message['status'] = 1
+            message['message'] = "File not found"
+        } else {
+            if (file.renameTo(new File(BASE_DIRECTORY,  filename +'_deleted'))){
+                message['status'] = 0
+                message['message'] = "The file has been temporarily deleted. You can contact the system administrator to recover it."
+            } else {
+                message['status'] = 1
+                message['message'] = "File deletion failed"
+            }
+        }
+
+        render(status: 200, contentType: 'application/json', text: message as JSON)
     }
 }

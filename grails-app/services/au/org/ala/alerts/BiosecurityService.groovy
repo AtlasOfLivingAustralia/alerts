@@ -181,6 +181,7 @@ class BiosecurityService {
                 record["dateSent"] = new SimpleDateFormat("dd/MM/yyyy").format(to)
                 record["listName"] = query.name
                 record["listId"] = drId
+                record["listLink"] = grailsApplication.config.getProperty('lists.baseURL') + "/speciesListItem/list/" + drId
                 return record
             }
 
@@ -245,6 +246,7 @@ class BiosecurityService {
                     if (listItem.kvpValues?.size()>0) {
                         //Do not join, let CSV generate handle it
                         occurrence['kvs'] = listItem.kvpValues.collect { kv -> "${kv.key}:${kv.value}" }
+                        occurrence['fq'] = listItem.kvpValues?.find { it.key == 'fq' }?.value
                     }
                     fetchExtraInfo(occurrence.uuid, occurrence)
                 }

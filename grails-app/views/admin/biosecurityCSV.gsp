@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Biosecurity Audit CSV </title>
+    <title>Biosecurity Alerts Reporting</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <meta name="layout" content="${grailsApplication.config.skin.layout}"/>
     <meta name="breadcrumb" content="BioSecurity CSV"/>
@@ -30,23 +30,60 @@
                 icon.toggleClass('fa-folder fa-folder-open-o');
             });
         });
+
+        function deleteFile(filename) {
+            $.ajax({
+                url: "${createLink(controller: 'admin', action: 'deleteBiosecurityAuditCSV')}",
+                type: 'POST',
+                data: {
+                    filename: filename
+                },
+                success: function(response) {
+                    // Assuming the response is a JSON object with a message
+                    alert(response.message);
+                    location.reload();
+                },
+                error: function(xhr, status, error) {
+                    alert("Error: " + xhr.responseText);
+                }
+            });
+        }
     </script>
 </head>
 <body>
+    <div>
+        <h2>All Biosecurity Alerts Data</h2>
+        Download a comprehensive CSV file detailing all occurrence records from every biosecurity alert sent. This includes both scheduled and manually triggered emails
+        <br/>
+        <a class="btn btn-primary " href="${createLink(controller: 'admin', action: 'aggregateBiosecurityAuditCSV', params: [folderName:'/'])}">
+        <i class="fa fa-cloud-download" aria-hidden="true" ></i>  Download Full CSV Report
+        </a>
+        <hr>
+    </div>
+
     <g:if test="${status == 0}">
-        <g:each in="${foldersAndFiles}" var="folder">
-            <div class="folder" data-folder="${folder.name}">
-                <i class="fa fa-folder folder-icon folder" aria-hidden="true"></i> ${folder.name}
-                <a href="${createLink(controller: 'admin', action: 'aggregateBiosecurityAuditCSV', params: [folderName:folder.name])}">
-                    <i class="fa fa-cloud-download" aria-hidden="true" title="Download as one CSV file for the date."></i>
-                </a>
-            </div>
-            <div class="file-list" id="files-${folder.name}">
-                <g:each in="${folder.files}" var="file">
-                    <div><a href="${createLink(controller: 'admin', action: 'downloadBiosecurityAuditCSV', params: [filename:folder.name +'/' + file])}"><i class="fa fa-download" aria-hidden="true"></i>  ${file}</a></div>
-                </g:each>
-            </div>
-        </g:each>
+        <div>
+            <h2>Individual Biosecurity Alerts Data</h2>
+            Download individual CSV files for each biosecurity alert email, detailing all occurrence records. Files are sorted by the date the alert was sent.
+            <g:each in="${foldersAndFiles}" var="folder">
+                <div class="folder" data-folder="${folder.name}">
+                    <i class="fa fa-folder folder-icon folder" aria-hidden="true"></i> ${folder.name}
+                    <a href="${createLink(controller: 'admin', action: 'aggregateBiosecurityAuditCSV', params: [folderName:folder.name])}">
+                        <i class="fa fa-cloud-download" aria-hidden="true" title="Download as one CSV file for the date."></i>
+                    </a>
+                </div>
+                <div class="file-list" id="files-${folder.name}">
+                    <g:each in="${folder.files}" var="file">
+                        <div>
+                            <a href="${createLink(controller: 'admin', action: 'downloadBiosecurityAuditCSV', params: [filename:folder.name +'/' + file])}"><i class="fa fa-download" aria-hidden="true"></i>  ${file}</a>
+                            <a href="#" onclick="deleteFile('${folder.name}/${file}'); return false;">
+                                <i class="fa fa-trash-o" aria-hidden="true"></i>
+                            </a>
+                        </div>
+                    </g:each>
+                </div>
+            </g:each>
+        </div>
     </g:if>
     <g:else>
         ${message}

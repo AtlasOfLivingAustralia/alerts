@@ -108,4 +108,10 @@ a.btn-ala {
     color: #fff; /* White text */
 }
 
+.row-fluid {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
 

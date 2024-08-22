@@ -75,14 +75,15 @@ class BiosecurityCSVService {
 
         def tempFilePath = Files.createTempFile(outputFile, ".csv")
         def tempFile = tempFilePath.toFile()
-        String rawHeader = "recordID:uuid, recordLink:occurrenceLink, scientificName,taxonConceptID,decimalLatitude,decimalLongitude,eventDate,occurrenceStatus,dataResourceName,multimedia,media_id:image," +
+        // example of rawHeader
+        // recordID:uuid  recordID is the header name, uuid is the property in the record
+        String rawHeader = "recordID:uuid, recordLink:occurrenceLink, scientificName,taxonConceptID,decimalLatitude,decimalLongitude,eventDate,occurrenceStatus,dataResourceName,multimedia,mediaId:image," +
                 "vernacularName,taxonConceptID_new,kingdom,phylum,class:classs,order,family,genus,species,subspecies," +
                 "firstLoadedDate:firstLoaded,basisOfRecord,match," +
-                "search_term,correct_name:scientificName,provided_name:providedName,common_name:vernacularName,state:stateProvince,lga,shape,list_id:listId,list_name:listName,cw_state,shape_feature,creator:collector," +
-                "license,mimetype,width,height," +
-                "image_url:smallImageUrl," + // TBC , multiple image urls
-                "date_sent:dateSent,"+
-                "cl"
+                "searchTerm:search_term,correct name:scientificName,provided name:providedName,common name:vernacularName,state:stateProvince,lga layer,lga,fq,list id:listId,list name:listName, listLink:listLink, cw_state,shape feature:shape_feature,creator:collector," +
+                "license,mimetype," +
+                "image url:smallImageUrl," + // TBC , multiple image urls
+                "date sent:dateSent"
                 //"fq, kvs"
         if (grailsApplication.config.biosecurity.csv.headers) {
             rawHeader = grailsApplication.config.biosecurity.csv.headers
@@ -92,7 +93,6 @@ class BiosecurityCSVService {
         def fields = []
         def headersAndFields = rawHeader.split(',')
         headersAndFields.each { entry ->
-
             def parts = entry.trim().split(':', 2)  // Split on ':' with a limit of 2 parts
             headers << parts[0]  // Add the part before ':' to the first array
             if (parts.size() > 1) {
@@ -107,36 +107,14 @@ class BiosecurityCSVService {
             writer.write(headers.join(",")+ "\n")
             records.each { record ->
                 def values = fields.collect { field ->
-                    def value = ""
-                    if(record.containsKey(field)) {
-                        value = record[field]
-                        //if value is a list, convert it to a string. e.g. collectors, images
-                        if (value instanceof List) {
-                            value = "\"${value.join(";")}\""  // Join the list with ';' and wrap it in double quotes
-                        } else {
-                            value = value.toString()
-                            switch (field) {
-                                case "eventDate":
-                                    if (value) {
-                                        value = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss").format(value.toLong())
-                                    }
-                                    break
-                                default:
-                                    if (value instanceof List) {
-                                        value = "\"${value.join(";")}\""  // Join the list with ';' and wrap it in double quotes
-                                    } else {
-                                        value = value.toString()
-                                    }
-                                    break
-                            }
-                        }
-                    } else {
-                        //special cases
-                        if(field == "lga") {
+                    def value = record[field]
+
+                    switch (field) {
+                        case "lga":
                             //read from cl (context layer)
                             def cls = record["cl"]
-                            //LGA2023
-                            def layerId= grailsApplication.config.biosecurity.csv.lga ?:"LGA2023"
+                            //LGA2023 is the default layer id
+                            def layerId =  grailsApplication.config.getProperty('biosecurity.csv.lga', 'LGA2023')
                             if(cls) {
                                 String matched = cls.find {
                                     def (k, v) = it.split(':') // Split the string into key and value
@@ -145,8 +123,30 @@ class BiosecurityCSVService {
                                 //assure return "" if matched is null
                                 value = matched?.split(':')?.with { it.size() > 1 ? it[1] : "" } ?: ""
                             }
-                        }
+                            break
+                        case "lga layer":
+                            value = grailsApplication.config.biosecurity.csv.lga ?:"LGA2023"
+                            break
+                        case "eventDate":
+                            if (value) {
+                                value = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss").format(value.toLong())
+                            } else {
+                                value = ""
+                            }
+                            break
+                        default:
+                            if (record.containsKey(field)) {
+                                if (value instanceof List) {
+                                    value = "\"${value.join(";")}\""  // Join the list with ';' and wrap it in double quotes
+                                } else {
+                                    value = value.toString()
+                                }
+                            } else {
+                                value = ""
+                            }
+                            break
                     }
+
                     return value
                 }
                 writer.write(values.join(","))
@@ -165,9 +165,10 @@ class BiosecurityCSVService {
     String aggregateCSVFiles(String folderName) {
         def BASE_DIRECTORY = grailsApplication.config.biosecurity.csv.local.directory
         def folder = new File(BASE_DIRECTORY, folderName)
-        Collection<File> csvFiles = folder.listFiles().findAll { it.isFile() && it.name.endsWith('.csv') }
+        Collection<File> csvFiles = []
+        collectCsvFiles(folder, csvFiles)
 
-        log.info("Aggregate CSV files into one file")
+        log.info("Aggregate ${csvFiles.size()} CSV files under ${folder} into one file")
         def tempFilePath = Files.createTempFile("merged_", ".csv")
         def tempFile = tempFilePath.toFile()
         tempFile.withWriter { writer ->
@@ -187,6 +188,21 @@ class BiosecurityCSVService {
         }
 
         return tempFile.absolutePath
+    }
+
+    /**
+     * Collect CSV files from the folder and its subfolders
+     * @param folder
+     * @param collectedFiles
+     */
+    private void collectCsvFiles(File folder, Collection<File> collectedFiles) {
+        folder.listFiles().each { file ->
+            if (file.isDirectory()) {
+                collectCsvFiles(file, collectedFiles) // Recursively collect CSV files from subfolders
+            } else if (file.isFile() && file.name.endsWith('.csv')) {
+                collectedFiles.add(file)
+            }
+        }
     }
 
     /**
@@ -219,13 +235,14 @@ class BiosecurityCSVService {
      * @param dir
      * @return Key value pair of folder and files
      * */
+
     private List<Map> listFilesRecursively(File dir) {
         def BASE_DIRECTORY = grailsApplication.config.biosecurity.csv.local.directory
         def rootDir = new File(BASE_DIRECTORY)
         def foldersAndFiles = rootDir.listFiles().findAll { it.isDirectory() }.collect { folder ->
             [
                     name: folder.name,
-                    files: folder.listFiles().findAll { it.isFile() }.collect { file -> file.name }
+                    files: folder.listFiles().findAll { it.isFile() && it.name.endsWith('.csv') }.collect { file -> file.name }
             ]
         }
         return foldersAndFiles
