@@ -6,7 +6,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <meta name="layout" content="${grailsApplication.config.skin.layout}"/>
     <meta name="breadcrumb" content="BioSecurity alerts"/>
-    <meta name="breadcrumbParent" content="${request.contextPath}/admin,Alerts admin"/>
+    <meta name="breadcrumbParent" content="${request.contextPath}/admin, Admin"/>
 
     <title>Admin - Manage BioSecurity alerts</title>
     <asset:stylesheet href="alerts.css"/>

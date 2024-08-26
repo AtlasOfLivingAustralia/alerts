@@ -312,7 +312,7 @@ environments:
             dbCreate: update
             driverClassName: com.mysql.jdbc.Driver
             url: jdbc:mysql://localhost/alerts
-            username: root
+            username: alerts_user
             password: password
     test:
         dataSource:

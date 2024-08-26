@@ -813,7 +813,7 @@ class NotificationService {
         }
     }
 
-    @Transactional
+
     def addAlertForUser(User user, Long queryId) {
         log.debug('add my alert :  ' + queryId + ' for user : ' + user)
         def notificationInstance = new Notification()
@@ -823,9 +823,11 @@ class NotificationService {
         def exists = Notification.findByQueryAndUser(notificationInstance.query, notificationInstance.user)
         if (!exists) {
             log.info("Adding alert for user: " + notificationInstance.user + ", query id: " + queryId)
-            if (!notificationInstance.save(validate: true, flush: true)) {
-                notificationInstance.errors.allErrors.each {
-                    log.error(it)
+            Notification.withTransaction {
+                if (!notificationInstance.save(validate: true, flush: true)) {
+                    notificationInstance.errors.allErrors.each {
+                        log.error(it)
+                    }
                 }
             }
         } else {
@@ -833,15 +835,16 @@ class NotificationService {
         }
     }
 
-    @Transactional
-    def deleteAlertForUser(User user, Long queryId) {
+        def deleteAlertForUser(User user, Long queryId) {
         log.debug('Deleting my alert :  ' + queryId + ' for user : ' + user)
         def query = Query.findById(queryId)
 
         def notificationInstance = Notification.findByUserAndQuery(user, query)
         if (notificationInstance) {
             log.debug('Deleting my notification :  ' + queryId)
-            notificationInstance.each { it.delete(flush: true) }
+            Notification.withTransaction {
+                notificationInstance.each { it.delete(flush: true) }
+            }
         } else {
             log.error('*** Unable to find  my notification - no delete :  ' + queryId)
         }
@@ -906,17 +909,21 @@ class NotificationService {
             QueryResult qr = QueryResult.findByQueryAndFrequency(query, oldFrequency)
             if (qr) {
                 qr.frequency = user.frequency
-                if (!qr.save(validate: true, flush: true)) {
-                    qr.errors.allErrors.each {
-                        log.error(it)
+                QueryResult.withTransaction {
+                    if (!qr.save(validate: true, flush: true)) {
+                        qr.errors.allErrors.each {
+                            log.error(it)
+                        }
                     }
                 }
             }
         }
 
-        if (!user.save(validate: true, flush: true)) {
-            user.errors.allErrors.each {
-                log.error(it)
+        User.withTransaction {
+            if (!user.save(validate: true, flush: true)) {
+                user.errors.allErrors.each {
+                    log.error(it)
+                }
             }
         }
     }

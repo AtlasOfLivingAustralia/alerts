@@ -135,7 +135,7 @@ class DiffService {
             String previous = "{}"
             // If previous result is null, assign an empty Json object
             if ( queryResult.previousResult != null) {
-                revious = decompressZipped(queryResult.previousResult)
+                previous = decompressZipped(queryResult.previousResult)
             }
 
             try {
