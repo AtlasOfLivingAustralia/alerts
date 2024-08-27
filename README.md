@@ -43,3 +43,6 @@ You can view all sent emails via the smtp4dev UI on http://localhost:3000/, inlc
 Change logs
 DB schema update:
 ``` ALTER TABLE alerts.query_result MODIFY logs TEXT NULL; ```
+
+### 4.2.0 Release
+No DB changes
