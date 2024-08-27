@@ -862,25 +862,29 @@ class NotificationService {
         }
     }
 
+
     def unsubscribeMyAnnotation(User user) {
         String myAnnotationQueryPath = queryService.constructMyAnnotationQueryPath(user?.userId)
         Query retrievedQuery = Query.findByQueryPath(myAnnotationQueryPath)
 
-        if (retrievedQuery != null) {
-            // delete the notification
-            def notification = Notification.findByQueryAndUser(retrievedQuery, user)
-            if (notification) {
-                notification.delete(flush: true)
-            }
 
-            // delete the query result
-            QueryResult qr = QueryResult.findByQueryAndFrequency(retrievedQuery, user?.frequency)
-            if (qr) {
-                qr.delete(flush: true)
-            }
+        Query.withTransaction {
+            if (retrievedQuery != null) {
+                // delete the notification
+                def notification = Notification.findByQueryAndUser(retrievedQuery, user)
+                if (notification) {
+                    notification.delete(flush: true)
+                }
 
-            // delete query
-            retrievedQuery.delete(flush: true)
+                // delete the query result
+                QueryResult qr = QueryResult.findByQueryAndFrequency(retrievedQuery, user?.frequency)
+                if (qr) {
+                    qr.delete(flush: true)
+                }
+
+                // delete query
+                retrievedQuery.delete(flush: true)
+            }
         }
     }
 
