@@ -134,7 +134,7 @@ class NotificationController {
         notificationService.refreshProperties(queryResult, lastResult)
         boolean hasChanged = notificationService.hasChanged(queryResult)
         def records = notificationService.collectUpdatedRecords(queryResult)
-        def results = ["hasChanged": hasChanged, "brief": queryResult.details(),  "records": records]
+        def results = ["hasChanged": hasChanged, "brief": queryResult.brief(),  "records": records]
         render results as JSON
     }
 
