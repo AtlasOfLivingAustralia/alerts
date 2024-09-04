@@ -385,7 +385,7 @@ class NotificationService {
             }
         }
 
-        if (queryService.checkChangeByDiff(queryResult)) {
+        if (queryService.checkChangeByDiff(query)) {
             log.debug("[QUERY " + query.id + "] Has change check. Checking JSON for query : " + query.name)
             changed = diffService.hasChangedJsonDiff(jsonPrevious, jsonCurrent, query)
         }
