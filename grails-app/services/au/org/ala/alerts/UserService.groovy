@@ -85,7 +85,7 @@ class UserService {
      *
      * @return total number of updates
      */
-//    @Transactional // transactions handled manually
+
     int updateUserEmails() {
         final int pageSize = grailsApplication.config.getProperty('alerts.user-sync.batch-size', Integer, 1000)
         def toUpdate = []

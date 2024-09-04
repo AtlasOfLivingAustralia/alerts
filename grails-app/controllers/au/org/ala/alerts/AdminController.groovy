@@ -42,7 +42,7 @@ class AdminController {
     def subscriptionsPerPage = grailsApplication.config.biosecurity?.subscriptionsPerPage? grailsApplication.config.biosecurity.subscriptionsPerPage.toInteger() : 10
     def index() {}
 
-    @Transactional
+
     def findUser() {
         List users = []
         if (params.term) {
@@ -51,7 +51,7 @@ class AdminController {
         render view: "/admin/userAlerts", model: [users: users]
     }
 
-    @Transactional
+
     def updateUserEmails() {
         def updated = userService.updateUserEmails()
         flash.message = "Updated ${updated} email addresses in system"
