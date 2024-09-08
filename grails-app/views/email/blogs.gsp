@@ -4,6 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="format-detection" content="telephone=no">
   <meta name="x-apple-disable-message-reformatting">
@@ -218,7 +219,7 @@
 
       <div class="button-div" >
         <a href="${grailsApplication.config.ala.baseURL + '/blog'}">
-          <button class="record-button" ><strong>All ALA news & updates</strong>
+          <button class="record-button" ><strong>All ALA news &amp; updates</strong>
           </button>
         </a>
       </div>
@@ -237,14 +238,14 @@
             <area shape="rect" coords="100,0,180,100" href="https://csiro.au" alt="CSIRO">
             <area shape="rect" coords="180,0,300,100" href="https://www.gbif.org/" alt="GBIF">
           </map>
-          <p>You are receiving this email because you opted in to ALA blog alerts.
+          <div>You are receiving this email because you opted in to ALA blog alerts.
             <div>
               <p>Our mailing address is: </p>
               Atlas of Living Australia <br/> GPO Box 1700<br/> Canberra, ACT 2601<br/>Australia
             </div>
             <br>
             Don't want to receive these emails? You can <a href="${unsubscribeOne}" style="color: #C44D34;">unsubscribe</a>.
-          </p>
+          </div>
         </div>
       </div>
     </div>
