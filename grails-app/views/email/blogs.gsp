@@ -1,8 +1,9 @@
-<%@ page contentType="text/html"%>
+<%@ page contentType="text/html" %>
 <%@ page import="java.text.SimpleDateFormat" %>
 <%@ page import="org.apache.commons.lang3.StringUtils" %>
-<html xmlns="http://www.w3.org/1999/xhtml" >
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="format-detection" content="telephone=no">
@@ -46,12 +47,12 @@
   }
 
   .main-shadow-div {
-    mso-table-lspace: 0pt;
-    mso-table-rspace: 0pt;
+    mso-table-lspace: 0;
+    mso-table-rspace: 0;
     box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
     width: 100%;
     max-width: 620px;
-    margin: 20px auto 0px;
+    margin: 20px auto 0;
   }
 
   .center-white-div{
@@ -81,7 +82,7 @@
   }
 
   .blog-thumbnail-div {
-    padding: 10px 0px 10px 0px;
+    padding: 10px 0 10px 0;
     align-items: center;
     max-width: 130px;
   }
@@ -191,7 +192,7 @@
 %{--                    int responseCode = connection.responseCode--}%
 %{--                    if (responseCode == 404) {--}%
 %{--                      // Handle the case where the image URL returns a 404 status code--}%
-%{--                       out <<  "<img src=\"${grailsApplication.config.grails.serverURL + '/assets/email/no-img-av-ALAsilver.png'}\" height='80' alt='Sorry, no image availabe' > "--}%
+%{--                       out <<  "<img src=\"${grailsApplication.config.grails.serverURL + '/assets/email/no-img-av-ALAsilver.png'}\" height='80' alt='Sorry, no image available' > "--}%
 %{--                    } else {--}%
 %{--                      // Handle the case where the image URL returns a different status code--}%
 %{--                      out << "<img src=\"${imageUrl}\" alt=\"${raw(blog.title.rendered)}\">"--}%
@@ -218,7 +219,7 @@
 
       <div class="button-div" >
         <a href="${grailsApplication.config.ala.baseURL + '/blog'}">
-          <button class="record-button" ><strong>All ALA news & updates</strong>
+          <button class="record-button" ><strong>All ALA news &amp; updates</strong>
           </button>
         </a>
       </div>
@@ -237,14 +238,14 @@
             <area shape="rect" coords="100,0,180,100" href="https://csiro.au" alt="CSIRO">
             <area shape="rect" coords="180,0,300,100" href="https://www.gbif.org/" alt="GBIF">
           </map>
-          <p>You are receiving this email because you opted in to ALA blog alerts.
+          <div>You are receiving this email because you opted in to ALA blog alerts.
             <div>
               <p>Our mailing address is: </p>
               Atlas of Living Australia <br/> GPO Box 1700<br/> Canberra, ACT 2601<br/>Australia
             </div>
             <br>
             Don't want to receive these emails? You can <a href="${unsubscribeOne}" style="color: #C44D34;">unsubscribe</a>.
-          </p>
+          </div>
         </div>
       </div>
     </div>

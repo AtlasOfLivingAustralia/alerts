@@ -11,7 +11,7 @@
  * rights and limitations under the License.
  */
 buildscript {
-    version "4.2.1"
+    version "4.2.2"
     group "au.org.ala"
 }
 
@@ -121,7 +121,7 @@ dependencies {
     testImplementation "org.grails:grails-test-mixins:3.3.0"
 
     // Grails plugin dependencies
-    runtimeOnly "org.grails.plugins:ala-bootstrap3:4.4.0", noCache
+    runtimeOnly "org.grails.plugins:ala-bootstrap3:4.5.0", noCache
     implementation "org.grails.plugins:ala-auth:$alaSecurityLibsVersion"
     implementation "org.grails.plugins:ala-ws-security-plugin:$alaSecurityLibsVersion"
     implementation "org.grails.plugins:ala-ws-plugin:$alaSecurityLibsVersion"

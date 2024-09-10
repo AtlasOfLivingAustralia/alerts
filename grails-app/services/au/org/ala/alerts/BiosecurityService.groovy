@@ -16,6 +16,7 @@ package au.org.ala.alerts;
 
 import com.jayway.jsonpath.JsonPath
 import grails.converters.JSON
+import grails.gorm.transactions.Transactional
 import org.apache.commons.lang.time.DateUtils
 import org.apache.http.entity.ContentType
 import java.text.SimpleDateFormat
@@ -62,6 +63,7 @@ class BiosecurityService {
      * @param query
      * @param since The local date to check the subscription since
      */
+    @Transactional
     def triggerBiosecuritySubscription(Query query, Date since) {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
         Date now = new Date()
@@ -148,7 +150,6 @@ class BiosecurityService {
             return result
         }
     }
-
 
     def processQueryBiosecurity(Query query, Date since, Date to) {
         def drId = query.listId
