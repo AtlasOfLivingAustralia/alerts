@@ -12,10 +12,10 @@
 <table border="0" cellpadding="0" cellspacing="0" width="100%" style="font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;border-spacing: 0;border-collapse: collapse;">
     <tr>
         <td align="center" style="padding: 20px;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;">
-            <table border="0" cellpadding="0" cellspacing="0" width="620" style="background-color: #ffffff;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;border-spacing: 0;border-collapse: collapse;">
+            <table border="0" cellpadding="0" cellspacing="0" width="620" style="font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;border-spacing: 0;border-collapse: collapse;">
                 <!-- Logo -->
                 <tr>
-                    <td align="center" style="padding: 20px; font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;">
+                    <td align="center" style="padding: 20px; background-color: #fff;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;">
 %{--                        <!--[if gte mso 9]>--}%
 %{--                        <v:image xmlns:v="urn:schemas-microsoft-com:vml" fill="true" stroke="false" style=" border: 0;display: inline-block; width: 480pt; height: 300pt;" src="https://via.placeholder.com/640x400" />--}%
 %{--                        <v:rect xmlns:v="urn:schemas-microsoft-com:vml" fill="true" stroke="false" style=" border: 0;display: inline-block;position: absolute; width: 480pt; height:300pt;">--}%
@@ -29,10 +29,20 @@
                 </tr>
                 <!-- Header -->
                 <tr>
-                    <td align="center" bgcolor="#B73D2D" background="${grailsApplication.config.grails.serverURL}/assets/email/biosecurity-alert-header.png" width="620" height="120"  style="color:white;background-color: #ffffff;padding: 20px;text-align: center;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;background:url(${grailsApplication.config.grails.serverURL}/assets/email/biosecurity-alert-header.png);">
+                    <td align="center" bgcolor="#B73D2D" background="${grailsApplication.config.grails.serverURL}/assets/email/biosecurity-alert-header.png" width="620" height="120"  style="color:white;background-color: #ffffff;padding: 20px 10px 20px 10px;text-align: center;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;background:url(${grailsApplication.config.grails.serverURL}/assets/email/biosecurity-alert-header.png);">
                         <h1 style="font-size: 24px; color: #fff;">Biosecurity Alerts</h1>
                         <p style="font-size: 16px; color: #fff;"><strong>${new SimpleDateFormat("dd MMMM yyyy").format(new Date())}</strong></p>
                         <p style="font-size: 16px; color: #fff;">Alerts service for new ALA records listing potential invasive species</p>
+                    </td>
+                </tr>
+                <tr>
+                    <td align="center" style="background-color: #E8E8E8;color: #000;padding: 40px 30px 40px 30px;text-align: center;font-family: 'Arial', sans-serif;font-size: 22px;line-height: 1.5;">
+                        <div> ${totalRecords} new ${totalRecords == 1 ? 'record' : 'records'} for
+                        </div>
+                        <div title="${speciesListInfo.name}">
+                            <strong>${StringUtils.abbreviate(speciesListInfo.name, 40)}, <a href="${speciesListInfo.url}">${speciesListInfo.drId}</a></strong>
+                        </div>
+                        <div><i>since ${new SimpleDateFormat("dd MMM yyyy").format(query.lastChecked)}</i></div>
                     </td>
                 </tr>
                 <!-- Records Section -->
@@ -97,19 +107,19 @@
                 </g:each>
                 <!-- Footer Section -->
                 <tr>
-                    <td style="padding: 20px 70px 14px 70px;background-color: #C44D34;color: #fff;font-family: 'Arial', sans-serif;font-size: 14px;line-height: 1.43;text-align: center;">
+                    <td style="padding: 35px 70px 35px 70px;background-color: #C44D34;color: #fff;font-family: 'Arial', sans-serif;font-size: 14px;line-height: 1.43;text-align: center;">
                         <p>If you notice a record has been misidentified, we encourage you to use your expertise to improve the quality of Australia's biosecurity data.</p>
                         <p>Please either annotate the record in the provider platform itself or notify us at <a href="mailto:biosecurity@ala.org.au" style="color: #f2f2f2; font-weight: 700;">biosecurity@ala.org.au</a> for assistance.</p>
                     </td>
                 </tr>
                 <tr>
-                    <td style="padding: 20px 70px 14px 70px;background-color: #000000;color: #fff;font-family: 'Arial', sans-serif;font-size: 14px;line-height: 1.43;;text-align: center;">
+                    <td style="padding: 35px 70px 35px 70px;background-color: #000000;color: #fff;font-family: 'Arial', sans-serif;font-size: 14px;line-height: 1.43;;text-align: center;">
                         <p>The Atlas of Living Australia acknowledges Australia's Traditional Owners and pays respect to the past and present Elders of the nation's Aboriginal and Torres Strait Islander communities.</p>
                         <p>We honour and celebrate the spiritual, cultural and customary connections of Traditional Owners to Country and the biodiversity that forms part of that Country.</p>
                     </td>
                 </tr>
                 <tr>
-                    <td style="padding: 20px 70px 14px 70px;background-color: #ffffff;color: #000;font-family: 'Arial', sans-serif;font-size: 14px;line-height: 1.43;;text-align: center;">
+                    <td style="padding: 35px 70px 35px 70px;background-color: #ffffff;color: #000;font-family: 'Arial', sans-serif;font-size: 14px;line-height: 1.43;;text-align: center;">
                         <img src="${grailsApplication.config.grails.serverURL}/assets/email/ncris.png" alt="Affiliated orgs" usemap="#orgsMap" height="80" style="border: 0;line-height: 100%;outline: 0;">
                         <map name="orgsMap">
                             <area shape="rect" coords="0,0,100,100" href="https://www.education.gov.au/ncris" alt="NCRIS">
