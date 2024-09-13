@@ -29,7 +29,7 @@
                 </tr>
                 <!-- Header -->
                 <tr>
-                    <td align="center" bgcolor="#B73D2D" background="${grailsApplication.config.grails.serverURL}/assets/email/biosecurity-alert-header.png" width="620" height="120"  style="color:white;background-color: #ffffff;padding: 20px 10px 20px 10px;text-align: center;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;background:url(${grailsApplication.config.grails.serverURL}/assets/email/biosecurity-alert-header.png);">
+                    <td align="center" bgcolor="#B53929" background="${grailsApplication.config.grails.serverURL}/assets/email/biosecurity-alert-header.png" width="620" height="120" style="color:white;background-color:#B53929;padding: 20px 10px 20px 10px;text-align: center;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;background-image:url(${grailsApplication.config.grails.serverURL}/assets/email/biosecurity-alert-header.png);">
                         <h1 style="font-size: 24px; color: #fff;">Biosecurity Alerts</h1>
                         <p style="font-size: 16px; color: #fff;"><strong>${new SimpleDateFormat("dd MMMM yyyy").format(new Date())}</strong></p>
                         <p style="font-size: 16px; color: #fff;">Alerts service for new ALA records listing potential invasive species</p>
@@ -83,16 +83,16 @@
                                         </g:if>
                                     </p>
                                 </td>
-                                <td width="50%" valign="top" style="font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;">
+                                <td width="25%" valign="top" style="font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;">
                                     <a href="https://www.google.com/maps/place/${oc.latLong}" target="_blank" style="font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;">
-                                        <img src="https://maps.googleapis.com/maps/api/staticmap?center=${oc.latLong}&markers=|${oc.latLong}&zoom=12&size=130x118&maptype=roadmap&key=${grailsApplication.config.getProperty('google.apikey')}" alt="Map Image" style="width: 130px;height: 118px;display: block;border: 0;line-height: 100%;">
+                                        <img src="https://maps.googleapis.com/maps/api/staticmap?center=${oc.latLong}&markers=|${oc.latLong}&zoom=12&size=130x118&maptype=roadmap&key=${grailsApplication.config.getProperty('google.apikey')}" alt="Map Image" style="width: 130px;height: 118px;display: block;border: 0;line-height: 100%;border-radius: 6px;">
                                     </a>
                                 </td>
-                                <td valign="top" style="font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;">
+                                <td width="25%" valign="top" style="font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;">
 %{--                                    <div class="species-thumbnail-div" style="vertical-align: top;max-width: 130px;width: 130px;height: 118px;border-radius: 6px;">--}%
                                         <g:if test="${oc.thumbnailUrl || oc.smallImageUrl }">
                                             <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}">
-                                                <div class="species-thumbnail-div" style="background-image: url('${oc.thumbnailUrl ?: oc.smallImageUrl}');background-size: cover;background-position: center;vertical-align: top;max-width: 130px;width: 130px;height: 118px;border-radius: 6px;"></div>
+                                                <img src="${oc.thumbnailUrl ?: oc.smallImageUrl}" alt="Species Image" style="width: 130px;vertical-align: top;max-width: 130px;width: 130px;height: 118px;border-radius: 6px;line-height: 100%;" />
                                             </a>
                                         </g:if>
                                         <g:else>
