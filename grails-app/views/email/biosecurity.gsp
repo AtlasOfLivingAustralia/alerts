@@ -56,7 +56,7 @@
                                     <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}" style="color: #C44D34;text-decoration: none;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;">
                                         <strong>${i+1}. <em>${oc.scientificName ?: 'N/A'}</em></strong>
                                     </a>
-                                    <p style="font-size: 13px; color: #212121;">
+                                    <p style="font-size: 13px; color: #212121;margin: 0;">
                                         <g:if test="${oc.scientificName && oc.raw_scientificName && oc.scientificName != oc.raw_scientificName}">
                                             Supplied as:<em>${oc.raw_scientificName}</em><br>
                                         </g:if>
@@ -88,8 +88,8 @@
                                         <img src="https://maps.googleapis.com/maps/api/staticmap?center=${oc.latLong}&markers=|${oc.latLong}&zoom=12&size=130x118&maptype=roadmap&key=${grailsApplication.config.getProperty('google.apikey')}" alt="Map Image" style="width: 130px;height: 118px;display: block;border: 0;line-height: 100%;">
                                     </a>
                                 </td>
-                                <td>
-                                    <div class="species-thumbnail-div" style="vertical-align: top;max-width: 130px;width: 130px;height: 118px;border-radius: 6px;">
+                                <td valign="top" style="font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;">
+%{--                                    <div class="species-thumbnail-div" style="vertical-align: top;max-width: 130px;width: 130px;height: 118px;border-radius: 6px;">--}%
                                         <g:if test="${oc.thumbnailUrl || oc.smallImageUrl }">
                                             <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}">
                                                 <div class="species-thumbnail-div" style="background-image: url('${oc.thumbnailUrl ?: oc.smallImageUrl}');background-size: cover;background-position: center;vertical-align: top;max-width: 130px;width: 130px;height: 118px;border-radius: 6px;"></div>
@@ -98,7 +98,7 @@
                                         <g:else>
                                             <div class="missing-species-thumbnail-div" style="vertical-align: top;max-width: 130px;width: 130px;height: 118px;border-radius: 6px;background-image: url(${grailsApplication.config.grails.serverURL}/assets/email/no-img-gray-bg.png);"> </div>
                                         </g:else>
-                                    </div>
+%{--                                    </div>--}%
                                 </td>
                             </tr>
                         </table>
