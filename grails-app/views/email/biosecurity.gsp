@@ -16,12 +16,6 @@
                 <!-- Logo -->
                 <tr>
                     <td align="center" style="padding: 20px; background-color: #fff;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;">
-%{--                        <!--[if gte mso 9]>--}%
-%{--                        <v:image xmlns:v="urn:schemas-microsoft-com:vml" fill="true" stroke="false" style=" border: 0;display: inline-block; width: 480pt; height: 300pt;" src="https://via.placeholder.com/640x400" />--}%
-%{--                        <v:rect xmlns:v="urn:schemas-microsoft-com:vml" fill="true" stroke="false" style=" border: 0;display: inline-block;position: absolute; width: 480pt; height:300pt;">--}%
-%{--                            <v:fill  opacity="0%" color="#000000”  />--}%
-%{--                        <v:textbox inset="0,0,0,0">--}%
-%{--                        <![endif]-->--}%
                         <a href="https://www.ala.org.au" target="_blank" style="font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;">
                             <img src="${grailsApplication.config.grails.serverURL + '/assets/email/logo-dark.png'}" height="60" alt="Logo" style="display: block;border: 0;line-height: 100%;">
                         </a>
@@ -120,12 +114,6 @@
                 </tr>
                 <tr>
                     <td style="padding: 35px 70px 35px 70px;background-color: #ffffff;color: #000;font-family: 'Arial', sans-serif;font-size: 14px;line-height: 1.43;text-align: center;">
-%{--                        <img src="${grailsApplication.config.grails.serverURL}/assets/email/ncris.png" alt="Affiliated orgs" usemap="#orgsMap" height="80" style="border: 0;line-height: 100%;outline: 0;">--}%
-%{--                        <map name="orgsMap">--}%
-%{--                            <area shape="rect" coords="0,0,100,100" href="https://www.education.gov.au/ncris" alt="NCRIS">--}%
-%{--                            <area shape="rect" coords="100,0,180,100" href="https://csiro.au" alt="CSIRO">--}%
-%{--                            <area shape="rect" coords="180,0,300,100" href="https://www.gbif.org/" alt="GBIF">--}%
-%{--                        </map>--}%
                         <p>
                             <a href="https://www.education.gov.au/national-collaborative-research-infrastructure-strategy-ncris"><img loading="lazy"  src="${grailsApplication.config.grails.serverURL}/assets/email/NCRIS_150px-150x109.jpg" alt="NCRIS logo" width="125" height="90"></a>&nbsp;
                             &nbsp;<a href="https://csiro.au/"><img loading="lazy" src="${grailsApplication.config.grails.serverURL}/assets/email/CSIRO_Solid_RGB-150x150.png" alt="CSIRO logo" width="90" height="90"></a>&nbsp;
