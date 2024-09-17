@@ -6,8 +6,6 @@ branches:
   only:
     - master
     - develop
-    # delete any branches below
-    - 280-email-rendering-issues-v2
 before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
   - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
