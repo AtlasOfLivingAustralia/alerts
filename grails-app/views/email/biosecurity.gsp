@@ -12,7 +12,7 @@
 <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f4f4f4;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;border-spacing: 0;border-collapse: collapse;">
     <tr>
         <td align="center" style="padding: 20px;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;">
-            <table border="0" cellpadding="0" cellspacing="0" width="620" style="background-color: #ffffff;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;border-spacing: 0;border-collapse: collapse;">
+            <table border="0" cellpadding="0" cellspacing="0" width="650" style="background-color: #ffffff;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;border-spacing: 0;border-collapse: collapse;">
                 <!-- Logo -->
                 <tr>
                     <td align="center" style="padding: 20px; background-color: #fff;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;">
@@ -46,7 +46,7 @@
                     <td style="padding: 20px;background-color: white;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;">
                         <table border="0" cellpadding="0" cellspacing="0" width="100%" style="font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;border-spacing: 0;border-collapse: collapse;">
                             <tr>
-                                <td width="50%" valign="top" style="font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;">
+                                <td width="46%" valign="top" style="font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;">
                                     <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}" style="color: #C44D34;text-decoration: none;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;">
                                         <strong>${i+1}. <em>${oc.scientificName ?: 'N/A'}</em></strong>
                                     </a>
@@ -77,20 +77,21 @@
                                         </g:if>
                                     </p>
                                 </td>
-                                <td width="25%" valign="top" style="font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;">
+                                <td width="28%" valign="top" style="font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;">
                                     <a href="https://www.google.com/maps/place/${oc.latLong}" target="_blank" style="font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;">
-                                        <img src="https://maps.googleapis.com/maps/api/staticmap?center=${oc.latLong}&markers=|${oc.latLong}&zoom=12&size=130x118&maptype=roadmap&key=${grailsApplication.config.getProperty('google.apikey')}" alt="Map Image" style="width: 130px;height: 118px;display: block;border: 0;line-height: 100%;border-radius: 6px;">
+                                        <img src="https://maps.googleapis.com/maps/api/staticmap?center=${oc.latLong}&markers=|${oc.latLong}&zoom=12&size=150x150&maptype=roadmap&key=${grailsApplication.config.getProperty('google.apikey')}" alt="Map Image" style="width: 150px;height: 150px;display: block;border: 0;line-height: 100%;border-radius: 6px;">
                                     </a>
                                 </td>
-                                <td width="25%" valign="top" style="font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;">
-                                    <g:if test="${oc.thumbnailUrl || oc.smallImageUrl }">
+                                <td width="26%" valign="top" style="font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;">
+                                    <g:set var="imageUrl" value="${oc.imageUrls?.get(0) ?: oc.thumbnailUrl ?: oc.smallImageUrl}" />
+                                    <g:if test="${imageUrl}">
                                         <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}">
-                                            <img src="${oc.thumbnailUrl ?: oc.smallImageUrl}" alt="Species Image" style="width: 130px;vertical-align: top;max-width: 130px;width: 130px;height: 118px;border-radius: 6px;line-height: 100%;" />
+                                            <img src="${imageUrl}${imageUrl.contains('?') ? '&thumbnailType=square_white' : ''}" alt="Species Image" height="150" width="150" style="width: 150px;vertical-align: top;max-width: 150px;width: 150px;height: 150px;border-radius: 6px;line-height: 100%;" />
                                         </a>
                                     </g:if>
                                     <g:else>
                                         <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}">
-                                            <img src="${grailsApplication.config.grails.serverURL}/assets/email/no-img-gray-bg.png" alt="Species Image" style="width: 130px;vertical-align: top;max-width: 130px;width: 130px;height: 118px;border-radius: 6px;line-height: 100%;" />
+                                            <img src="${grailsApplication.config.grails.serverURL}/assets/email/no-img-av-ALAsilver.png" alt="Species Image" height="150" width="150" style="width: 150px;vertical-align: top;max-width: 150px;width: 150px;height: 150px;border-radius: 6px;line-height: 100%;" />
                                         </a>
                                     </g:else>
                                 </td>
@@ -119,12 +120,14 @@
                             &nbsp;<a href="https://csiro.au/"><img loading="lazy" src="${grailsApplication.config.grails.serverURL}/assets/email/CSIRO_Solid_RGB-150x150.png" alt="CSIRO logo" width="90" height="90"></a>&nbsp;
                             &nbsp;<a href="https://www.gbif.org/en/"><img loading="lazy"  src="${grailsApplication.config.grails.serverURL}/assets/email/GBIF_109px.png" alt="GBIF logo" width="171" height="90"></a>
                         </p>
-                        <div style="margin-top: 25px;">You are receiving this email because you opted in to ALA alerts.
+                        <div style="margin-top: 25px;">
                             <div>
                                 <p>Our mailing address is: </p>
                                 Atlas of Living Australia <br> GPO Box 1700<br> Canberra, ACT 2601<br>Australia
                             </div>
-                            <br>
+                            <br/>
+                            You are receiving this email because you opted in to ALA alerts.
+                            <br/>
                             Don't want to receive these emails? You can <a href="${unsubscribeOne}" style="color: #C44D34;">unsubscribe</a>.
                         </div>
                     </td>
