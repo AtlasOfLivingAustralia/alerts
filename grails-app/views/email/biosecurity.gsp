@@ -23,7 +23,7 @@
                 </tr>
                 <!-- Header -->
                 <tr>
-                    <td align="center" bgcolor="#B53929" background="${grailsApplication.config.grails.serverURL}/assets/email/biosecurity-alert-header.png" width="620" height="120" style="color:white;background-color:#B53929;padding: 20px 10px 20px 10px;text-align: center;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;background-image:url(${grailsApplication.config.grails.serverURL}/assets/email/biosecurity-alert-header.png);">
+                    <td align="center" bgcolor="#B53929" background="${grailsApplication.config.grails.serverURL}/assets/email/biosecurity-alert-header.png" width="620" height="120" style="color:white;background-color:#B53929;padding: 20px 10px 20px 10px;text-align: center;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;background-image:url(${grailsApplication.config.grails.serverURL}/assets/email/biosecurity-alert-header.png);background-position: top center;background-size: cover;background-repeat: no-repeat">
                         <h1 style="font-size: 24px; color: #fff;">Biosecurity Alerts</h1>
                         <p style="font-size: 16px; color: #fff;"><strong>${new SimpleDateFormat("dd MMMM yyyy").format(new Date())}</strong></p>
                         <p style="font-size: 16px; color: #fff;">Alerts service for new ALA records listing potential invasive species</p>
@@ -91,7 +91,7 @@
                                     </g:if>
                                     <g:else>
                                         <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}">
-                                            <img src="${grailsApplication.config.grails.serverURL}/assets/email/no-img-av-ALAsilver.png" alt="Species Image" height="150" width="150" style="width: 150px;vertical-align: top;max-width: 150px;width: 150px;height: 150px;border-radius: 6px;line-height: 100%;" />
+                                            <img src="${grailsApplication.config.grails.serverURL}/assets/email/no-image-available.png" alt="Species Image" height="150" width="150" style="width: 150px;vertical-align: top;max-width: 150px;width: 150px;height: 150px;border-radius: 6px;line-height: 100%;" />
                                         </a>
                                     </g:else>
                                 </td>
