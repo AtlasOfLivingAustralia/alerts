@@ -6,7 +6,6 @@ branches:
   only:
     - master
     - develop
-    - 288-rendering-of-images-in-alerts-email
 before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
   - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
