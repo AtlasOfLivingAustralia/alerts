@@ -13,6 +13,9 @@
  */
 package au.org.ala.alerts
 
+import org.apache.commons.csv.CSVPrinter
+import org.apache.commons.csv.CSVFormat
+
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import java.text.SimpleDateFormat
@@ -26,8 +29,8 @@ class BiosecurityCSVService {
     def grailsApplication
 
     def list() {
-        def BASE_DIRECTORY = grailsApplication.config.biosecurity.csv.local.directory
-        if (grailsApplication.config.biosecurity.csv.local.enabled) {
+        def BASE_DIRECTORY = grailsApplication.config.getProperty('biosecurity.csv.local.directory', '/tmp')
+        if (grailsApplication.config.getProperty('biosecurity.csv.local.enabled', Boolean, false)) {
             def dir = new File(BASE_DIRECTORY)
             if (!dir.exists() || !dir.isDirectory()) {
                 return [status: 1, message: "Directory not found"]
@@ -47,15 +50,16 @@ class BiosecurityCSVService {
      */
     void generateAuditCSV(QueryResult qs) {
         def task = {
-            def records = diffService.getNewRecords(qs)
+            def records = diffService.getNewRecords(qs) // TODO: unused var - remove?
 
             File outputFile = createTempCSV(qs)
 
-            if (grailsApplication.config.biosecurity.csv.local.enabled) {
+            if (grailsApplication.config.getProperty('biosecurity.csv.local.enabled', Boolean, false)) {
                 String fileName = sanitizeFileName("${qs.query.name}")+ ".csv"
                 String folderName = new SimpleDateFormat("yyyy-MM-dd").format(new Date())
-                String destinationFolder = new File(grailsApplication.config.biosecurity.csv.local.directory, folderName).absolutePath
+                String destinationFolder = new File(grailsApplication.config.getProperty('biosecurity.csv.local.directory', '/tmp'), folderName).absolutePath
                 File destinationFile = new File(destinationFolder, fileName)
+                log.info("Move CSV file from ${outputFile} to ${destinationFile}")
                 moveToDestination(outputFile, destinationFile)
             }
         }
@@ -85,8 +89,8 @@ class BiosecurityCSVService {
                 "image url:smallImageUrl," + // TBC , multiple image urls
                 "date sent:dateSent"
                 //"fq, kvs"
-        if (grailsApplication.config.biosecurity.csv.headers) {
-            rawHeader = grailsApplication.config.biosecurity.csv.headers
+        if (grailsApplication.config.getProperty('biosecurity.csv.headers')) {
+            rawHeader =  grailsApplication.config.getProperty('biosecurity.csv.headers')
         }
 
         def headers = []
@@ -114,7 +118,7 @@ class BiosecurityCSVService {
                             //read from cl (context layer)
                             def cls = record["cl"]
                             //LGA2023 is the default layer id
-                            def layerId =  grailsApplication.config.getProperty('biosecurity.csv.lga', 'LGA2023')
+                            def layerId = grailsApplication.config.getProperty('biosecurity.csv.lga', 'LGA2023')
                             if(cls) {
                                 String matched = cls.find {
                                     def (k, v) = it.split(':') // Split the string into key and value
@@ -125,7 +129,7 @@ class BiosecurityCSVService {
                             }
                             break
                         case "lga layer":
-                            value = grailsApplication.config.biosecurity.csv.lga ?:"LGA2023"
+                            value = grailsApplication.config.getProperty('biosecurity.csv.lga', 'LGA2023')
                             break
                         case "eventDate":
                             if (value) {
@@ -149,8 +153,12 @@ class BiosecurityCSVService {
 
                     return value
                 }
-                writer.write(values.join(","))
-                writer.write("\n")
+
+                // Write the values to the CSV file using Commons-CSV RFC4180 format
+                StringWriter stringWriter = new StringWriter()
+                CSVPrinter csvPrinter = new CSVPrinter(stringWriter , CSVFormat.RFC4180)
+                csvPrinter.printRecord(values)
+                writer.write(stringWriter.toString())
             }
         }
 
@@ -163,7 +171,7 @@ class BiosecurityCSVService {
      * @return absolute path of the aggregated CSV file
      */
     String aggregateCSVFiles(String folderName) {
-        def BASE_DIRECTORY = grailsApplication.config.biosecurity.csv.local.directory
+        def BASE_DIRECTORY = grailsApplication.config.getProperty('biosecurity.csv.local.directory', '/tmp')
         def folder = new File(BASE_DIRECTORY, folderName)
         Collection<File> csvFiles = []
         collectCsvFiles(folder, csvFiles)
@@ -237,7 +245,7 @@ class BiosecurityCSVService {
      * */
 
     private List<Map> listFilesRecursively(File dir) {
-        def BASE_DIRECTORY = grailsApplication.config.biosecurity.csv.local.directory
+        def BASE_DIRECTORY =  grailsApplication.config.getProperty('biosecurity.csv.local.directory', '/tmp')
         def rootDir = new File(BASE_DIRECTORY)
         def foldersAndFiles = rootDir.listFiles().findAll { it.isDirectory() }.collect { folder ->
             [
@@ -245,6 +253,6 @@ class BiosecurityCSVService {
                     files: folder.listFiles().findAll { it.isFile() && it.name.endsWith('.csv') }.collect { file -> file.name }
             ]
         }
-        return foldersAndFiles
+        return foldersAndFiles.sort({ it.name }).reverse()
     }
 }

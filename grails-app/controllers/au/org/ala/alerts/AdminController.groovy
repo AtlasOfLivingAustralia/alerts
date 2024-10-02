@@ -39,7 +39,7 @@ class AdminController {
     def messageSource
     def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
 
-    def subscriptionsPerPage = grailsApplication.config.biosecurity?.subscriptionsPerPage? grailsApplication.config.biosecurity.subscriptionsPerPage.toInteger() : 10
+    def subscriptionsPerPage = grailsApplication.config.getProperty('biosecurity.subscriptionsPerPage', Integer, 100)
     def index() {}
 
 
