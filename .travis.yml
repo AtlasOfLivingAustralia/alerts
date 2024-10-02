@@ -6,8 +6,6 @@ branches:
   only:
     - master
     - develop
-    # Delete any branch names below this line
-    - 298-kingdom-not-displaying-correctly-in-alerts-csv
 before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
   - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
