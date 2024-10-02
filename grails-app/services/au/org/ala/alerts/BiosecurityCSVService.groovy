@@ -59,7 +59,6 @@ class BiosecurityCSVService {
                 String folderName = new SimpleDateFormat("yyyy-MM-dd").format(new Date())
                 String destinationFolder = new File(grailsApplication.config.getProperty('biosecurity.csv.local.directory', '/tmp'), folderName).absolutePath
                 File destinationFile = new File(destinationFolder, fileName)
-                log.info("Move CSV file from ${outputFile} to ${destinationFile}")
                 moveToDestination(outputFile, destinationFile)
             }
         }
