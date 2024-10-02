@@ -11,7 +11,7 @@
  * rights and limitations under the License.
  */
 buildscript {
-    version "4.2.4"
+    version "4.3.0-SNAPSHOT"
     group "au.org.ala"
 }
 
@@ -154,7 +154,9 @@ dependencies {
     testRuntimeOnly("org.seleniumhq.selenium:selenium-firefox-driver:4.10.0")
     testRuntimeOnly("org.seleniumhq.selenium:selenium-safari-driver:4.10.0")
     runtimeOnly 'commons-lang:commons-lang:2.6'
-    implementation 'commons-io:commons-io:2.11.0'
+    implementation 'commons-codec:commons-codec:1.17.1'
+    implementation 'commons-io:commons-io:2.17.0'
+    implementation 'org.apache.commons:commons-csv:1.12.0'
     runtimeOnly 'org.hamcrest:hamcrest-core:2.2'
     runtimeOnly 'org.hamcrest:hamcrest-library:2.2'
     runtimeOnly 'xalan:xalan:2.7.3'
