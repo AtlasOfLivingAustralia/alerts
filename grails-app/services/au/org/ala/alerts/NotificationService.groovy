@@ -81,7 +81,7 @@ class NotificationService {
             if (!urlString.contains("___MAX___")) {
                 // queries without paging
                 if (!queryService.isBioSecurityQuery(query)) {
-                    processedJson = processQueryReturnedJson(query, IOUtils.toString(new URL(urlString).newReader()))
+                    processedJson = processQueryReturnedJson(query, getWebserviceResults(urlString))
                 }
             } else {
                 // queries with paging
@@ -90,7 +90,24 @@ class NotificationService {
                 def result = []
                 boolean finished = false
                 def allLists = []
-                while (!finished && (result = processQueryReturnedJson(query, new URL(urlString.replaceAll('___MAX___', String.valueOf(max)).replaceAll('___OFFSET___', String.valueOf(offset))).text))?.size()) {
+
+                while (!finished) {
+                    // Construct the URL
+                    def url = new URL(urlString
+                            .replaceAll('___MAX___', String.valueOf(max))
+                            .replaceAll('___OFFSET___', String.valueOf(offset))
+                    )
+
+                    // Process the query
+                    result = processQueryReturnedJson(query, getWebserviceResults(url.toString())) // API errors will result in an empty string ("")
+
+                    // Check if we have results
+                    if (!result || result?.size() == 0) {
+                        finished = true
+                        continue
+                    }
+
+                    // Increment offset for next iteration
                     offset += max
 
                     try {
@@ -192,7 +209,7 @@ class NotificationService {
                 // queries without paging
                 if (!queryService.isBioSecurityQuery(query)) {
                     // standard query
-                    processedJson = processQueryReturnedJson(query, IOUtils.toString(new URL(urlString).newReader()))
+                    processedJson = processQueryReturnedJson(query, getWebserviceResults(urlString))
                 } else {
                     // biosecurity query is handled elsewhere
                     Date since = lastQueryResult.lastChecked ?: DateUtils.addDays(new Date(), -1 * grailsApplication.config.getProperty("biosecurity.legacy.firstLoadedDateAge", Integer, 7))
@@ -203,25 +220,39 @@ class NotificationService {
                 // queries with paging
                 int max = PAGING_MAX
                 int offset = 0
-                def result
-                boolean finished = false
                 def allLists = []
-                while (!finished && (result = processQueryReturnedJson(query, new URL(urlString.replaceAll('___MAX___', String.valueOf(max)).replaceAll('___OFFSET___', String.valueOf(offset))).text))?.size()) {
-                    offset += max
+                boolean finished = false
+
+                while (!finished) {
+                    // Construct the URL with max and offset values
+                    String urlWithParams = urlString.replace('___MAX___', max.toString()).replace('___OFFSET___', offset.toString())
+
+                    // Get the result from the query
+                    def result = processQueryReturnedJson(query, getWebserviceResults(urlWithParams))
+
+                    // Check if result is not empty
+                    if (result?.size() == 0) {
+                        finished = true
+                        break
+                    }
 
                     try {
+                        // Read latest values from JSON
                         def latestValue = JsonPath.read(result, query.recordJsonPath)
+
                         if (latestValue.size() == 0) {
                             finished = true
                         } else {
                             processedJson = result
                             allLists.addAll(latestValue)
+                            offset += max // Update offset for the next iteration
                         }
                     } catch (Exception e) {
-                        //expected behaviour for missing properties
+                        // Handle missing properties gracefully
                         finished = true
                     }
                 }
+
                 // only for species lists
                 def json = JSON.parse(processedJson) as JSONObject
                 if (json.lists) {
@@ -443,7 +474,13 @@ class NotificationService {
             return json
         }
 
-        JSONObject rslt = JSON.parse(json) as JSONObject
+        JSONObject rslt
+        try {
+            rslt = JSON.parse(json) as JSONObject
+        } catch (Exception e) {
+            log.error("Failed to parse JSON in processQueryReturnedJson(): ${e.message}", e)
+            rslt = new JSONObject()
+        }
 
         // all the occurrences user has made annotations to
         if (rslt.occurrences) {
@@ -477,17 +514,30 @@ class NotificationService {
         return rslt.toString()
     }
 
-    JSONElement getJsonElements(String url) {
+    String getWebserviceResults(String url) {
         log.debug "(internal) getJson URL = " + url
         def conn = new URL(url).openConnection()
         try {
             conn.setConnectTimeout(10000)
             conn.setReadTimeout(50000)
-            return JSON.parse(conn.getInputStream(), "UTF-8")
+            conn.setRequestProperty('User-Agent', grailsApplication.config.getProperty("customUserAgent", "ALA-alerts"))
+            return IOUtils.toString(conn.getInputStream(), "UTF-8")
         } catch (Exception e) {
             def error = "Failed to get json from web service (${url}). ${e.getClass()} ${e.getMessage()}, ${e}"
             log.error error
-            return new JSONObject();
+            return ""
+        }
+    }
+
+    JSONElement getJsonElements(String url) {
+        log.debug "(internal) getJson URL = " + url
+        def data = getWebserviceResults(url)
+
+        try {
+            return JSON.parse(data)
+        } catch (Exception e) {
+            log.error("Failed to parse JSON in getJsonElements() (value: ${data}): ${e.message}", e)
+            return new JSONObject()
         }
     }
 

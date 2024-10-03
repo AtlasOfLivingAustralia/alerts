@@ -132,7 +132,7 @@ skin:
     orgSupportEmail: support@ala.org.au
 privacyPolicy: "https://www.ala.org.au/terms-of-use/privacy-policy/"
 siteDefaultLanguage: "en"
-
+customUserAgent: 'alerts/@info.app.version@'
 security:
     cas:
         adminRole: ROLE_ADMIN
@@ -186,7 +186,7 @@ biosecurity:
             bucket: alerts
         # read lga from the layer
         lga: LGA2023
-
+    subscriptionsPerPage: 100
     legacy:
         aus: cl927:*
         act: cl927:"Australian Capital Territory" OR cl927:"Jervis Bay Territory"
