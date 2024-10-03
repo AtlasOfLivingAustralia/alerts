@@ -163,7 +163,8 @@ class BiosecurityService {
 
             while (repeat) {
                 def url = grailsApplication.config.getProperty('lists.baseURL') + "/ws/speciesListItemsInternal/" + drId + "?includeKVP=true" + "&offset=" + offset + "&max=" + max
-                def speciesList = webService.get(url, [:], ContentType.APPLICATION_JSON, true, false)
+                def headers = ["User-Agent": "${grailsApplication.config.getProperty("customUserAgent", "alerts")}"]
+                def speciesList = webService.get(url, [:], ContentType.APPLICATION_JSON, true, false, headers)
                 if (speciesList.statusCode != 200 && speciesList.statusCode != 201) {
                     log.error("Failed to access: " + url)
                     log.error("Error: " + speciesList.error)
@@ -237,7 +238,10 @@ class BiosecurityService {
             log.debug("URL: " + url)
 
             try {
-                def get = JSON.parse(new URL(url).text)
+                def get = JSON.parse(new URL(url).openConnection().with { conn ->
+                    conn.setRequestProperty("User-Agent", grailsApplication.config.getProperty("customUserAgent", "alerts"))
+                    conn.inputStream.text
+                })
                 get?.occurrences?.each { occurrence ->
                     occurrences[occurrence.uuid] = occurrence
                     //extra info should be added here
@@ -261,7 +265,10 @@ class BiosecurityService {
     def fetchExtraInfo(def uuid, def occurrence) {
         try {
             def url = grailsApplication.config.getProperty('biocacheService.baseURL') + '/occurrences/' + uuid
-            def record = JSON.parse(new URL(url).text)
+            def record = JSON.parse(new URL(url).openConnection().with { conn ->
+                conn.setRequestProperty("User-Agent", grailsApplication.config.getProperty("customUserAgent", "alerts"))
+                conn.inputStream.text
+            })
             occurrence['firstLoaded'] = record.raw?.firstLoaded
             //Do not join, let CSV generate handle it
             occurrence['cl'] = record.processed?.cl?.collect { "${it.key}:${it.value}" }

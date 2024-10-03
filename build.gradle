@@ -119,6 +119,7 @@ dependencies {
     testImplementation "org.grails.plugins:geb"
     testImplementation "org.grails:grails-web-testing-support"
     testImplementation "org.grails:grails-test-mixins:3.3.0"
+    testImplementation 'org.grails:grails-datastore-gorm-testing-support:6.1.12'
 
     // Grails plugin dependencies
     runtimeOnly "org.grails.plugins:ala-bootstrap3:4.5.0", noCache
