@@ -399,7 +399,7 @@
                 <div class="row" style="text-align: right">
                     <div class="col-sm-10" >Download CSV list of all occurrences from all biosecurity alerts sent (scheduled and manual)</div>
                     <div class="col-sm-2" >
-                        <a class="btn btn-info" href="${createLink(controller: 'admin', action: 'listBiosecurityAuditCSV')}" target="_blank">Reporting</a>
+                        <a class="btn btn-info" href="${createLink(controller: 'admin', action: 'listBiosecurityAuditCSV')}" target="_blank">CSV Reporting</a>
                     </div>
                 </div>
                 <p></p>

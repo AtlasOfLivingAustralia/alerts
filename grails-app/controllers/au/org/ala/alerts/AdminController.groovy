@@ -716,16 +716,20 @@ class AdminController {
 
     @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true, redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to view that page.")
     def listBiosecurityAuditCSV() {
-        def result  = biosecurityCSVService.list()
+        def result = [:]
+        try {
+            result  = biosecurityCSVService.list()
+        } catch (Exception e) {
+            log.error("Error in listing Biosecurity CSV files: ${e.message}")
+            result = [status: 1, message: "Error in listing Biosecurity CSV files: ${e.message}"]
+        }
         render(view: 'biosecurityCSV', model: result)
     }
 
     @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true,redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to view that page.")
     def aggregateBiosecurityAuditCSV(String folderName) {
-        def BASE_DIRECTORY = grailsApplication.config.biosecurity.csv.local.directory
-        def folder = new File(BASE_DIRECTORY, folderName)
-        if (!folder.exists() || !folder.isDirectory()) {
-            render(status: 404, text: "Data not found")
+        if (!biosecurityCSVService.folderExists(folderName)) {
+            render(status: 404, text: 'Data not found')
             return
         }
 
@@ -742,17 +746,17 @@ class AdminController {
 
     @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true,redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to view that page.")
     def downloadBiosecurityAuditCSV(String filename) {
-        def BASE_DIRECTORY = grailsApplication.config.biosecurity.csv.local.directory
-        def file = new File(BASE_DIRECTORY, filename)
-        if (!file.exists() || file.isDirectory()) {
+        String contents = biosecurityCSVService.getFile(filename)
+        if (!contents) {
             render(status: 404, text: "Data not found")
             return
         }
-
-        def saveToFile = Paths.get(filename).collect { it.toString() }.join("_")
-        response.contentType = 'application/octet-stream'
-        response.setHeader('Content-Disposition', "attachment; filename=\"${saveToFile}\"")
-        response.outputStream << file.bytes
+        response.contentType = 'text/csv'
+        response.setHeader("Content-disposition", "attachment; filename=\"${filename.tokenize(File.separator).last()}\"")
+        response.outputStream.withWriter("UTF-8") { writer ->
+            writer << contents
+        }
+        response.outputStream.flush()
     }
 
     /**
@@ -781,22 +785,14 @@ class AdminController {
 
     @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
     def deleteBiosecurityAuditCSV(String filename) {
-        Map message = [status : 1, message: ""]
-        def BASE_DIRECTORY = grailsApplication.config.biosecurity.csv.local.directory
-        def file = new File(BASE_DIRECTORY, filename)
-        if (!file.exists() || file.isDirectory()) {
-            message['status'] = 1
-            message['message'] = "File not found"
-        } else {
-            if (file.renameTo(new File(BASE_DIRECTORY,  filename +'_deleted'))){
-                message['status'] = 0
-                message['message'] = "The file has been temporarily deleted. You can contact the system administrator to recover it."
-            } else {
-                message['status'] = 1
-                message['message'] = "File deletion failed"
-            }
-        }
+        Map message = biosecurityCSVService.deleteFile(filename)
+        render(status: 200, contentType: 'application/json', text: message as JSON)
+    }
 
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
+    def moveLocalFilesToS3() {
+        Boolean dryRun = params.boolean('dryRun', true)
+        Map message = biosecurityCSVService.moveLocalFilesToS3(dryRun)
         render(status: 200, contentType: 'application/json', text: message as JSON)
     }
 }
