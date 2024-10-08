@@ -179,12 +179,12 @@ biosecurity:
         link: https://www.ala.org.au/blogs-news/ala-helps-to-stop-pests-in-their-tracks/
     csv:
         local:
-            enabled: true
+            enabled: false # See environments.development section below where set to true
             directory: /data/alerts/csv
         s3:
-            enabled: false
+            enabled: true
             directory: biosecurity # key prefix
-            # bucket: alerts # configured via plugin config `plugin.awssdk.s3.bucket`
+            # bucket: alerts # configured via plugin config `grails.plugin.awssdk.s3.bucket`
         # read lga from the layer
         lga: LGA2023
     subscriptionsPerPage: 100
@@ -231,9 +231,9 @@ environments:
         biosecurity:
             csv:
                 local:
-                    enabled: false
-                s3:
                     enabled: true
+                s3:
+                    enabled: false
         userdetails:
             web:
                 url: https://aws-auth-test-2023.test.ala.org.au/userdetails/
