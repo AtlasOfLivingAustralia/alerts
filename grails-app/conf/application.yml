@@ -120,6 +120,14 @@ grails:
                 scriptlets: html
                 taglib: none
                 staticparts: none
+    plugin:
+        awssdk:
+            region: ap-southeast-2
+            s3:
+#                # accessKey:  # Not required on EC2 deployments
+#                # secretKey:  # Not required on EC2 deployments
+#                bucket: ala-alerts-test
+#                profile: comp-ala-developer
 ---
 headerAndFooter:
     baseURL: "https://www.ala.org.au/commonui-bs3-2019"
@@ -203,8 +211,6 @@ biosecurity:
         #shape: spatialObject:9223660
         eventDateAge: 150
         firstLoadedDateAge: 8
-
-
 
 environments:
     development:
