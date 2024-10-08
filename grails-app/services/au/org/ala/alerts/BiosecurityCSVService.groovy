@@ -37,16 +37,7 @@ class BiosecurityCSVService {
     AmazonS3Service amazonS3Service
 
     def list() throws Exception {
-        if (grailsApplication.config.getProperty('biosecurity.csv.local.enabled', Boolean, true)) {
-            def BASE_DIRECTORY = grailsApplication.config.getProperty('biosecurity.csv.local.directory', '/tmp')
-            def dir = new File(BASE_DIRECTORY)
-            if (!dir.exists() || !dir.isDirectory()) {
-                return [status: 1, message: "Directory not found"]
-            }
-
-            def foldersAndFiles = listFilesRecursively(dir)
-            return [status:0, foldersAndFiles: foldersAndFiles]
-        } else if (grailsApplication.config.getProperty('biosecurity.csv.s3.enabled', Boolean, false)) {
+        if (grailsApplication.config.getProperty('biosecurity.csv.s3.enabled', Boolean, false)) {
             def s3Directory = grailsApplication.config.getProperty('biosecurity.csv.s3.directory', 'biosecurity')
             def s3Files = amazonS3Service.listObjects(s3Directory)
 
@@ -69,6 +60,15 @@ class BiosecurityCSVService {
             def foldersAndFiles = folderMap.collect { k, v -> [name: k, files: v] }.sort({ it.name }).reverse()
 
             return [status:0, foldersAndFiles: foldersAndFiles]
+        } else if (grailsApplication.config.getProperty('biosecurity.csv.local.enabled', Boolean, true)) {
+            def BASE_DIRECTORY = grailsApplication.config.getProperty('biosecurity.csv.local.directory', '/tmp')
+            def dir = new File(BASE_DIRECTORY)
+            if (!dir.exists() || !dir.isDirectory()) {
+                return [status: 1, message: "Directory not found"]
+            }
+
+            def foldersAndFiles = listFilesRecursively(dir)
+            return [status:0, foldersAndFiles: foldersAndFiles]
         }
     }
 
@@ -84,15 +84,15 @@ class BiosecurityCSVService {
             String folderName = new SimpleDateFormat("yyyy-MM-dd").format(new Date())
             String fileName = sanitizeFileName("${qs.query.name}")+ ".csv"
 
-            if (grailsApplication.config.getProperty('biosecurity.csv.local.enabled', Boolean, true)) {
-                String destinationFolder = new File(grailsApplication.config.getProperty('biosecurity.csv.local.directory', '/tmp'), folderName).absolutePath
-                File destinationFile = new File(destinationFolder, fileName)
-                moveToDestination(outputFile, destinationFile)
-            } else if (grailsApplication.config.getProperty('biosecurity.csv.s3.enabled', Boolean, false)) {
+            if (grailsApplication.config.getProperty('biosecurity.csv.s3.enabled', Boolean, false)) {
                 def s3Directory = grailsApplication.config.getProperty('biosecurity.csv.s3.directory', 'biosecurity')
                 String s3Key = "${s3Directory}/${folderName}/${fileName}"
                 log.debug("Uploading file to S3: " + s3Key)
                 amazonS3Service.storeFile(s3Key, outputFile, CannedAccessControlList.Private)
+            } else if (grailsApplication.config.getProperty('biosecurity.csv.local.enabled', Boolean, true)) {
+              String destinationFolder = new File(grailsApplication.config.getProperty('biosecurity.csv.local.directory', '/tmp'), folderName).absolutePath
+              File destinationFile = new File(destinationFolder, fileName)
+              moveToDestination(outputFile, destinationFile)
             }
         }
 
@@ -207,10 +207,7 @@ class BiosecurityCSVService {
         def folder = new File(BASE_DIRECTORY, folderName)
         Collection<File> csvFiles = []
 
-        if (grailsApplication.config.getProperty('biosecurity.csv.local.enabled', Boolean, true)) {
-            // recursively collect CSV files from the folder and its subfolders
-            collectCsvFiles(folder, csvFiles)
-        } else if (grailsApplication.config.getProperty('biosecurity.csv.s3.enabled', Boolean, false)) {
+        if (grailsApplication.config.getProperty('biosecurity.csv.s3.enabled', Boolean, false)) {
             // Folders in S3 are not real folders, but prefixes in the key - doesn't need to be recursive
             folderName = (folderName == '/') ? '' : folderName
             def folderPrefix = grailsApplication.config.getProperty('biosecurity.csv.s3.directory', 'biosecurity')
@@ -226,6 +223,9 @@ class BiosecurityCSVService {
                     }
                 }
             }
+        } else if (grailsApplication.config.getProperty('biosecurity.csv.local.enabled', Boolean, true)) {
+            // recursively collect CSV files from the folder and its subfolders
+            collectLocalCsvFiles(folder, csvFiles)
         }
 
         log.info("Aggregate ${csvFiles.size()} CSV files under ${folder} into one file")
@@ -275,19 +275,16 @@ class BiosecurityCSVService {
         if (!folderName) return false
 
         def config = grailsApplication.config
-
-        if (config.getProperty('biosecurity.csv.local.enabled', Boolean, true)) {
-            String baseDirectory = config.getProperty('biosecurity.csv.local.directory', String, '/tmp')
-            File folder = new File(baseDirectory, folderName)
-            return folder.exists() && folder.isDirectory()
-        }
-
         if (config.getProperty('biosecurity.csv.s3.enabled', Boolean, false)) {
             def folderPrefix = config.getProperty('biosecurity.csv.s3.directory', 'biosecurity')
             def s3Prefix = "${folderPrefix}/${folderName == '/' ? '' : folderName}"
             def s3Files = amazonS3Service.listObjects(s3Prefix)
             log.debug("Listing S3: $s3Prefix -> ${s3Files.objectSummaries.size()} files")
             return !s3Files.objectSummaries.isEmpty()
+        } else if (config.getProperty('biosecurity.csv.local.enabled', Boolean, true)) {
+            String baseDirectory = config.getProperty('biosecurity.csv.local.directory', String, '/tmp')
+            File folder = new File(baseDirectory, folderName)
+            return folder.exists() && folder.isDirectory()
         }
 
         false
@@ -304,19 +301,17 @@ class BiosecurityCSVService {
 
         def config = grailsApplication.config
 
-        if (config.getProperty('biosecurity.csv.local.enabled', Boolean, true)) {
-            String BASE_DIRECTORY = config.getProperty('biosecurity.csv.local.directory', String, '/tmp')
-            def file = new File(BASE_DIRECTORY, filename)
-            if (file.exists()) {
-                return file.text
-            }
-        }
-
         if (config.getProperty('biosecurity.csv.s3.enabled', Boolean, false)) {
             // Folders in S3 are not real folders, but prefixes in the key
             def folderPrefix = config.getProperty('biosecurity.csv.s3.directory', 'biosecurity')
             if (amazonS3Service.exists("${folderPrefix}/${filename}")) {
                 def file = amazonS3Service.getFile("${folderPrefix}/${filename}", "/tmp/${filename.tokenize(File.separator).last()}")
+                return file.text
+            }
+        } else if (config.getProperty('biosecurity.csv.local.enabled', Boolean, true)) {
+            String BASE_DIRECTORY = config.getProperty('biosecurity.csv.local.directory', String, '/tmp')
+            def file = new File(BASE_DIRECTORY, filename)
+            if (file.exists()) {
                 return file.text
             }
         }
@@ -329,7 +324,21 @@ class BiosecurityCSVService {
 
         def config = grailsApplication.config
 
-        if (config.getProperty('biosecurity.csv.local.enabled', Boolean, true)) {
+        if (config.getProperty('biosecurity.csv.s3.enabled', Boolean, false)) {
+            // Folders in S3 are not real folders, but prefixes in the key
+            String folderPrefix = config.getProperty('biosecurity.csv.s3.directory', 'biosecurity')
+            String bucket = config.getProperty('grails.plugin.awssdk.s3.bucket', null)
+            Map message
+
+            if (amazonS3Service.exists("${folderPrefix}/${filename}")) {
+                Boolean success = amazonS3Service.moveObject(bucket, "${folderPrefix}/${filename}", bucket, "${folderPrefix}/${filename}_deleted")
+                message = success ? [status: 0, message: "File deleted"] : [status: 1, message: "File deletion failed"]
+            } else {
+                message = [status: 1, message: "File not found"]
+            }
+
+            return message
+        } else if (config.getProperty('biosecurity.csv.local.enabled', Boolean, true)) {
             def BASE_DIRECTORY = grailsApplication.config.biosecurity.csv.local.directory
             def file = new File(BASE_DIRECTORY, filename)
             def message = [:]
@@ -345,22 +354,6 @@ class BiosecurityCSVService {
                     message['status'] = 1
                     message['message'] = "File deletion failed"
                 }
-            }
-
-            return message
-        }
-
-        if (config.getProperty('biosecurity.csv.s3.enabled', Boolean, false)) {
-            // Folders in S3 are not real folders, but prefixes in the key
-            String folderPrefix = config.getProperty('biosecurity.csv.s3.directory', 'biosecurity')
-            String bucket = config.getProperty('grails.plugin.awssdk.s3.bucket', null)
-            Map message
-
-            if (amazonS3Service.exists("${folderPrefix}/${filename}")) {
-                Boolean success = amazonS3Service.moveObject(bucket, "${folderPrefix}/${filename}", bucket, "${folderPrefix}/${filename}_deleted")
-                message = success ? [status: 0, message: "File deleted"] : [status: 1, message: "File deletion failed"]
-            } else {
-                message = [status: 1, message: "File not found"]
             }
 
             return message
