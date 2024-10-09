@@ -110,7 +110,6 @@ Resources:
       Description: !Sub 'Ec2 instance profile role for ${AWS::StackName} ${pEnvironment} build ${pBuild}'
       ManagedPolicyArns:
         - !Sub arn:aws:iam::${AWS::AccountId}:policy/cpt/cptSSMInstanceCoreCloudWatchPatch
-        - arn:aws:iam::aws:policy/AmazonCognitoPowerUser
       Policies:
         - PolicyDocument:
             Version: "2012-10-17"
@@ -200,6 +199,8 @@ Outputs:
 
   AlertsSecret:
     Description: The Secrets name for alerts 
-    Value: !Sub 
-            - alerts-${ResourceName}
-            - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
+    Value: !Ref AlertsSecret 
+  
+  BiosecurityAlertsBucket:
+    Description: The S3 bucket for the Biosecurity Alerts service
+    Value: !Ref BiosecurityAlertsBucket
