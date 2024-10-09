@@ -6,6 +6,9 @@ Parameters:
   pBuild:
     Type: String
     Description: The build number
+  pBackupBucket:
+    Type: String
+    Description: The backup bucket
   pCleanBranch:
     Type: String
     Description: The clean branch, can be used in resource names
@@ -28,8 +31,7 @@ Conditions:
     - !Equals
       - !Ref pEnvironment
       - production
-  #IsFirstBuild: !Equals [!Ref pBuild, "1"]
-  IsFirstBuild: !Equals ["1", "1"]
+  IsFirstBuild: !Equals [!Ref pBuild, "1"]
 
 Resources:
 
@@ -92,7 +94,66 @@ Resources:
           Value: !Sub 
               - ${pProductName}-${ResourceName}
               - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
-        
+
+  AlertsRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - ec2.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Description: !Sub 'Ec2 instance profile role for ${AWS::StackName} ${pEnvironment} build ${pBuild}'
+      ManagedPolicyArns:
+        - !Sub arn:aws:iam::${AWS::AccountId}:policy/cpt/cptSSMInstanceCoreCloudWatchPatch
+        - arn:aws:iam::aws:policy/AmazonCognitoPowerUser
+      Policies:
+        - PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+            - Effect: Allow
+              Action:
+                - 'secretsmanager:getsecretvalue'
+              Resource:
+                - !Sub ${AlertsSecret}-??????
+          PolicyName: secrets
+        - PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+            - Effect: Allow
+              Action:
+                - s3:DeleteObject
+                - s3:DeleteObjectVersion
+                - s3:GetBucketLocation
+                - s3:GetObject
+                - s3:ListBucket
+                - s3:PutObject
+              Resource:
+                - !Sub arn:aws:s3:::${pBackupBucket}
+                - !Sub arn:aws:s3:::${pBackupBucket}/*
+          PolicyName: backups
+        - PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+            - Effect: Allow
+              Action:
+                - ses:SendEmail
+                - ses:SendTemplatedEmail
+                - ses:SendRawEmail
+              Resource:
+                - '*'
+          PolicyName: backups
+      RoleName: !Sub '${AWS::StackName}--${pEnvironment}--${pBuild}'
+      Tags:
+        - Key: Name
+          Value: !Sub 
+              - ${pProductName}-${ResourceName}
+              - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
+ 
 
   AlertsSecret:
     Type: 'AWS::SecretsManager::Secret'
