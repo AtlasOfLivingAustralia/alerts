@@ -28,7 +28,8 @@ Conditions:
     - !Equals
       - !Ref pEnvironment
       - production
-  IsFirstBuild: !Equals [!Ref pBuild, "1"]
+  #IsFirstBuild: !Equals [!Ref pBuild, "1"]
+  IsFirstBuild: !Equals ["1", "1"]
 
 Resources:
 
@@ -95,21 +96,19 @@ Resources:
 
   AlertsSecret:
     Type: 'AWS::SecretsManager::Secret'
-    Condition: IsFirstBuild
     Properties:
       Name: !Sub 
               - ${pProductName}-${ResourceName}
               - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
       Description: !Sub Alerts app ${pEnvironment} secrets
-      GenerateSecretString: 
-        GenerateStringKey: db-password
-        PasswordLength: 12
-        ExcludeCharacters: "/@\" "
-        SecretStringTemplate: |
-          {
-            "db-password": "",
-            "oidc_secret" : ""
-          }
+      SecretString: !If
+              - IsFirstBuild
+              - |
+                {
+                   "oidc_secret" : "",
+                   "db-password" : "",
+                }
+              - !Ref "AWS::NoValue"
 
 
 
