@@ -108,12 +108,9 @@ Resources:
         ExcludeCharacters: "/@\" "
         SecretStringTemplate: |
           {
-            "db-password": ""
+            "db-password": "",
+            "oidc_secret" : ""
           }
-      SecretString: |
-                {
-                   "oidc_secret" : ""
-                }
 
 
 
