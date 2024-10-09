@@ -12,13 +12,24 @@
         <g:set var="userPrefix" value="${adminUser ? user.email : message(code:"my.alerts.my") }"/>
         <title><g:message code="my.alerts.title" args="[userPrefix]" /> | ${grailsApplication.config.skin.orgNameLong}</title>
         <asset:stylesheet href="alerts.css"/>
+        <script>
+            $(function () {
+                $('[data-toggle="tooltip"]').tooltip()
+            })
+        </script>
     </head>
     <body>
       <div id="content">
           <header id="page-header">
               <div class="inner row-fluid">
                   <div class="content">
-                      <h1><g:message code="my.alerts.h1" args="[userPrefix]" /></h1>
+                      <h1>
+                          <g:message code="my.alerts.h1" args="[userPrefix]" />
+                          <g:if test="${user.locked}">
+                              &nbsp;
+                              <i class="fa fa-lock" data-toggle="tooltip" data-placement="bottom" title="${g.message(code:'my.alerts.user.isLocked.title')}"></i>
+                          </g:if>
+                      </h1>
                   </div>
                   <div>
                       <% if (request.isUserInRole("ROLE_ADMIN")) { %>
