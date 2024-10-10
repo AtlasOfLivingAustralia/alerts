@@ -1,0 +1,13 @@
+version: 0.2
+###
+# Deletes all objects from the biosecurity alerts bucket, this needs to be done 
+# before the teardown action so the bucket can be removed
+
+env:
+  shell: bash
+
+phases:
+  build:
+    commands:
+      - echo The alerts bucket is $BIOSECURITY_ALERTS_BUCKET, deleting all objects
+      - aws s3 rm s3://$BIOSECURITY_ALERTS_BUCKET --recursive
