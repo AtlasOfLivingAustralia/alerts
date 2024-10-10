@@ -44,7 +44,7 @@ Resources:
       ImageScanningConfiguration:
         ScanOnPush: true
       RepositoryName: !Sub
-                         - alerts-${ResourceName}
+                         - ${pProductName}-${ResourceName}
                          - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
       RepositoryPolicyText:
         Version: 2012-10-17
