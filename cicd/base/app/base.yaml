@@ -63,7 +63,7 @@ Resources:
           Value: !Ref pCleanBranch
 
   BiosecurityAlertsBucket:
-    Type: "AWS::S3::Bucket"
+    Type: AWS::S3::Bucket
     DeletionPolicy: Delete
     Properties:
       BucketEncryption:
@@ -78,11 +78,6 @@ Resources:
           - Id: delete
             AbortIncompleteMultipartUpload:
                DaysAfterInitiation: 1
-            Status: Enabled
-          - Id: storage class transition
-            Transition:
-              StorageClass: INTELLIGENT_TIERING
-              TransitionInDays: 7
             Status: Enabled
       PublicAccessBlockConfiguration:
         BlockPublicAcls: TRUE
@@ -170,7 +165,7 @@ Resources:
  
 
   AlertsSecret:
-    Type: 'AWS::SecretsManager::Secret'
+    Type: AWS::SecretsManager::Secret
     Properties:
       Name: !Sub 
               - ${pProductName}-${ResourceName}
