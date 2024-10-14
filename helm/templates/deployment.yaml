@@ -14,7 +14,7 @@ spec:
       labels:
         {{- include "ala-alerts.selectorLabels" . | nindent 8 }}
     spec:
-      serviceAccountName: alerts-ses-email-sender
+      serviceAccountName: alerts-service-account
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
