@@ -6,12 +6,21 @@ Parameters:
   pBuild:
     Type: String
     Description: The build number
+  pBackupBucket:
+    Type: String
+    Description: The backup bucket
   pCleanBranch:
     Type: String
     Description: The clean branch, can be used in resource names
   pEnvironment:
     Type: String
     Description: The AWS environment this belongs to
+  pProductComponent:
+    Type: String
+    Description: The product component
+  pProductName:
+    Type: String
+    Description: The name of the product
 
 Conditions:
 
@@ -22,6 +31,7 @@ Conditions:
     - !Equals
       - !Ref pEnvironment
       - production
+  IsFirstBuild: !Equals [!Ref pBuild, "1"]
 
 Resources:
 
@@ -34,7 +44,7 @@ Resources:
       ImageScanningConfiguration:
         ScanOnPush: true
       RepositoryName: !Sub
-                         - alerts-${ResourceName}
+                         - ${pProductName}-${ResourceName}
                          - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
       RepositoryPolicyText:
         Version: 2012-10-17
@@ -52,21 +62,123 @@ Resources:
         - Key: Branch
           Value: !Ref pCleanBranch
 
+  BiosecurityAlertsBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Delete
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      BucketName: !Sub 
+              - ${pProductName}-${ResourceName}
+              - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
+      LifecycleConfiguration:
+        Rules:
+          - Id: delete
+            AbortIncompleteMultipartUpload:
+               DaysAfterInitiation: 1
+            Status: Enabled
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: TRUE
+        BlockPublicPolicy: TRUE
+        IgnorePublicAcls: TRUE
+        RestrictPublicBuckets: TRUE
+      Tags:
+        - Key: Name
+          Value: !Sub 
+              - ${pProductName}-${ResourceName}
+              - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
+
+  AlertsRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - ec2.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Description: !Sub 'Ec2 instance profile role for ${AWS::StackName} ${pEnvironment} build ${pBuild}'
+      ManagedPolicyArns:
+        - !Sub arn:aws:iam::${AWS::AccountId}:policy/cpt/cptSSMInstanceCoreCloudWatchPatch
+      Policies:
+        - PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+            - Effect: Allow
+              Action:
+                - 'secretsmanager:getsecretvalue'
+              Resource:
+                - !Sub ${AlertsSecret}-??????
+          PolicyName: secrets
+        - PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+            - Effect: Allow
+              Action:
+                - s3:DeleteObject
+                - s3:DeleteObjectVersion
+                - s3:GetBucketLocation
+                - s3:GetObject
+                - s3:ListBucket
+                - s3:PutObject
+              Resource:
+                - !Sub arn:aws:s3:::${pBackupBucket}
+                - !Sub arn:aws:s3:::${pBackupBucket}/*
+          PolicyName: backups
+        - PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+            - Effect: Allow
+              Action:
+                - s3:DeleteObject
+                - s3:DeleteObjectVersion
+                - s3:GetBucketLocation
+                - s3:GetObject
+                - s3:ListBucket
+                - s3:PutObject
+              Resource:
+                - !Sub arn:aws:s3:::${BiosecurityAlertsBucket}
+                - !Sub arn:aws:s3:::${BiosecurityAlertsBucket}/*
+          PolicyName: biosecurity-bucket
+        - PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+            - Effect: Allow
+              Action:
+                - ses:SendEmail
+                - ses:SendTemplatedEmail
+                - ses:SendRawEmail
+              Resource:
+                - '*'
+          PolicyName: email
+      RoleName: !Sub '${AWS::StackName}--${pEnvironment}--${pBuild}'
+      Tags:
+        - Key: Name
+          Value: !Sub 
+              - ${pProductName}-${ResourceName}
+              - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
+ 
+
   AlertsSecret:
-    Type: 'AWS::SecretsManager::Secret'
+    Type: AWS::SecretsManager::Secret
     Properties:
       Name: !Sub 
-              - alerts-${ResourceName}
+              - ${pProductName}-${ResourceName}
               - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
       Description: !Sub Alerts app ${pEnvironment} secrets
-      GenerateSecretString: 
-        GenerateStringKey: db-password
-        PasswordLength: 12
-        ExcludeCharacters: "/@\" "
-        SecretStringTemplate: |
-          {
-            "db-password": ""
-          }
+      SecretString: !If
+              - IsFirstBuild
+              - |
+                {
+                   "oidc_secret" : "",
+                   "db-password" : "",
+                }
+              - !Ref "AWS::NoValue"
 
 
 
@@ -82,4 +194,8 @@ Outputs:
 
   AlertsSecret:
     Description: The Secrets name for alerts 
-    Value: !Ref AlertsSecret
+    Value: !Ref AlertsSecret 
+  
+  BiosecurityAlertsBucket:
+    Description: The S3 bucket for the Biosecurity Alerts service
+    Value: !Ref BiosecurityAlertsBucket

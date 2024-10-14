@@ -1,8 +1,11 @@
 {
   "Parameters" : {
     "pBuild"                : "{{ codebuild_build_number }}",
+    "pBackupBucket"          : "{{ backup_bucket }}",
     "pCleanBranch"          : "{{ clean_branch }}",
-    "pEnvironment"          : "{{ environment }}"
+    "pEnvironment"          : "{{ environment }}",
+    "pProductComponent"     : "{{ product_component }}",
+    "pProductName"          : "{{ product_name }}"
   },
   "Tags" : {
     "product"     : "{{ product_name }}",
