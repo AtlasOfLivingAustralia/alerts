@@ -108,7 +108,7 @@ Resources:
                   "Action": "sts:AssumeRoleWithWebIdentity",
                   "Condition": {
                       "StringEquals": {
-                                        "${pClusterOidcIssuerUrl}:sub": "system:serviceaccount:${pProductName}:${pServiceAccountName}",
+                                        "${pClusterOidcIssuerUrl}:sub": "system:serviceaccount:${pProductName}:alerts-service-account",
                                         "${pClusterOidcIssuerUrl}:aud": "sts.amazonaws.com"
                       }
                   }
