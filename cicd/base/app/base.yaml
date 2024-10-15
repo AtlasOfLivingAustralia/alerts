@@ -21,6 +21,9 @@ Parameters:
   pProductName:
     Type: String
     Description: The name of the product
+  pOidcConnectProvider:
+    Type: String
+    Description: The OIDC connect provider
   pClusterOidcIssuerUrl:
     Type: String
     Description: The OIDC issuer URL for the cluster
