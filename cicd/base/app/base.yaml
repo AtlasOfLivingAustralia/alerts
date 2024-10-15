@@ -106,8 +106,8 @@ Resources:
             Federated:
               - arn:aws:iam::${AWS::AccountId}:oidc-provider/${pClusterOidcIssuerUrl}
           Action:
-          - sts:AssumeRole
-          - sts:AssumeRoleWithWebIdentity
+            - sts:AssumeRole
+            - sts:AssumeRoleWithWebIdentity
       Description: !Sub 'Ec2 instance profile role for ${AWS::StackName} ${pEnvironment} build ${pBuild}'
       ManagedPolicyArns:
         - !Sub arn:aws:iam::${AWS::AccountId}:policy/cpt/cptSSMInstanceCoreCloudWatchPatch
