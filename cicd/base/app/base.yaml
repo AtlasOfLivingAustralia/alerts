@@ -104,7 +104,7 @@ Resources:
             Service:
             - ec2.amazonaws.com
             Federated:
-              - arn:aws:iam::${AWS::AccountId}:oidc-provider/${pClusterOidcIssuerUrl}
+            - arn:aws:iam::${AWS::AccountId}:oidc-provider/${pClusterOidcIssuerUrl}
           Action:
             - sts:AssumeRole
             - sts:AssumeRoleWithWebIdentity
