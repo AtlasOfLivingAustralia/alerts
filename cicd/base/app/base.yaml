@@ -21,6 +21,9 @@ Parameters:
   pProductName:
     Type: String
     Description: The name of the product
+  pClusterOidcIssuerUrl:
+    Type: String
+    Description: The OIDC issuer URL for the cluster
 
 Conditions:
 
@@ -101,9 +104,10 @@ Resources:
             Service:
             - ec2.amazonaws.com
             Federated:
-              - arn:aws:iam::${AWS::AccountId}:oidc-provider/${EKS_CLUSTER_OIDC_PROVIDER}
+              - arn:aws:iam::${AWS::AccountId}:oidc-provider/${pClusterOidcIssuerUrl}
           Action:
           - sts:AssumeRole
+          - sts:AssumeRoleWithWebIdentity
       Description: !Sub 'Ec2 instance profile role for ${AWS::StackName} ${pEnvironment} build ${pBuild}'
       ManagedPolicyArns:
         - !Sub arn:aws:iam::${AWS::AccountId}:policy/cpt/cptSSMInstanceCoreCloudWatchPatch

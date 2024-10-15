@@ -19,6 +19,7 @@ env:
     - ALERTS_ECR_REPOSITORY_NAME
     - DB_READ_ENDPOINT
     - DB_WRITE_ENDPOINT
+    - EKS_CLUSTER_NAME
 
 phases:
 
@@ -68,6 +69,8 @@ phases:
       - echo ALERTS_ECR_REPOSITORY_NAME=$ALERTS_ECR_REPOSITORY_NAME
       - echo DB_READ_ENDPOINT=$DB_READ_ENDPOINT
       - echo DB_WRITE_ENDPOINT=$DB_WRITE_ENDPOINT
+      - export EKS_CLUSTER_NAME=$(aws cloudformation list-exports --query "Exports[?Name=='$REGOLITH_STACK_NAME-ClusterName'].Value" --output text)
+      - echo EKS_CLUSTER_NAME=$EKS_CLUSTER_NAME
     finally:
       - #echo This always runs
 

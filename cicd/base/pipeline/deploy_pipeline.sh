@@ -141,8 +141,6 @@ aws cloudformation deploy \
         pBootstrapStackName=$BOOTSTRAP_STACK_NAME \
         pBucketsStackName=$BUCKETS_STACK_NAME \
         pCleanBranch=$clean_branch \
-        pEksClusterName=$EKS_CLUSTER_NAME \
-        pEksClusterOidcIssuer=$EKS_CLUSTER_OIDC_ISSUER \
         pEnvironment=$environment \
         pGitHubBranch=$branch \
         pGitHubOwner=$GITHUB_OWNER \
