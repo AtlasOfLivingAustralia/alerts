@@ -112,14 +112,6 @@ Resources:
                                         "${pClusterOidcIssuerUrl}:aud": "sts.amazonaws.com"
                       }
                   }
-              },
-              {
-                "Effect": "Allow",
-                "Principal": {
-                  "Service":  "ec2.amazonaws.com"
-                
-                },
-                "Action": "sts:AssumeRole"
               }
           ]
         }
