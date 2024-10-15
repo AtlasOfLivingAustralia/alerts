@@ -21,6 +21,12 @@ Parameters:
   pProductName:
     Type: String
     Description: The name of the product
+  pOidcConnectProvider:
+    Type: String
+    Description: The OIDC connect provider
+  pClusterOidcIssuerUrl:
+    Type: String
+    Description: The OIDC issuer URL for the cluster
 
 Conditions:
 
@@ -93,15 +99,33 @@ Resources:
   AlertsRole:
     Type: AWS::IAM::Role
     Properties:
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-        - Effect: Allow
-          Principal:
-            Service:
-            - ec2.amazonaws.com
-          Action:
-          - sts:AssumeRole
+      AssumeRolePolicyDocument: !Sub |
+        {
+          "Version": "2012-10-17",
+          "Statement": [
+              {
+                  "Effect": "Allow",
+                  "Principal": {
+                      "Federated": "${pOidcConnectProvider}"
+                  },
+                  "Action": "sts:AssumeRoleWithWebIdentity",
+                  "Condition": {
+                      "StringEquals": {
+                                        "${pClusterOidcIssuerUrl}:sub": "system:serviceaccount:${pProductName}:alerts-service-account",
+                                        "${pClusterOidcIssuerUrl}:aud": "sts.amazonaws.com"
+                      }
+                  }
+              },
+              {
+                "Effect": "Allow",
+                "Principal": {
+                  "Service":  "ec2.amazonaws.com"
+                
+                },
+                "Action": "sts:AssumeRole"
+              }
+          ]
+        }
       Description: !Sub 'Ec2 instance profile role for ${AWS::StackName} ${pEnvironment} build ${pBuild}'
       ManagedPolicyArns:
         - !Sub arn:aws:iam::${AWS::AccountId}:policy/cpt/cptSSMInstanceCoreCloudWatchPatch
@@ -199,3 +223,7 @@ Outputs:
   BiosecurityAlertsBucket:
     Description: The S3 bucket for the Biosecurity Alerts service
     Value: !Ref BiosecurityAlertsBucket
+
+  AlertsRoleArn:
+    Description: The role ARN for the Alerts service
+    Value: !GetAtt AlertsRole.Arn
