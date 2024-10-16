@@ -188,7 +188,7 @@ class UserService {
                     log.error(it)
                 }
             }
-            if (grailsApplication.getProperty('useBlogsAlerts', Boolean, true)) {
+            if (grailsApplication.config.getProperty('useBlogsAlerts', Boolean, true)) {
                 // new user gets "Blogs and News" weekly by default (opt out)
                 def notificationInstance = new Notification()
                 notificationInstance.query = Query.findByName(messageSource.getMessage("query.ala.blog.title", null, siteLocale))
