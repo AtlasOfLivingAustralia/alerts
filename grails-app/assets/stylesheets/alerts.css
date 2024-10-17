@@ -89,6 +89,29 @@ a.btn-ala {
 }
 
 .indented-text {
-    text-indent: -2ch;
-    padding-left: 3ch;
+    text-indent: -1.8ch;
+    padding-left: 3.5ch;
 }
+
+.badge-primary {
+    background-color: #c44d34; /* Red color */
+    color: #fff; /* White text */
+}
+
+.badge-info {
+    background-color: #17a2b8; /* Red color */
+    color: #fff; /* White text */
+}
+
+.badge-dark {
+    background-color: #343a40; /* Red color */
+    color: #fff; /* White text */
+}
+
+.row-fluid {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+

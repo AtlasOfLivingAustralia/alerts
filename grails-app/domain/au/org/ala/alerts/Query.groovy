@@ -44,8 +44,22 @@ class Query {
         notifications cascade: 'all-delete-orphan'
     }
 
-    public String toString() {
+    Query() {
+        this.notifications = []
+        this.queryResults = []
+        this.propertyPaths = []
+    }
+
+    String toString() {
         return name
+    }
+
+    int countSubscribers(String frequency = null) {
+        if (frequency) {
+            return notifications.collect { it.user }.count(it -> it.frequency?.name == frequency)
+        } else {
+            return notifications.collect { it.user }.count()
+        }
     }
 
     String getListId() {
@@ -55,5 +69,32 @@ class Query {
             return matcher.group(1)
         }
         return null
+    }
+    /**
+     * return logs of a given frequency, or all logs if frequency is null
+     * @param frequency
+     * @return logs [array]
+     */
+    String[] getLogs(String frequency= null) {
+        def logs = []
+        if (frequency) {
+            this.queryResults?.each { qr ->
+                if (qr.frequency.isFrequency(frequency)) {
+                    logs << qr.getLog()
+                }
+            }
+        } else {
+            this.queryResults?.each { qr ->
+                logs << qr.getLog()
+            }
+        }
+        return logs.flatten()
+    }
+
+    /**
+     * return QueryResult of a given frequency
+     */
+    QueryResult getQueryResult(String frequency) {
+        return this.queryResults.find { it.frequency.isFrequency(frequency) }
     }
 }

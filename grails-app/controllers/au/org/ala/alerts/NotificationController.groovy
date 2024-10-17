@@ -1,10 +1,8 @@
 package au.org.ala.alerts
 
 import grails.converters.JSON
-import grails.gorm.transactions.Transactional
 import io.micronaut.http.HttpStatus
 
-@Transactional
 class NotificationController {
 
     def notificationService
@@ -80,7 +78,10 @@ class NotificationController {
         def notificationInstance = Notification.findByUserAndQuery(user, query)
         if (notificationInstance) {
             log.debug('Deleting my notification :  ' + params.id)
-            notificationInstance.each { it.delete(flush: true) }
+            Notification.withTransaction {
+                notificationInstance.each { it.delete(flush: true) }
+            }
+
         } else {
             log.error('*** Unable to find  my notification - no delete :  ' + params.id)
         }
@@ -102,13 +103,39 @@ class NotificationController {
         return null
     }
 
+    /**
+     * todo check if it works?
+     */
     def checkNow = {
         Notification notification = Notification.get(params.id)
-        boolean sendUpdateEmail = notificationService.checkStatus(notification.query)
+        // no such method
+        boolean sendUpdateEmail = notificationService.executeQuery(notification.query)?.hasChanged
         if (sendUpdateEmail) {
             emailService.sendNotificationEmail(notification)
         }
         redirect(action: "show", params: params)
+    }
+
+    /**
+     * Debug the algorithm used to detect changes in the latest result / previous result
+     *
+     */
+
+    def evaluateChangeDetectionAlgorithm = {
+        def query = Query.get(params.queryId)
+        def queryResult = query?.queryResults?.find { queryResult ->
+            queryResult.id == params.queryResultId.toLong()
+        }
+        //NOTE: this is a hack since the lastResult will be copied into the previousResult in RefreshProperties method
+        //We need to hack the current result with previousResult.
+        def lastResult = queryResult.decompress(queryResult.lastResult)
+        queryResult.lastResult = queryResult.previousResult
+
+        notificationService.refreshProperties(queryResult, lastResult)
+        boolean hasChanged = notificationService.hasChanged(queryResult)
+        def records = notificationService.collectUpdatedRecords(queryResult)
+        def results = ["hasChanged": hasChanged, "brief": queryResult.brief(),  "records": records]
+        render results as JSON
     }
 
     def index = {

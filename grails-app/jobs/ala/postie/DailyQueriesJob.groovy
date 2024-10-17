@@ -11,7 +11,7 @@ class DailyQueriesJob {
     def execute() {
         // execute task
         log.info("****** Scheduled daily update ****** " + new Date())
-        notificationService.checkQueryForFrequency('daily')
+        notificationService.execQueryForFrequency('daily')
         log.info("****** Scheduled daily update finished ******" + new Date())
     }
 }

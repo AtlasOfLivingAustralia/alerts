@@ -1,5 +1,6 @@
 package au.org.ala.alerts
 
+import grails.gorm.transactions.NotTransactional
 import grails.util.Holders
 import groovy.sql.Sql
 import org.apache.http.entity.ContentType
@@ -7,16 +8,10 @@ import org.springframework.dao.DataIntegrityViolationException
 import grails.gorm.transactions.Transactional
 
 
-
-@Transactional
 class QueryService {
 
-    static transactional = true
-
     def serviceMethod() {}
-
     def grailsApplication, notificationService, alertsWebService, webService
-
     def messageSource, dataSource
     def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
 
@@ -38,10 +33,16 @@ class QueryService {
         n
     }
 
+    /**
+     * return true if a query does not have a propertyPath with fireWhenChange AND fireWhenNotZero set to true
+     * @param query
+     * @return
+     */
+    @NotTransactional
     Boolean checkChangeByDiff(Query query) {
         !hasAFireProperty(query) && (query.idJsonPath || isMyAnnotation(query))
     }
-
+    @NotTransactional
     Boolean hasAFireProperty(Query query) {
         query.propertyPaths.any { it.fireWhenChange || it.fireWhenNotZero }
     }
@@ -65,23 +66,34 @@ class QueryService {
         queryPath.substring(queryPath.indexOf('assertion_user_id:') + 'assertion_user_id:'.length(), queryPath.indexOf('&dir=desc'))
     }
 
-    Integer fireWhenNotZeroProperty(QueryResult queryResult) {
-        Integer fireWhenNotZeroValue = -1
+    /**
+     * When fireWhenNotZero is true,  it should has a digit propertyVale, e.g. totalNumber
+     * It is supposed to be totalNumber of NEW records
+     * NOT SAFE
+     *
+     * @param queryResult
+     * @return the last valid number in propertyValues. Assume 'totalNumber' is the last propertyPath with 'fireWhenNotZero' set to 'true
+     *
+     *
+     */
+    Integer totalNumberWhenNotZeroPropertyEnabled(QueryResult queryResult) {
+        Integer fireWhenNotZeroValue = 0
         queryResult.propertyValues.each { pv ->
             if (pv.propertyPath.fireWhenNotZero) {
                 // true is 1, false is 0
-                fireWhenNotZeroValue = pv?.currentValue? pv?.currentValue.toInteger() : -1
+                fireWhenNotZeroValue = pv?.currentValue? pv?.currentValue.toInteger() : 0
             }
         }
         fireWhenNotZeroValue
     }
 
     /**
-     * Voilate the constraints, cannot delete
+     * Validate the constraints, cannot delete
      * @param queryInstance
      * @return
      * @throws DataIntegrityViolationException
      */
+    @Transactional
     def deleteQuery(Query queryInstance) throws DataIntegrityViolationException {
         def propertyPaths = PropertyPath.findAllByQuery(queryInstance)
         def queryResults = QueryResult.findAllByQuery(queryInstance)
@@ -94,7 +106,8 @@ class QueryService {
         queryInstance.delete(flush: true)
     }
 
-    int deleteOrphanedQueries() {
+    @Transactional
+    Map deleteOrphanedQueries() {
         def toBeRemoved = []
         Query.findAll().each {
             if (it.notifications.size() == 0 && it.custom == true) {
@@ -106,59 +119,47 @@ class QueryService {
             deleteQuery(it)
         }
 
-        toBeRemoved.size()
+        //remove notifications which its query has been removed
+        int ophanedNotifications = 0;
+        Notification.findAll().each {
+            if (!Query.findById(it.queryId)) {
+                it.delete(flush: true)
+                ophanedNotifications++
+            }
+        }
+        log.info("Deleted ${toBeRemoved.size()} orphaned queries")
+        log.info("Deleted ${ophanedNotifications} orphaned notifications")
+        [OrphanQuery: toBeRemoved.size(), OrphanNotification: ophanedNotifications]
     }
 
     // return true if a new query is created, otherwise return false
+    @Transactional
     boolean createQueryForUserIfNotExists(Query newQuery, User user, boolean setPropertyPath = true) {
         boolean newQueryCreated = false
         //find the query
         Query retrievedQuery = Query.findByBaseUrlAndQueryPath(newQuery.baseUrl, newQuery.queryPath)
         if (retrievedQuery == null) {
-            try {
-                if (!newQuery.save(validate: true, flush: true)) {
-                    newQuery.errors.allErrors.each {
-                        log.error(it)
-                    }
-                }
-                newQueryCreated = true
-                if (setPropertyPath) {
-                    PropertyPath pp = new PropertyPath([name: "totalRecords", jsonPath: "totalRecords", query: newQuery, fireWhenNotZero: true])
-                    if (!pp.save(validate: true, flush: true)) {
-                        pp.errors.allErrors.each {
-                            log.error(it)
-                        }
-                    }
-                    pp = new PropertyPath([name: "last_loaded_record", jsonPath: "occurrences[0].uuid", query: newQuery])
-                    if (!pp.save(validate: true, flush: true)) {
-                        pp.errors.allErrors.each {
-                            log.error(it)
-                        }
-                    }
-                }
-            } catch (Exception ex) {
-                log.error("Error occurred when saving Query: " + ex.toString())
+            log.debug("Query does not exist....")
+            //save the query
+            newQuery.save(flush: true)
+            newQueryCreated = true
+            if (setPropertyPath) {
+                PropertyPath totalRecordPP = new PropertyPath([name: "totalRecords", jsonPath: "totalRecords", query: newQuery, fireWhenNotZero: true])
+                PropertyPath lastLoadedPP = new PropertyPath([name: "last_loaded_record", jsonPath: "occurrences[0].uuid", query: newQuery])
+                newQuery.propertyPaths.add(totalRecordPP)
+                newQuery.propertyPaths.add(lastLoadedPP)
             }
         } else {
             newQuery = retrievedQuery
         }
-
         //does the notification already exist?
         def exists = Notification.findByQueryAndUser(newQuery, user)
         if (!exists) {
-
             Notification n = new Notification([query: newQuery, user: user])
-            if (!n.save(validate: true, flush: true)) {
-                n.errors.allErrors.each {
-                    log.error(it)
-                }
-            }
-
-            if (n.hasErrors()) {
-                n.errors.allErrors.each { e -> log.error(e) }
-            }
+            newQuery.notifications.add(n)
         }
 
+        newQuery.save(validate: true, flush: true)
         newQueryCreated
     }
 
@@ -168,6 +169,7 @@ class QueryService {
      * @param biocacheWebserviceQueryPath
      * @return
      */
+
     Query createBioCacheChangeQuery(String biocacheWebserviceQueryPath, String biocacheUIQueryPath, String queryDisplayName, String baseUrlForWS, String baseUrlForUI, String resourceName) {
         // truncate long name to avoid SQL error
         if (queryDisplayName.length() >= 250) {
@@ -326,6 +328,7 @@ class QueryService {
      * @param listid
      * @return
      */
+
     Query createBioSecurityQuery(String listid) {
         def sList = getSpeciesListName(listid)
         String speciesListName = sList.name
@@ -392,10 +395,20 @@ class QueryService {
             order('id', 'desc')
         }
 
+
+
         def results = queries.collect{ query ->
-            QueryResult qr = !query.queryResults.isEmpty() ? query.queryResults.last() : null
+            // Bioseurity queries are weekly ONLY, so filter out the other frequencies
+            def filteredQueryResults = query.queryResults.findAll { it.frequency?.name == 'weekly' }
+            // Get the last QueryResult from the filtered list, if it exists
+            QueryResult qr = !filteredQueryResults.isEmpty() ? filteredQueryResults.first() : null
+
+            // Update the query's lastChecked property if a QueryResult was found
             if (qr) {
                 query.lastChecked = qr.lastChecked
+                query.queryResults = [qr]
+            } else {
+                query.queryResults = []
             }
             query
         }
@@ -413,10 +426,6 @@ class QueryService {
         return subscription
     }
 
-    def getQueryLogs(query) {
-        def queryResult = QueryResult.findByQuery(query)
-        return queryResult?.retrieveLogs()
-    }
 
     // get all subscribers to the specified query
     def getSubscribers(Long queryId) {
@@ -465,7 +474,7 @@ class QueryService {
         def result = null
         try {
             // Execute a raw SQL for full-text match query
-            String query = "SELECT * FROM query WHERE MATCH(name) AGAINST ('${keywords}*' IN BOOLEAN MODE ) AND email_template = '/email/biosecurity' LIMIT 10 "
+            String query = "SELECT * FROM query WHERE name LIKE '%${keywords}%' AND email_template = '/email/biosecurity' LIMIT 10 "
             result = sql.rows(query)
         } catch(Exception e) {
             // Handle any exceptions
@@ -479,6 +488,7 @@ class QueryService {
     }
 
     // delete a query (also remove all subscriptions)
+    @Transactional
     def wipe(id) {
         def result = ['status': 1, 'message': 'Runtime error, check logs']
         if (id) {
@@ -493,7 +503,19 @@ class QueryService {
                     pp.delete(flush: true)
                 }
 
-               query.delete()
+                //Manually delete all related Notifications
+                Notification.findAllByQuery(query).each { Notification n ->
+                    log.debug("Deleting notification of : ${id}")
+                    n.delete(flush: true)
+                }
+
+                //Manually delete all related QueryResults
+                QueryResult.findAllByQuery(query).each { QueryResult qr ->
+                    log.debug("Deleting query result of : ${id}")
+                    qr.delete(flush: true)
+                }
+
+                query.delete()
                 result['status'] = 0
                 result['message'] = "Query ${id} removed"
             } else {
@@ -514,5 +536,28 @@ class QueryService {
             lastCheckedDate = queryResult.lastChecked
         }
         lastCheckedDate
+    }
+
+    /**
+     * List all queries grouped by email template
+     */
+    def summarize() {
+        List<Query> queries =  Query.createCriteria().list {
+            ne("name", "My Annotations")
+        }
+
+        List<Query> annotations =  Query.createCriteria().list {
+            eq("name", "My Annotations")
+            createAlias("notifications", "n")
+            createAlias("n.user", "u")
+            order("u.email")
+        }
+
+        Map<String, List<Query>> groupedByTemplate = queries.groupBy { it.emailTemplate }.collectEntries { key, value ->
+            [ (key.replace("/email/", "")) : value.sort { it.name }]
+        }
+        groupedByTemplate['annotations'] = annotations
+
+        return groupedByTemplate
     }
 }

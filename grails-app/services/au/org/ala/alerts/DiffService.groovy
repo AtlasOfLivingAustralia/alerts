@@ -14,19 +14,23 @@
 package au.org.ala.alerts
 
 import com.jayway.jsonpath.JsonPath
-
 import java.util.zip.GZIPInputStream
 
+/**
+ * Service to compare JSON results stored in QueryResult
+ */
 class DiffService {
-
-    static transactional = true
     def queryService
 
     Boolean hasChangedJsonDiff(QueryResult queryResult) {
-        if (queryResult.lastResult != null && queryResult.previousResult != null) {
-            String last = decompressZipped(queryResult.lastResult)
-            String previous = decompressZipped(queryResult.previousResult)
-            hasChangedJsonDiff(previous, last, queryResult.query)
+        if (queryResult.lastResult != null) {
+            if (queryResult.previousResult != null) {
+                String last = decompressZipped(queryResult.lastResult)
+                String previous = decompressZipped(queryResult.previousResult)
+                hasChangedJsonDiff(previous, last, queryResult.query)
+            } else {
+                true
+            }
         } else {
             false
         }
@@ -38,7 +42,6 @@ class DiffService {
 
     Boolean hasChangedJsonDiff(String previous, String current, Query query, Boolean debugDiff = false) {
         if (current != null && previous != null) {
-
             try {
                 if (!queryService.isMyAnnotation(query)) {
                     def ids1 = JsonPath.read(current, query.recordJsonPath + "." + query.idJsonPath)
@@ -127,12 +130,15 @@ class DiffService {
 
         def records = []
 
-        if (queryResult.lastResult != null && queryResult.previousResult != null) {
-            try {
-                //decompress both and compare lists
-                String last = decompressZipped(queryResult.lastResult)
-                String previous = decompressZipped(queryResult.previousResult)
+        if (queryResult.lastResult != null ) {
+            String last = decompressZipped(queryResult.lastResult)
+            String previous = "{}"
+            // If previous result is null, assign an empty Json object
+            if ( queryResult.previousResult != null) {
+                previous = decompressZipped(queryResult.previousResult)
+            }
 
+            try {
                 if (!last.startsWith("<") && !previous.startsWith("<")) {
                     // Don't try and process 401, 301, 500, etc., responses that contain HTML
                     if (!queryService.isMyAnnotation(queryResult.query)) {

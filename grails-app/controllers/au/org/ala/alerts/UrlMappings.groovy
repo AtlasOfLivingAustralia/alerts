@@ -29,18 +29,23 @@ class UrlMappings {
         "/admin/subscribeBioSecurity"(controller: 'admin', action: 'subscribeBioSecurity')
         "/admin/unsubscribeAllUsers"(controller: 'admin', action: 'unsubscribeAllUsers')
         "/admin/deleteQuery"(controller: 'admin', action: 'deleteQuery')
+        "/biosecurity/csv"(controller: 'admin', action: 'listBiosecurityAuditCSV')
+        "/biosecurity/csv/download"(controller: 'admin', action: 'downloadBiosecurityAuditCSV')
+        "/biosecurity/csv/delete"(controller: 'admin', action: 'deleteBiosecurityAuditCSV')
+        "/biosecurity/csv/aggregate"(controller: 'admin', action: 'aggregateBiosecurityAuditCSV')
+
+
+        "/ws/alerts/user/$userId"(controller: 'webservice', action: 'getUserAlerts')
+        "/ws/noauth/$action"(controller: 'webservice')
+        "/ws/$action?/$id?"(controller: 'webservice')
+
+        "/"(controller: 'notification', action: 'index')
 
         "/$controller/$action?/$id?(.$format)?"{
             constraints {
                 // apply constraints here
             }
         }
-
-        "/ws/alerts/user/$userId"(controller: 'webservice', action: 'getUserAlerts')
-        "/ws/$action"(controller: 'webservice')
-        "/ws/noauth/$action"(controller: 'webservice')
-
-        "/"(controller: 'notification', action: 'index')
 
         // 13/4/16 existing production config puts all ws/.* requests through CAS (even /ws/noauth!), which is fine if
         // they are always invoked via javascript (and have the CAS cookie), but doesn't work when invoked from a service.

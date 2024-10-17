@@ -8,8 +8,8 @@
 <g:set var="logs" value="${logs}"/>
 
 
-<div name="subscription_${query.id}" class="row bioscecrurity-padding" style="background-color: ${(i+startIdx) % 2 == 0 ? '#f0f0f0' : '#ffffff'};">
-    <div class="col-md-4 indented-text">
+<div id="subscription_${query.id}" class="row bioscecrurity-padding" style="background-color: ${(i+startIdx) % 2 == 0 ? '#f0f0f0' : '#ffffff'};">
+    <div class="col-md-4 indented-text" id="${query.listId}">
         <g:if test ="${query.listId != null && !(query.listId instanceof String && query.listId.toLowerCase() == 'null')}">            &nbsp;&nbsp;
             <g:link controller="query" action="show" id="${query.id}">
                 <span><i class="fa fa-info-circle" aria-hidden="true" title="Show the query"></i></span>
@@ -27,6 +27,12 @@
                     <span name="showLastCheckDetails_${query.id}" style="cursor: pointer; text-decoration: underline;"  data-toggle="popover" data-placement="bottom" data-content="${logs.collect {'<li>' + it + '</li>'  }.join()}" >
                         ${new java.text.SimpleDateFormat('dd MMM yyyy HH:mm').format(query.lastChecked)}
                     </span>
+                    <g:if test="${query.queryResults.find{it.frequency.name=='weekly'}?.id}">
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        <g:link controller="admin" action="downloadLastBiosecurityResult" params="[id:  query.queryResults.find{it.frequency.name=='weekly'}?.id]" target="_blank">
+                            <span><i class="fa fa-download"></i>CSV</span>
+                        </g:link>
+                    </g:if>
                 </g:if>
                 <g:else>
                     <span hidden  name="showLastCheckDetails_${query.id}" style="cursor: pointer; text-decoration: underline;"  data-toggle="popover" data-placement="bottom" >

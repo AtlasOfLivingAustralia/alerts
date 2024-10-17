@@ -2,30 +2,30 @@ package au.org.ala.alerts
 
 import com.jayway.jsonpath.JsonPath
 import grails.gorm.transactions.NotTransactional
-import org.apache.http.entity.ContentType
 import grails.converters.JSON
 import org.apache.commons.io.IOUtils
 import org.apache.commons.lang.time.DateUtils
 import org.grails.web.json.JSONArray
 import org.grails.web.json.JSONElement
 import org.grails.web.json.JSONObject
-import grails.gorm.transactions.Transactional
-import java.text.SimpleDateFormat
-import java.util.zip.GZIPOutputStream
 
-@Transactional
+import javax.transaction.Transactional
+import java.util.zip.GZIPOutputStream
+import java.text.SimpleDateFormat
+import groovy.time.TimeCategory
+import org.hibernate.FlushMode
+
 class NotificationService {
 
-    static transactional = true
-
     int PAGING_MAX = 1000
-
+    def sessionFactory
     def emailService
     def diffService
     def queryService
     def grailsApplication
-    def webService
+    def dateFormatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
 
+    @Transactional
     QueryResult getQueryResult(Query query, Frequency frequency) {
         QueryResult qr = QueryResult.findByQueryAndFrequency(query, frequency)
         if (qr == null) {
@@ -34,23 +34,45 @@ class NotificationService {
         qr
     }
 
+    def retrieveRecordForQuery(query, queryResult) {
+        if  (query.recordJsonPath) {
+            // return all of the new records if query is configured to fire on a non-zero value OR if previous value does not exist.
+            if (queryService.firesWhenNotZero(query) || queryResult.previousResult ==  null) {
+                diffService.getNewRecords(queryResult)
+                // return diff of new and old records for all other cases
+            } else {
+                diffService.getNewRecordsFromDiff(queryResult)
+            }
+        } else {
+            []
+        }
+    }
+
     /**
-     * Check the status of queries for this given frequency.
+     * CORE method of searching if there are new records for a given query and frequency.
+     * EXCEPT BioSecurity Query which is handled elsewhere.
      *
      * @param query
      * @param frequency
-     * @return
+     * @param runLastCheck It will set the date range from N days before the previous check date, based on the given frequency, to the last check date
+     * @param dryRun If true, the method will not update the database
+     * @return true if the result has changed
      */
-    boolean checkStatus(Query query, Frequency frequency, boolean flushResult = false) {
+
+    QueryResult executeQuery(Query query, Frequency frequency, boolean runLastCheck=false, boolean dryRun=false) {
+
+        def session = sessionFactory.currentSession
+        session.setFlushMode(FlushMode.MANUAL) // Set the flush mode to MANUAL
 
         QueryResult qr = getQueryResult(query, frequency)
-
+        Date startTime = new Date()
+        qr.newLog("Checking: ${frequency?.name} - [${query.id}] - ${query.name} - ${dateFormatter.format(startTime)}.")
         //def url = new URL("http://biocache.ala.org.au/ws/occurrences/search?q=*:*&pageSize=1")
-        def urls = getQueryUrl(query, frequency)
+        def urls = buildQueryUrl(query, frequency, runLastCheck)
 
         def urlString = urls.first()
         def urlStringForUI = urls.last()
-
+        qr.addLog("${urlString}")
         log.debug("[QUERY " + query.id + "] Querying URL: " + urlString)
 
         try {
@@ -58,14 +80,8 @@ class NotificationService {
 
             if (!urlString.contains("___MAX___")) {
                 // queries without paging
-                if (queryService.isBioSecurityQuery(query)) {
-                    // biosecurity query is handled elsewhere
-                    Date since = qr.lastChecked ?: DateUtils.addDays(new Date(), -1 * grailsApplication.config.getProperty("biosecurity.legacy.firstLoadedDateAge", Integer, 7))
-                    Date to = new Date()
-                    processedJson = processQueryBiosecurity(query, since, to)
-                } else {
-                    // standard query
-                    processedJson = processQueryReturnedJson(query, IOUtils.toString(new URL(urlString).newReader()))
+                if (!queryService.isBioSecurityQuery(query)) {
+                    processedJson = processQueryReturnedJson(query, getWebserviceResults(urlString))
                 }
             } else {
                 // queries with paging
@@ -74,7 +90,24 @@ class NotificationService {
                 def result = []
                 boolean finished = false
                 def allLists = []
-                while (!finished && (result = processQueryReturnedJson(query, new URL(urlString.replaceAll('___MAX___', String.valueOf(max)).replaceAll('___OFFSET___', String.valueOf(offset))).text))?.size()) {
+
+                while (!finished) {
+                    // Construct the URL
+                    def url = new URL(urlString
+                            .replaceAll('___MAX___', String.valueOf(max))
+                            .replaceAll('___OFFSET___', String.valueOf(offset))
+                    )
+
+                    // Process the query
+                    result = processQueryReturnedJson(query, getWebserviceResults(url.toString())) // API errors will result in an empty string ("")
+
+                    // Check if we have results
+                    if (!result || result?.size() == 0) {
+                        finished = true
+                        continue
+                    }
+
+                    // Increment offset for next iteration
                     offset += max
 
                     try {
@@ -102,13 +135,6 @@ class NotificationService {
             //update the stored properties
             refreshProperties(qr, processedJson)
 
-            // When qr is not yet saved, use the unsaved object. Unsure why qr is retrieved here so not removing it.
-            QueryResult qCurrent = qr
-            qr = QueryResult.findById(qr.id)
-            if (qr == null) {
-                qr = qCurrent
-            }
-
             // set check time
             qr.previousCheck = qr.lastChecked
             // store the last result from the webservice call
@@ -120,21 +146,45 @@ class NotificationService {
             qr.queryUrlUIUsed = urlStringForUI
 
             log.debug("[QUERY " + query.id + "] Has changed?: " + qr.hasChanged)
-            if (qr.hasChanged) {
-                qr.lastChanged = new Date()
-            }
+            qr.addLog("Completed. ${qr.hasChanged ? 'Changed' : 'No change'}")
 
-            if (!qr.save(validate: true, flush: true)) {
-                qr.errors.allErrors.each {
-                    log.error(it)
-                }
-            }
-            qr.hasChanged
         } catch (Exception e) {
             log.error("[QUERY " + query.id + "] URL: " + urlString + " " + e.getMessage(), e)
+            qr.addLog("Failed: ${e.getMessage()}")
+            qr.succeed = false
+        } finally {
+            Date endTime = new Date()
+            if (qr.hasChanged) {
+                qr.lastChanged = endTime
+            }
+            def duration = TimeCategory.minus(endTime, startTime)
+            qr.addLog("Time cost: ${duration}")
+            if(!dryRun) {
+                QueryResult.withTransaction {
+                    if (!qr.save(validate: true, flush: true)) {
+                        qr.errors.allErrors.each {
+                            log.error(it)
+                        }
+                    }
+                }
+            }
+            else {
+                // if dryRun, evict the object to avoid being persistent
+                session.evict(qr)
+            }
         }
+
+        return qr
     }
 
+    /**
+     * It has similar code with checkStatus, but not identical
+     *
+     * @param query
+     * @param frequency
+     * @return
+     */
+    @Deprecated
     QueryCheckResult checkStatusDontUpdate(Query query, Frequency frequency) {
 
         //get the previous result
@@ -143,7 +193,7 @@ class NotificationService {
         QueryCheckResult qcr = new QueryCheckResult()
 
         //get the urls to query
-        def urls = getQueryUrl(query, frequency)
+        def urls = buildQueryUrl(query, frequency)
         def urlString = urls.first()
         qcr.frequency = frequency
         qcr.urlChecked = urlString
@@ -159,7 +209,7 @@ class NotificationService {
                 // queries without paging
                 if (!queryService.isBioSecurityQuery(query)) {
                     // standard query
-                    processedJson = processQueryReturnedJson(query, IOUtils.toString(new URL(urlString).newReader()))
+                    processedJson = processQueryReturnedJson(query, getWebserviceResults(urlString))
                 } else {
                     // biosecurity query is handled elsewhere
                     Date since = lastQueryResult.lastChecked ?: DateUtils.addDays(new Date(), -1 * grailsApplication.config.getProperty("biosecurity.legacy.firstLoadedDateAge", Integer, 7))
@@ -170,25 +220,39 @@ class NotificationService {
                 // queries with paging
                 int max = PAGING_MAX
                 int offset = 0
-                def result
-                boolean finished = false
                 def allLists = []
-                while (!finished && (result = processQueryReturnedJson(query, new URL(urlString.replaceAll('___MAX___', String.valueOf(max)).replaceAll('___OFFSET___', String.valueOf(offset))).text))?.size()) {
-                    offset += max
+                boolean finished = false
+
+                while (!finished) {
+                    // Construct the URL with max and offset values
+                    String urlWithParams = urlString.replace('___MAX___', max.toString()).replace('___OFFSET___', offset.toString())
+
+                    // Get the result from the query
+                    def result = processQueryReturnedJson(query, getWebserviceResults(urlWithParams))
+
+                    // Check if result is not empty
+                    if (result?.size() == 0) {
+                        finished = true
+                        break
+                    }
 
                     try {
+                        // Read latest values from JSON
                         def latestValue = JsonPath.read(result, query.recordJsonPath)
+
                         if (latestValue.size() == 0) {
                             finished = true
                         } else {
                             processedJson = result
                             allLists.addAll(latestValue)
+                            offset += max // Update offset for the next iteration
                         }
                     } catch (Exception e) {
-                        //expected behaviour for missing properties
+                        // Handle missing properties gracefully
                         finished = true
                     }
                 }
+
                 // only for species lists
                 def json = JSON.parse(processedJson) as JSONObject
                 if (json.lists) {
@@ -228,16 +292,32 @@ class NotificationService {
         bout.toByteArray()
     }
 
-    def String[] getQueryUrl(Query query, Frequency frequency) {
+    /**
+     * if runLastCheck is true, the date range will start from the previous check data to the last check date
+     *
+     * @param query
+     * @param frequency
+     * @param runLastCheck
+     * @return
+     */
+    String[] buildQueryUrl(Query query, Frequency frequency, boolean runLastCheck=false) {
         def queryPath = query.queryPath
         def queryPathForUI = query.queryPathForUI
 
         //if there is a date format, then there's a param to replace
         if (query.dateFormat) {
+            def checkDate = new Date()
+            if (runLastCheck) {
+                QueryResult qs = query.getQueryResult(frequency.name)
+                if (qs && qs.lastChecked) {
+                    checkDate  = qs.lastChecked
+                }
+            }
+
             def additionalTimeoffset = grailsApplication.config.getProperty('mail.details.forceAllAlertsGetSent', Boolean, false) ? 24 * 180 : 1
-            def dateToUse = DateUtils.addSeconds(new Date(), -1 * frequency.periodInSeconds * additionalTimeoffset)
+            def dateToUse = DateUtils.addSeconds(checkDate, -1 * frequency.periodInSeconds * additionalTimeoffset)
             // date one year prior from today.
-            def dateLastYear = DateUtils.addYears(new Date(), -1)
+            def dateLastYear = DateUtils.addYears(checkDate, -1)
             //insert the date to query with
             SimpleDateFormat sdf = new SimpleDateFormat(query.dateFormat)
             sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -249,7 +329,6 @@ class NotificationService {
             def dateLastYearFormatted = sdf.format(dateLastYear)
             queryPath = queryPath.replaceAll("___LASTYEARPARAM___", dateLastYearFormatted)
             queryPathForUI = queryPathForUI.replaceAll("___LASTYEARPARAM___", dateLastYearFormatted)
-
         }
 
         [cleanUpUrl(query.baseUrl + queryPath), cleanUpUrl(query.baseUrlForUI + queryPathForUI)]
@@ -271,11 +350,16 @@ class NotificationService {
      * @param queryResult
      * @return
      */
+    //@NotTransactional
     Boolean hasChanged(QueryResult queryResult) {
         Boolean changed = false
 
         //if there is a fireWhenNotZero or fireWhenChange ignore  idJsonPath
         log.debug("[QUERY " + queryResult.query.id + "] Checking query: " + queryResult.query.name)
+
+         // PropertyValues in a Biocache Query 'usually' has two properties: totalRecords and last_loaded_records (uuid)
+         //Both have the possible null value
+         //The following check is determined by the last propertyValue, since it overwrites the previous one
 
         queryResult.propertyValues.each { pv ->
             log.debug("[QUERY " + queryResult.query.id + "] " +
@@ -285,12 +369,18 @@ class NotificationService {
                     + ", fireWhenNotZero:" + pv.propertyPath.fireWhenNotZero
                     + ", fireWhenChange:" + pv.propertyPath.fireWhenChange
             )
+
+            // Two different types of queries: Biocache and Blog/News
+            // Biocache: totalRecords and last_loaded_records
+            // Blog/News: last_blog_id
             if (pv.propertyPath.fireWhenNotZero) {
                 changed = pv.currentValue?.toInteger() ?: 0 > 0
             } else if (pv.propertyPath.fireWhenChange) {
                 changed = pv.previousValue != pv.currentValue
             }
         }
+
+        //Example, in a blog/news query,fireWhenNotZero and fireWhenChange both are false
 
         if (queryService.checkChangeByDiff(queryResult.query)) {
             log.debug("[QUERY " + queryResult.query.id + "] Has change check. Checking JSON for query : " + queryResult.query.name)
@@ -384,7 +474,13 @@ class NotificationService {
             return json
         }
 
-        JSONObject rslt = JSON.parse(json) as JSONObject
+        JSONObject rslt
+        try {
+            rslt = JSON.parse(json) as JSONObject
+        } catch (Exception e) {
+            log.error("Failed to parse JSON in processQueryReturnedJson(): ${e.message}", e)
+            rslt = new JSONObject()
+        }
 
         // all the occurrences user has made annotations to
         if (rslt.occurrences) {
@@ -418,170 +514,30 @@ class NotificationService {
         return rslt.toString()
     }
 
-    def processQueryBiosecurity(Query query, Date since, Date to) {
-        def drId = query.listId
-        if (drId) {
-            int offset = 0
-            int max = 400
-            def repeat = true
-
-            // prevent duplicates
-            def occurrences = [:]
-
-            while (repeat) {
-                def url = grailsApplication.config.getProperty('lists.baseURL') + "/ws/speciesListItemsInternal/" + drId + "?includeKVP=true" + "&offset=" + offset + "&max=" + max
-                def speciesList = webService.get(url, [:], ContentType.APPLICATION_JSON, true, false)
-                if (speciesList.statusCode != 200 && speciesList.statusCode != 201) {
-                    log.error("Failed to access: " + url)
-                    log.error("Error: " + speciesList.error)
-                    break;
-                }
-                speciesList.resp?.each { listItem ->
-                    processListItemBiosecurity(occurrences, listItem, since, to)
-                }
-
-                repeat = (max == speciesList.resp?.size())
-                offset += max
-
-            }
-            return ([occurrences: occurrences.values(), totalRecords: occurrences.values().size()] as JSON).toString()
-        } else {
-            return ([occurrences: [], totalRecords: 0] as JSON).toString()
-        }
-    }
-
-    /**
-     * Date will be converted to UTC
-     *
-     * @param occurrences
-     * @param listItem
-     * @param since
-     * @return
-     */
-    def processListItemBiosecurity(def occurrences, def listItem, Date since, Date to) {
-        def names = listItem.kvpValues.find { it.key == 'synonyms' }?.value?.split(',') as List ?: []
-        names.add(listItem.name)
-
-        //Convert localtime to UTC
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
-        def utcTimeZone = TimeZone.getTimeZone("UTC")
-        sdf.setTimeZone(utcTimeZone)
-
-        String utcFrom = sdf.format(since)
-        String utcTo = sdf.format(to)
-
-        def todayNDaysAgo = DateUtils.addDays(since, -1 * grailsApplication.config.getProperty("biosecurity.legacy.eventDateAge", Integer, 150))
-        def firstLoadedDate = '&fq=' + URLEncoder.encode('firstLoadedDate:[' + utcFrom + ' TO ' + utcTo + ' ]', 'UTF-8')
-        def dateRange = '&fq=' + URLEncoder.encode('eventDate:[' + sdf.format(todayNDaysAgo) + ' TO ' + utcTo + ' ]', 'UTF-8')
-
-        // legacy date range filter
-//        SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-dd")
-//        def today = date // 2023-10-14
-//        def todayMinus8 = DateUtils.addDays(today, -1 * grailsApplication.config.getProperty("biosecurity.legacy.firstLoadedDateAge", Integer, 8)) // 2023-10-06
-//        def todayNDaysAgo = DateUtils.addDays(today, -1 * grailsApplication.config.getProperty("biosecurity.legacy.eventDateAge", Integer, 29)) // 2023-9-15
-//        def firstLoadedDate = '&fq=' + URLEncoder.encode('firstLoadedDate:[' + sdf.format(todayMinus8) + 'T00:00:00Z TO ' + sdf.format(today) + 'T00:00:00Z]', 'UTF-8')
-//        def dateRange = '&fq=' + URLEncoder.encode('eventDate:[' + sdf.format(todayNDaysAgo) + 'T00:00:00Z TO ' + sdf.format(today) + 'T00:00:00Z]', 'UTF-8')
-
-        //Build fq for anything in fq of KVP
-        def fq = buildFq(listItem)
-        // temporary code for backward compatibility
-        def legacyFq = legacyFq(listItem)
-
-        names.each { name ->
-            name = name.trim()
-
-            def searchTerms = []
-            searchTerms.add('genus:"' + name + '"')
-            searchTerms.add('species:"' + name + '"')
-            searchTerms.add('subspecies:"' + name + '"')
-            searchTerms.add('scientificName:"' + name + '"')
-            searchTerms.add('raw_scientificName:"' + name + '"')
-
-            def searchTerm = 'q=' + URLEncoder.encode("(" + searchTerms.join(") OR (") + ")")
-
-            def url = grailsApplication.config.getProperty('biocacheService.baseURL') + '/occurrences/search?' + searchTerm + fq + legacyFq + dateRange + firstLoadedDate + "&pageSize=10000"
-            log.debug("URL: " + url)
-
-            try {
-                def get = JSON.parse(new URL(url).text)
-                get?.occurrences?.each { occurrence ->
-                    occurrences[occurrence.uuid] = occurrence
-                }
-            } catch (Exception e) {
-                log.error("failed to get occurrences at URL: " + url)
-                log.error(e.message)
-            }
-        }
-    }
-
-    def buildFq(def it) {
-        def fqValue = it.kvpValues?.find { it.key == 'fq' }?.value
-        def fq = ''
-        if (fqValue) {
-            fq = '&fq=' + URLEncoder.encode(fqValue, "UTF-8")
-        }
-        fq
-    }
-
-    def legacyFq(def it) {
-        def fq = ''
-
-        def state = it.kvpValues?.find { it.key == 'state' }?.value
-        def lga = it.kvpValues?.find { it.key == 'lga' }?.value
-        def shapefile = it.kvpValues?.find { it.key == 'shape' }?.value
-
-        if (state) {
-            state?.toString()?.toUpperCase()?.split(",").each { st ->
-                def s = st.trim()
-
-                if (fq && s) {
-                    fq += " OR "
-                }
-                if (s == 'AUS') {
-                    fq += grailsApplication.config.getProperty('biosecurity.legacy.aus')
-                } else if (s == 'NSW') {
-                    fq += grailsApplication.config.getProperty('biosecurity.legacy.nsw')
-                } else if (s == 'ACT') {
-                    fq += grailsApplication.config.getProperty('biosecurity.legacy.act')
-                } else if (s == 'QLD') {
-                    fq += grailsApplication.config.getProperty('biosecurity.legacy.qld')
-                } else if (s == 'SA') {
-                    fq += grailsApplication.config.getProperty('biosecurity.legacy.sa')
-                } else if (s == 'NT') {
-                    fq += grailsApplication.config.getProperty('biosecurity.legacy.nt')
-                } else if (s == 'TAS') {
-                    fq += grailsApplication.config.getProperty('biosecurity.legacy.tas')
-                } else if (s == 'VIC') {
-                    fq += grailsApplication.config.getProperty('biosecurity.legacy.vic')
-                } else if (s == 'WA') {
-                    fq += grailsApplication.config.getProperty('biosecurity.legacy.wa')
-                }
-            }
-        }
-        if (lga) {
-            fq = grailsApplication.config.getProperty('biosecurity.legacy.lgaField') + ":\"" + lga + "\""
-        } else if (shapefile) {
-            fq = grailsApplication.config.getProperty('biosecurity.legacy.shape')
-        }
-
-        if (fq) {
-            fq = '&fq=' + URLEncoder.encode(fq, "UTF-8")
-        }
-
-        fq
-    }
-
-    JSONElement getJsonElements(String url) {
+    String getWebserviceResults(String url) {
         log.debug "(internal) getJson URL = " + url
         def conn = new URL(url).openConnection()
         try {
             conn.setConnectTimeout(10000)
             conn.setReadTimeout(50000)
-            return JSON.parse(conn.getInputStream(), "UTF-8")
+            conn.setRequestProperty('User-Agent', grailsApplication.config.getProperty("customUserAgent", "ALA-alerts"))
+            return IOUtils.toString(conn.getInputStream(), "UTF-8")
         } catch (Exception e) {
             def error = "Failed to get json from web service (${url}). ${e.getClass()} ${e.getMessage()}, ${e}"
             log.error error
-            return new JSONObject();
+            return ""
+        }
+    }
+
+    JSONElement getJsonElements(String url) {
+        log.debug "(internal) getJson URL = " + url
+        def data = getWebserviceResults(url)
+
+        try {
+            return JSON.parse(data)
+        } catch (Exception e) {
+            log.error("Failed to parse JSON in getJsonElements() (value: ${data}): ${e.message}", e)
+            return new JSONObject()
         }
     }
 
@@ -615,14 +571,20 @@ class NotificationService {
         [openAssertions, verifiedAssertions, correctedAssertions]
     }
 
+    /**
+     * Update the values of the properties, e.g. totalRecords, lastLoadedRecords etc defined int PropertyPath
+     *
+     * @param queryResult
+     * @param json
+     * @return
+     */
     @NotTransactional
-    private def refreshProperties(QueryResult queryResult, json) {
-
+    def refreshProperties(QueryResult queryResult, json) {
         log.debug("[QUERY " + queryResult?.query?.id ?: 'NULL' + "] Refreshing properties for query: " + queryResult.query.name + " : " + queryResult.frequency)
-
         try {
-            QueryResult.withTransaction {
                 queryResult.query.propertyPaths.each { propertyPath ->
+                    //Used to read the ID from the JSON, if needed
+                    String idJsonPath = queryResult.query.idJsonPath?: 'id'
 
                     //read the value from the request
                     def latestValue = null
@@ -638,24 +600,21 @@ class NotificationService {
                     propertyValue.previousValue = propertyValue.currentValue
 
                     if (latestValue != null && latestValue instanceof List) {
-                        propertyValue.currentValue = latestValue.size().toString()
-                    } else {
-                        propertyValue.currentValue = latestValue
-                    }
-
-                    if (!propertyValue.save(flush: true)) {
-                        propertyValue.errors.allErrors.each {
-                            log.error(it)
+                        //Assume that the size of the list is the total number of records
+                        //We need to decide to store the total number or the first?/last? ID (Assume it is defined in idJsonPath)
+                        //depends on the propertyPath e.g. fireWhenNotZero, fireWhenChange etc
+                        if (propertyPath.fireWhenNotZero ) {
+                            propertyValue.currentValue = latestValue.size().toString()
+                        } else if (propertyPath.fireWhenChange){
+                            //idJsonPath is defined in query represents the 'id' of the record
+                            propertyValue.currentValue = latestValue.first()[idJsonPath]?.toString()
                         }
+                     } else {
+                        propertyValue.currentValue = latestValue
                     }
                     queryResult.addToPropertyValues(propertyValue)
                 }
-                if (!queryResult.save(flush: true)) {
-                    queryResult.errors.allErrors.each {
-                        log.error(it)
-                    }
-                }
-            }
+
         } catch (Exception e) {
             log.error("[QUERY " + queryResult?.query?.id ?: 'NULL' + "] There was a problem reading the supplied JSON.", e)
         }
@@ -664,24 +623,15 @@ class NotificationService {
     PropertyValue getPropertyValue(PropertyPath pp, QueryResult queryResult) {
         PropertyValue pv = queryResult.id == null ? null : PropertyValue.findByPropertyPathAndQueryResult(pp, queryResult)
         if (pv == null) {
-            if (queryResult.id == null) {
-                // must save QueryResult first
-                if (!queryResult.save(flush: true)) {
-                    queryResult.errors.allErrors.each {
-                        log.error(it)
-                    }
-                }
-            }
             pv = new PropertyValue([propertyPath: pp, queryResult: queryResult])
-            if (!pv.save(flush: true)) {
-                pv.errors.allErrors.each {
-                    log.error(it)
-                }
-            }
         }
         pv
     }
 
+    /**
+     * We are now using the original query code for testing, instead of using a duplicated version.
+     */
+    @Deprecated
     def checkQueryById(queryId, freqStr) {
 
         log.debug("[QUERY " + queryId + "] Running query...")
@@ -701,7 +651,10 @@ class NotificationService {
         qcr
     }
 
-    // used in debug all alerts
+    /**
+     * We are now using the original query code for testing, instead of using a duplicated version.
+     */
+    @Deprecated
     def checkAllQueries(PrintWriter writer) {
         //iterate through all queries
         def checkedCount = 0
@@ -746,13 +699,13 @@ class NotificationService {
 
                         writer.write("\n" + (qcr.errored ? "ERROR:" : "") + query.id + " " + frequency.name + ":" + hasUpdated + "(diff=" + !hasFireProperty + ")" + ":" + ": " + query.toString() + " " + qcr.timeTaken / 1000 + "s")
                     } else {
-                        hasUpdated = checkStatus(query, frequency)
+                        hasUpdated = executeQuery(query, frequency)?.hasChanged
 
                         // these query and queryResult read/write methods are called by the scheduled jobs
                         Integer totalRecords = null
                         QueryResult queryResult = QueryResult.findByQueryAndFrequency(query, frequency)
-                        def records = emailService.retrieveRecordForQuery(query, queryResult)
-                        Integer fireWhenNotZero = queryService.fireWhenNotZeroProperty(queryResult)
+                        def records = retrieveRecordForQuery(query, queryResult)
+                        Integer fireWhenNotZero = queryService.totalNumberWhenNotZeroPropertyEnabled(queryResult)
                         totalRecords = records.size()
 
                         writer.write("\n" + query.id + " " + frequency.name + ":" + hasUpdated + "(diff=" + !hasFireProperty + ")" + ":" + totalRecords + ": " + query.toString() + " " + (System.currentTimeMillis() - timeTaken) / 1000 + "s")
@@ -775,6 +728,10 @@ class NotificationService {
         log.debug("Queries checked: " + checkedCount + ", updated: " + checkedAndUpdatedCount)
     }
 
+    @Deprecated
+    /**
+     * We are now using the original query code for testing, instead of using a duplicated version.
+     */
     def debugQueriesForUser(User user, PrintWriter writer) {
         log.debug("Checking queries for user: " + user)
         def checkedCount = 0
@@ -800,145 +757,27 @@ class NotificationService {
         }
     }
 
-    def biosecurityAlerts() {
-        def results = []
-        queryService.getALLBiosecurityQuery().each { Query query ->
-            def result = triggerBiosecuritySubscription(query)
-            results.add(result)
-        }
-        return results
-    }
+
 
     /**
-     *
-     * A query contains a number of independent searches depends on the number of species in the list.
-     * Each search will return a number of records from the last checked date to the current timestamp,
-     * which means the end timestamp of the each search is different, although only have seconds/minutes differences.
-     *
-     * Trigger a subscription for a query since last the last checked date
-     *
-     * @param query
+     * Check the queries for a specific frequency EXCEPT for biosecurity queries.
+     * @param frequencyName
+     * @return
      */
-    def triggerBiosecuritySubscription(Query query) {
-        //If has not been checked before, then set the lastChecked to 7 days before
-        Date lastChecked = query.lastChecked ?: DateUtils.addDays(new Date(), -1 * grailsApplication.config.getProperty("biosecurity.legacy.firstLoadedDateAge", Integer, 7))
-        triggerBiosecuritySubscription(query, lastChecked)
-    }
-
-    /**
-     * It can be used to manually give a date to check the subscription since
-     *
-     * @param query
-     * @param since The local date to check the subscription since
-     */
-    def triggerBiosecuritySubscription(Query query, Date since) {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
-        Date now = new Date()
-
-        def message = "Checking records of ${query?.id}. ${query?.name} from ${sdf.format(since)} to ${sdf.format(now)}."
-        log.info(message)
-        def result = [status: 1, message: message, logs: [message]]
-
-        def frequency = 'weekly'
-        QueryResult qr = getQueryResult(query, Frequency.findByName(frequency))
-
-        try {
-            def processedJson = processQueryBiosecurity(query, since, now)
-
-            def recordsFound = JsonPath.read(processedJson, '$.totalRecords')
-            result.logs << "${recordsFound} record(s) found since ${sdf.format(since)}."
-
-            // set check time
-            qr.previousCheck = since
-
-            // store the last result from the webservice call
-            qr.previousResult = qr.lastResult
-            qr.lastResult = gzipResult(processedJson)
-            qr.lastChecked = now
-            qr.hasChanged = diffService.hasChangedJsonDiff(qr)
-            qr.logs = ""
-
-            log.debug("[QUERY " + query.id + "] Has changed?: " + qr.hasChanged)
-            if (qr.hasChanged) {
-                qr.lastChanged = since
-            }
-
-            // todo Need to be reviewed, the queryUrlUIUsed does not work with biosecurity query
-
-//             copied from R code
-//            def todayMinus7 = DateUtils.addDays(qr.previousCheck, -1 * grailsApplication.config.getProperty("biosecurity.legacy.firstLoadedDateAge", Integer, 7))
-//            def todayNDaysAgo = DateUtils.addDays(qr.previousCheck, -1 * grailsApplication.config.getProperty("biosecurity.legacy.eventDateAge", Integer, 29))
-//
-//            def firstLoadedDate = sdf.format(todayMinus7) + 'T00:00:00Z'
-//            def occuranceDate = sdf.format(todayNDaysAgo) + 'T00:00:00Z'
-//            String queryPath = query.queryPathForUI
-//            String modifiedPath = queryPath.replaceAll('___DATEPARAM___', firstLoadedDate).replaceAll('___LASTYEARPARAM___', occuranceDate)
-//            qr.queryUrlUIUsed = query.baseUrlForUI + modifiedPath
-
-            //todo experimental code, need to be reviewed and updated
-            def todayNDaysAgo = DateUtils.addDays(since, -1 * grailsApplication.config.getProperty("biosecurity.legacy.eventDateAge", Integer, 150))
-            def firstLoadedDate = sdf.format(since)
-            def occuranceDate = sdf.format(todayNDaysAgo)
-            String queryPath = query.queryPathForUI
-            String modifiedPath = queryPath.replaceAll('___DATEPARAM___', firstLoadedDate).replaceAll('___LASTYEARPARAM___', occuranceDate)
-            qr.queryUrlUIUsed = query.baseUrlForUI + modifiedPath
-
-            //Do not remove, it breaks the refreshProperties method if it is a new subscription
-            if (!qr.save(validate: true, flush: true)) {
-                qr.errors.allErrors.each {
-                    log.error(it)
-                }
-            }
-            // save QueryResult
-            refreshProperties(qr, processedJson)
-
-
-            def users = queryService.getSubscribers(query.id)
-            def recipients = users.collect { user ->
-                def notificationUnsubToken = user.notifications.find { it.query.id == query.id }?.unsubscribeToken
-                [email: user.email, userUnsubToken: user.unsubscribeToken, notificationUnsubToken: notificationUnsubToken]
-            }
-
-            def emails = recipients.collect { it.email }
-            result.logs << "Sending emails to ${emails.size() <= 2 ? emails.join('; ') : emails.take(2).join('; ') + ' and ' + (emails.size() - 2) + ' other users.'}"
-
-            if (!users.isEmpty()) {
-                def emailStatus = emailService.sendGroupNotification(qr, Frequency.findByName('weekly'), recipients)
-
-                result.status = emailStatus.status
-                result.logs << emailStatus.message
-            }
-            result.logs << "Completed!"
-            result.message = "Completion of Subscription check: ${query?.id}. ${query?.name}."
-
-        } catch (Exception e) {
-            log.error("Failed to trigger subscription [ ${query?.id}  ${query?.name} ]", e)
-            result = [status: 1, message: "Failed to trigger subscription [ ${query?.id}  ${query?.name} ]" + e.message]
-        } finally {
-            log.info("[Status: ${result.status}] - ${result.message}")
-
-            qr.appendLogs(result.logs.join("\n"))
-            if (!qr.save(validate: true, flush: true)) {
-                qr.errors.allErrors.each {
-                    log.error(it)
-                }
-            }
-            return result
-        }
-    }
-
-    def checkQueryForFrequency(String frequencyName) {
+    def execQueryForFrequency(String frequencyName, boolean sendEmails = true) {
         log.debug("Checking frequency : " + frequencyName)
         Date now = new Date()
         Frequency frequency = Frequency.findByName(frequencyName)
-        checkQueryForFrequency(frequency, true)
+        execQueryForFrequency(frequency, sendEmails)
         //update the frequency last checked
         frequency = Frequency.findByName(frequencyName)
         if (frequency) {
             frequency.lastChecked = now
-            if (!frequency.save(validate: true, flush: true)) {
-                frequency.errors.allErrors.each {
-                    log.error(it)
+            Frequency.withTransaction {
+                if (!frequency.save(validate: true, flush: true)) {
+                    frequency.errors.allErrors.each {
+                        log.error(it)
+                    }
                 }
             }
         } else {
@@ -947,7 +786,7 @@ class NotificationService {
     }
 
     //select q.id, u.frequency from query q inner join notification n on n.query_id=q.id inner join user u on n.user_id=u.id;
-    List<Map> checkQueryForFrequency(Frequency frequency, Boolean sendEmails) {
+    List<Map> execQueryForFrequency(Frequency frequency, Boolean sendEmails) {
         List<Map> recipients = []
         def queries = Query.executeQuery(
                 """select q from Query q
@@ -960,7 +799,7 @@ class NotificationService {
             // biosecurity queries are handled elsewhere
             if (!queryService.isBioSecurityQuery(query)) {
                 log.debug("Running query: " + query.name)
-                boolean hasUpdated = checkStatus(query, frequency)
+                boolean hasUpdated = executeQuery(query, frequency)?.hasChanged
                 Boolean forceUpdate = grailsApplication.config.getProperty('mail.details.forceAllAlertsGetSent', Boolean, false)
 
                 if (forceUpdate || hasUpdated && sendEmails) {
@@ -991,6 +830,8 @@ class NotificationService {
         recipients
     }
 
+
+
     /**
      * Check the queries of a specific user.
      *
@@ -1011,7 +852,7 @@ class NotificationService {
 
         queries.each { query ->
             log.debug("Running query: " + query.name)
-            boolean hasUpdated = checkStatus(query, user.frequency)
+            boolean hasUpdated = executeQuery(query, user.frequency)?.hasChanged
             if (hasUpdated && sendEmails) {
                 log.debug("Query has been updated. Sending emails to...." + user)
                 //send separate emails for now
@@ -1022,6 +863,7 @@ class NotificationService {
         }
     }
 
+
     def addAlertForUser(User user, Long queryId) {
         log.debug('add my alert :  ' + queryId + ' for user : ' + user)
         def notificationInstance = new Notification()
@@ -1031,9 +873,11 @@ class NotificationService {
         def exists = Notification.findByQueryAndUser(notificationInstance.query, notificationInstance.user)
         if (!exists) {
             log.info("Adding alert for user: " + notificationInstance.user + ", query id: " + queryId)
-            if (!notificationInstance.save(validate: true, flush: true)) {
-                notificationInstance.errors.allErrors.each {
-                    log.error(it)
+            Notification.withTransaction {
+                if (!notificationInstance.save(validate: true, flush: true)) {
+                    notificationInstance.errors.allErrors.each {
+                        log.error(it)
+                    }
                 }
             }
         } else {
@@ -1041,14 +885,16 @@ class NotificationService {
         }
     }
 
-    def deleteAlertForUser(User user, Long queryId) {
+        def deleteAlertForUser(User user, Long queryId) {
         log.debug('Deleting my alert :  ' + queryId + ' for user : ' + user)
         def query = Query.findById(queryId)
 
         def notificationInstance = Notification.findByUserAndQuery(user, query)
         if (notificationInstance) {
             log.debug('Deleting my notification :  ' + queryId)
-            notificationInstance.each { it.delete(flush: true) }
+            Notification.withTransaction {
+                notificationInstance.each { it.delete(flush: true) }
+            }
         } else {
             log.error('*** Unable to find  my notification - no delete :  ' + queryId)
         }
@@ -1062,34 +908,39 @@ class NotificationService {
         // triggered only once.
         if (newQueryCreated) {
             Query savedQuery = Query.findByBaseUrlAndQueryPath(myAnnotationQuery.baseUrl, myAnnotationQuery.queryPath)
-            checkStatus(savedQuery, user.frequency, true)
+            executeQuery(savedQuery, user.frequency)
         }
     }
+
 
     def unsubscribeMyAnnotation(User user) {
         String myAnnotationQueryPath = queryService.constructMyAnnotationQueryPath(user?.userId)
         Query retrievedQuery = Query.findByQueryPath(myAnnotationQueryPath)
 
-        if (retrievedQuery != null) {
-            // delete the notification
-            def notification = Notification.findByQueryAndUser(retrievedQuery, user)
-            if (notification) {
-                notification.delete(flush: true)
-            }
 
-            // delete the query result
-            QueryResult qr = QueryResult.findByQueryAndFrequency(retrievedQuery, user?.frequency)
-            if (qr) {
-                qr.delete(flush: true)
-            }
+        Query.withTransaction {
+            if (retrievedQuery != null) {
+                // delete the notification
+                def notification = Notification.findByQueryAndUser(retrievedQuery, user)
+                if (notification) {
+                    notification.delete(flush: true)
+                }
 
-            // delete query
-            retrievedQuery.delete(flush: true)
+                // delete the query result
+                QueryResult qr = QueryResult.findByQueryAndFrequency(retrievedQuery, user?.frequency)
+                if (qr) {
+                    qr.delete(flush: true)
+                }
+
+                // delete query
+                retrievedQuery.delete(flush: true)
+            }
         }
     }
 
     // update user to new frequency
     // there are some special work if user is subscribed to 'My Annotation' alert
+    @Transactional
     def updateFrequency(User user, String newFrequency) {
         def oldFrequency = user.frequency
         user.frequency = Frequency.findByName(newFrequency)
@@ -1112,17 +963,21 @@ class NotificationService {
             QueryResult qr = QueryResult.findByQueryAndFrequency(query, oldFrequency)
             if (qr) {
                 qr.frequency = user.frequency
-                if (!qr.save(validate: true, flush: true)) {
-                    qr.errors.allErrors.each {
-                        log.error(it)
+                QueryResult.withTransaction {
+                    if (!qr.save(validate: true, flush: true)) {
+                        qr.errors.allErrors.each {
+                            log.error(it)
+                        }
                     }
                 }
             }
         }
 
-        if (!user.save(validate: true, flush: true)) {
-            user.errors.allErrors.each {
-                log.error(it)
+        User.withTransaction {
+            if (!user.save(validate: true, flush: true)) {
+                user.errors.allErrors.each {
+                    log.error(it)
+                }
             }
         }
     }
@@ -1139,4 +994,24 @@ class NotificationService {
         }
     }
 
+    /**
+     * Copied from EmailService
+     * Todo : Not full correct, need to be fixed
+     * @param queryResult
+     * @return
+     */
+    //@NotTransactional
+    def collectUpdatedRecords(queryResult) {
+        if  (queryResult.query?.recordJsonPath) {
+            // return all of the new records if query is configured to fire on a non-zero value OR if previous value does not exist.
+            if (queryService.firesWhenNotZero(queryResult.query) || queryResult.previousResult ==  null) {
+                diffService.getNewRecords(queryResult)
+                // return diff of new and old records for all other cases
+            } else {
+                diffService.getNewRecordsFromDiff(queryResult)
+            }
+        } else {
+            []
+        }
+    }
 }

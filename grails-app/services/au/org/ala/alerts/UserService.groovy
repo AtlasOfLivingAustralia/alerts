@@ -21,6 +21,7 @@ import grails.plugin.cache.Cacheable
 import grails.util.Holders
 import grails.util.Environment
 
+
 import grails.gorm.transactions.Transactional
 
 @Transactional
@@ -35,12 +36,21 @@ class UserService {
     def getUserAlertsConfig(User user) {
 
         log.debug('getUserAlertsConfig - Viewing my alerts :  ' + user)
-
         //enabled alerts
         def notificationInstanceList = Notification.findAllByUser(user)
 
         //split into custom and non-custom...
-        def enabledQueries = notificationInstanceList.collect { it.query }
+        //in case some queries which were removed
+        def enabledQueries = notificationInstanceList.findAll { it?.query != null }
+                .collect { it.query }
+                .findAll { query ->
+                    try {
+                        Query.get(query.id) != null
+                    } catch (Exception e) {
+                        false
+                    }
+                }
+
         def enabledIds = enabledQueries.collect { it.id }
 
         // all standard queries + 'my annotations' queries
@@ -75,7 +85,7 @@ class UserService {
      *
      * @return total number of updates
      */
-//    @Transactional // transactions handled manually
+
     int updateUserEmails() {
         final int pageSize = grailsApplication.config.getProperty('alerts.user-sync.batch-size', Integer, 1000)
         def toUpdate = []

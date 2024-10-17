@@ -120,6 +120,14 @@ grails:
                 scriptlets: html
                 taglib: none
                 staticparts: none
+    plugin:
+        awssdk:
+            region: ap-southeast-2
+            s3:
+#                # accessKey:  # Not required on EC2 deployments
+#                # secretKey:  # Not required on EC2 deployments
+#                bucket: ala-alerts-test
+#                profile: comp-ala-developer
 ---
 headerAndFooter:
     baseURL: "https://www.ala.org.au/commonui-bs3-2019"
@@ -132,7 +140,7 @@ skin:
     orgSupportEmail: support@ala.org.au
 privacyPolicy: "https://www.ala.org.au/terms-of-use/privacy-policy/"
 siteDefaultLanguage: "en"
-
+customUserAgent: 'alerts/@info.app.version@'
 security:
     cas:
         adminRole: ROLE_ADMIN
@@ -177,7 +185,17 @@ biosecurity:
         maxRecords: 500
     moreinfo:
         link: https://www.ala.org.au/blogs-news/ala-helps-to-stop-pests-in-their-tracks/
-    dir: /data/alerts/emails
+    csv:
+        local:
+            enabled: false # See environments.development section below where set to true
+            directory: /data/alerts/csv
+        s3:
+            enabled: true
+            directory: biosecurity # key prefix
+            # bucket: alerts # configured via plugin config `grails.plugin.awssdk.s3.bucket`
+        # read lga from the layer
+        lga: LGA2023
+    subscriptionsPerPage: 100
     legacy:
         aus: cl927:*
         act: cl927:"Australian Capital Territory" OR cl927:"Jervis Bay Territory"
@@ -202,9 +220,26 @@ environments:
                 host: "localhost"
                 port: 1025
                 #username: postie.emailSender
+            plugin:
+                awssdk:
+                    region: ap-southeast-2
+                    s3:
+                        #          accessKey:
+                        #          secretKey:
+                        bucket: ala-alerts-test
+                        profile: comp-ala-developer
+                        region: ap-southeast-2
         security:
             cas:
                 appServerName: "http://localhost:8080"
+        quartz:
+            autoStartup : false
+        biosecurity:
+            csv:
+                local:
+                    enabled: true
+                s3:
+                    enabled: false
         userdetails:
             web:
                 url: https://aws-auth-test-2023.test.ala.org.au/userdetails/
@@ -297,7 +332,7 @@ environments:
             dbCreate: update
             driverClassName: com.mysql.jdbc.Driver
             url: jdbc:mysql://localhost/alerts
-            username: root
+            username: alerts_user
             password: password
     test:
         dataSource:

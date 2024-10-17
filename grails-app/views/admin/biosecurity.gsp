@@ -6,7 +6,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <meta name="layout" content="${grailsApplication.config.skin.layout}"/>
     <meta name="breadcrumb" content="BioSecurity alerts"/>
-    <meta name="breadcrumbParent" content="${request.contextPath}/admin,Alerts admin"/>
+    <meta name="breadcrumbParent" content="${request.contextPath}/admin, Admin"/>
 
     <title>Admin - Manage BioSecurity alerts</title>
     <asset:stylesheet href="alerts.css"/>
@@ -69,7 +69,6 @@
                                 let logs = data.logs
                                 popup.removeAttr('hidden');
                                 popup.attr('data-content', "<li>" + logs.map(item => item).join('</li><li>') + '</li>');
-                                popup.before("Last checked on ")
                                 popup.html( formatToLocaleDate(localDateTo) + "<i class='fa fa-check' aria-hidden='true' style='color: red;padding-left: 15px;'></i>")
                                 initializePopoverAgain();
                                 //Hide possible info
@@ -283,12 +282,17 @@
                 source: function(query, process) {
                     // Fetch options from another URL based on the input value
                     $.ajax({
-                        url: '${request.contextPath}/ws/searchBiosecuritySubscriptions?q="' + query, // Replace with your URL
+                        url: '${request.contextPath}/ws/searchBiosecuritySubscriptions?q=' + query, // Replace with your URL
                         dataType: 'json',
                         success: function(data) {
                             process(data);
                         },
                         error: function(xhr, status, error) {
+                            if (xhr.status == 401) {
+                                alert.error('Authentication expired. Please login again.');
+                            } else {
+                                console.error('Failed to find queries. Please refresh pages and try again.');
+                            }
                             console.error('Failed to fetch options:', error);
                         }
                     });
@@ -378,22 +382,10 @@
                             <label for="quick-submit"  style="visibility: hidden;">control</label>
                             <button type="submit" id="quick-submit" form="create-security-alert" class="btn btn-primary"><g:message code="biosecurity.view.body.button.subscribe" default="Subscribe"/></button>
                         </div>
+
                     </div>
                 </g:form>
 
-                <p></p>
-                <g:if test="${queries}">
-                    <form target="_blank" action="${request.contextPath}/admin/csvAllBiosecurity" method="post">
-                    <div class="row" style="text-align: right">
-                        <div class="col-sm-10" >
-                            Download CSV list of all occurrences from all alerts since: <input type="date" class="form" name="date" value="${today}"/>
-                        </div>
-                        <div class="col-sm-2">
-                         <button type="submit" class="btn  btn-info">Download CSV</button>
-                        </div>
-                    </div>
-                    </form>
-                </g:if>
                 <p></p>
                 <div class="row" style="text-align: right">
                     <div class="col-sm-10" >
@@ -403,6 +395,28 @@
                         <button class="btn btn-info" onclick="triggerSubscriptions()">Check & Notify </button>
                     </div>
                 </div>
+                <p></p>
+                <div class="row" style="text-align: right">
+                    <div class="col-sm-10" >Download CSV list of all occurrences from all biosecurity alerts sent (scheduled and manual)</div>
+                    <div class="col-sm-2" >
+                        <a class="btn btn-info" href="${createLink(controller: 'admin', action: 'listBiosecurityAuditCSV')}" target="_blank">CSV Reporting</a>
+                    </div>
+                </div>
+                <p></p>
+%{--                <div>
+                <g:if test="${queries}">
+                    <form target="_blank" action="${request.contextPath}/admin/csvAllBiosecurity" method="post">
+                        <div class="row" style="text-align: right">
+                            <div class="col-sm-10" >
+                                Download CSV list of all occurrences from all alerts since: <input type="date" class="form" name="date" value="${today}"/>
+                            </div>
+                            <div class="col-sm-2">
+                                <button type="submit" class="btn  btn-info">Download CSV</button>
+                            </div>
+                        </div>
+                    </form>
+                </g:if>
+                </div>--}%
 
             </div>
         </div>
