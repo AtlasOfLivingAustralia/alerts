@@ -58,8 +58,8 @@ phases:
       - set -a ; source env.txt ; set +a
       - EKS_CLUSTER_NAME=$(aws cloudformation list-exports --query "Exports[?Name=='$REGOLITH_STACK_NAME-ClusterName'].Value" --output text)
       - echo EKS_CLUSTER_NAME=$EKS_CLUSTER_NAME
-      # get the OIDC connect provider and cluster OIDC issuer URL. If we cant get the EKS_CLUSTER_NAME
-      # set dummy values for trust relationship. Can be removed when we're migrated to EKS
+      # Get the OIDC connect provider and cluster OIDC issuer URL from the cluster. If we cant get the
+      # EKS_CLUSTER_NAME set dummy values for trust relationship. Can be removed when we're migrated to EKS
       - |
           if [[ $EKS_CLUSTER_NAME == "" ]]; then
             echo "EKS_CLUSTER_NAME not found in $REGOLITH_STACK_NAME exports, setting dummy values for trust relationship"
