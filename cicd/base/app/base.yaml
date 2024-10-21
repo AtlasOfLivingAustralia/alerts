@@ -180,13 +180,23 @@ Resources:
               Resource:
                 - '*'
           PolicyName: email
-      RoleName: !Sub '${AWS::StackName}--${pEnvironment}--${pBuild}'
+      RoleName: !Sub
+                   - ${pProductName}-${ResourceName}
+                   - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
       Tags:
         - Key: Name
           Value: !Sub 
               - ${pProductName}-${ResourceName}
               - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
  
+  AlertsInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      InstanceProfileName: !Sub
+                              - ${pProductName}-${ResourceName}
+                              - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
+      Roles:
+        - !Ref AlertsRole
 
   AlertsSecret:
     Type: AWS::SecretsManager::Secret
