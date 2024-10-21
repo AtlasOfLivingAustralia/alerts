@@ -7,7 +7,7 @@ import org.grails.web.json.JSONArray
 import org.grails.web.json.JSONObject
 
 
-class MyAnnotationService {
+class MyAnnotationService extends AnnotationService {
     NotificationService notificationService
 
     String appendAssertions(Query query, JSONObject occurrences) {
@@ -34,17 +34,16 @@ class MyAnnotationService {
 
                     // only include record has at least 1 (50001/50002/50003) assertion
                     // They will be used for diffService (records that will be included in alert email)
-
-                    // find the open/verfied/corrected annotations which comment on all the assertions created by the users
-                    def proccessedAssertionIds = openAssertions.collect { it.uuid } + verifiedAssertions.collect { it.uuid } + correctedAssertions.collect { it.uuid }
-                    def processedAssertions = assertions.findAll{
-                        proccessedAssertionIds.contains(it.relatedUuid)
-                    }
-                    occurrence.put('processed_assertions', processedAssertions)
-
-                    // Those open/verified/corrected assertions will be used to retrieve diff (records that will be included in alert email)
                     if (!openAssertions.isEmpty() || !verifiedAssertions.isEmpty() || !correctedAssertions.isEmpty()) {
-                        //Display the content of the user assertions
+
+                        // find the open/verfied/corrected annotations which COMMENTed on all the assertions created by the users
+                        def processedAssertionIds = openAssertions.collect { it.uuid } + verifiedAssertions.collect { it.uuid } + correctedAssertions.collect { it.uuid }
+                        def processedAssertions = assertions.findAll{
+                            processedAssertionIds.contains(it.relatedUuid)
+                        }
+                        occurrence.put('processed_assertions', processedAssertions)
+
+                        // Those open/verified/corrected assertions will be used to retrieve diff (records that will be included in alert email)
                         openAssertions.sort { it.uuid }
                         verifiedAssertions.sort { it.uuid }
                         correctedAssertions.sort { it.uuid }
@@ -91,48 +90,5 @@ class MyAnnotationService {
             correctedAssertions = origUserAssertions.findAll { correctedIds.contains(it.uuid) }
         }
         [origUserAssertions, openAssertions, verifiedAssertions, correctedAssertions,]
-    }
-
-
-    /**
-     * for normal alerts, comparing occurrence uuid is enough to show the difference.
-     * for my annotation alerts, same occurrence record could exist in both result but have different assertions.
-     * so comparing occurrence uuid is not enough, we need to compare 50001/50002/50003 sections inside each occurrence record
-
-     * return a list of records that their annotations have been changed or deleted
-     * @param previous
-     * @param last
-     * @param recordJsonPath
-     * @return
-     */
-    def diff(previous, last, recordJsonPath) {
-        // uuid -> occurrence record map
-        def oldRecordsMap = [:]
-        def curRecordsMap = [:]
-        try {
-            oldRecordsMap = JsonPath.read(previous, recordJsonPath).collectEntries { [(it.uuid): it] }
-        }catch (PathNotFoundException e){
-            log.info("Previous result doesn't contain any records since the returned json does not contain any 'recordJsonPath'")
-        }
-        try {
-             curRecordsMap = JsonPath.read(last, recordJsonPath).collectEntries { [(it.uuid): it] }
-        }catch (PathNotFoundException e){
-            log.info("Previous result doesn't contain any records since the returned json does not contain any 'recordJsonPath'")
-        }
-        // if an occurrence record doesn't exist in previous result (added) or has different open_assertions or verified_assertions or corrected_assertions than previous (changed).
-        def records = curRecordsMap.findAll {
-            def record = it.value
-            !oldRecordsMap.containsKey(record.uuid) ||
-                    record.open_assertions != oldRecordsMap.get(record.uuid).open_assertions ||
-                    record.verified_assertions != oldRecordsMap.get(record.uuid).verified_assertions ||
-                    record.corrected_assertions != oldRecordsMap.get(record.uuid).corrected_assertions
-        }.values()
-
-
-        //if an occurrence record exists in previous result but not in current, it means the annotation is deleted.
-        //We need to add these records as a 'modified' record
-        records.addAll(oldRecordsMap.findAll { !curRecordsMap.containsKey(it.value.uuid) }.values())
-
-        return records
     }
 }

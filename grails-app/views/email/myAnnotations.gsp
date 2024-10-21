@@ -65,15 +65,12 @@
                                 </td>
                                 <td class="annotation" nowrap="nowrap" style="width: 30%" style="font-family: 'Arial', sans-serif;font-size: 12px;line-height: 1.5;">
                                     <g:if test="${oc.processed_assertions?.size() > 0}">
-                                        <ul>
-                                            <g:each in="${oc.processed_assertions}" var="assertion">
-                                                <li>
-                                                    Date created: ${assertion.created}<br/>
-                                                    Comments:<br> ${assertion.comment}<br/>
-                                                    Comment by: ${assertion.userDisplayName}
-                                                </li>
-                                            </g:each>
-                                        </ul>
+                                        <%
+                                            def latestAssertion = oc.processed_assertions[0] // Get the first (latest) assertion
+                                        %>
+                                        Date created: ${latestAssertion.created}<br/>
+                                        Comments:<br/> ${latestAssertion.comment}<br/>
+                                        Comment by: ${latestAssertion.userDisplayName}
                                     </g:if>
                                 </td>
                                 <td style="width: 33%; text-align: right;" >

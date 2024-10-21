@@ -6,16 +6,15 @@ import grails.converters.JSON
 import org.grails.web.json.JSONArray
 import org.grails.web.json.JSONObject
 
+import java.text.SimpleDateFormat
+
 
 class AnnotationService {
     NotificationService notificationService
+    def sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss")  // Adjust the pattern as needed
 
     String appendAssertions(Query query, JSONObject occurrences) {
         String baseUrl = query.baseUrl
-
-        // get the user id from the query path
-        // NOTE: oder of the query path is important
-//        String userId = query.queryPath.substring(query.queryPath.indexOf('assertion_user_id:') + 'assertion_user_id:'.length(), query.queryPath.indexOf('&dir=desc'))
 
         if(occurrences.occurrences) {
             // reconstruct occurrences so that only those records with specified annotations are put into the list
@@ -31,20 +30,23 @@ class AnnotationService {
 
                     def (openAssertions, verifiedAssertions, correctedAssertions) = filterAssertions(assertions)
 
-
                     // only include record has at least 1 (50001/50002/50003) assertion
-                    // They will be used for diffService (records that will be included in alert email)
-
-                    // find the open/verfied/corrected annotations which comment on all the assertions created by the users
-                    def proccessedAssertionIds = openAssertions.collect { it.uuid } + verifiedAssertions.collect { it.uuid } + correctedAssertions.collect { it.uuid }
-                    def processedAssertions = assertions.findAll{
-                        proccessedAssertionIds.contains(it.relatedUuid)
-                    }
-                    occurrence.put('processed_assertions', processedAssertions)
-
-                    // Those open/verified/corrected assertions will be used to retrieve diff (records that will be included in alert email)
                     if (!openAssertions.isEmpty() || !verifiedAssertions.isEmpty() || !correctedAssertions.isEmpty()) {
-                        //Display the content of the user assertions
+                        // find the open/verified/corrected annotations which comment on all the assertions created by the users
+                        def processedAssertionIds = openAssertions.collect { it.uuid } + verifiedAssertions.collect { it.uuid } + correctedAssertions.collect { it.uuid }
+                        def processedAssertions = assertions.findAll{
+                            processedAssertionIds.contains(it.relatedUuid)
+                        }
+
+                        def sortedAssertions = processedAssertions.findAll { processedAssertionIds.contains(it.relatedUuid) }
+                                .sort { a, b ->
+                                    sdf.parse(b.created) <=> sdf.parse(a.created)
+                                }
+                        occurrence.put('processed_assertions', sortedAssertions)
+
+                        // only include record has at least 1 (50001/50002/50003) assertion
+                        // They will be used for diffService (records that will be included in alert email)
+                        // Those open/verified/corrected assertions will be used to retrieve diff (records that will be included in alert email)
                         openAssertions.sort { it.uuid }
                         verifiedAssertions.sort { it.uuid }
                         correctedAssertions.sort { it.uuid }
@@ -68,13 +70,13 @@ class AnnotationService {
     //Search the assertions which the USER has made
     //return those have been open-issued, verified or corrected
     //
-    private static def filterMyAssertions(JSONArray assertions) {
+    private static def filterAssertions(JSONArray assertions) {
         def openAssertions = []
         def verifiedAssertions = []
         def correctedAssertions = []
         if (assertions) {
             // all the 50001 (open issue) assertions (could belong to userId or other users)
-            def openIssueIds = assertions.findAll { it.uuid && it.relatedUuid && it.code == 50000 && it.qaStatus == 50001 }.collect { it.relatedUuid }
+            def openIssueIds= assertions.findAll { it.uuid && it.relatedUuid && it.code == 50000 && it.qaStatus == 50001 }.collect { it.relatedUuid }
 
             // all the 50002 (verified) assertions (could belong to userId or other users)
             def verifiedIds = assertions.findAll { it.uuid && it.relatedUuid && it.code == 50000 && it.qaStatus == 50002 }.collect { it.relatedUuid }

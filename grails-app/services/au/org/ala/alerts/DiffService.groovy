@@ -24,6 +24,7 @@ import java.util.zip.GZIPInputStream
 class DiffService {
     def queryService
     def myAnnotationService
+    def annotationService
 
     Boolean hasChangedJsonDiff(QueryResult queryResult) {
         if (queryResult.lastResult != null) {
@@ -149,8 +150,9 @@ class DiffService {
                         // for my annotation alerts, same occurrence record could exist in both result but have different assertions.
                         // so comparing occurrence uuid is not enough, we need to compare 50001/50002/50003 sections inside each occurrence record
                         records = myAnnotationService.diff(previous, last, queryResult.query.recordJsonPath)
-
-                    } else {
+                    } else if (queryService.isAnnotation(queryResult.query)) {
+                        records = annotationService.diff(previous, last, queryResult.query.recordJsonPath)
+                    }else {
                         List<String> ids1 = JsonPath.read(last, queryResult.query.recordJsonPath + "." + queryResult.query.idJsonPath)
                         List<String> ids2 = []
                         try {

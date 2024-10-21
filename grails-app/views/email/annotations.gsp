@@ -46,19 +46,31 @@
                             <tr style="vertical-align: top;">
                                 <td style="width: 37%">
                                     <a href="${occurrencelink}" style="color: #C44D34;text-decoration: none;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;">
-                                       <strong>${i+1}. <em>${oc.vernacularName ?: 'N/A'}</em></strong>
+                                        <g:if test="${oc.vernacularName ?: oc.raw_raw_scientificName ?: oc.scientificName}">
+                                            <strong>${i+1}. <em>${oc.vernacularName ?: oc.raw_raw_scientificName ?: oc.scientificName}</em></strong>
+                                        </g:if>
                                     </a>
-                                    <br/>
-                                    <g:if test="${oc.taxonRankID > 5000}"><i></g:if>
-                                    ${oc.scientificName}<br/>
-                                    <g:if test="${oc.taxonRankID > 5000}"></i></g:if>
-                                    ${oc.stateProvince}<br/>
-                                    Family: ${oc.family}<br/>
-                                    Source: ${oc.dataProviderName}
+                                    <p style="padding-left: 15px;">
+                                        <g:if test="${oc.taxonRankID > 5000}"><i></g:if>
+                                        ${oc.scientificName}<br/>
+                                        <g:if test="${oc.taxonRankID > 5000}"></i></g:if>
+                                        ${oc.stateProvince}<br/>
+                                        Family: ${oc.family}<br/>
+                                        <g:if test="${oc.dataProviderName}">
+                                            Source: ${oc.dataProviderName}
+                                        </g:if>
+                                    </p>
 
                                 </td>
                                 <td class="annotation" nowrap="nowrap" style="width: 30%">
-%{--                                    <a href="${assertionlink}" style="color: #C44D34;text-decoration: none;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;">Annotation details</a>--}%
+                                    <g:if test="${oc.processed_assertions?.size() > 0}">
+                                        <%
+                                            def latestAssertion = oc.processed_assertions[0] // Get the first (latest) assertion
+                                        %>
+                                        Date created: ${latestAssertion.created}<br/>
+                                        Comments:<br/> ${latestAssertion.comment}<br/>
+                                        Comment by: ${latestAssertion.userDisplayName}
+                                    </g:if>
                                 </td>
                                 <td style="width: 33%; text-align: right;" >
                                     <g:if test="${oc.image != null}">
