@@ -50,7 +50,7 @@
                                     <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}" style="color: #C44D34;text-decoration: none;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;">
                                         <strong>${i+1}. <em>${oc.scientificName ?: 'N/A'}</em></strong>
                                     </a>
-                                    <p style="font-size: 13px; color: #212121;margin: 0;">
+                                    <p style="font-size: 13px; color: #212121;padding-left: 15px;">
                                         <g:if test="${oc.scientificName && oc.raw_scientificName && oc.scientificName != oc.raw_scientificName}">
                                             Supplied as:<em>${oc.raw_scientificName}</em><br>
                                         </g:if>
@@ -96,11 +96,17 @@
                                     </g:else>
                                 </td>
                             </tr>
+                            <tr>
+                                <td style="padding: 35px 70px 35px 70px;background-color: #C44D34;color: #fff;font-family: 'Arial', sans-serif;font-size: 14px;line-height: 1.43;text-align: center;">
+                                    <p>If you notice a record has been misidentified, we encourage you to use your expertise to improve the quality of Australia's biosecurity data.</p>
+                                    <p>Please either annotate the record in the provider platform itself or notify us at <a href="mailto:biosecurity@ala.org.au" style="color: #f2f2f2; font-weight: 700;">biosecurity@ala.org.au</a> for assistance.</p>
+                                </td>
+                            </tr>
                         </table>
                     </td>
                 </tr>
                 </g:each>
-                <g:include view="email/footer.gsp" />
+                <g:render template="/email/footer"/>
             </table>
         </td>
     </tr>

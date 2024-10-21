@@ -14,6 +14,8 @@
 package au.org.ala.alerts
 
 import com.jayway.jsonpath.JsonPath
+import com.jayway.jsonpath.PathNotFoundException
+
 import java.util.zip.GZIPInputStream
 
 /**
@@ -21,6 +23,7 @@ import java.util.zip.GZIPInputStream
  */
 class DiffService {
     def queryService
+    def myAnnotationService
 
     Boolean hasChangedJsonDiff(QueryResult queryResult) {
         if (queryResult.lastResult != null) {
@@ -141,9 +144,21 @@ class DiffService {
             try {
                 if (!last.startsWith("<") && !previous.startsWith("<")) {
                     // Don't try and process 401, 301, 500, etc., responses that contain HTML
-                    if (!queryService.isMyAnnotation(queryResult.query)) {
+                    if (queryService.isMyAnnotation(queryResult.query)) {
+                        // for normal alerts, comparing occurrence uuid is enough to show the difference.
+                        // for my annotation alerts, same occurrence record could exist in both result but have different assertions.
+                        // so comparing occurrence uuid is not enough, we need to compare 50001/50002/50003 sections inside each occurrence record
+                        records = myAnnotationService.diff(previous, last, queryResult.query.recordJsonPath)
+
+                    } else {
                         List<String> ids1 = JsonPath.read(last, queryResult.query.recordJsonPath + "." + queryResult.query.idJsonPath)
-                        List<String> ids2 = JsonPath.read(previous, queryResult.query.recordJsonPath + "." + queryResult.query.idJsonPath)
+                        List<String> ids2 = []
+                        try {
+                            ids2 = JsonPath.read(previous, queryResult.query.recordJsonPath + "." + queryResult.query.idJsonPath)
+                        }catch (PathNotFoundException e){
+                            log.info("Previous result doesn't contain any records since the returned json does not contain any 'recordJsonPath'")
+                        }
+
                         List<String> diff = ids1.findAll { !ids2.contains(it) }
                         //pull together the records that have been added
 
@@ -153,25 +168,6 @@ class DiffService {
                                 records.add(record)
                             }
                         }
-                    } else {
-                        // for normal alerts, comparing occurrence uuid is enough to show the difference.
-                        // for my annotation alerts, same occurrence record could exist in both result but have different assertions.
-                        // so comparing occurrence uuid is not enough, we need to compare 50001/50002/50003 sections inside each occurrence record
-
-                        // uuid -> occurrence record map
-                        def oldRecordsMap = JsonPath.read(previous, queryResult.query.recordJsonPath).collectEntries { [(it.uuid): it] }
-                        def curRecordsMap = JsonPath.read(last, queryResult.query.recordJsonPath).collectEntries { [(it.uuid): it] }
-
-                        // if an occurrence record doesn't exist in previous result (added) or has different open_assertions or verified_assertions or corrected_assertions than previous (changed).
-                        records = curRecordsMap.values().findAll {
-                            !oldRecordsMap.containsKey(it.uuid) ||
-                                    it.open_assertions != oldRecordsMap.get(it.uuid).open_assertions ||
-                                    it.verified_assertions != oldRecordsMap.get(it.uuid).verified_assertions ||
-                                    it.corrected_assertions != oldRecordsMap.get(it.uuid).corrected_assertions
-                        }
-
-                        // if an occurrence record exists in previous result but not in current (deleted).
-                        records.addAll(oldRecordsMap.findAll { !curRecordsMap.containsKey(it.value.uuid) }.values())
                     }
                 } else {
                     log.warn "queryId: " + queryResult.query.id + ", queryResult:" + queryResult.id + " last or previous objects contains HTML and not JSON"

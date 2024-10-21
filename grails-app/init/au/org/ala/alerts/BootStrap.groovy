@@ -66,7 +66,7 @@ class BootStrap {
                     queryPath: '/occurrences/search?fq=user_assertions:*&q=last_assertion_date:[___DATEPARAM___%20TO%20*]&sort=last_assertion_date&dir=desc&pageSize=20&facets=basis_of_record',
                     queryPathForUI: '/occurrences/search?fq=user_assertions:*&q=last_assertion_date:[___DATEPARAM___%20TO%20*]&sort=last_assertion_date&dir=desc',
                     dateFormat: """yyyy-MM-dd'T'HH:mm:ss'Z'""",
-                    emailTemplate: '/email/biocache',
+                    emailTemplate: '/email/annotations',
                     recordJsonPath: '\$.occurrences[*]',
                     idJsonPath: 'uuid'
             ])).save()

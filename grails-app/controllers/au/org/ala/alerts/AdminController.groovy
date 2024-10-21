@@ -620,6 +620,37 @@ class AdminController {
     }
 
     /**
+     * NO Database update, Email sent to current user
+     * Query on the check date and email the result to current user
+     * @return
+     */
+    def emailAlertsOnCheckDate(){
+        def id = params.queryId
+        def frequency = params.frequency
+        def checkDate = params.checkDate
+        if (id && frequency && checkDate) {
+            Query query = Query.get(id)
+            Frequency fre = Frequency.findByName(frequency)
+            Date date = new SimpleDateFormat("yyyy-MM-dd").parse(checkDate)
+            if (query && fre) {
+                QueryResult qs = notificationService.executeQuery(query, fre, false, true, date)
+                boolean hasChanged = notificationService.hasChanged(qs)
+                def records = notificationService.collectUpdatedRecords(qs)
+                User currentUser = userService.getUser()
+                def recipient =
+                        [email: currentUser.email, userUnsubToken: currentUser.unsubscribeToken, notificationUnsubToken: '']
+                emailService.sendGroupNotification(qs, fre, [recipient])
+                def results = ["hasChanged": hasChanged, "records": records, "recipient": currentUser.email]
+                render results as JSON
+            } else {
+                render([status: 1, message: "Cannot find query: ${id}"] as JSON)
+            }
+        } else {
+            render([status: 1, message: "Missing queryId or frequency or check date"] as JSON)
+        }
+    }
+
+    /**
      * Database updates, Email sent to current user
      *
      * Test only. Test if a QueryResult [Weekly - hard coded]can be initiated and sent to the current user

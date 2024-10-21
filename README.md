@@ -46,3 +46,16 @@ DB schema update:
 
 ### 4.2.0 Release
 No DB changes
+
+
+### 4.3.1 Release
+Apply new templates for other alerts
+
+Change logs
+
+Database update:
+
+Annotations now uses its own template. To update the template, run the following query:
+```update alerts.query set email_template="/email/annotations" where name="Annotations"```
+My Annotations now uses its own template. To update the template, run the following query:
+```update alerts.query set email_template="/email/myAnnotations" where name="My Annotations"```

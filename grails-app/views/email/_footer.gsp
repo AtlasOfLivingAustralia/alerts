@@ -1,18 +1,12 @@
 <!-- Footer Section -->
 <tr>
-    <td style="padding: 35px 70px 35px 70px;background-color: #C44D34;color: #fff;font-family: 'Arial', sans-serif;font-size: 14px;line-height: 1.43;text-align: center;">
-        <p>If you notice a record has been misidentified, we encourage you to use your expertise to improve the quality of Australia's biosecurity data.</p>
-        <p>Please either annotate the record in the provider platform itself or notify us at <a href="mailto:biosecurity@ala.org.au" style="color: #f2f2f2; font-weight: 700;">biosecurity@ala.org.au</a> for assistance.</p>
-    </td>
-</tr>
-<tr>
     <td style="padding: 35px 70px 35px 70px;background-color: #000000;color: #fff;font-family: 'Arial', sans-serif;font-size: 14px;line-height: 1.43;;text-align: center;">
         <p>The Atlas of Living Australia acknowledges Australia's Traditional Owners and pays respect to the past and present Elders of the nation's Aboriginal and Torres Strait Islander communities.</p>
         <p>We honour and celebrate the spiritual, cultural and customary connections of Traditional Owners to Country and the biodiversity that forms part of that Country.</p>
     </td>
 </tr>
 <tr>
-    <td style="padding: 35px 70px 35px 70px;background-color: #ffffff;color: #000;font-family: 'Arial', sans-serif;font-size: 14px;line-height: 1.43;text-align: center;">
+    <td style="padding: 35px 70px 5px 70px;background-color: #ffffff;color: #000;font-family: 'Arial', sans-serif;font-size: 14px;line-height: 1.43;text-align: center;">
         <p>
             <a href="https://www.education.gov.au/national-collaborative-research-infrastructure-strategy-ncris"><img loading="lazy"  src="${grailsApplication.config.grails.serverURL}/assets/email/NCRIS_150px-150x109.jpg" alt="NCRIS logo" width="125" height="90"></a>&nbsp;
         &nbsp;<a href="https://csiro.au/"><img loading="lazy" src="${grailsApplication.config.grails.serverURL}/assets/email/CSIRO_Solid_RGB-150x150.png" alt="CSIRO logo" width="90" height="90"></a>&nbsp;
@@ -26,7 +20,6 @@
             <br/>
             You are receiving this email because you opted in to ALA alerts.
             <br/>
-            Don't want to receive these emails? You can <a href="${unsubscribeOne}" style="color: #C44D34;">unsubscribe</a>.
         </div>
     </td>
 </tr>

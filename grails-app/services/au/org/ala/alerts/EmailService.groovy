@@ -6,6 +6,7 @@ import org.grails.web.json.JSONArray
 import java.text.SimpleDateFormat
 
 class EmailService {
+    def groovyPageRenderer
     def notificationService
     def queryService
     def grailsApplication
@@ -28,16 +29,15 @@ class EmailService {
         def emailModel = generateEmailModel(notification, queryResult)
         def user = notification.user
         def localeSubject = messageSource.getMessage("emailservice.update.subject", [notification.query.name] as Object[], siteLocale)
+        String emailBody = groovyPageRenderer.render(template: notification.query.emailTemplate, plugin: "email-confirmation", model: emailModel)
+
         if (grailsApplication.config.getProperty("mail.enabled", Boolean, false) && !user.locked) {
             log.info "Sending email to ${user.email} for ${notification.query.name}"
             sendMail {
                 from grailsApplication.config.mail.details.alertAddressTitle + "<" + grailsApplication.config.mail.details.sender + ">"
                 subject localeSubject
                 bcc user.email
-                body(view: notification.query.emailTemplate,
-                        plugin: "email-confirmation",
-                        model: emailModel
-                )
+                html emailBody
             }
         } else if (grailsApplication.config.getProperty("mail.enabled", Boolean, false) && user.locked) {
             log.warn "Email not sent to locked user: ${user.email}"
@@ -138,32 +138,41 @@ class EmailService {
         String urlPrefix = "${grailsApplication.config.security.cas.appServerName}${grailsApplication.config.getProperty('security.cas.contextPath', '')}"
         def localeSubject = messageSource.getMessage("emailservice.update.subject", [query.name] as Object[], siteLocale)
         // pass the last check date to template
+
+        // lastChecked is used into template :  records since lastChecked date
+        // That is why we need to assign the previousCheck of queryResult to query.lastChecked
+        // todo : separate the since and to with lastChecked and previousCheck in the QueryResult or query
         query.lastChecked = queryResult.previousCheck
+
         String title = query.name
         if (Environment.current == Environment.DEVELOPMENT || Environment.current == Environment.TEST) {
             title = "[${Environment.current}] " + query.name
         }
+
+        String emailBody = groovyPageRenderer.render(view:  query.emailTemplate,
+                plugin: "email-confirmation",
+                model: [title: localeSubject,
+                       message: query.updateMessage,
+                       query: query,
+                       moreInfo: queryResult.queryUrlUIUsed,
+                       speciesListInfo: speciesListInfo,
+                       userAssertions: userAssertions,
+                       listcode: queryService.isMyAnnotation(query) ? "biocache.view.myannotation.list" : "biocache.view.list",
+                       stopNotification: urlPrefix + '/notification/myAlerts',
+                       records: records,
+                       frequency: messageSource.getMessage('frequency.' + frequency, null, siteLocale),
+                       totalRecords: (totalRecords >= 0 ? totalRecords : records.size()),
+                       unsubscribeAll: urlPrefix + "/unsubscribe?token=" + userUnsubToken,
+                       unsubscribeOne: urlPrefix + "/unsubscribe?token=" + notificationUnsubToken
+               ]
+        )
+
         try {
             sendMail {
                 from grailsApplication.config.mail.details.alertAddressTitle + "<" + grailsApplication.config.mail.details.sender + ">"
                 subject title
                 bcc subsetOfAddresses
-                body(view: query.emailTemplate,
-                    plugin: "email-confirmation",
-                    model: [title: localeSubject,
-                        message: query.updateMessage,
-                        query: query,
-                        moreInfo: queryResult.queryUrlUIUsed,
-                        speciesListInfo: speciesListInfo,
-                        userAssertions: userAssertions,
-                        listcode: queryService.isMyAnnotation(query) ? "biocache.view.myannotation.list" : "biocache.view.list",
-                        stopNotification: urlPrefix + '/notification/myAlerts',
-                        records: records,
-                        frequency: messageSource.getMessage('frequency.' + frequency, null, siteLocale),
-                        totalRecords: (totalRecords >= 0 ? totalRecords : records.size()),
-                        unsubscribeAll: urlPrefix + "/unsubscribe?token=" + userUnsubToken,
-                        unsubscribeOne: urlPrefix + "/unsubscribe?token=" + notificationUnsubToken
-                    ])
+                html(emailBody)
             }
         } catch (Exception e) {
             log.error("Error sending email to addresses: " + subsetOfAddresses, e)

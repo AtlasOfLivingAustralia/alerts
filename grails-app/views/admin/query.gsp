@@ -101,15 +101,31 @@
                                                         </g:link>
                                                         <g:if test="${queryType != 'biosecurity'}">
                                                             <g:link class="btn btn-info"  controller="admin" action="emailMeLastCheck" params="[queryId: query.id, frequency: queryResult.frequency?.name]" target="_blank">
-                                                                Email me the latest check result (Query fired, No DB update)
+                                                                Email me the latest check result (No DB update)
                                                             </g:link>
                                                             <g:link class="btn btn-info"  controller="admin" action="dryRunQuery" params="[queryId: query.id, frequency: queryResult.frequency?.name]" target="_blank">
                                                                 Dry run (no DB update, no emails)
                                                             </g:link>
                                                             <br>
+                                                            <div style="margin-top: 20px; margin-bottom: 20px;">
+                                                                <g:form class="form-inline" controller="admin" action="emailAlertsOnCheckDate" method="POST" target="_blank">
+                                                                    <%@ page import="java.time.LocalDate" %>
+                                                                    <%
+                                                                        String today = LocalDate.now().toString();  // Format: YYYY-MM-DD
+                                                                    %>
+                                                                    <input type="hidden" name="queryId" value="${query.id}" />
+                                                                    <input type="hidden" name="frequency" value="${queryResult.frequency?.name}" />
+                                                                    <label for="checkDate">Email me the results checked on the given check date (no DB update) </label>
+                                                                     <input type="date" id="checkDate" name="checkDate"value="${today}" class="form-control" />
+
+                                                                    <button type="submit" class="btn btn-primary mb-2">Run</button>
+                                                                </g:form>
+                                                            </div>
+                                                            <div>
                                                             <g:link class="btn btn-primary"  controller="admin" action="runQueryWithLastCheckDate" params="[queryId: query.id, frequency: queryResult.frequency?.name]" target="_blank">
                                                                 Run the last check (DB update, no emails)
                                                             </g:link>
+                                                            </div>
                                                         </g:if>
                                                         <g:else>
                                                             <g:link class="btn btn-primary" controller="admin" action="downloadLastBiosecurityResult" params="[id:  queryResult.id]" target="_blank">
