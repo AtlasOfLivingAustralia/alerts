@@ -44,6 +44,52 @@ class DiffService {
         [Collection, Object[]].any { it.isAssignableFrom(object.getClass()) }
     }
 
+    /**
+     * Indicates if the result of a query has changed by checking its properties.
+     *
+     * @param queryResult
+     * @return
+     */
+
+    Boolean hasChanged(QueryResult queryResult) {
+        Boolean changed = false
+
+        //if there is a fireWhenNotZero or fireWhenChange ignore  idJsonPath
+        log.debug("[QUERY " + queryResult.query.id + "] Checking query: " + queryResult.query.name)
+
+        // PropertyValues in a Biocache Query 'usually' has two properties: totalRecords and last_loaded_records (uuid)
+        //Both have the possible null value
+        //The following check is determined by the last propertyValue, since it overwrites the previous one
+
+        queryResult.propertyValues.each { pv ->
+            log.debug("[QUERY " + queryResult.query.id + "] " +
+                    " Has changed check:" + pv.propertyPath.name
+                    + ", value:" + pv.currentValue
+                    + ", previous:" + pv.previousValue
+                    + ", fireWhenNotZero:" + pv.propertyPath.fireWhenNotZero
+                    + ", fireWhenChange:" + pv.propertyPath.fireWhenChange
+            )
+
+            // Two different types of queries: Biocache and Blog/News
+            // Biocache: totalRecords and last_loaded_records
+            // Blog/News: last_blog_id
+            if (pv.propertyPath.fireWhenNotZero) {
+                changed = pv.currentValue?.toInteger() ?: 0 > 0
+            } else if (pv.propertyPath.fireWhenChange) {
+                changed = pv.previousValue != pv.currentValue
+            }
+        }
+
+        //Example, in a blog/news query,fireWhenNotZero and fireWhenChange both are false
+
+        if (queryService.checkChangeByDiff(queryResult.query)) {
+            log.debug("[QUERY " + queryResult.query.id + "] Has change check. Checking JSON for query : " + queryResult.query.name)
+            changed = hasChangedJsonDiff(queryResult)
+        }
+
+        changed
+    }
+
     Boolean hasChangedJsonDiff(String previous, String current, Query query, Boolean debugDiff = false) {
         if (current != null && previous != null) {
             try {

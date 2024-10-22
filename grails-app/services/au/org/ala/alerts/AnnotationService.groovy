@@ -26,35 +26,13 @@ class AnnotationService {
                     String assertionUrl = baseUrl + '/occurrences/' + occurrence.uuid + '/assertions'
                     def assertionsData = notificationService.getWebserviceResults(assertionUrl)
                     JSONArray assertions = JSON.parse(assertionsData) as JSONArray
-                    occurrence.put('user_assertions', assertions)
 
-                    def (openAssertions, verifiedAssertions, correctedAssertions) = filterAssertions(assertions)
+                    def sortedAssertions = assertions.sort { a, b ->
+                                sdf.parse(b.created) <=> sdf.parse(a.created)
+                            }
 
-                    // only include record has at least 1 (50001/50002/50003) assertion
-                    if (!openAssertions.isEmpty() || !verifiedAssertions.isEmpty() || !correctedAssertions.isEmpty()) {
-                        // find the open/verified/corrected annotations which comment on all the assertions created by the users
-                        def processedAssertionIds = openAssertions.collect { it.uuid } + verifiedAssertions.collect { it.uuid } + correctedAssertions.collect { it.uuid }
-                        def processedAssertions = assertions.findAll{
-                            processedAssertionIds.contains(it.relatedUuid)
-                        }
-
-                        def sortedAssertions = processedAssertions.findAll { processedAssertionIds.contains(it.relatedUuid) }
-                                .sort { a, b ->
-                                    sdf.parse(b.created) <=> sdf.parse(a.created)
-                                }
-                        occurrence.put('processed_assertions', sortedAssertions)
-
-                        // only include record has at least 1 (50001/50002/50003) assertion
-                        // They will be used for diffService (records that will be included in alert email)
-                        // Those open/verified/corrected assertions will be used to retrieve diff (records that will be included in alert email)
-                        openAssertions.sort { it.uuid }
-                        verifiedAssertions.sort { it.uuid }
-                        correctedAssertions.sort { it.uuid }
-                        occurrence.put('open_assertions', openAssertions.collect { it.uuid }.join(','))
-                        occurrence.put('verified_assertions', verifiedAssertions.collect { it.uuid }.join(','))
-                        occurrence.put('corrected_assertions', correctedAssertions.collect { it.uuid }.join(','))
-                        reconstructedOccurrences.push(occurrence)
-                    }
+                    occurrence.put('user_assertions', sortedAssertions)
+                    reconstructedOccurrences.push(occurrence)
                 }
             }
             reconstructedOccurrences.sort { it.uuid }
@@ -66,33 +44,9 @@ class AnnotationService {
         return occurrences.toString()
     }
 
-
-    //Search the assertions which the USER has made
-    //return those have been open-issued, verified or corrected
-    //
-    private static def filterAssertions(JSONArray assertions) {
-        def openAssertions = []
-        def verifiedAssertions = []
-        def correctedAssertions = []
-        if (assertions) {
-            // all the 50001 (open issue) assertions (could belong to userId or other users)
-            def openIssueIds= assertions.findAll { it.uuid && it.relatedUuid && it.code == 50000 && it.qaStatus == 50001 }.collect { it.relatedUuid }
-
-            // all the 50002 (verified) assertions (could belong to userId or other users)
-            def verifiedIds = assertions.findAll { it.uuid && it.relatedUuid && it.code == 50000 && it.qaStatus == 50002 }.collect { it.relatedUuid }
-
-            // all the 50003 (corrected) assertions (could belong to userId or other users)
-            def correctedIds = assertions.findAll { it.uuid && it.relatedUuid && it.code == 50000 && it.qaStatus == 50003 }.collect { it.relatedUuid }
-
-            openAssertions = assertions.findAll { openIssueIds.contains(it.uuid) }
-            verifiedAssertions = assertions.findAll { verifiedIds.contains(it.uuid) }
-            correctedAssertions = assertions.findAll { correctedIds.contains(it.uuid) }
-        }
-        [openAssertions, verifiedAssertions, correctedAssertions,]
-    }
-
-
     /**
+     * If fireNotZero property is true, diff method will not be called
+     *
      * for normal alerts, comparing occurrence uuid is enough to show the difference.
      * for my annotation alerts, same occurrence record could exist in both result but have different assertions.
      * so comparing occurrence uuid is not enough, we need to compare 50001/50002/50003 sections inside each occurrence record
@@ -120,10 +74,14 @@ class AnnotationService {
         // if an occurrence record doesn't exist in previous result (added) or has different open_assertions or verified_assertions or corrected_assertions than previous (changed).
         def records = curRecordsMap.findAll {
             def record = it.value
-            !oldRecordsMap.containsKey(record.uuid) ||
-                    record.open_assertions != oldRecordsMap.get(record.uuid).open_assertions ||
-                    record.verified_assertions != oldRecordsMap.get(record.uuid).verified_assertions ||
-                    record.corrected_assertions != oldRecordsMap.get(record.uuid).corrected_assertions
+            def previousRecord = oldRecordsMap.get(record.uuid)
+            if (previousRecord) {
+                String currentAssertions = JSON.stringify(filterAssertions(record.user_assertions))
+                String previousAssertions = JSON.stringify(filterAssertions(previousRecord.user_assertions))
+                currentAssertions || previousAssertions
+            } else {
+                true
+            }
         }.values()
 
 

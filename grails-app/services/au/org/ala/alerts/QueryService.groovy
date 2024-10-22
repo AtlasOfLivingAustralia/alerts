@@ -52,20 +52,16 @@ class QueryService {
     }
 
     Boolean isMyAnnotation(Query query) {
-        // Currently only 'my annotation' alert is user specific (among all non-custom queries)
-        query.name.startsWith(messageSource.getMessage("query.myannotations.title", null, siteLocale))
+        query.emailTemplate == '/email/myAnnotations'
     }
 
     Boolean isAnnotation(Query query) {
-        // Currently only 'my annotation' alert is user specific (among all non-custom queries)
-        query.name.startsWith(messageSource.getMessage("query.annotations.title", null, siteLocale))
+        query.emailTemplate == '/email/annotations'
     }
 
     Boolean isBioSecurityQuery(Query query) {
         query.emailTemplate == '/email/biosecurity'
     }
-
-
 
     /**
      * When fireWhenNotZero is true,  it should has a digit propertyVale, e.g. totalNumber

@@ -634,7 +634,7 @@ class AdminController {
             Date date = new SimpleDateFormat("yyyy-MM-dd").parse(checkDate)
             if (query && fre) {
                 QueryResult qs = notificationService.executeQuery(query, fre, false, true, date)
-                boolean hasChanged = notificationService.hasChanged(qs)
+                boolean hasChanged = diffService.hasChanged(qs)
                 def records = notificationService.collectUpdatedRecords(qs)
                 User currentUser = userService.getUser()
                 def recipient =
@@ -665,7 +665,7 @@ class AdminController {
             Frequency fre = Frequency.findByName(frequency)
             if (query && fre) {
                 QueryResult qs = notificationService.executeQuery(query, fre, false, false)
-                boolean hasChanged = notificationService.hasChanged(qs)
+                boolean hasChanged = diffService.hasChanged(qs)
                 def records = notificationService.collectUpdatedRecords(qs)
                 User currentUser = userService.getUser()
                 def recipient =

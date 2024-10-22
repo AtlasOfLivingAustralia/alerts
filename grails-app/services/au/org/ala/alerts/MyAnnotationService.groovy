@@ -7,7 +7,7 @@ import org.grails.web.json.JSONArray
 import org.grails.web.json.JSONObject
 
 
-class MyAnnotationService extends AnnotationService {
+class MyAnnotationService{
     NotificationService notificationService
 
     String appendAssertions(Query query, JSONObject occurrences) {
@@ -90,5 +90,36 @@ class MyAnnotationService extends AnnotationService {
             correctedAssertions = origUserAssertions.findAll { correctedIds.contains(it.uuid) }
         }
         [origUserAssertions, openAssertions, verifiedAssertions, correctedAssertions,]
+    }
+
+    def diff(previous, last, recordJsonPath) {
+        // uuid -> occurrence record map
+        def oldRecordsMap = [:]
+        def curRecordsMap = [:]
+        try {
+            oldRecordsMap = JsonPath.read(previous, recordJsonPath).collectEntries { [(it.uuid): it] }
+        }catch (PathNotFoundException e){
+            log.info("Previous result doesn't contain any records since the returned json does not contain any 'recordJsonPath'")
+        }
+        try {
+            curRecordsMap = JsonPath.read(last, recordJsonPath).collectEntries { [(it.uuid): it] }
+        }catch (PathNotFoundException e){
+            log.info("Previous result doesn't contain any records since the returned json does not contain any 'recordJsonPath'")
+        }
+        // if an occurrence record doesn't exist in previous result (added) or has different open_assertions or verified_assertions or corrected_assertions than previous (changed).
+        def records = curRecordsMap.findAll {
+            def record = it.value
+            !oldRecordsMap.containsKey(record.uuid) ||
+                    record.open_assertions != oldRecordsMap.get(record.uuid).open_assertions ||
+                    record.verified_assertions != oldRecordsMap.get(record.uuid).verified_assertions ||
+                    record.corrected_assertions != oldRecordsMap.get(record.uuid).corrected_assertions
+        }.values()
+
+
+        //if an occurrence record exists in previous result but not in current, it means the annotation is deleted.
+        //We need to add these records as a 'modified' record
+        records.addAll(oldRecordsMap.findAll { !curRecordsMap.containsKey(it.value.uuid) }.values())
+
+        return records
     }
 }

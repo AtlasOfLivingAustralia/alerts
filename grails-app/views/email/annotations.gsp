@@ -62,14 +62,14 @@
                                     </p>
 
                                 </td>
-                                <td class="annotation" nowrap="nowrap" style="width: 30%">
-                                    <g:if test="${oc.processed_assertions?.size() > 0}">
+                                <td class="annotation" nowrap="nowrap" style="width: 30%; word-wrap: break-word; white-space: normal;">
+                                    <g:if test="${oc.user_assertions?.size() > 0}">
                                         <%
-                                            def latestAssertion = oc.processed_assertions[0] // Get the first (latest) assertion
+                                            def latestAssertion = oc.user_assertions[0] // Get the first (latest) assertion
                                         %>
-                                        Date created: ${latestAssertion.created}<br/>
-                                        Comments:<br/> ${latestAssertion.comment}<br/>
-                                        Comment by: ${latestAssertion.userDisplayName}
+                                        Date created:<br/>-&nbsp;<i>${latestAssertion.created}</i><br/>
+                                        Comments:<br/>-&nbsp;<i>${latestAssertion.comment}</i><br/>
+                                        Comment by:<br/>-&nbsp;<i>${latestAssertion.userDisplayName}</i>
                                     </g:if>
                                 </td>
                                 <td style="width: 33%; text-align: right;" >

@@ -51,22 +51,45 @@ No DB changes
 ### 4.3.1 Release
 Apply new templates for other alerts
 
-Change logs
+#### Change logs
 
 Database update:
 
-Annotations now uses its own template. To update the template, run the following query:
-```update alerts.query set email_template="/email/annotations" where name="Annotations"```
-My Annotations now uses its own template. To update the template, run the following query:
-```update alerts.query set email_template="/email/myAnnotations" where name="My Annotations"```
+1. Annotations now uses its own template. To update the template, run the following query:
 
-Check Annotation query to see if it works with the Api GW
-```select * from alerts.query where name="Annotations"```
-check the value of base_url and query_path:
-if base_url is like:```https://biocache.ala.org.au```
-and query_path is like: ```/ws/occurrences/search?fq=user_assertions:*&q=last_assertion_date:[___DATEPARAM___%20TO%20*]&sort=last_assertion_date&dir=desc&pageSize=20&facets=basis_of_record```
+    ```update alerts.query set email_template="/email/annotations" where name="Annotations"```
 
-then they should be changed to:
-```https://api.ala.org.au/occurrences```
 
-```/occurrences/search?fq=user_assertions:*&q=last_assertion_date:[___DATEPARAM___%20TO%20*]&sort=last_assertion_date&dir=desc&pageSize=20&facets=basis_of_record```
+2. My Annotations now uses its own template. To update the template, run the following query:
+
+    ```update alerts.query set email_template="/email/myAnnotations" where name="My Annotations"```
+
+* Check Annotation query to see if it works with the Api GW
+
+    ```select * from alerts.query where name="Annotations"```
+
+
+3. Annotation on records for Dataset / collections / species  now uses its "Annotation" template. To update the template, run the following query:
+
+    ```       
+              UPDATE alerts.query 
+              SET email_template = '/email/annotations'
+              WHERE name LIKE 'New annotations on%';
+   ```
+4. Check base_url and query_path for the queries which name is "Annotations" and "My Annotations"
+    
+
+     if base_url is like:
+      ```https://biocache.ala.org.au```
+    
+      and query_path is like:
+    
+      ```/ws/occurrences/search?fq=user_assertions:*&q=last_assertion_date:[___DATEPARAM___%20TO%20*]&sort=last_assertion_date&dir=desc&pageSize=20&facets=basis_of_record```
+    
+      then they should be changed to:
+    
+      ```https://api.ala.org.au/occurrences```
+    
+      and
+    
+      ```/occurrences/search?fq=user_assertions:*&q=last_assertion_date:[___DATEPARAM___%20TO%20*]&sort=last_assertion_date&dir=desc&pageSize=20&facets=basis_of_record```

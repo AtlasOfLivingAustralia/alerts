@@ -44,7 +44,7 @@
                         <g:set var="assertionlink" value="${query.baseUrl}/occurrences/${oc.uuid}/assertions"></g:set>
                         <table style="width: 100%">
                             <tr style="vertical-align: top;">
-                                <td style="width: 37%">
+                                <td style="width: 33%">
 
                                     <a href="${occurrencelink}" style="color: #C44D34;text-decoration: none;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;">
                                      <g:if test="${oc.vernacularName ?: oc.raw_raw_scientificName ?: oc.scientificName}">
@@ -63,14 +63,14 @@
                                     </p>
 
                                 </td>
-                                <td class="annotation" nowrap="nowrap" style="width: 30%" style="font-family: 'Arial', sans-serif;font-size: 12px;line-height: 1.5;">
+                                <td class="annotation" nowrap="nowrap" style="width: 34%;word-wrap: break-word; white-space: normal;font-family: 'Arial', sans-serif;font-size: 12px;line-height: 1.5;">
                                     <g:if test="${oc.processed_assertions?.size() > 0}">
                                         <%
                                             def latestAssertion = oc.processed_assertions[0] // Get the first (latest) assertion
                                         %>
-                                        Date created: ${latestAssertion.created}<br/>
-                                        Comments:<br/> ${latestAssertion.comment}<br/>
-                                        Comment by: ${latestAssertion.userDisplayName}
+                                        Date created:<br/>-&nbsp;<i>${latestAssertion.created}</i><br/>
+                                        Comments:<br/>-&nbsp;<i>${latestAssertion.comment}</i><br/>
+                                        Comment by:<br/>-&nbsp;<i>${latestAssertion.userDisplayName}</i>
                                     </g:if>
                                 </td>
                                 <td style="width: 33%; text-align: right;" >
