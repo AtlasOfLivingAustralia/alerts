@@ -25,6 +25,7 @@ class DiffService {
     def queryService
     def myAnnotationService
     def annotationService
+    def datasetService
 
     Boolean hasChangedJsonDiff(QueryResult queryResult) {
         if (queryResult.lastResult != null) {
@@ -198,24 +199,10 @@ class DiffService {
                         records = myAnnotationService.diff(previous, last, queryResult.query.recordJsonPath)
                     } else if (queryService.isAnnotation(queryResult.query)) {
                         records = annotationService.diff(previous, last, queryResult.query.recordJsonPath)
-                    }else {
-                        List<String> ids1 = JsonPath.read(last, queryResult.query.recordJsonPath + "." + queryResult.query.idJsonPath)
-                        List<String> ids2 = []
-                        try {
-                            ids2 = JsonPath.read(previous, queryResult.query.recordJsonPath + "." + queryResult.query.idJsonPath)
-                        }catch (PathNotFoundException e){
-                            log.info("Previous result doesn't contain any records since the returned json does not contain any 'recordJsonPath'")
-                        }
-
-                        List<String> diff = ids1.findAll { !ids2.contains(it) }
-                        //pull together the records that have been added
-
-                        def allRecords = JsonPath.read(last, queryResult.query.recordJsonPath)
-                        allRecords.each { record ->
-                            if (diff.contains(record.get(queryResult.query.idJsonPath))) {
-                                records.add(record)
-                            }
-                        }
+                    } else if (queryService.isDatasetQuery(queryResult.query)) {
+                        records = datasetService.diff(previous, last, queryResult.query.recordJsonPath, queryResult.query.idJsonPath)
+                    } else {
+                        records = differentiateRecordsById(previous, last, queryResult.query.recordJsonPath, queryResult.query.idJsonPath)
                     }
                 } else {
                     log.warn "queryId: " + queryResult.query.id + ", queryResult:" + queryResult.id + " last or previous objects contains HTML and not JSON"
@@ -225,6 +212,37 @@ class DiffService {
             }
         }
         records
+    }
+
+    /**
+     * General method to differentiate records by id
+     * @param previous
+     * @param last
+     * @param idJsonPath
+     * @return
+     */
+    def differentiateRecordsById(previous, last, recordJsonPath, idJsonPath) {
+        def records = []
+        String fullRecordJsonPath = recordJsonPath + "." + idJsonPath
+        List<String> ids1 = []
+        List<String> ids2 = []
+        try {
+            ids1 = JsonPath.read(last, fullRecordJsonPath)
+            ids2 = JsonPath.read(previous, fullRecordJsonPath)
+        }catch (PathNotFoundException e){
+            log.info("it's not an error. Result doesn't contain any records since the returned json does not contain any 'recordJsonPath', if result is empty.")
+        }
+
+        List<String> diff = ids1.findAll { !ids2.contains(it) }
+        //pull together the records that have been added
+
+        def allRecords = JsonPath.read(last, recordJsonPath)
+        allRecords.each { record ->
+            if (diff.contains(record.get(idJsonPath))) {
+                records.add(record)
+            }
+        }
+        return records
     }
 
     String decompressZipped(byte[] zipped) {

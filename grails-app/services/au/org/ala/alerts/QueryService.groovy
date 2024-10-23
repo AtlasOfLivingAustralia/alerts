@@ -63,6 +63,10 @@ class QueryService {
         query.emailTemplate == '/email/biosecurity'
     }
 
+    Boolean isDatasetQuery(Query query) {
+        query.emailTemplate == '/email/datasets'
+    }
+
     /**
      * When fireWhenNotZero is true,  it should has a digit propertyVale, e.g. totalNumber
      * It is supposed to be totalNumber of NEW records

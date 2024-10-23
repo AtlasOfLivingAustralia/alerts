@@ -60,7 +60,7 @@
                                     </p>
                                 </td>
                                 <td class="annotation" nowrap="nowrap" style="width: 30%">
-                                    <a href="${assertionlink}" style="color: #C44D34;text-decoration: none;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;">Annotation details</a>
+                                    Date created: ${new SimpleDateFormat("dd MMM yyyy").format(oc.eventDate)}<br/>
                                 </td>
                                 <td style="width: 33%; text-align: right;" >
                                     <g:if test="${oc.image != null}">
