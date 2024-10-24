@@ -98,7 +98,7 @@ class EmailService {
 
         def records =  notificationService.retrieveRecordForQuery(query, queryResult)
         def userAssertions = queryService.isBioSecurityQuery(query) ? getBiosecurityAssertions(query, records as List) : [:]
-        def speciesListInfo = getSpeciesListInfo(query)
+        //def speciesListInfo = getSpeciesListInfo(query)
 
         //It returns the total number of records when the property 'fireWhenNotZero' is enabled
         //Integer fireWhenNotZero = queryService.totalNumberWhenNotZeroPropertyEnabled(queryResult)
@@ -112,7 +112,7 @@ class EmailService {
                 log.info "Sending emails for ${query.name} to ${emails.size() <= 2 ? emails.join('; ') : emails.take(2).join('; ') + ' and ' + emails.size() + ' other users.'}"
                 recipients.each { recipient ->
                     if (!recipient.locked) {
-                        sendGroupEmail(query, [recipient.email], queryResult, records.take(maxRecords), frequency, totalRecords, recipient.userUnsubToken as String, recipient.notificationUnsubToken as String, speciesListInfo, userAssertions)
+                        sendGroupEmail(query, [recipient.email], queryResult, records.take(maxRecords), frequency, totalRecords, recipient.userUnsubToken as String, recipient.notificationUnsubToken as String)
                     } else {
                         log.warn "Email not sent to locked user: ${recipient}"
                     }
@@ -134,7 +134,7 @@ class EmailService {
         }
     }
 
-    public void sendGroupEmail(Query query, subsetOfAddresses, QueryResult queryResult, records, Frequency frequency, int totalRecords, String userUnsubToken, String notificationUnsubToken, Map speciesListInfo, Map userAssertions) {
+    public void sendGroupEmail(Query query, subsetOfAddresses, QueryResult queryResult, records, Frequency frequency, int totalRecords, String userUnsubToken, String notificationUnsubToken) {
         String urlPrefix = "${grailsApplication.config.security.cas.appServerName}${grailsApplication.config.getProperty('security.cas.contextPath', '')}"
         def localeSubject = messageSource.getMessage("emailservice.update.subject", [query.name] as Object[], siteLocale)
         // pass the last check date to template
@@ -155,8 +155,6 @@ class EmailService {
                        message: query.updateMessage,
                        query: query,
                        moreInfo: queryResult.queryUrlUIUsed,
-                       speciesListInfo: speciesListInfo,
-                       userAssertions: userAssertions,
                        listcode: queryService.isMyAnnotation(query) ? "biocache.view.myannotation.list" : "biocache.view.list",
                        stopNotification: urlPrefix + '/notification/myAlerts',
                        records: records,
@@ -205,29 +203,29 @@ class EmailService {
             }
         }?.findAll{it != null}
     }
-    /**
-     * Get the species list info
-     *
-     * @param query
-     * @return a Map contains list name and list URL
-     */
-
-    Map getSpeciesListInfo(Query query) {
-        // if it's biosecurity query, we try to get list details
-        if (query.emailTemplate == '/email/biosecurity') {
-            // species list name already in query name, we just need to parse it
-            String matchStr = messageSource.getMessage("query.biosecurity.title", null, siteLocale) + ' '
-            int idx = query.name.indexOf(matchStr)
-            String listname = ""
-            String listid = query.listId
-            String listURL =  grailsApplication.config.getProperty("lists.baseURL") + '/speciesListItem/list/' + listid
-            if (idx != -1) {
-                listname = query.name.substring(idx + matchStr.length())
-            }
-
-            return [name : listname, url: listURL, drId: listid]
-        }
-
-        [:]
-    }
+//    /**
+//     * Get the species list info
+//     *
+//     * @param query
+//     * @return a Map contains list name and list URL
+//     */
+//
+//    Map getSpeciesListInfo(Query query) {
+//        // if it's biosecurity query, we try to get list details
+//        if (query.emailTemplate == '/email/biosecurity') {
+//            // species list name already in query name, we just need to parse it
+//            String matchStr = messageSource.getMessage("query.biosecurity.title", null, siteLocale) + ' '
+//            int idx = query.name.indexOf(matchStr)
+//            String listname = ""
+//            String listid = query.listId
+//            String listURL =  grailsApplication.config.getProperty("lists.baseURL") + '/speciesListItem/list/' + listid
+//            if (idx != -1) {
+//                listname = query.name.substring(idx + matchStr.length())
+//            }
+//
+//            return [name : listname, url: listURL, drId: listid]
+//        }
+//
+//        [:]
+//    }
 }

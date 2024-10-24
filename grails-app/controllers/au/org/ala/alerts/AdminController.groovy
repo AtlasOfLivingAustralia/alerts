@@ -375,8 +375,6 @@ class AdminController {
 
 
         def records = notificationService.retrieveRecordForQuery(qr.query, qr)
-        def userAssertions = queryService.isBioSecurityQuery(qr.query) ? emailService.getBiosecurityAssertions(qr.query, records as List) : [:]
-        def speciesListInfo = emailService.getSpeciesListInfo(qr.query)
 
         String urlPrefix = "${grailsApplication.config.getProperty("grails.serverURL")}${grailsApplication.config.getProperty('security.cas.contextPath', '')}"
         def localeSubject = messageSource.getMessage("emailservice.update.subject", [query.name] as Object[], siteLocale)
@@ -397,8 +395,6 @@ class AdminController {
                         message: query.updateMessage,
                         query: query,
                         moreInfo: qr.queryUrlUIUsed,
-                        speciesListInfo: speciesListInfo,
-                        userAssertions: userAssertions,
                         listcode: queryService.isMyAnnotation(query) ? "biocache.view.myannotation.list" : "biocache.view.list",
                         stopNotification: urlPrefix + '/notification/myAlerts',
                         records: records.take(maxRecords),

@@ -33,8 +33,10 @@
                     <td align="center" style="background-color: #E8E8E8;color: #000;padding: 40px 30px 40px 30px;text-align: center;font-family: 'Arial', sans-serif;font-size: 22px;line-height: 1.5;">
                         <div> ${totalRecords} new ${totalRecords == 1 ? 'record' : 'records'} for
                         </div>
-                        <div title="${speciesListInfo.name}">
-                            <strong>${StringUtils.abbreviate(speciesListInfo.name, 40)}, <a href="${speciesListInfo.url}">${speciesListInfo.drId}</a></strong>
+                        <div>
+                            <g:set var="listURL" value="${grailsApplication.config.getProperty("lists.baseURL") + '/speciesListItem/list/' + query.listId}" />
+                            <g:set var="listName" value="${query.name.replaceAll('BioSecurity alert for', '').replaceAll('\"', '').trim()}" />
+                            <strong><a href="${listURL}">${StringUtils.abbreviate(listName, 40)}</a></strong>
                         </div>
                         <div><i>since ${new SimpleDateFormat("dd MMM yyyy").format(query.lastChecked)}</i></div>
                     </td>
@@ -96,16 +98,16 @@
                                     </g:else>
                                 </td>
                             </tr>
-                            <tr>
-                                <td style="padding: 35px 70px 35px 70px;background-color: #C44D34;color: #fff;font-family: 'Arial', sans-serif;font-size: 14px;line-height: 1.43;text-align: center;">
-                                    <p>If you notice a record has been misidentified, we encourage you to use your expertise to improve the quality of Australia's biosecurity data.</p>
-                                    <p>Please either annotate the record in the provider platform itself or notify us at <a href="mailto:biosecurity@ala.org.au" style="color: #f2f2f2; font-weight: 700;">biosecurity@ala.org.au</a> for assistance.</p>
-                                </td>
-                            </tr>
                         </table>
                     </td>
                 </tr>
                 </g:each>
+                <tr>
+                    <td style="padding: 35px 70px 35px 70px;background-color: #C44D34;color: #fff;font-family: 'Arial', sans-serif;font-size: 14px;line-height: 1.43;text-align: center;">
+                        <p>If you notice a record has been misidentified, we encourage you to use your expertise to improve the quality of Australia's biosecurity data.</p>
+                        <p>Please either annotate the record in the provider platform itself or notify us at <a href="mailto:biosecurity@ala.org.au" style="color: #f2f2f2; font-weight: 700;">biosecurity@ala.org.au</a> for assistance.</p>
+                    </td>
+                </tr>
                 <g:render template="/email/footer"/>
             </table>
         </td>

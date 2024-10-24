@@ -56,15 +56,8 @@
                                                 Content type: ${oc.details.resourceType}<br/>
                                             </g:if>
 
-                                            <g:if test="${oc.details.lastUpdated}">
-                                                Updated: ${oc.details.lastUpdated}<br/>
-                                            </g:if>
-                                            <g:else>
-                                                <g:if test="${oc.details.dateCreated}">
-                                                 Created:  ${oc.details.dateCreated}<br/>
-                                                </g:if>
-                                            </g:else>
 
+                                            <br/>
                                             <g:if test="${oc.details.pubShortDescription}">
                                                 ${oc.details.pubShortDescription}<br/>
                                             </g:if>
@@ -82,9 +75,16 @@
                                                 <img src="${oc.smallImageUrl}" alt="image for record" style="vertical-align: top;max-width: 150px; width: 150px; height: 150px;border-radius: 6px;line-height: 100%;"/>
                                             </a>
                                         </g:if>
+
+                                        <g:if test="${oc.details.lastUpdated}">
+                                            Updated: ${oc.details.lastUpdated}<br/>
+                                        </g:if>
                                         <g:else>
-                                            <g:message code="biocache.no.image" />
+                                            <g:if test="${oc.details.dateCreated}">
+                                                Created:  ${oc.details.dateCreated}<br/>
+                                            </g:if>
                                         </g:else>
+
                                     </td>
                                 </tr>
                             </table>
