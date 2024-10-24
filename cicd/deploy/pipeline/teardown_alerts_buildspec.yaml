@@ -1,0 +1,47 @@
+version: 0.2
+
+env:
+  shell: bash
+  variables:
+    JAVA_TOOL_OPTIONS: -Dhttps.protocols=TLSv1.2
+
+phases:
+  install:
+    commands:
+      - echo Installing dependencies...
+      - apt update -y
+        && cat /etc/lsb-release
+        && apt-get -q -y install openjdk-11-jdk
+        && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+        && add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+        && apt-get update
+        && apt-get install -y docker-ce
+        && curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+        && chmod 700 get_helm.sh
+        && ./get_helm.sh
+        && curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+        && chmod +x kubectl
+        && mv kubectl /usr/local/bin/
+        && ARCH=amd64
+        && PLATFORM=$(uname -s)_$ARCH
+        && curl -sLO "https://github.com/eksctl-io/eksctl/releases/latest/download/eksctl_$PLATFORM.tar.gz"
+        && tar -xzf eksctl_$PLATFORM.tar.gz -C /tmp && rm eksctl_$PLATFORM.tar.gz
+        && mv /tmp/eksctl /usr/local/bin
+
+  build:
+    commands:
+      - echo Build started on $(date)
+      - aws eks --region ap-southeast-2 update-kubeconfig --name $EKS_CLUSTER_NAME
+      - kubectl config set-context --current --namespace=alerts
+      - kubectl delete secret alerts-config-secret-$CLEAN_BRANCH || true
+      - eksctl delete iamserviceaccount --name=alerts-service-account-$CLEAN_BRANCH --namespace=alerts --cluster=$EKS_CLUSTER_NAME
+      - helm uninstall $HELM_RELEASE_NAME -n alerts
+  post_build:
+    commands:
+      - echo Post-build phase...
+      - echo Build completed on $(date)
+
+artifacts:
+  base-directory: $CODEBUILD_SRC_DIR
+  files:
+    - '**/*'

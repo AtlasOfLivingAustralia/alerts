@@ -9,6 +9,9 @@ image:
   pullPolicy: IfNotPresent
   tag: "latest"
 
+secret:
+  name: "alerts-config-secret"
+
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
@@ -70,4 +73,5 @@ tolerations: []
 affinity: {}
 
 rds:
+  name: "mysql-rds"
   externalName: "mysql-rds"

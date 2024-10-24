@@ -21,6 +21,8 @@ env:
     - DB_READ_ENDPOINT
     - DB_WRITE_ENDPOINT
     - EKS_CLUSTER_NAME
+    - HELM_RELEASE_NAME
+    - HOSTED_ZONE
 
 phases:
 
@@ -63,6 +65,12 @@ phases:
       - set -a ; source env.txt ; set +a
       - ALERTS_SECRET_NAME_ARN=$(aws cloudformation describe-stacks --stack-name $BASE_STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='AlertsSecret'].OutputValue" --output text)
       - ALERTS_SECRET_NAME=$(echo $ALERTS_SECRET_NAME_ARN | cut -d':' -f7 | rev | cut -d'-' -f2- | rev)
+      - echo ALERTS_SECRET_NAME=$ALERTS_SECRET_NAME
+      - |
+          if [[ "$CLEAN_BRANCH" != "develop" && "$CLEAN_BRANCH" != "testing" && "$CLEAN_BRANCH" != "staging" && "$CLEAN_BRANCH" != "production" ]]; then
+            ALERTS_SECRET_NAME="alerts-develop"
+          fi
+      - echo ALERTS_SECRET_NAME=$ALERTS_SECRET_NAME
       - ALERTS_ECR_REPOSITORY_NAME=$(aws cloudformation describe-stacks --stack-name $BASE_STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='AlertsRepositoryName'].OutputValue" --output text)
       - DB_READ_ENDPOINT=$(aws cloudformation describe-stacks --stack-name $DATABASE_STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='ReadEndpoint'].OutputValue" --output text)
       - DB_WRITE_ENDPOINT=$(aws cloudformation describe-stacks --stack-name $DATABASE_STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='WriteEndpoint'].OutputValue" --output text)
