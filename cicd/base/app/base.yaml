@@ -207,10 +207,10 @@ Resources:
       Description: !Sub Alerts app ${pEnvironment} secrets
       SecretString: !If
               - IsFirstBuild
-              - |
+              - !Sub |
                 {
                    "oidc_secret" : "",
-                   "db-password" : "",
+                   "db-password" : ""
                 }
               - !Ref "AWS::NoValue"
 

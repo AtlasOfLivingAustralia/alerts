@@ -181,6 +181,23 @@ Resources:
             Namespace: CheckoutSrcNS
             OutputArtifacts:
               - Name: 'SourceArtifact'
+            RunOrder: 1
+          - Name: CheckoutAnsibleRepo
+            ActionTypeId:
+              Category: Source
+              Owner: AWS
+              Provider: CodeStarSourceConnection
+              Version: 1
+            Configuration:
+              ConnectionArn:
+                Fn::ImportValue:
+                  Fn::Sub: ${pBootstrapStackName}-CodestarConnectionArn
+              FullRepositoryId: !Sub ${pGitHubOwner}/ansible-inventories
+              OutputArtifactFormat: CODEBUILD_CLONE_REF
+            Namespace: CheckoutAdditionalRepoNS
+            OutputArtifacts:
+              - Name: 'AnsibleInventoriesSourceArtifact'
+            RunOrder: 2
       - Name: Deploy_Infrastructure_Build
         Actions:
           - Name: ExportConfig
@@ -228,6 +245,7 @@ Resources:
                 ]
             InputArtifacts:
               - Name: 'SourceArtifact'
+              - Name: 'AnsibleInventoriesSourceArtifact'
             RunOrder: 2
 
           - Name: DeployNotification
