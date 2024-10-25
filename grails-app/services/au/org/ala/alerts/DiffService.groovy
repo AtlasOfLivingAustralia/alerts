@@ -200,7 +200,7 @@ class DiffService {
                     } else if (queryService.isAnnotation(queryResult.query)) {
                         records = annotationService.diff(previous, last, queryResult.query.recordJsonPath)
                     } else if (queryService.isDatasetQuery(queryResult.query)) {
-                        records = datasetService.diff(previous, last, queryResult.query.recordJsonPath, queryResult.query.idJsonPath)
+                        records = datasetService.diff(queryResult)
                     } else {
                         records = differentiateRecordsById(previous, last, queryResult.query.recordJsonPath, queryResult.query.idJsonPath)
                     }

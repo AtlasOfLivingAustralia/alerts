@@ -49,21 +49,21 @@
                                         </a>
                                         <p style="padding-left: 15px;">
 
-                                            <g:if test="${oc.details.licenseType}">
-                                                Licence: ${oc.details.licenseType}<br/>
+                                            <g:if test="${oc.details?.licenseType}">
+                                                Licence: ${oc.details?.licenseType}<br/>
                                             </g:if>
-                                            <g:if test="${oc.details.resourceType}">
-                                                Content type: ${oc.details.resourceType}<br/>
+                                            <g:if test="${oc.details?.resourceType}">
+                                                Content type: ${oc.details?.resourceType}<br/>
                                             </g:if>
 
 
                                             <br/>
-                                            <g:if test="${oc.details.pubShortDescription}">
-                                                ${oc.details.pubShortDescription}<br/>
+                                            <g:if test="${oc.details?.pubShortDescription}">
+                                                ${oc.details?.pubShortDescription}<br/>
                                             </g:if>
                                             <g:else>
-                                                <g:if test="${oc.details.pubDescription}">
-                                                    ${oc.details.pubDescription}<br/>
+                                                <g:if test="${oc.details?.pubDescription}">
+                                                    ${oc.details?.pubDescription}<br/>
                                                 </g:if>
                                             </g:else>
                                         </p>
@@ -76,11 +76,11 @@
                                             </a>
                                         </g:if>
 
-                                        <g:if test="${oc.details.lastUpdated}">
+                                        <g:if test="${oc.details?.lastUpdated}">
                                             Updated: ${oc.details.lastUpdated}<br/>
                                         </g:if>
                                         <g:else>
-                                            <g:if test="${oc.details.dateCreated}">
+                                            <g:if test="${oc.details?.dateCreated}">
                                                 Created:  ${oc.details.dateCreated}<br/>
                                             </g:if>
                                         </g:else>
