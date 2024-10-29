@@ -67,6 +67,10 @@ class QueryService {
         query.emailTemplate == '/email/datasets'
     }
 
+    Boolean isBiocacheImages(Query query) {
+        query.emailTemplate == '/email/biocacheImages'
+    }
+
     /**
      * When fireWhenNotZero is true,  it should has a digit propertyVale, e.g. totalNumber
      * It is supposed to be totalNumber of NEW records

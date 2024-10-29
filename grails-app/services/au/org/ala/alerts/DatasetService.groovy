@@ -6,30 +6,9 @@ import groovy.json.JsonSlurper
 class DatasetService {
     def diffService
     def httpService
-    def grailsApplication
 
     def diff(QueryResult qs) {
-        def records = []
-        String last = {}
-        // If last result is null, assign an empty Json object
-        if (qs.lastResult != null) {
-            last = diffService.decompressZipped(qs.lastResult)
-        }
-
-        String previous = "{}"
-        // If previous result is null, assign an empty Json object
-        if ( qs.previousResult != null) {
-            previous = diffService.decompressZipped(qs.previousResult)
-        }
-
-        def recordJsonPath = qs.query.recordJsonPath
-        def idJsonPath = qs.query.idJsonPath
-
-        int maxRecords = grailsApplication.config.getProperty("biosecurity.query.maxRecords", Integer, 500)
-        records = diffService.differentiateRecordsById(previous, last, recordJsonPath, idJsonPath)
-        if (records.size() > maxRecords) {
-            records = records.subList(0, maxRecords)
-        }
+        def records = diffService.findNewRecordsById(qs)
         def uids = records.collect { it.uid }
 
         String collectionUrl = qs.query.baseUrl + "/find/dataResource"

@@ -97,11 +97,6 @@ class EmailService {
         log.debug("Using email template: " + query.emailTemplate)
 
         def records =  notificationService.retrieveRecordForQuery(query, queryResult)
-        def userAssertions = queryService.isBioSecurityQuery(query) ? getBiosecurityAssertions(query, records as List) : [:]
-        //def speciesListInfo = getSpeciesListInfo(query)
-
-        //It returns the total number of records when the property 'fireWhenNotZero' is enabled
-        //Integer fireWhenNotZero = queryService.totalNumberWhenNotZeroPropertyEnabled(queryResult)
 
         int totalRecords = records.size()
         int maxRecords = grailsApplication.config.getProperty("biosecurity.query.maxRecords", Integer, 500)
@@ -134,7 +129,7 @@ class EmailService {
         }
     }
 
-    public void sendGroupEmail(Query query, subsetOfAddresses, QueryResult queryResult, records, Frequency frequency, int totalRecords, String userUnsubToken, String notificationUnsubToken) {
+    void sendGroupEmail(Query query, subsetOfAddresses, QueryResult queryResult, records, Frequency frequency, int totalRecords, String userUnsubToken, String notificationUnsubToken) {
         String urlPrefix = "${grailsApplication.config.security.cas.appServerName}${grailsApplication.config.getProperty('security.cas.contextPath', '')}"
         def localeSubject = messageSource.getMessage("emailservice.update.subject", [query.name] as Object[], siteLocale)
         // pass the last check date to template

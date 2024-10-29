@@ -26,6 +26,8 @@ class DiffService {
     def myAnnotationService
     def annotationService
     def datasetService
+    def imageService
+    def grailsApplication
 
     Boolean hasChangedJsonDiff(QueryResult queryResult) {
         if (queryResult.lastResult != null) {
@@ -163,18 +165,19 @@ class DiffService {
     }
 
     def getNewRecords(QueryResult queryResult) {
-
+        def records = []
         //decompress both and compare lists
         if (queryResult.query.recordJsonPath) {
             String last = decompressZipped(queryResult.lastResult)
             if (last) {
-                JsonPath.read(last, queryResult.query.recordJsonPath)
-            } else {
-                []
+                records =  JsonPath.read(last, queryResult.query.recordJsonPath)
             }
-        } else {
-            []
+
+            if (queryService.isBiocacheImages(queryResult.query)) {
+                records = imageService.diff(records)
+            }
         }
+        return records
     }
 
     def getNewRecordsFromDiff(QueryResult queryResult) {
@@ -201,8 +204,10 @@ class DiffService {
                         records = annotationService.diff(previous, last, queryResult.query.recordJsonPath)
                     } else if (queryService.isDatasetQuery(queryResult.query)) {
                         records = datasetService.diff(queryResult)
+                    } else if ( queryService.isBiocacheImages(queryResult.query)) {
+                        records = imageService.diff(queryResult)
                     } else {
-                        records = differentiateRecordsById(previous, last, queryResult.query.recordJsonPath, queryResult.query.idJsonPath)
+                        records = findNewRecordsById(previous, last, queryResult.query.recordJsonPath, queryResult.query.idJsonPath)
                     }
                 } else {
                     log.warn "queryId: " + queryResult.query.id + ", queryResult:" + queryResult.id + " last or previous objects contains HTML and not JSON"
@@ -214,6 +219,25 @@ class DiffService {
         records
     }
 
+    def findNewRecordsById(QueryResult qs) {
+        String last = {}
+        // If last result is null, assign an empty Json object
+        if (qs.lastResult != null) {
+            last = decompressZipped(qs.lastResult)
+        }
+
+        String previous = "{}"
+        // If previous result is null, assign an empty Json object
+        if ( qs.previousResult != null) {
+            previous = decompressZipped(qs.previousResult)
+        }
+
+        def recordJsonPath = qs.query.recordJsonPath
+        def idJsonPath = qs.query.idJsonPath
+
+        return findNewRecordsById(previous, last, recordJsonPath, idJsonPath)
+    }
+
     /**
      * General method to differentiate records by id
      * @param previous
@@ -221,7 +245,7 @@ class DiffService {
      * @param idJsonPath
      * @return
      */
-    def differentiateRecordsById(previous, last, recordJsonPath, idJsonPath) {
+    def findNewRecordsById(previous, last, recordJsonPath, idJsonPath) {
         def records = []
         String fullRecordJsonPath = recordJsonPath + "." + idJsonPath
         List<String> ids1 = []
@@ -241,6 +265,10 @@ class DiffService {
             if (diff.contains(record.get(idJsonPath))) {
                 records.add(record)
             }
+        }
+        int maxRecords = grailsApplication.config.getProperty("biosecurity.query.maxRecords", Integer, 500)
+        if (records.size() > maxRecords) {
+            records = records.subList(0, maxRecords)
         }
         return records
     }
