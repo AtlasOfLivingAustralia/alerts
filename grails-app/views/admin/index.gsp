@@ -67,12 +67,14 @@
         </ul>
     </div>
 
-    <div class="panel-heading">
-        <h3>Alerts for News and Blogs</h3>
-        <ul>
-            <li class="controller"><a href="${request.contextPath}/admin/previewBlogAlerts">Preview alerts for the five most recent blogs</a></li>
-        </ul>
-    </div>
+    <g:if test="${grailsApplication.config.getProperty('useBlogsAlerts', Boolean, true)}">
+        <div class="panel-heading">
+            <h3>Alerts for News and Blogs</h3>
+            <ul>
+                <li class="controller"><a href="${request.contextPath}/admin/previewBlogAlerts">Preview alerts for the five most recent blogs</a></li>
+            </ul>
+        </div>
+    </g:if>
 
     <div class="panel-heading">
         <h3>Application Management </h3>
