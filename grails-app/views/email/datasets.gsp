@@ -40,7 +40,7 @@
                 <g:each status="i" in="${records}" var="oc">
                     <tr>
                         <td style="padding: 20px;background-color: white;font-family: 'Arial', sans-serif;font-size: 14px;line-height: 1.5;">
-                            <g:set var="oclink" value="${oc.details.alaPublicUrl}"></g:set>
+                            <g:set var="oclink" value="${oc.details?.alaPublicUrl}"></g:set>
                             <table style="width: 100%">
                                 <tr style="vertical-align: top;">
                                     <td style="width: 70%">

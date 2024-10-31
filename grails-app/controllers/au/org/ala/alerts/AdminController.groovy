@@ -22,7 +22,7 @@ import java.text.SimpleDateFormat
 import groovyx.net.http.HTTPBuilder
 import groovy.json.JsonSlurper
 import java.nio.file.Files
-import java.nio.file.Paths
+
 
 @AlaSecured(value = 'ROLE_ADMIN', redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to view that page.")
 class AdminController {
@@ -574,7 +574,7 @@ class AdminController {
             Frequency fre = Frequency.findByName(frequency)
             if (query && fre) {
                 QueryResult qs = notificationService.executeQuery(query, fre, true)
-                boolean hasChanged = notificationService.hasChanged(qs)
+                boolean hasChanged = diffService.hasChanged(qs)
                 def records = notificationService.collectUpdatedRecords(qs)
                 def results = ["hasChanged": hasChanged, "records": records]
                 render results as JSON
@@ -599,7 +599,7 @@ class AdminController {
             Frequency fre = Frequency.findByName(frequency)
             if (query && fre) {
                 QueryResult qs = notificationService.executeQuery(query, fre, true, true)
-                boolean hasChanged = notificationService.hasChanged(qs)
+                boolean hasChanged = diffService.hasChanged(qs)
                 def records = notificationService.collectUpdatedRecords(qs)
                 User currentUser = userService.getUser()
                 def recipient =

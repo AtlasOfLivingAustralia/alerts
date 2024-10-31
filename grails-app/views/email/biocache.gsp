@@ -62,7 +62,7 @@
                                 <td class="annotation" nowrap="nowrap" style="width: 30%">
                                     Date created: ${new SimpleDateFormat("dd MMM yyyy").format(oc.eventDate)}<br/>
                                 </td>
-                                <td style="width: 33%; text-align: right;" >
+                                <td style="width: 33%; text-align: center; vertical-align: middle;" >
                                     <g:if test="${oc.image != null}">
                                         <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}">
                                             <img src="${oc.smallImageUrl}" alt="image for record" style="vertical-align: top;max-width: 150px; width: 150px; height: 150px;border-radius: 6px;line-height: 100%;"/>

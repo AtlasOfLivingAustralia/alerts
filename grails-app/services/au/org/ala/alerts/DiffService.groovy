@@ -50,6 +50,9 @@ class DiffService {
     /**
      * Indicates if the result of a query has changed by checking its properties.
      *
+     * todo: when fireWhenChange is true, it only compare the last 'ID', UUID, UID etc field of the previous and current result
+     * The ID values may be same, but the rest of the records may have changed.
+     *
      * @param queryResult
      * @return
      */
