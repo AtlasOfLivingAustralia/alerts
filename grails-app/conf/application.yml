@@ -177,7 +177,7 @@ useSpatialAlerts: true
 useBlogsAlerts: true
 useCitizenScienceAlerts: true
 biosecurity:
-    cronExpression: '0 30 9 ? * WED'
+    cronExpression: '0 0 11 ? * THU'
     query:
         template:
             authoritativeList: /occurrences/search?q=species_list_uid:___LISTIDPARAM___&fq=decade:2020&fq=country:Australia&fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&fq=occurrence_date:[___LASTYEARPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc&disableAllQualityFilters=true
