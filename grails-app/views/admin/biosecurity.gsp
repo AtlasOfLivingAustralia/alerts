@@ -168,6 +168,10 @@
         }
 
         function unsubscribe( queryId, userId, email) {
+            if (!confirm("Are you sure you want to remove this email?")) {
+                return; // Exit the function if the user cancels
+            }
+
             let url  ="${request.contextPath}/ws/unsubscribeBiosecurity?queryid="+queryId+"&userid=" + userId + "&useremail="+email
             $.ajax({
                 url: url,

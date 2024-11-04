@@ -36,7 +36,7 @@
                         <div>
                             <g:set var="listURL" value="${grailsApplication.config.getProperty("lists.baseURL") + '/speciesListItem/list/' + query.listId}" />
                             <g:set var="listName" value="${query.name.replaceAll('BioSecurity alert for', '').replaceAll('\"', '').trim()}" />
-                            <strong><a href="${listURL}">${StringUtils.abbreviate(listName, 40)}</a></strong>
+                            <strong>${StringUtils.abbreviate(listName, 40)}, ${query.listId}</strong>
                         </div>
                         <div><i>since ${new SimpleDateFormat("dd MMM yyyy").format(query.lastChecked)}</i></div>
                     </td>
