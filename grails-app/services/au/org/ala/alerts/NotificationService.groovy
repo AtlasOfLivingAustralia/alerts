@@ -19,6 +19,7 @@ class NotificationService {
 
     int PAGING_MAX = 1000
     def sessionFactory
+    def httpService
     def emailService
     def diffService
     def queryService
@@ -39,7 +40,7 @@ class NotificationService {
     def retrieveRecordForQuery(query, queryResult) {
         if  (query.recordJsonPath) {
             // return all of the new records if query is configured to fire on a non-zero value OR if previous value does not exist.
-            if (queryService.firesWhenNotZero(query) || queryResult.previousResult ==  null) {
+            if (queryService.firesWhenNotZero(query)) {
                 diffService.getNewRecords(queryResult)
                 // return diff of new and old records for all other cases
             } else {
@@ -351,6 +352,9 @@ class NotificationService {
 
 
     /**
+     * todo: this method has been moved to diffService
+     * It is not used by a deprecated method: checkStatusDontUpdate
+     *
      * Indicates if the result of a query has changed by checking its properties.
      *
      * @param queryResult
@@ -385,6 +389,8 @@ class NotificationService {
     }
 
     /**
+     * todo: this method is not used by a deprecated method: checkStatusDontUpdate
+     *
      * Compares the stored values with the values in the JSON returning a map of
      *
      * propertyPath -> [current, previous]
@@ -432,58 +438,23 @@ class NotificationService {
 
      String processQuery(Query query, String url) {
         String queryResult = "{}"
-        try {
-            queryResult = getWebserviceResults(url)
-
+        def resp = httpService.getJson(url)
+        if (resp.status == 200) {
+            def occurrences = resp.json
             if (queryService.isMyAnnotation(query)) {
-                JSONObject occurrences  = JSON.parse(queryResult) as JSONObject
                 queryResult = myAnnotationService.appendAssertions(query, occurrences)
             } else if (queryService.isAnnotation(query)) {
-                JSONObject occurrences  = JSON.parse(queryResult) as JSONObject
                 queryResult = annotationService.appendAssertions(query, occurrences)
+            } else {
+                queryResult = occurrences.toString()
             }
-
-        } catch (Exception e) {
+        } else {
             log.error("Failed to process query ${query.name}")
             log.error("URL: ${url}")
-            log.error("${e.message}", e)
+            log.error("${resp.error}")
         }
         return queryResult
     }
-
-    String getWebserviceResults(String url) {
-        log.debug "(internal) getJson URL = " + url
-        def conn = new URL(url).openConnection()
-        try {
-            conn.setConnectTimeout(10000)
-            conn.setReadTimeout(50000)
-            conn.setRequestProperty('User-Agent', grailsApplication.config.getProperty("customUserAgent", "ALA-alerts"))
-            return IOUtils.toString(conn.getInputStream(), "UTF-8")
-        } catch (Exception e) {
-            def error = "Failed to get json from web service (${url}). ${e.getClass()} ${e.getMessage()}, ${e}"
-            log.error error
-            return ""
-        }
-    }
-
-    JSONElement getJsonElements(String url) {
-        log.debug "(internal) getJson URL = " + url
-        def data = getWebserviceResults(url)
-
-        try {
-            return JSON.parse(data)
-        } catch (Exception e) {
-            log.error("Failed to parse JSON in getJsonElements() (value: ${data}): ${e.message}", e)
-            return new JSONObject()
-        }
-    }
-
-    JSONArray getAssertionsOfARecord(String baseUrl, String uuid) {
-        def url = baseUrl + '/occurrences/' + uuid + '/assertions'
-        return getJsonElements(url) as JSONArray
-    }
-
-
 
     /**
      * Update the values of the properties, e.g. totalRecords, lastLoadedRecords etc defined int PropertyPath

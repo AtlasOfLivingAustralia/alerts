@@ -12,8 +12,7 @@ class EmailService {
     def grailsApplication
     def messageSource
     def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
-    // this is the date format of 'created' in user assertions
-    def dateformat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+
 
     /**
      * Todo check if it is only for testing purpose
@@ -171,56 +170,4 @@ class EmailService {
             log.error("Error sending email to addresses: " + subsetOfAddresses, e)
         }
     }
-
-    private Map getBiosecurityAssertions(Query query, List records) {
-       records.collectEntries { [it.uuid, getBiosecurityAssertionForRecord(query.baseUrl, it.uuid as String)] }
-    }
-
-    private List getBiosecurityAssertionForRecord(String baseUrl, String recordId) {
-        JSONArray biosecurityAssertions = notificationService.getAssertionsOfARecord(baseUrl, recordId)
-        return biosecurityAssertions?.findAll {it.qaStatus == 50005 || it.code == 200021}?.collect { it ->
-            if (it.comment) {
-                String created = ""
-                if (it.created) {
-                    created = new SimpleDateFormat("yyyy-MM-dd").format(dateformat.parse(it.created))
-                }
-                if (created && it.userDisplayName) {
-                    return it.comment + " (" + messageSource.getMessage("emailservice.format.name_and_date", [it.userDisplayName, created] as Object[], 'By {0} on {1}', siteLocale) + ")"
-                } else if (it.userDisplayName) {
-                    return it.comment + " (" + messageSource.getMessage("emailservice.format.name", [it.userDisplayName] as Object[], 'By {0}', siteLocale) + ")"
-                } else if (created) {
-                    return it.comment + "(" + created + ")"
-                } else {
-                    return it.comment
-                }
-            } else {
-                return null;
-            }
-        }?.findAll{it != null}
-    }
-//    /**
-//     * Get the species list info
-//     *
-//     * @param query
-//     * @return a Map contains list name and list URL
-//     */
-//
-//    Map getSpeciesListInfo(Query query) {
-//        // if it's biosecurity query, we try to get list details
-//        if (query.emailTemplate == '/email/biosecurity') {
-//            // species list name already in query name, we just need to parse it
-//            String matchStr = messageSource.getMessage("query.biosecurity.title", null, siteLocale) + ' '
-//            int idx = query.name.indexOf(matchStr)
-//            String listname = ""
-//            String listid = query.listId
-//            String listURL =  grailsApplication.config.getProperty("lists.baseURL") + '/speciesListItem/list/' + listid
-//            if (idx != -1) {
-//                listname = query.name.substring(idx + matchStr.length())
-//            }
-//
-//            return [name : listname, url: listURL, drId: listid]
-//        }
-//
-//        [:]
-//    }
 }

@@ -8,7 +8,38 @@ import org.grails.web.json.JSONObject
 
 
 class MyAnnotationService{
-    NotificationService notificationService
+    def httpService
+
+    def diff(previous, last, recordJsonPath) {
+        // uuid -> occurrence record map
+        def oldRecordsMap = [:]
+        def curRecordsMap = [:]
+        try {
+            oldRecordsMap = JsonPath.read(previous, recordJsonPath).collectEntries { [(it.uuid): it] }
+        }catch (PathNotFoundException e){
+            log.warn("Previous result is empty or doesn't have any records containing a field ${recordJsonPath} defined in recordJsonPath")
+        }
+        try {
+            curRecordsMap = JsonPath.read(last, recordJsonPath).collectEntries { [(it.uuid): it] }
+        }catch (PathNotFoundException e){
+            log.warn("Current result is empty or doesn't have any records containing a field ${recordJsonPath} defined in recordJsonPath")
+        }
+        // if an occurrence record doesn't exist in previous result (added) or has different open_assertions or verified_assertions or corrected_assertions than previous (changed).
+        def records = curRecordsMap.findAll {
+            def record = it.value
+            !oldRecordsMap.containsKey(record.uuid) ||
+                    record.open_assertions != oldRecordsMap.get(record.uuid).open_assertions ||
+                    record.verified_assertions != oldRecordsMap.get(record.uuid).verified_assertions ||
+                    record.corrected_assertions != oldRecordsMap.get(record.uuid).corrected_assertions
+        }.values()
+
+
+        //if an occurrence record exists in previous result but not in current, it means the annotation is deleted.
+        //We need to add these records as a 'modified' record
+        records.addAll(oldRecordsMap.findAll { !curRecordsMap.containsKey(it.value.uuid) }.values())
+
+        return records
+    }
 
     String appendAssertions(Query query, JSONObject occurrences) {
         String baseUrl = query.baseUrl
@@ -25,7 +56,7 @@ class MyAnnotationService{
                     // all the verified assertions of this occurrence record
 
                     String assertionUrl = baseUrl + '/occurrences/' + occurrence.uuid + '/assertions'
-                    def assertionsData = notificationService.getWebserviceResults(assertionUrl)
+                    def assertionsData = httpService.get(assertionUrl)
                     JSONArray assertions = JSON.parse(assertionsData) as JSONArray
                     occurrence.put('user_assertions', assertions)
 
@@ -90,36 +121,5 @@ class MyAnnotationService{
             correctedAssertions = origUserAssertions.findAll { correctedIds.contains(it.uuid) }
         }
         [origUserAssertions, openAssertions, verifiedAssertions, correctedAssertions,]
-    }
-
-    def diff(previous, last, recordJsonPath) {
-        // uuid -> occurrence record map
-        def oldRecordsMap = [:]
-        def curRecordsMap = [:]
-        try {
-            oldRecordsMap = JsonPath.read(previous, recordJsonPath).collectEntries { [(it.uuid): it] }
-        }catch (PathNotFoundException e){
-            log.info("Previous result doesn't contain any records since the returned json does not contain any 'recordJsonPath'")
-        }
-        try {
-            curRecordsMap = JsonPath.read(last, recordJsonPath).collectEntries { [(it.uuid): it] }
-        }catch (PathNotFoundException e){
-            log.info("Previous result doesn't contain any records since the returned json does not contain any 'recordJsonPath'")
-        }
-        // if an occurrence record doesn't exist in previous result (added) or has different open_assertions or verified_assertions or corrected_assertions than previous (changed).
-        def records = curRecordsMap.findAll {
-            def record = it.value
-            !oldRecordsMap.containsKey(record.uuid) ||
-                    record.open_assertions != oldRecordsMap.get(record.uuid).open_assertions ||
-                    record.verified_assertions != oldRecordsMap.get(record.uuid).verified_assertions ||
-                    record.corrected_assertions != oldRecordsMap.get(record.uuid).corrected_assertions
-        }.values()
-
-
-        //if an occurrence record exists in previous result but not in current, it means the annotation is deleted.
-        //We need to add these records as a 'modified' record
-        records.addAll(oldRecordsMap.findAll { !curRecordsMap.containsKey(it.value.uuid) }.values())
-
-        return records
     }
 }

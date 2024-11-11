@@ -137,7 +137,7 @@
                             <g:message code="my.alerts.sample.list.intro" args="[grailsApplication.config.skin.orgNameShort]" />
                             <ul>
                                 <li>
-                                    <g:message code="my.alerts.data.resource.desc" args="[grailsApplication.config.collection.searchURL, grailsApplication.config.collection.searchTitle]" />
+                                    <g:message code="my.alerts.data.resource.desc" args="[grailsApplication.config.collectory.searchURL, grailsApplication.config.collection.searchTitle]" />
                                 </li>
                                 <li>
                                     <g:message code="my.alerts.species.desc" args="[grailsApplication.config.speciesPages.searchURL, grailsApplication.config.speciesPages.searchTitle]" />

@@ -157,6 +157,8 @@ spatial:
     baseURL: "https://spatial.ala.org.au"
 collectory:
     baseURL: "https://collections.ala.org.au"
+collectoryService:
+    baseURL: "https://collections.ala.org.au/ws"
 lists:
     baseURL: "https://lists.ala.org.au"
 speciesPages:

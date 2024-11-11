@@ -67,10 +67,21 @@
                                         <%
                                             def latestAssertion = oc.user_assertions[0] // Get the first (latest) assertion
                                         %>
-                                        Date created:<br/>-&nbsp;<i>${latestAssertion.created}</i><br/>
-                                        Comments:<br/>-&nbsp;<i>${latestAssertion.comment}</i><br/>
-                                        Comment by:<br/>-&nbsp;<i>${latestAssertion.userDisplayName}</i>
-                                    </g:if>
+                                        <b>Comment:</b><br/>
+                                        <i> ${StringUtils.abbreviate(latestAssertion.comment, 100)}</i>
+                                        <br>- <b>${latestAssertion.userDisplayName}
+                                            <g:if test="${latestAssertion.created}">,&nbsp;
+                                                    <%
+                                                        try {
+                                                            def parsedDate = Date.parse("yyyy-MM-dd'T'HH:mm:ss'Z'", latestAssertion.created)
+                                                            out << parsedDate.format('dd/MM/yyyy')
+                                                        } catch (Exception e) {
+                                                            out << latestAssertion.created
+                                                        }
+                                                    %>
+                                             </g:if>
+                                          </b>
+                                     </g:if>
                                 </td>
                                 <td style="width: 33%; text-align: right;" >
                                     <g:if test="${oc.image != null}">

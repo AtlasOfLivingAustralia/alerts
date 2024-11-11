@@ -10,7 +10,7 @@ import java.text.SimpleDateFormat
 
 
 class AnnotationService {
-    NotificationService notificationService
+    def httpService
     def sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss")  // Adjust the pattern as needed
 
     String appendAssertions(Query query, JSONObject occurrences) {
@@ -24,13 +24,12 @@ class AnnotationService {
                     // all the verified assertions of this occurrence record
 
                     String assertionUrl = baseUrl + '/occurrences/' + occurrence.uuid + '/assertions'
-                    def assertionsData = notificationService.getWebserviceResults(assertionUrl)
+                    def assertionsData = httpService.get(assertionUrl)
                     JSONArray assertions = JSON.parse(assertionsData) as JSONArray
 
                     def sortedAssertions = assertions.sort { a, b ->
                                 sdf.parse(b.created) <=> sdf.parse(a.created)
                             }
-
                     occurrence.put('user_assertions', sortedAssertions)
                     reconstructedOccurrences.push(occurrence)
                 }
@@ -64,12 +63,12 @@ class AnnotationService {
         try {
             oldRecordsMap = JsonPath.read(previous, recordJsonPath).collectEntries { [(it.uuid): it] }
         }catch (PathNotFoundException e){
-            log.info("Previous result doesn't contain any records since the returned json does not contain any 'recordJsonPath'")
+            log.warn("Previous result is empty or doesn't have any records containing a field ${recordJsonPath} defined in recordJsonPath")
         }
         try {
              curRecordsMap = JsonPath.read(last, recordJsonPath).collectEntries { [(it.uuid): it] }
         }catch (PathNotFoundException e){
-            log.info("Previous result doesn't contain any records since the returned json does not contain any 'recordJsonPath'")
+            log.warn("Current result is empty or doesn't have any records containing a field ${recordJsonPath} defined in recordJsonPath")
         }
         // if an occurrence record doesn't exist in previous result (added) or has different open_assertions or verified_assertions or corrected_assertions than previous (changed).
         def records = curRecordsMap.findAll {

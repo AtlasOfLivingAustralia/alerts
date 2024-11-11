@@ -67,6 +67,10 @@ class QueryService {
         query.emailTemplate == '/email/datasets'
     }
 
+    Boolean isDatasetResource(Query query) {
+        query.emailTemplate == '/email/dataresource'
+    }
+
     Boolean isBiocacheImages(Query query) {
         query.emailTemplate == '/email/biocacheImages'
     }

@@ -95,18 +95,24 @@
 
                                                         </g:each>
                                                     </div>
-                                                    <div>
-                                                        <g:link class="btn btn-info"  controller="notification" action="evaluateChangeDetectionAlgorithm" params="[queryId: query.id, queryResultId: queryResult.id]" target="_blank">
-                                                            Evaluate the latest check in DB
-                                                        </g:link>
+                                                    <div style="text-align: right;">
+                                                        <hr>
+                                                         <div style="padding: 5px;">
+                                                            <label>Evaluate the new record discovery algorithm by comparing the latest and previous results in database </label><g:link class="btn btn-info"  controller="notification" action="evaluateChangeDetectionAlgorithm" params="[queryId: query.id, queryResultId: queryResult.id]" target="_blank">
+                                                                Evaluate
+                                                            </g:link>
+                                                         </div>
                                                         <g:if test="${queryType != 'biosecurity'}">
-                                                            <g:link class="btn btn-info"  controller="admin" action="emailMeLastCheck" params="[queryId: query.id, frequency: queryResult.frequency?.name]" target="_blank">
-                                                                Email me the latest check result (No DB update)
+                                                            <div style="padding: 5px;">
+                                                            <label>Email me the latest updated records in database </label><g:link class="btn btn-info"  controller="admin" action="emailMeLastCheck" params="[queryId: query.id, frequency: queryResult.frequency?.name]" target="_blank">
+                                                                Email me
                                                             </g:link>
-                                                            <g:link class="btn btn-info"  controller="admin" action="dryRunQuery" params="[queryId: query.id, frequency: queryResult.frequency?.name]" target="_blank">
-                                                                Dry run (no DB update, no emails)
-                                                            </g:link>
-                                                            <br>
+                                                            </div>
+                                                            <div style="padding: 5px;">
+                                                                <label>Collect the latest records, compare them with the current results in the database, and display the changes.</label> <g:link class="btn btn-info"  controller="admin" action="dryRunQuery" params="[queryId: query.id, frequency: queryResult.frequency?.name]" target="_blank">
+                                                                    Dry run (no DB update, no emails)
+                                                                </g:link>
+                                                            </div>
                                                             <div style="margin-top: 20px; margin-bottom: 20px;">
                                                                 <g:form class="form-inline" controller="admin" action="emailAlertsOnCheckDate" method="POST" target="_blank">
                                                                     <%@ page import="java.time.LocalDate" %>
@@ -115,16 +121,16 @@
                                                                     %>
                                                                     <input type="hidden" name="queryId" value="${query.id}" />
                                                                     <input type="hidden" name="frequency" value="${queryResult.frequency?.name}" />
-                                                                    <label for="checkDate">Email me the results checked on the given check date (no DB update) </label>
+                                                                    <label for="checkDate">Collect records on the given date, and email new records </label>
                                                                      <input type="date" id="checkDate" name="checkDate"value="${today}" class="form-control" />
-
-                                                                    <button type="submit" class="btn btn-primary mb-2">Run</button>
+                                                                    <button type="submit" class="btn btn-info mb-2">Email me, No DB update</button>
                                                                 </g:form>
                                                             </div>
                                                             <div>
-                                                            <g:link class="btn btn-primary"  controller="admin" action="runQueryWithLastCheckDate" params="[queryId: query.id, frequency: queryResult.frequency?.name]" target="_blank">
-                                                                Run the last check (DB update, no emails)
-                                                            </g:link>
+                                                                <label>Perform the check and update the database with no emails for users..</label>
+                                                                <g:link class="btn btn-primary"  controller="admin" action="runQueryWithLastCheckDate" params="[queryId: query.id, frequency: queryResult.frequency?.name]" target="_blank">
+                                                                    Update
+                                                                </g:link>
                                                             </div>
                                                         </g:if>
                                                         <g:else>

@@ -59,11 +59,13 @@
 
                                             <br/>
                                             <g:if test="${oc.details?.pubShortDescription}">
-                                                ${oc.details?.pubShortDescription}<br/>
+                                                ${StringUtils.abbreviate(oc.details?.pubShortDescription, 200)}
+                                                <br/>
                                             </g:if>
                                             <g:else>
                                                 <g:if test="${oc.details?.pubDescription}">
-                                                    ${oc.details?.pubDescription}<br/>
+                                                    ${StringUtils.abbreviate(oc.details?.pubDescription, 200)}
+                                                    <br/>
                                                 </g:if>
                                             </g:else>
                                         </p>

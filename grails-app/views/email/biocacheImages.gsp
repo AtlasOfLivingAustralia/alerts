@@ -67,13 +67,29 @@
                     </td>
                 </tr>
             <!-- Records Section -->
-                <g:each status="i" in="${records.keySet()}" var="dataResourceName">
+                <g:each status="i" in="${records.keySet()}" var="dataResourceId">
                     <tr>
                         <td style="padding: 20px;background-color: white;font-family: 'Arial', sans-serif;font-size: 14px;line-height: 1.5;">
-                            <g:set var="occurrences" value="${records[dataResourceName]}" />
+                            <g:set var="occurrences" value="${records[dataResourceId]}" />
+                            <g:set var="dataResourceName" value="${occurrences[0]?.dataResourceName?:dataResourceId}" />
+                            <g:set var="dataResourcePublicUrl" value="${occurrences[0]?.dataResourceInfo?.alaPublicUrl}" />
+
+                            <g:set var="lastUpdated" value="${occurrences[0]?.dataResourceInfo?.lastUpdated}" />
                             <table style="width: 100%">
                                 <tr>
-                                    <td colspan="4"><h3>Dataset: ${dataResourceName}</h3><hr/>
+                                    <td colspan="4">
+                                        <h3>Dataset: <a href="${dataResourcePublicUrl}">${dataResourceName}</a></h3>
+                                        <g:if test="${occurrences[0]?.dataResourceInfo?.lastUpdated}">
+                                            <%
+                                                try {
+                                                    def parsedDate = Date.parse("yyyy-MM-dd'T'HH:mm:ss'Z'", occurrences[0]?.dataResourceInfo?.lastUpdated)
+                                                    out << "<p>Last updated: " + parsedDate.format('dd/MM/yyyy') +"</p>"
+                                                } catch (Exception e) {
+                                                    out <<"<p>Last updated: " + occurrences[0]?.dataResourceInfo?.lastUpdated +"</p>"
+                                                }
+                                            %>
+                                        </g:if>
+                                        <hr/>
                                     </td>
                                 </tr>
                                 <g:each in="${occurrences}" var="oc" status="j">

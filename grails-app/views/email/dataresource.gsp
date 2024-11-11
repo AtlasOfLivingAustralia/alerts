@@ -49,7 +49,7 @@
                 <g:each status="i" in="${records}" var="oc">
                     <tr>
                         <td style="padding: 20px;background-color: white;font-family: 'Arial', sans-serif;font-size: 14px;line-height: 1.5;">
-                            <g:set var="oclink" value="${grailsApplication.config.collectory.baseURL}/public/show/${oc.i18nCode.substring(oc.i18nCode.indexOf('.') + 1)}"></g:set>
+                            <g:set var="oclink" value="${grailsApplication.config.collectory.baseURL}/public/show/${oc.uid}"></g:set>
                             <table style="width: 100%">
                                 <tr style="vertical-align: top;">
                                     <td style="width: 70%">
@@ -72,11 +72,11 @@
 
                                             <br/>
                                             <g:if test="${oc.details?.pubShortDescription}">
-                                                ${oc.details?.pubShortDescription}<br/>
+                                                ${StringUtils.abbreviate(oc.details?.pubShortDescription, 200)}<br/>
                                             </g:if>
                                             <g:else>
                                                 <g:if test="${oc.details?.pubDescription}">
-                                                    ${oc.details?.pubDescription}<br/>
+                                                    ${StringUtils.abbreviate(oc.details?.pubDescription, 200)}<br/>
                                                 </g:if>
                                             </g:else>
                                         </p>

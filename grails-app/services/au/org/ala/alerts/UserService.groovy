@@ -174,7 +174,7 @@ class UserService {
         log.debug "getUser - userDetails = ${userDetails}"
 
         if (!userDetails?.userId) {
-            log.error "User isn't logged in - or there is a problem with CAS configuration"
+            log.error("User isn't logged in - or there is a problem with CAS configuration")
             return null
         }
 

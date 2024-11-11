@@ -60,7 +60,9 @@
                                     </p>
                                 </td>
                                 <td class="annotation" nowrap="nowrap" style="width: 30%">
-                                    Date created: ${new SimpleDateFormat("dd MMM yyyy").format(oc.eventDate)}<br/>
+                                    <g:if test="${oc.occurrenceDetails}">
+                                        Date created: ${new SimpleDateFormat("dd MMM yyyy").format(oc.eventDate)}<br/>
+                                    </g:if>
                                 </td>
                                 <td style="width: 33%; text-align: center; vertical-align: middle;" >
                                     <g:if test="${oc.image != null}">

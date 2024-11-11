@@ -27,6 +27,7 @@ class DiffService {
     def annotationService
     def datasetService
     def imageService
+    def dataResourceService
     def grailsApplication
 
     Boolean hasChangedJsonDiff(QueryResult queryResult) {
@@ -207,8 +208,12 @@ class DiffService {
                         records = annotationService.diff(previous, last, queryResult.query.recordJsonPath)
                     } else if (queryService.isDatasetQuery(queryResult.query)) {
                         records = datasetService.diff(queryResult)
-                    } else if ( queryService.isBiocacheImages(queryResult.query)) {
+                    } else if (queryService.isDatasetResource(queryResult.query)) {
+                        records = dataResourceService.diff(queryResult)
+                    }else if ( queryService.isBiocacheImages(queryResult.query)) {
                         records = imageService.diff(queryResult)
+                    } else if ( queryService.isBiocacheImages(queryResult.query)) {
+                        records = datasetService.diff(queryResult)
                     } else {
                         records = findNewRecordsById(previous, last, queryResult.query.recordJsonPath, queryResult.query.idJsonPath)
                     }
@@ -216,7 +221,7 @@ class DiffService {
                     log.warn "queryId: " + queryResult.query.id + ", queryResult:" + queryResult.id + " last or previous objects contains HTML and not JSON"
                 }
             } catch (Exception ex) {
-                log.error "queryId: " + queryResult.query.id + ", JsonPath error: ${ex}"
+                log.error("queryId: ${queryResult.query.id}, JsonPath error: ${ex}")
             }
         }
         records
