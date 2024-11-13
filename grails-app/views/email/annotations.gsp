@@ -68,7 +68,7 @@
                                             def latestAssertion = oc.user_assertions[0] // Get the first (latest) assertion
                                         %>
                                         <b>Comment:</b><br/>
-                                        <i> ${StringUtils.abbreviate(latestAssertion.comment, 100)}</i>
+                                        <i>${StringUtils.abbreviate(latestAssertion.comment, 100)}</i>
                                         <br>- <b>${latestAssertion.userDisplayName}
                                             <g:if test="${latestAssertion.created}">,&nbsp;
                                                     <%

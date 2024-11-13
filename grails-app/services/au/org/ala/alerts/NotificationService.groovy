@@ -449,6 +449,7 @@ class NotificationService {
                 queryResult = occurrences.toString()
             }
         } else {
+            //todo : Link may be broken, shall we stop the query?
             log.error("Failed to process query ${query.name}")
             log.error("URL: ${url}")
             log.error("${resp.error}")

@@ -54,35 +54,34 @@ class MyAnnotationService{
             for (JSONObject occurrence : occurrences.occurrences) {
                 if (occurrence.uuid) {
                     // all the verified assertions of this occurrence record
-
                     String assertionUrl = baseUrl + '/occurrences/' + occurrence.uuid + '/assertions'
-                    def assertionsData = httpService.get(assertionUrl)
-                    JSONArray assertions = JSON.parse(assertionsData) as JSONArray
-                    occurrence.put('user_assertions', assertions)
+                    def assertionsData = httpService.getJson(assertionUrl)
+                    if (assertionsData.status == 200) {
+                        JSONArray assertions = assertionsData.json as JSONArray
+                        occurrence.put('user_assertions', assertions)
 
-                    def (origUserAssertions, openAssertions, verifiedAssertions, correctedAssertions) = filterMyAssertions(assertions, userId)
+                        def (origUserAssertions, openAssertions, verifiedAssertions, correctedAssertions) = filterMyAssertions(assertions, userId)
+                        // only include record has at least 1 (50001/50002/50003) assertion
+                        // They will be used for diffService (records that will be included in alert email)
+                        if (!openAssertions.isEmpty() || !verifiedAssertions.isEmpty() || !correctedAssertions.isEmpty()) {
 
+                            // find the open/verfied/corrected annotations which COMMENTed on all the assertions created by the users
+                            def processedAssertionIds = openAssertions.collect { it.uuid } + verifiedAssertions.collect { it.uuid } + correctedAssertions.collect { it.uuid }
+                            def processedAssertions = assertions.findAll{
+                                processedAssertionIds.contains(it.relatedUuid)
+                            }
+                            occurrence.put('processed_assertions', processedAssertions)
 
-                    // only include record has at least 1 (50001/50002/50003) assertion
-                    // They will be used for diffService (records that will be included in alert email)
-                    if (!openAssertions.isEmpty() || !verifiedAssertions.isEmpty() || !correctedAssertions.isEmpty()) {
-
-                        // find the open/verfied/corrected annotations which COMMENTed on all the assertions created by the users
-                        def processedAssertionIds = openAssertions.collect { it.uuid } + verifiedAssertions.collect { it.uuid } + correctedAssertions.collect { it.uuid }
-                        def processedAssertions = assertions.findAll{
-                            processedAssertionIds.contains(it.relatedUuid)
+                            // Those open/verified/corrected assertions will be used to retrieve diff (records that will be included in alert email)
+                            openAssertions.sort { it.uuid }
+                            verifiedAssertions.sort { it.uuid }
+                            correctedAssertions.sort { it.uuid }
+                            occurrence.put('open_assertions', openAssertions.collect { it.uuid }.join(','))
+                            occurrence.put('verified_assertions', verifiedAssertions.collect { it.uuid }.join(','))
+                            occurrence.put('corrected_assertions', correctedAssertions.collect { it.uuid }.join(','))
                         }
-                        occurrence.put('processed_assertions', processedAssertions)
-
-                        // Those open/verified/corrected assertions will be used to retrieve diff (records that will be included in alert email)
-                        openAssertions.sort { it.uuid }
-                        verifiedAssertions.sort { it.uuid }
-                        correctedAssertions.sort { it.uuid }
-                        occurrence.put('open_assertions', openAssertions.collect { it.uuid }.join(','))
-                        occurrence.put('verified_assertions', verifiedAssertions.collect { it.uuid }.join(','))
-                        occurrence.put('corrected_assertions', correctedAssertions.collect { it.uuid }.join(','))
-                        reconstructedOccurrences.push(occurrence)
                     }
+                    reconstructedOccurrences.push(occurrence)
                 }
             }
             reconstructedOccurrences.sort { it.uuid }

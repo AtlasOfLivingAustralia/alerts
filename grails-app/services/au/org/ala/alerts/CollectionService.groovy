@@ -27,7 +27,7 @@ class CollectionService {
         def jsonSlurper = new JsonSlurper()
         def collectionResp = httpService.post(dataResourceURL, collectionJsonPayload)
         if (collectionResp.status == 200) {
-            def collectionJson = collectionResp.data
+            def collectionJson = collectionResp.json
             collectionMap = collectionJson.inject([:]) { map, item ->
                 // Collection server is supposed to return a JSON array of collection objects with a uid field
                 // but it returns a JSON array of String instead

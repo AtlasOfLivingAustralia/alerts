@@ -22,15 +22,15 @@ class AnnotationService {
             for (JSONObject occurrence : occurrences.occurrences) {
                 if (occurrence.uuid) {
                     // all the verified assertions of this occurrence record
-
                     String assertionUrl = baseUrl + '/occurrences/' + occurrence.uuid + '/assertions'
-                    def assertionsData = httpService.get(assertionUrl)
-                    JSONArray assertions = JSON.parse(assertionsData) as JSONArray
-
-                    def sortedAssertions = assertions.sort { a, b ->
-                                sdf.parse(b.created) <=> sdf.parse(a.created)
-                            }
-                    occurrence.put('user_assertions', sortedAssertions)
+                    def assertionResp = httpService.getJson(assertionUrl)
+                    if (assertionResp.status == 200) {
+                        def assertions = assertionResp.json
+                        def sortedAssertions = assertions.sort { a, b ->
+                            sdf.parse(b.created) <=> sdf.parse(a.created)
+                        }
+                        occurrence.put('user_assertions', sortedAssertions)
+                    }
                     reconstructedOccurrences.push(occurrence)
                 }
             }
