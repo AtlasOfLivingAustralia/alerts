@@ -173,7 +173,7 @@ regions:
 occurrence:
     searchURL: "https://biocache.ala.org.au/occurrences/search?q=passer"
     searchTitle: occurrence search
-userDetails:
+userdetails:
     web:
         url: https://auth.ala.org.au/userdetails
 useSpeciesListsAlerts: true
