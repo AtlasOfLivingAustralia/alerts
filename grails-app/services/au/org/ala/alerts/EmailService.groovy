@@ -2,8 +2,6 @@ package au.org.ala.alerts
 
 import grails.util.Environment
 import grails.util.Holders
-import org.grails.web.json.JSONArray
-import java.text.SimpleDateFormat
 
 class EmailService {
     def groovyPageRenderer

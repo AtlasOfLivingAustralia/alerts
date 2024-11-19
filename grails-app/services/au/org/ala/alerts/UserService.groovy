@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Atlas of Living Australia
+ * Copyright (C) 2024 Atlas of Living Australia
  * All Rights Reserved.
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -12,8 +12,6 @@
  */
 
 package au.org.ala.alerts
-
-import au.org.ala.userdetails.UserDetailsFromIdListRequest
 import au.org.ala.userdetails.UserDetailsFromIdListResponse
 import au.org.ala.web.UserDetails
 import grails.converters.JSON

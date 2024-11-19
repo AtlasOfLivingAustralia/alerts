@@ -389,7 +389,8 @@ class NotificationService {
     }
 
     /**
-     * todo: this method is not used by a deprecated method: checkStatusDontUpdate
+     * todo: check if this method could be removed.
+     * It is used by a deprecated method: checkStatusDontUpdate
      *
      * Compares the stored values with the values in the JSON returning a map of
      *

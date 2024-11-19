@@ -1,3 +1,18 @@
+
+/*
+ *   Copyright (c) 2024.  Atlas of Living Australia
+ *   All Rights Reserved.
+ *   The contents of this file are subject to the Mozilla Public
+ *   License Version 1.1 (the "License"); you may not use this file
+ *   except in compliance with the License. You may obtain a copy of
+ *   the License at http://www.mozilla.org/MPL/
+ *   Software distributed under the License is distributed on an "AS
+ *   IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ *   implied. See the License for the specific language governing
+ *   rights and limitations under the License.
+ *
+ */
+
 package au.org.ala.alerts
 
 import com.jayway.jsonpath.JsonPath
@@ -8,15 +23,23 @@ import org.grails.web.json.JSONObject
 
 import java.text.SimpleDateFormat
 
-
+/**
+ *   A diff service for annotations
+ */
 class AnnotationService {
     def httpService
     def sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss")  // Adjust the pattern as needed
 
+    /**
+     * Append assertions to the occurrences
+     * @param query
+     * @param occurrences
+     * @return
+     */
     String appendAssertions(Query query, JSONObject occurrences) {
         String baseUrl = query.baseUrl
 
-        if(occurrences.occurrences) {
+        if (occurrences.occurrences) {
             // reconstruct occurrences so that only those records with specified annotations are put into the list
             JSONArray reconstructedOccurrences = []
             for (JSONObject occurrence : occurrences.occurrences) {
@@ -51,23 +74,24 @@ class AnnotationService {
      * so comparing occurrence uuid is not enough, we need to compare 50001/50002/50003 sections inside each occurrence record
 
      * return a list of records that their annotations have been changed or deleted
-     * @param previous
-     * @param last
-     * @param recordJsonPath
-     * @return
+     * @param String previous
+     * @param String last
+     * @param String  recordJsonPath
+     * @return a list of records
      */
-    def diff(previous, last, recordJsonPath) {
+    Collection diff(String previous,String last,String recordJsonPath) {
         // uuid -> occurrence record map
         def oldRecordsMap = [:]
         def curRecordsMap = [:]
         try {
             oldRecordsMap = JsonPath.read(previous, recordJsonPath).collectEntries { [(it.uuid): it] }
-        }catch (PathNotFoundException e){
+        } catch (PathNotFoundException e) {
             log.warn("Previous result is empty or doesn't have any records containing a field ${recordJsonPath} defined in recordJsonPath")
         }
+
         try {
              curRecordsMap = JsonPath.read(last, recordJsonPath).collectEntries { [(it.uuid): it] }
-        }catch (PathNotFoundException e){
+        } catch (PathNotFoundException e){
             log.warn("Current result is empty or doesn't have any records containing a field ${recordJsonPath} defined in recordJsonPath")
         }
         // if an occurrence record doesn't exist in previous result (added) or has different open_assertions or verified_assertions or corrected_assertions than previous (changed).

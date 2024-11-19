@@ -57,16 +57,15 @@ class DiffService {
      * @param queryResult
      * @return
      */
-
     Boolean hasChanged(QueryResult queryResult) {
         Boolean changed = false
 
-        //if there is a fireWhenNotZero or fireWhenChange ignore  idJsonPath
+        // if there is a fireWhenNotZero or fireWhenChange ignore  idJsonPath
         log.debug("[QUERY " + queryResult.query.id + "] Checking query: " + queryResult.query.name)
 
         // PropertyValues in a Biocache Query 'usually' has two properties: totalRecords and last_loaded_records (uuid)
-        //Both have the possible null value
-        //The following check is determined by the last propertyValue, since it overwrites the previous one
+        // Both have the possible null value
+        // The following check is determined by the last propertyValue, since it overwrites the previous one
 
         queryResult.propertyValues.each { pv ->
             log.debug("[QUERY " + queryResult.query.id + "] " +
@@ -87,14 +86,14 @@ class DiffService {
             }
         }
 
-        //Example, in a blog/news query,fireWhenNotZero and fireWhenChange both are false
+        // Example, in a blog/news query,fireWhenNotZero and fireWhenChange both are false
 
         if (queryService.checkChangeByDiff(queryResult.query)) {
             log.debug("[QUERY " + queryResult.query.id + "] Has change check. Checking JSON for query : " + queryResult.query.name)
             changed = hasChangedJsonDiff(queryResult)
         }
 
-        changed
+        return changed
     }
 
     Boolean hasChangedJsonDiff(String previous, String current, Query query, Boolean debugDiff = false) {
@@ -170,7 +169,7 @@ class DiffService {
 
     def getNewRecords(QueryResult queryResult) {
         def records = []
-        //decompress both and compare lists
+        // decompress both and compare lists
         if (queryResult.query.recordJsonPath) {
             String last = decompressZipped(queryResult.lastResult)
             if (last) {
@@ -210,7 +209,7 @@ class DiffService {
                         records = datasetService.diff(queryResult)
                     } else if (queryService.isDatasetResource(queryResult.query)) {
                         records = dataResourceService.diff(queryResult)
-                    }else if ( queryService.isBiocacheImages(queryResult.query)) {
+                    } else if ( queryService.isBiocacheImages(queryResult.query)) {
                         records = imageService.diff(queryResult)
                     } else if ( queryService.isBiocacheImages(queryResult.query)) {
                         records = datasetService.diff(queryResult)
@@ -224,9 +223,14 @@ class DiffService {
                 log.error("queryId: ${queryResult.query.id}, JsonPath error: ${ex}")
             }
         }
-        records
+        return records
     }
 
+    /**
+     *  Find new records by compare the last and previous results in QueryResult
+     * @param qs
+     * @return
+     */
     def findNewRecordsById(QueryResult qs) {
         String last = {}
         // If last result is null, assign an empty Json object
@@ -248,12 +252,12 @@ class DiffService {
 
     /**
      * General method to differentiate records by id
-     * @param previous
-     * @param last
-     * @param idJsonPath
-     * @return
+     * @param String previous
+     * @param String last
+     * @param String idJsonPath
+     * @return a list of new records
      */
-    def findNewRecordsById(previous, last, recordJsonPath, idJsonPath) {
+    def findNewRecordsById(String previous,String last, String recordJsonPath,String idJsonPath) {
         def records = []
         String fullRecordJsonPath = recordJsonPath + "." + idJsonPath
         List<String> ids1 = []
@@ -261,12 +265,12 @@ class DiffService {
         try {
             ids1 = JsonPath.read(last, fullRecordJsonPath)
             ids2 = JsonPath.read(previous, fullRecordJsonPath)
-        }catch (PathNotFoundException e){
+        } catch (PathNotFoundException e){
             log.info("it's not an error. Result doesn't contain any records since the returned json does not contain any 'recordJsonPath', if result is empty.")
         }
 
+        // pull together the records that have been added
         List<String> diff = ids1.findAll { !ids2.contains(it) }
-        //pull together the records that have been added
 
         def allRecords = JsonPath.read(last, recordJsonPath)
         allRecords.each { record ->
@@ -278,6 +282,7 @@ class DiffService {
         if (records.size() > maxRecords) {
             records = records.subList(0, maxRecords)
         }
+
         return records
     }
 

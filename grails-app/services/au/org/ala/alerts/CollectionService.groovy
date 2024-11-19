@@ -17,10 +17,20 @@ package au.org.ala.alerts
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 
+/**
+ * Collection info from the collection server
+ */
 class CollectionService {
 
     def httpService
 
+    /**
+     * Collection info by uids
+     *
+     * @param dataResourceURL
+     * @param a list of uids
+     * @return a list of collection info
+     */
     def findResourceByUids(String dataResourceURL, String[] uids) {
         def collectionMap = [:]
         String collectionJsonPayload = JsonOutput.toJson(uids)
