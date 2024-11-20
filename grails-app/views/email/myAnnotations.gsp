@@ -11,10 +11,10 @@
 <style>
 </style>
 <body style="background-color: #f4f4f4;margin: 0;padding: 0;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;">
-<table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f4f4f4;border-spacing: 0;border-collapse: collapse;">
+<table  cellpadding="0" cellspacing="0" width="100%" style="border:0; background-color: #f4f4f4;border-spacing: 0;border-collapse: collapse; ">
     <tr>
         <td align="center" style="padding: 20px;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;">
-            <table border="0" cellpadding="0" cellspacing="0" width="650" style="background-color: #ffffff;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;border-spacing: 0;border-collapse: collapse;">
+            <table border="0" cellpadding="0" cellspacing="0" width="650" style="border:0; background-color: #ffffff;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;border-spacing: 0;border-collapse: collapse;">
                 <!-- Logo -->
                 <tr>
                     <td style="text-align: center; padding: 20px; background-color: #fff;">
@@ -40,14 +40,17 @@
                 <g:each status="i" in="${records}" var="oc">
                     <tr>
                         <td style="padding: 20px;background-color: white;font-family: 'Arial', sans-serif;font-size: 14px;line-height: 1.5;">
-                        <g:set var="occurrencelink" value="${query.baseUrlForUI}/occurrences/${oc.uuid}"></g:set>
+                        <g:set var="occurrencelink" value="${query.baseUrlForUI}/occurrences/${oc.uid}"></g:set>
                         <g:set var="assertionlink" value="${query.baseUrl}/occurrences/${oc.uuid}/assertions"></g:set>
                         <table style="width: 100%">
                             <tr style="vertical-align: top;">
-                                <td style="width: 37%">
-                                    <g:if test="${oc.vernacularName ?: oc.raw_raw_scientificName ?: oc.scientificName}">
-                                        <strong>${i+1}. <em>${oc.vernacularName ?: oc.raw_raw_scientificName ?: oc.scientificName}</em></strong>
-                                    </g:if>
+                                <td style="width: 33%">
+
+                                    <a href="${occurrencelink}" style="color: #C44D34;text-decoration: none;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;">
+                                     <g:if test="${oc.vernacularName ?: oc.raw_raw_scientificName ?: oc.scientificName}">
+                                       <strong>${i+1}. <em>${oc.vernacularName ?: oc.raw_raw_scientificName ?: oc.scientificName}</em></strong>
+                                     </g:if>
+                                    </a>
                                     <p style="padding-left: 15px;">
                                         <g:if test="${oc.taxonRankID > 5000}"><i></g:if>
                                         ${oc.scientificName}<br/>
@@ -55,16 +58,31 @@
                                         ${oc.stateProvince}<br/>
                                         Family: ${oc.family}<br/>
                                         <g:if test="${oc.dataProviderName}">
-                                            Source: ${oc.dataProviderName}
+                                           Source: ${oc.dataProviderName}
                                         </g:if>
                                     </p>
+
                                 </td>
-                                <td class="annotation" nowrap="nowrap" style="width: 30%">
-                                    <g:if test="${oc.occurrenceDetails}">
-                                        Date created: ${new SimpleDateFormat("dd MMM yyyy").format(oc.eventDate)}<br/>
+                                <td class="annotation" nowrap="nowrap" style="width: 34%;word-wrap: break-word; white-space: normal;font-family: 'Arial', sans-serif;font-size: 12px;line-height: 1.5;">
+                                    <g:if test="${oc.processed_assertions?.size() > 0}">
+                                        <%
+                                            def latestAssertion = oc.processed_assertions[0] // Get the first (latest) assertion
+                                        %>
+                                        Comments:<br/><i>${StringUtils.abbreviate(latestAssertion.comment,100)}</i>
+                                        <br/>-&nbsp;${latestAssertion.userDisplayName}
+                                        <g:if test="${latestAssertion.created}">,&nbsp;
+                                            <%
+                                                try {
+                                                    def parsedDate = Date.parse("yyyy-MM-dd'T'HH:mm:ss'Z'", latestAssertion.created)
+                                                    out << parsedDate.format('dd/MM/yyyy')
+                                                } catch (Exception e) {
+                                                    out << latestAssertion.created
+                                                }
+                                            %>
+                                        </g:if>
                                     </g:if>
                                 </td>
-                                <td style="width: 33%; text-align: center; vertical-align: middle;" >
+                                <td style="width: 33%; text-align: right;" >
                                     <g:if test="${oc.image != null}">
                                         <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}">
                                             <img src="${oc.smallImageUrl}" alt="image for record" style="vertical-align: top;max-width: 150px; width: 150px; height: 150px;border-radius: 6px;line-height: 100%;"/>

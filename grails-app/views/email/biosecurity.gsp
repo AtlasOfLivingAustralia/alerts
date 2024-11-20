@@ -33,8 +33,10 @@
                     <td align="center" style="background-color: #E8E8E8;color: #000;padding: 40px 30px 40px 30px;text-align: center;font-family: 'Arial', sans-serif;font-size: 22px;line-height: 1.5;">
                         <div> ${totalRecords} new ${totalRecords == 1 ? 'record' : 'records'} for
                         </div>
-                        <div title="${speciesListInfo.name}">
-                            <strong>${StringUtils.abbreviate(speciesListInfo.name, 40)}, <a href="${speciesListInfo.url}">${speciesListInfo.drId}</a></strong>
+                        <div>
+                            <g:set var="listURL" value="${grailsApplication.config.getProperty("lists.baseURL") + '/speciesListItem/list/' + query.listId}" />
+                            <g:set var="listName" value="${query.name.replaceAll('BioSecurity alert for', '').replaceAll('\"', '').trim()}" />
+                            <strong>${StringUtils.abbreviate(listName, 40)}, ${query.listId}</strong>
                         </div>
                         <div><i>since ${new SimpleDateFormat("dd MMM yyyy").format(query.lastChecked)}</i></div>
                     </td>
@@ -50,7 +52,7 @@
                                     <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}" style="color: #C44D34;text-decoration: none;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;">
                                         <strong>${i+1}. <em>${oc.scientificName ?: 'N/A'}</em></strong>
                                     </a>
-                                    <p style="font-size: 13px; color: #212121;margin: 0;">
+                                    <p style="font-size: 13px; color: #212121;padding-left: 15px;">
                                         <g:if test="${oc.scientificName && oc.raw_scientificName && oc.scientificName != oc.raw_scientificName}">
                                             Supplied as:<em>${oc.raw_scientificName}</em><br>
                                         </g:if>
@@ -100,7 +102,6 @@
                     </td>
                 </tr>
                 </g:each>
-                <!-- Footer Section -->
                 <tr>
                     <td style="padding: 35px 70px 35px 70px;background-color: #C44D34;color: #fff;font-family: 'Arial', sans-serif;font-size: 14px;line-height: 1.43;text-align: center;">
                         <p>If you notice a record has been misidentified, we encourage you to use your expertise to improve the quality of Australia's biosecurity data.</p>

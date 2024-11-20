@@ -45,9 +45,11 @@
                         <table style="width: 100%">
                             <tr style="vertical-align: top;">
                                 <td style="width: 37%">
-                                    <g:if test="${oc.vernacularName ?: oc.raw_raw_scientificName ?: oc.scientificName}">
-                                        <strong>${i+1}. <em>${oc.vernacularName ?: oc.raw_raw_scientificName ?: oc.scientificName}</em></strong>
-                                    </g:if>
+                                    <a href="${occurrencelink}" style="color: #C44D34;text-decoration: none;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;">
+                                        <g:if test="${oc.vernacularName ?: oc.raw_raw_scientificName ?: oc.scientificName}">
+                                            <strong>${i+1}. <em>${oc.vernacularName ?: oc.raw_raw_scientificName ?: oc.scientificName}</em></strong>
+                                        </g:if>
+                                    </a>
                                     <p style="padding-left: 15px;">
                                         <g:if test="${oc.taxonRankID > 5000}"><i></g:if>
                                         ${oc.scientificName}<br/>
@@ -58,13 +60,30 @@
                                             Source: ${oc.dataProviderName}
                                         </g:if>
                                     </p>
+
                                 </td>
-                                <td class="annotation" nowrap="nowrap" style="width: 30%">
-                                    <g:if test="${oc.occurrenceDetails}">
-                                        Date created: ${new SimpleDateFormat("dd MMM yyyy").format(oc.eventDate)}<br/>
-                                    </g:if>
+                                <td class="annotation" nowrap="nowrap" style="width: 30%; word-wrap: break-word; white-space: normal;">
+                                    <g:if test="${oc.user_assertions?.size() > 0}">
+                                        <%
+                                            def latestAssertion = oc.user_assertions[0] // Get the first (latest) assertion
+                                        %>
+                                        <b>Comment:</b><br/>
+                                        <i>${StringUtils.abbreviate(latestAssertion.comment, 100)}</i>
+                                        <br>- <b>${latestAssertion.userDisplayName}
+                                            <g:if test="${latestAssertion.created}">,&nbsp;
+                                                    <%
+                                                        try {
+                                                            def parsedDate = Date.parse("yyyy-MM-dd'T'HH:mm:ss'Z'", latestAssertion.created)
+                                                            out << parsedDate.format('dd/MM/yyyy')
+                                                        } catch (Exception e) {
+                                                            out << latestAssertion.created
+                                                        }
+                                                    %>
+                                             </g:if>
+                                          </b>
+                                     </g:if>
                                 </td>
-                                <td style="width: 33%; text-align: center; vertical-align: middle;" >
+                                <td style="width: 33%; text-align: right;" >
                                     <g:if test="${oc.image != null}">
                                         <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}">
                                             <img src="${oc.smallImageUrl}" alt="image for record" style="vertical-align: top;max-width: 150px; width: 150px; height: 150px;border-radius: 6px;line-height: 100%;"/>

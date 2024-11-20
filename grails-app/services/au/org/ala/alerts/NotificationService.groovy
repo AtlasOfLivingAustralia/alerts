@@ -19,9 +19,12 @@ class NotificationService {
 
     int PAGING_MAX = 1000
     def sessionFactory
+    def httpService
     def emailService
     def diffService
     def queryService
+    def myAnnotationService
+    def annotationService
     def grailsApplication
     def dateFormatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
 
@@ -37,7 +40,7 @@ class NotificationService {
     def retrieveRecordForQuery(query, queryResult) {
         if  (query.recordJsonPath) {
             // return all of the new records if query is configured to fire on a non-zero value OR if previous value does not exist.
-            if (queryService.firesWhenNotZero(query) || queryResult.previousResult ==  null) {
+            if (queryService.firesWhenNotZero(query)) {
                 diffService.getNewRecords(queryResult)
                 // return diff of new and old records for all other cases
             } else {
@@ -54,21 +57,24 @@ class NotificationService {
      *
      * @param query
      * @param frequency
-     * @param runLastCheck It will set the date range from N days before the previous check date, based on the given frequency, to the last check date
+     * @param runLastCheck It has the highest priority. It will set the date range from N days before the previous check date, based on the given frequency, to the last check date
      * @param dryRun If true, the method will not update the database
+     * @param checkDate the date to check the query. It is the current date by default
      * @return true if the result has changed
      */
 
-    QueryResult executeQuery(Query query, Frequency frequency, boolean runLastCheck=false, boolean dryRun=false) {
+    QueryResult executeQuery(Query query, Frequency frequency, boolean runLastCheck=false, boolean dryRun=false, Date checkDate= new Date()) {
 
         def session = sessionFactory.currentSession
         session.setFlushMode(FlushMode.MANUAL) // Set the flush mode to MANUAL
 
         QueryResult qr = getQueryResult(query, frequency)
+        //For log only, the time started to run the query, not the time which query was executed against
         Date startTime = new Date()
-        qr.newLog("Checking: ${frequency?.name} - [${query.id}] - ${query.name} - ${dateFormatter.format(startTime)}.")
+
+        qr.newLog("Checking: ${frequency?.name} - [${query.id}] - ${query.name} - ${dateFormatter.format(checkDate)}.")
         //def url = new URL("http://biocache.ala.org.au/ws/occurrences/search?q=*:*&pageSize=1")
-        def urls = buildQueryUrl(query, frequency, runLastCheck)
+        def urls = buildQueryUrl(query, frequency, runLastCheck, checkDate)
 
         def urlString = urls.first()
         def urlStringForUI = urls.last()
@@ -80,9 +86,7 @@ class NotificationService {
 
             if (!urlString.contains("___MAX___")) {
                 // queries without paging
-                if (!queryService.isBioSecurityQuery(query)) {
-                    processedJson = processQueryReturnedJson(query, getWebserviceResults(urlString))
-                }
+                    processedJson = processQuery(query, urlString)
             } else {
                 // queries with paging
                 int max = PAGING_MAX
@@ -99,7 +103,7 @@ class NotificationService {
                     )
 
                     // Process the query
-                    result = processQueryReturnedJson(query, getWebserviceResults(url.toString())) // API errors will result in an empty string ("")
+                    result = processQuery(query, url.toString()) // API errors will result in an empty string ("")
 
                     // Check if we have results
                     if (!result || result?.size() == 0) {
@@ -140,8 +144,9 @@ class NotificationService {
             // store the last result from the webservice call
             qr.previousResult = qr.lastResult
             qr.lastResult = gzipResult(processedJson)
-            qr.lastChecked = new Date()
-            qr.hasChanged = hasChanged(qr)
+            qr.lastChecked = checkDate
+            //todo: review this algorithm for all queries
+            qr.hasChanged = diffService.hasChanged(qr)
             qr.queryUrlUsed = urlString
             qr.queryUrlUIUsed = urlStringForUI
 
@@ -209,7 +214,7 @@ class NotificationService {
                 // queries without paging
                 if (!queryService.isBioSecurityQuery(query)) {
                     // standard query
-                    processedJson = processQueryReturnedJson(query, getWebserviceResults(urlString))
+                    processedJson = processQuery(query, urlString)
                 } else {
                     // biosecurity query is handled elsewhere
                     Date since = lastQueryResult.lastChecked ?: DateUtils.addDays(new Date(), -1 * grailsApplication.config.getProperty("biosecurity.legacy.firstLoadedDateAge", Integer, 7))
@@ -228,7 +233,7 @@ class NotificationService {
                     String urlWithParams = urlString.replace('___MAX___', max.toString()).replace('___OFFSET___', offset.toString())
 
                     // Get the result from the query
-                    def result = processQueryReturnedJson(query, getWebserviceResults(urlWithParams))
+                    def result = processQuery(query, urlWithParams)
 
                     // Check if result is not empty
                     if (result?.size() == 0) {
@@ -292,21 +297,22 @@ class NotificationService {
         bout.toByteArray()
     }
 
+
     /**
-     * if runLastCheck is true, the date range will start from the previous check data to the last check date
+     * runLastCheck has the highest priority, if it is true, the date range will start from the previous check data to the last check date
      *
      * @param query
      * @param frequency
      * @param runLastCheck
+     * @param checkDate the date to check the query. It is the current date by default
      * @return
      */
-    String[] buildQueryUrl(Query query, Frequency frequency, boolean runLastCheck=false) {
+    String[] buildQueryUrl(Query query, Frequency frequency, boolean runLastCheck=false, Date checkDate= new Date()) {
         def queryPath = query.queryPath
         def queryPathForUI = query.queryPathForUI
 
         //if there is a date format, then there's a param to replace
         if (query.dateFormat) {
-            def checkDate = new Date()
             if (runLastCheck) {
                 QueryResult qs = query.getQueryResult(frequency.name)
                 if (qs && qs.lastChecked) {
@@ -344,53 +350,11 @@ class NotificationService {
         }
     }
 
+
     /**
-     * Indicates if the result of a query has changed by checking its properties.
+     * todo: this method has been moved to diffService
+     * It is not used by a deprecated method: checkStatusDontUpdate
      *
-     * @param queryResult
-     * @return
-     */
-    //@NotTransactional
-    Boolean hasChanged(QueryResult queryResult) {
-        Boolean changed = false
-
-        //if there is a fireWhenNotZero or fireWhenChange ignore  idJsonPath
-        log.debug("[QUERY " + queryResult.query.id + "] Checking query: " + queryResult.query.name)
-
-         // PropertyValues in a Biocache Query 'usually' has two properties: totalRecords and last_loaded_records (uuid)
-         //Both have the possible null value
-         //The following check is determined by the last propertyValue, since it overwrites the previous one
-
-        queryResult.propertyValues.each { pv ->
-            log.debug("[QUERY " + queryResult.query.id + "] " +
-                    " Has changed check:" + pv.propertyPath.name
-                    + ", value:" + pv.currentValue
-                    + ", previous:" + pv.previousValue
-                    + ", fireWhenNotZero:" + pv.propertyPath.fireWhenNotZero
-                    + ", fireWhenChange:" + pv.propertyPath.fireWhenChange
-            )
-
-            // Two different types of queries: Biocache and Blog/News
-            // Biocache: totalRecords and last_loaded_records
-            // Blog/News: last_blog_id
-            if (pv.propertyPath.fireWhenNotZero) {
-                changed = pv.currentValue?.toInteger() ?: 0 > 0
-            } else if (pv.propertyPath.fireWhenChange) {
-                changed = pv.previousValue != pv.currentValue
-            }
-        }
-
-        //Example, in a blog/news query,fireWhenNotZero and fireWhenChange both are false
-
-        if (queryService.checkChangeByDiff(queryResult.query)) {
-            log.debug("[QUERY " + queryResult.query.id + "] Has change check. Checking JSON for query : " + queryResult.query.name)
-            changed = diffService.hasChangedJsonDiff(queryResult)
-        }
-
-        changed
-    }
-
-    /**
      * Indicates if the result of a query has changed by checking its properties.
      *
      * @param queryResult
@@ -425,6 +389,9 @@ class NotificationService {
     }
 
     /**
+     * todo: check if this method could be removed.
+     * It is used by a deprecated method: checkStatusDontUpdate
+     *
      * Compares the stored values with the values in the JSON returning a map of
      *
      * propertyPath -> [current, previous]
@@ -469,106 +436,26 @@ class NotificationService {
         propertyPaths
     }
 
-    private def processQueryReturnedJson(Query query, String json) {
-        if (!queryService.isMyAnnotation(query) || !queryService.getUserId(query)) {
-            return json
-        }
 
-        JSONObject rslt
-        try {
-            rslt = JSON.parse(json) as JSONObject
-        } catch (Exception e) {
-            log.error("Failed to parse JSON in processQueryReturnedJson(): ${e.message}", e)
-            rslt = new JSONObject()
-        }
-
-        // all the occurrences user has made annotations to
-        if (rslt.occurrences) {
-            // reconstruct occurrences so that only those records with specified annotations are put into the list
-            JSONArray reconstructedOccurrences = []
-            for (JSONObject occurrence : rslt.occurrences) {
-                if (occurrence.uuid) {
-                    // all the verified assertions of this occurrence record
-                    def (openAssertions, verifiedAssertions, correctedAssertions) = filterAssertionsForAQuery(getAssertionsOfARecord(query.baseUrl, occurrence.uuid), queryService.getUserId(query))
-
-                    // only include record has at least 1 (50001/50002/50003) assertion
-                    if (!openAssertions.isEmpty() || !verifiedAssertions.isEmpty() || !correctedAssertions.isEmpty()) {
-
-                        openAssertions.sort { it.uuid }
-                        verifiedAssertions.sort { it.uuid }
-                        correctedAssertions.sort { it.uuid }
-
-                        occurrence.put('open_assertions', openAssertions.collect { it.uuid }.join(','))
-                        occurrence.put('verified_assertions', verifiedAssertions.collect { it.uuid }.join(','))
-                        occurrence.put('corrected_assertions', correctedAssertions.collect { it.uuid }.join(','))
-                        reconstructedOccurrences.push(occurrence)
-                    }
-                }
+     String processQuery(Query query, String url) {
+        String queryResult = "{}"
+        def resp = httpService.getJson(url)
+        if (resp.status == 200) {
+            def occurrences = resp.json
+            if (queryService.isMyAnnotation(query)) {
+                queryResult = myAnnotationService.appendAssertions(query, occurrences)
+            } else if (queryService.isAnnotation(query)) {
+                queryResult = annotationService.appendAssertions(query, occurrences)
+            } else {
+                queryResult = occurrences.toString()
             }
-            reconstructedOccurrences.sort { it.uuid }
-
-            // reconstruct occurrences which will be used to retrieve diff (records that will be included in alert email)
-            rslt.put('occurrences', reconstructedOccurrences)
+        } else {
+            //todo : Link may be broken, shall we stop the query?
+            log.error("Failed to process query ${query.name}")
+            log.error("URL: ${url}")
+            log.error("${resp.error}")
         }
-
-        return rslt.toString()
-    }
-
-    String getWebserviceResults(String url) {
-        log.debug "(internal) getJson URL = " + url
-        def conn = new URL(url).openConnection()
-        try {
-            conn.setConnectTimeout(10000)
-            conn.setReadTimeout(50000)
-            conn.setRequestProperty('User-Agent', grailsApplication.config.getProperty("customUserAgent", "ALA-alerts"))
-            return IOUtils.toString(conn.getInputStream(), "UTF-8")
-        } catch (Exception e) {
-            def error = "Failed to get json from web service (${url}). ${e.getClass()} ${e.getMessage()}, ${e}"
-            log.error error
-            return ""
-        }
-    }
-
-    JSONElement getJsonElements(String url) {
-        log.debug "(internal) getJson URL = " + url
-        def data = getWebserviceResults(url)
-
-        try {
-            return JSON.parse(data)
-        } catch (Exception e) {
-            log.error("Failed to parse JSON in getJsonElements() (value: ${data}): ${e.message}", e)
-            return new JSONObject()
-        }
-    }
-
-    JSONArray getAssertionsOfARecord(String baseUrl, String uuid) {
-        def url = baseUrl + '/occurrences/' + uuid + '/assertions'
-        return getJsonElements(url) as JSONArray
-    }
-
-    // of all the assertions user has made return those have been open-issued, verified or corrected
-    private static def filterAssertionsForAQuery(JSONArray assertions, String userId) {
-        def openAssertions = []
-        def verifiedAssertions = []
-        def correctedAssertions = []
-        if (assertions) {
-            // all the original user assertions (issues users flagged)
-            def origUserAssertions = assertions.findAll { it.uuid && !it.relatedUuid && it.userId == userId }
-
-            // all the 50001 (open issue) assertions (could belong to userId or other users)
-            def openIssueIds = assertions.findAll { it.uuid && it.relatedUuid && it.code == 50000 && it.qaStatus == 50001 }.collect { it.relatedUuid }
-
-            // all the 50002 (verified) assertions (could belong to userId or other users)
-            def verifiedIds = assertions.findAll { it.uuid && it.relatedUuid && it.code == 50000 && it.qaStatus == 50002 }.collect { it.relatedUuid }
-
-            // all the 50003 (corrected) assertions (could belong to userId or other users)
-            def correctedIds = assertions.findAll { it.uuid && it.relatedUuid && it.code == 50000 && it.qaStatus == 50003 }.collect { it.relatedUuid }
-
-            openAssertions = origUserAssertions.findAll { openIssueIds.contains(it.uuid) }
-            verifiedAssertions = origUserAssertions.findAll { verifiedIds.contains(it.uuid) }
-            correctedAssertions = origUserAssertions.findAll { correctedIds.contains(it.uuid) }
-        }
-        [openAssertions, verifiedAssertions, correctedAssertions]
+        return queryResult
     }
 
     /**
@@ -1004,7 +891,7 @@ class NotificationService {
     def collectUpdatedRecords(queryResult) {
         if  (queryResult.query?.recordJsonPath) {
             // return all of the new records if query is configured to fire on a non-zero value OR if previous value does not exist.
-            if (queryService.firesWhenNotZero(queryResult.query) || queryResult.previousResult ==  null) {
+            if (queryService.firesWhenNotZero(queryResult.query)) {
                 diffService.getNewRecords(queryResult)
                 // return diff of new and old records for all other cases
             } else {

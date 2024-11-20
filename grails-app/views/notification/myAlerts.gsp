@@ -8,7 +8,7 @@
         <meta name="layout" content="${grailsApplication.config.skin.layout}" />
 
         <meta name="breadcrumb" content="${message(code:"my.alerts.breadcrumbs")}" />
-        <meta name="breadcrumbParent" content="${grailsApplication.config.userDetails.web.url}/myprofile, ${message(code:"my.alerts.breadcrumb.parent")}" />
+        <meta name="breadcrumbParent" content="${grailsApplication.config.userdetails.web.url}/myprofile, ${message(code:"my.alerts.breadcrumb.parent")}" />
         <g:set var="userPrefix" value="${adminUser ? user.email : message(code:"my.alerts.my") }"/>
         <title><g:message code="my.alerts.title" args="[userPrefix]" /> | ${grailsApplication.config.skin.orgNameLong}</title>
         <asset:stylesheet href="alerts.css"/>
@@ -137,7 +137,7 @@
                             <g:message code="my.alerts.sample.list.intro" args="[grailsApplication.config.skin.orgNameShort]" />
                             <ul>
                                 <li>
-                                    <g:message code="my.alerts.data.resource.desc" args="[grailsApplication.config.collection.searchURL, grailsApplication.config.collection.searchTitle]" />
+                                    <g:message code="my.alerts.data.resource.desc" args="[grailsApplication.config.collectory.searchURL, grailsApplication.config.collection.searchTitle]" />
                                 </li>
                                 <li>
                                     <g:message code="my.alerts.species.desc" args="[grailsApplication.config.speciesPages.searchURL, grailsApplication.config.speciesPages.searchTitle]" />

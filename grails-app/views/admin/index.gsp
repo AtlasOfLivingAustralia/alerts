@@ -36,12 +36,12 @@
 
             <li><g:link controller="admin" action="deleteOrphanAlerts">Delete orphaned queries</g:link> - Remove queries no longer associated with Alert Notification/Subscription.</li>
             <li><g:link controller="admin" action="dryRunAllQueriesForFrequency" params="[frequency: 'daily']" target="_blank">Debug daily alerts</g:link> - Dry-run of daily alerts to determine if emails will be triggered on the next schedule. </li>
-            <li class="admin"><a href="${request.contextPath}/admin/query">Or visit this debug page</a> - Test and debug queries</li>
+            <li class="admin"><a class="btn btn-info" href="${request.contextPath}/admin/query">Debug and Test</a> - For testers and developers</li>
         </ul>
         <h4>Fix empty/invalid notification_token</h4>
         <ul>
-            <li><g:link controller="admin" action="repairNotificationsWithoutUnsubscribeToken">Fix empty notification_token values in Notification table (unsubscribe links with '?token=NULL')</g:link></li>
-            <li><g:link controller="admin" action="repairUsersWithoutUnsubscribeToken">Fix empty notification_token values in user table (unsubscribe all links with '?token=NULL')</g:link></li>
+            <li><g:link controller="admin" action="repairNotificationsWithoutUnsubscribeToken"> Fix empty notification_token values in Notification table (unsubscribe links with '?token=NULL')</g:link></li>
+            <li><g:link controller="admin" action="repairUsersWithoutUnsubscribeToken"> Fix empty notification_token values in user table (unsubscribe all links with '?token=NULL')</g:link></li>
         </ul>
     </div>
     <div class="panel-heading">

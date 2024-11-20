@@ -30,6 +30,7 @@ class BiosecurityService {
     def grailsApplication
     def emailService
     def webService
+    def diffService
     def biosecurityCSVService
 
     def biosecurityAlerts() {
@@ -92,7 +93,7 @@ class BiosecurityService {
              * refreshProperties has to be called before hasChanged
              */
             notificationService.refreshProperties(qr, processedJson)
-            qr.hasChanged = notificationService.hasChanged(qr)
+            qr.hasChanged = diffService.hasChanged(qr)
             qr.newLog("")
 
             log.debug("[QUERY " + query.id + "] Has changed?: " + qr.hasChanged)

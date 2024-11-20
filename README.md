@@ -46,3 +46,13 @@ DB schema update:
 
 ### 4.2.0 Release
 No DB changes
+
+
+### 4.3.1 Release
+Apply new templates for alerts
+
+#### Change logs
+Database update: Check RELEASE.MD for the queries to run
+
+
+

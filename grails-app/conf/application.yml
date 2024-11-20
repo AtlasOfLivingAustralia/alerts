@@ -157,6 +157,8 @@ spatial:
     baseURL: "https://spatial.ala.org.au"
 collectory:
     baseURL: "https://collections.ala.org.au"
+collectoryService:
+    baseURL: "https://collections.ala.org.au/ws"
 lists:
     baseURL: "https://lists.ala.org.au"
 speciesPages:
@@ -171,7 +173,9 @@ regions:
 occurrence:
     searchURL: "https://biocache.ala.org.au/occurrences/search?q=passer"
     searchTitle: occurrence search
-
+userdetails:
+    web:
+        url: https://auth.ala.org.au/userdetails
 useSpeciesListsAlerts: true
 useSpatialAlerts: true
 useBlogsAlerts: true

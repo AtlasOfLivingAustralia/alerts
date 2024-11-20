@@ -22,7 +22,7 @@ import java.text.SimpleDateFormat
 import groovyx.net.http.HTTPBuilder
 import groovy.json.JsonSlurper
 import java.nio.file.Files
-import java.nio.file.Paths
+
 
 @AlaSecured(value = 'ROLE_ADMIN', redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to view that page.")
 class AdminController {
@@ -375,8 +375,6 @@ class AdminController {
 
 
         def records = notificationService.retrieveRecordForQuery(qr.query, qr)
-        def userAssertions = queryService.isBioSecurityQuery(qr.query) ? emailService.getBiosecurityAssertions(qr.query, records as List) : [:]
-        def speciesListInfo = emailService.getSpeciesListInfo(qr.query)
 
         String urlPrefix = "${grailsApplication.config.getProperty("grails.serverURL")}${grailsApplication.config.getProperty('security.cas.contextPath', '')}"
         def localeSubject = messageSource.getMessage("emailservice.update.subject", [query.name] as Object[], siteLocale)
@@ -397,8 +395,6 @@ class AdminController {
                         message: query.updateMessage,
                         query: query,
                         moreInfo: qr.queryUrlUIUsed,
-                        speciesListInfo: speciesListInfo,
-                        userAssertions: userAssertions,
                         listcode: queryService.isMyAnnotation(query) ? "biocache.view.myannotation.list" : "biocache.view.list",
                         stopNotification: urlPrefix + '/notification/myAlerts',
                         records: records.take(maxRecords),
@@ -578,7 +574,7 @@ class AdminController {
             Frequency fre = Frequency.findByName(frequency)
             if (query && fre) {
                 QueryResult qs = notificationService.executeQuery(query, fre, true)
-                boolean hasChanged = notificationService.hasChanged(qs)
+                boolean hasChanged = diffService.hasChanged(qs)
                 def records = notificationService.collectUpdatedRecords(qs)
                 def results = ["hasChanged": hasChanged, "records": records]
                 render results as JSON
@@ -603,7 +599,7 @@ class AdminController {
             Frequency fre = Frequency.findByName(frequency)
             if (query && fre) {
                 QueryResult qs = notificationService.executeQuery(query, fre, true, true)
-                boolean hasChanged = notificationService.hasChanged(qs)
+                boolean hasChanged = diffService.hasChanged(qs)
                 def records = notificationService.collectUpdatedRecords(qs)
                 User currentUser = userService.getUser()
                 def recipient =
@@ -616,6 +612,37 @@ class AdminController {
             }
         } else {
             render([status: 1, message: "Missing queryId or frequency"] as JSON)
+        }
+    }
+
+    /**
+     * NO Database update, Email sent to current user
+     * Query on the check date and email the result to current user
+     * @return
+     */
+    def emailAlertsOnCheckDate(){
+        def id = params.queryId
+        def frequency = params.frequency
+        def checkDate = params.checkDate
+        if (id && frequency && checkDate) {
+            Query query = Query.get(id)
+            Frequency fre = Frequency.findByName(frequency)
+            Date date = new SimpleDateFormat("yyyy-MM-dd").parse(checkDate)
+            if (query && fre) {
+                QueryResult qs = notificationService.executeQuery(query, fre, false, true, date)
+                boolean hasChanged = diffService.hasChanged(qs)
+                def records = notificationService.collectUpdatedRecords(qs)
+                User currentUser = userService.getUser()
+                def recipient =
+                        [email: currentUser.email, userUnsubToken: currentUser.unsubscribeToken, notificationUnsubToken: '']
+                emailService.sendGroupNotification(qs, fre, [recipient])
+                def results = ["hasChanged": hasChanged, "records": records, "recipient": currentUser.email]
+                render results as JSON
+            } else {
+                render([status: 1, message: "Cannot find query: ${id}"] as JSON)
+            }
+        } else {
+            render([status: 1, message: "Missing queryId or frequency or check date"] as JSON)
         }
     }
 
@@ -634,7 +661,7 @@ class AdminController {
             Frequency fre = Frequency.findByName(frequency)
             if (query && fre) {
                 QueryResult qs = notificationService.executeQuery(query, fre, false, false)
-                boolean hasChanged = notificationService.hasChanged(qs)
+                boolean hasChanged = diffService.hasChanged(qs)
                 def records = notificationService.collectUpdatedRecords(qs)
                 User currentUser = userService.getUser()
                 def recipient =

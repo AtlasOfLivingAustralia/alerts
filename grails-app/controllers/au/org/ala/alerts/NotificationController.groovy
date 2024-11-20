@@ -9,6 +9,7 @@ class NotificationController {
     def emailService
     def userService
     def authService
+    def diffService
 
     static allowedMethods = [save: "POST", update: "POST", delete: "POST"]
 
@@ -132,7 +133,7 @@ class NotificationController {
         queryResult.lastResult = queryResult.previousResult
 
         notificationService.refreshProperties(queryResult, lastResult)
-        boolean hasChanged = notificationService.hasChanged(queryResult)
+        boolean hasChanged = diffService.hasChanged(queryResult)
         def records = notificationService.collectUpdatedRecords(queryResult)
         def results = ["hasChanged": hasChanged, "brief": queryResult.brief(),  "records": records]
         render results as JSON
