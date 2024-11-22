@@ -15,7 +15,7 @@
         <div style="margin-top: 25px;">
             <div>
                 <p>Our mailing address is: </p>
-                Atlas of Living Australia <br> GPO Box 1700<br> Canberra, ACT 2601<br>Australia
+                Atlas of Living Australia, GPO Box 1700<br> Canberra ACT 2601 Australia
             </div>
             <br/>
             You are receiving this email because you opted in to ALA alerts.

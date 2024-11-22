@@ -104,7 +104,7 @@
                                                          </div>
                                                         <g:if test="${queryType != 'biosecurity'}">
                                                             <div style="padding: 5px;">
-                                                            <label>Email me the latest updated records in database </label><g:link class="btn btn-info"  controller="admin" action="emailMeLastCheck" params="[queryId: query.id, frequency: queryResult.frequency?.name]" target="_blank">
+                                                            <label>Get the latest records, compare with the current records in the database, Email me the results </label><g:link class="btn btn-info"  controller="admin" action="emailMeLastCheck" params="[queryId: query.id, frequency: queryResult.frequency?.name]" target="_blank">
                                                                 Email me
                                                             </g:link>
                                                             </div>

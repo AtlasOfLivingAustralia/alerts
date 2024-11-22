@@ -9,12 +9,15 @@
     <title><g:message code="alert.title" args="[query.resourceName]" /></title>
 </head>
 <style>
+    a {
+        color: #003A70;
+    }
 </style>
 <body style="background-color: #f4f4f4;margin: 0;padding: 0;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;">
-<table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f4f4f4;border-spacing: 0;border-collapse: collapse;">
+<table style="width: 100%; background-color: #f4f4f4;border-spacing: 0;border-collapse: collapse;">
     <tr>
         <td align="center" style="padding: 20px;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;">
-            <table border="0" cellpadding="0" cellspacing="0" width="650" style="background-color: #ffffff;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;border-spacing: 0;border-collapse: collapse;">
+            <table style="width: 650px; background-color: #ffffff; font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;border-spacing: 0;border-collapse: collapse;">
                 <!-- Logo -->
                 <tr>
                     <td style="text-align: center; padding: 20px; background-color: #fff;">
@@ -25,9 +28,9 @@
                 </tr>
                 <!-- Header -->
                 <tr>
-                    <td  align="center" bgcolor="#B53929" background="${grailsApplication.config.grails.serverURL}/assets/email/biosecurity-alert-header.png" width="620" height="120" style="color:white;background-color:#B53929;padding: 20px 10px 20px 10px;text-align: center;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;background-image:url(${grailsApplication.config.grails.serverURL}/assets/email/biosecurity-alert-header.png);background-position: top center;background-size: cover;background-repeat: no-repeat">
+                    <td height="120" style="color:white;background-color:#003A70;padding: 20px 10px 20px 10px;text-align: center;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;background-image:url(${grailsApplication.config.grails.serverURL}/assets/email/banner-ocean.png);background-position: top center;background-size: cover;background-repeat: no-repeat">
                         <h1 style="font-size: 24px; color: #fff;">ALA Alerts - ${query.name}</h1>
-                        <p style="font-size: 16px; color: #fff;"><strong>${new SimpleDateFormat("dd MMMM yyyy").format(new Date())}</strong></p>
+                        <p style="font-size: 16px; color: #fff;"><strong>${new SimpleDateFormat("dd MMM yyyy").format(new Date())}</strong></p>
                     </td>
                 </tr>
                 <tr>
@@ -45,8 +48,8 @@
                         <table style="width: 100%">
                             <tr style="vertical-align: top;">
                                 <td style="width: 37%">
-                                    <g:if test="${oc.vernacularName ?: oc.raw_raw_scientificName ?: oc.scientificName}">
-                                        <strong>${i+1}. <em>${oc.vernacularName ?: oc.raw_raw_scientificName ?: oc.scientificName}</em></strong>
+                                    <g:if test="${oc.scientificName?: oc.vernacularName ?: oc.raw_raw_scientificName}">
+                                        <strong>${i+1}. <em><a href="${occurrencelink}">${oc.scientificName?: oc.vernacularName ?: oc.raw_raw_scientificName}</a></em></strong>
                                     </g:if>
                                     <p style="padding-left: 15px;">
                                         <g:if test="${oc.taxonRankID > 5000}"><i></g:if>
@@ -60,23 +63,23 @@
                                     </p>
                                 </td>
                                 <td class="annotation" nowrap="nowrap" style="width: 30%">
-                                    <g:if test="${oc.occurrenceDetails}">
+                                    <g:if test="${oc.eventDate}">
                                         Date created: ${new SimpleDateFormat("dd MMM yyyy").format(oc.eventDate)}<br/>
                                     </g:if>
                                 </td>
                                 <td style="width: 33%; text-align: center; vertical-align: middle;" >
                                     <g:if test="${oc.image != null}">
-                                        <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}">
+                                        <a href="${occurrencelink}">
                                             <img src="${oc.smallImageUrl}" alt="image for record" style="vertical-align: top;max-width: 150px; width: 150px; height: 150px;border-radius: 6px;line-height: 100%;"/>
                                         </a>
                                     </g:if>
                                     <g:elseif test="${oc.image}">
-                                        <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}">
+                                        <a href="${occurrencelink}">
                                             <img src="${oc.image}" alt="${message(code:"biocache.alt.image.for.record")}" style="vertical-align: top;max-width: 150px; width: 150px; height: 150px;border-radius: 6px;line-height: 100%;"/>
                                         </a>
                                     </g:elseif>
                                     <g:else>
-                                        <g:message code="biocache.no.image" />
+                                        <img src="${grailsApplication.config.grails.serverURL}/assets/email/no-image-available.png" alt="No images" style="vertical-align: top;max-width: 150px; width: 150px;height: 150px;border-radius: 6px;line-height: 100%;" />
                                     </g:else>
                                 </td>
                            </tr>

@@ -65,3 +65,24 @@ SET
     base_url = 'https://biocache.ala.org.au/ws'
 WHERE
         base_url LIKE 'https://api.ala.org.au/occurrences%';
+
+
+--- Special cases for test environments:
+--- Check if "Citizen science records with images" and "New images" are under 'biocacheImages' tab
+--- If not, run the following queries to update them:
+SELECT * FROM alerts.query where name='Citizen science records with images';
+update alerts.query set email_template='/email/biocacheImages'  where name='Citizen science records with images';
+
+SELECT * FROM alerts.query where name='New images';
+update alerts.query set email_template='/email/biocacheImages'  where name='New images';
+
+--- Update query for species list
+--- Find the query id which need to be updated
+UPDATE `alerts`.`query`
+    SET `base_url` = 'https://lists.ala.org.au/ws',
+        `id_json_path` = 'dataResourceUid',
+        `query_path` = '/speciesList?max=___MAX___&offset=___OFFSET___',
+        `record_json_path` = '$.lists[*]',
+        `email_template` = '/email/specieslist',
+        `base_url_forui` = 'https://lists.ala.org.au'
+    WHERE (`id` = 'Replace it');

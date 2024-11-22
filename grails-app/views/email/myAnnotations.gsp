@@ -25,9 +25,9 @@
                 </tr>
                 <!-- Header -->
                 <tr>
-                    <td  align="center" bgcolor="#B53929" background="${grailsApplication.config.grails.serverURL}/assets/email/biosecurity-alert-header.png" width="620" height="120" style="color:white;background-color:#B53929;padding: 20px 10px 20px 10px;text-align: center;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;background-image:url(${grailsApplication.config.grails.serverURL}/assets/email/biosecurity-alert-header.png);background-position: top center;background-size: cover;background-repeat: no-repeat">
+                    <td  align="center" background="${grailsApplication.config.grails.serverURL}/assets/email/banner-ocean.png"  height="120" style="color:white;background-color:#003A70;padding: 20px 10px 20px 10px;text-align: center;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;background-image:url(${grailsApplication.config.grails.serverURL}/assets/email/banner-ocean.png);background-position: top center;background-size: cover;background-repeat: no-repeat">
                         <h1 style="font-size: 24px; color: #fff;">ALA Alerts - ${query.name}</h1>
-                        <p style="font-size: 16px; color: #fff;"><strong>${new SimpleDateFormat("dd MMMM yyyy").format(new Date())}</strong></p>
+                        <p style="font-size: 16px; color: #fff;"><strong>${new SimpleDateFormat("dd MMM yyyy").format(new Date())}</strong></p>
                     </td>
                 </tr>
                 <tr>
@@ -47,13 +47,13 @@
                                 <td style="width: 33%">
 
                                     <a href="${occurrencelink}" style="color: #C44D34;text-decoration: none;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;">
-                                     <g:if test="${oc.vernacularName ?: oc.raw_raw_scientificName ?: oc.scientificName}">
-                                       <strong>${i+1}. <em>${oc.vernacularName ?: oc.raw_raw_scientificName ?: oc.scientificName}</em></strong>
+                                     <g:if test="${oc.scientificName?:oc.vernacularName ?: oc.raw_raw_scientificName}">
+                                       <strong>${i+1}. <em>${oc.scientificName?:oc.vernacularName ?: oc.raw_raw_scientificName }</em></strong>
                                      </g:if>
                                     </a>
                                     <p style="padding-left: 15px;">
                                         <g:if test="${oc.taxonRankID > 5000}"><i></g:if>
-                                        ${oc.scientificName}<br/>
+                                        ${oc.vernacularName}<br/>
                                         <g:if test="${oc.taxonRankID > 5000}"></i></g:if>
                                         ${oc.stateProvince}<br/>
                                         Family: ${oc.family}<br/>
@@ -74,7 +74,7 @@
                                             <%
                                                 try {
                                                     def parsedDate = Date.parse("yyyy-MM-dd'T'HH:mm:ss'Z'", latestAssertion.created)
-                                                    out << parsedDate.format('dd/MM/yyyy')
+                                                    out << parsedDate.format('dd MMM yyyy')
                                                 } catch (Exception e) {
                                                     out << latestAssertion.created
                                                 }
@@ -94,7 +94,7 @@
                                         </a>
                                     </g:elseif>
                                     <g:else>
-                                        <g:message code="biocache.no.image" />
+                                        <img src="${grailsApplication.config.grails.serverURL}/assets/email/no-image-available.png" alt="No images" style="vertical-align: top;max-width: 150px; width: 150px;height: 150px;border-radius: 6px;line-height: 100%;" />
                                     </g:else>
                                 </td>
                            </tr>
