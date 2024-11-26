@@ -367,7 +367,7 @@ class AdminController {
 
         def frequency = 'weekly'
         QueryResult qr = notificationService.getQueryResult(query, Frequency.findByName(frequency))
-        qr.lastResult = notificationService.gzipResult(processedJson)
+        qr.lastResult = qr.compress(processedJson)
         //this logic only applies on preview page
         qr.previousCheck = qr.lastChecked
         qr.lastChecked = since
@@ -472,7 +472,7 @@ class AdminController {
 
             def frequency = 'weekly'
             QueryResult qr = notificationService.getQueryResult(query, Frequency.findByName(frequency))
-            qr.lastResult = notificationService.gzipResult(processedJson)
+            qr.lastResult = qr.compress(processedJson)
             File tempCSV = biosecurityCSVService.createTempCSV(qr)
             csvFiles.add(tempCSV.path)
         }

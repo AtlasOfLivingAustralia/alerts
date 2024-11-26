@@ -18,6 +18,7 @@ package au.org.ala.alerts
  * Database service for QueryResult:
  */
 class QueryResultService {
+    def queryService
     /**
      * Get QueryResult by id, including cascading objects: query and frequency
      *
@@ -27,11 +28,14 @@ class QueryResultService {
     def get(id){
         QueryResult qs = QueryResult.get(id)
         if (qs) {
-            Query query = Query.get(qs.query.id)
+            Query query = queryService.get(qs.query.id)
             qs.query = query
 
             Frequency frequency = Frequency.get(qs.frequency.id)
             qs.frequency = frequency
+
+            PropertyValue pvs = PropertyValue.findByQueryResult(qs)
+            qs.propertyValues = [pvs]
         }
         return qs
     }

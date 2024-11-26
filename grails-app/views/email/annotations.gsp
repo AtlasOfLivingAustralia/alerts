@@ -69,7 +69,7 @@
                                         %>
                                         <b>Comment:</b><br/>
                                         <i>${StringUtils.abbreviate(latestAssertion.comment, 100)}</i>
-                                        <br>- <b>${latestAssertion.userDisplayName}
+                                        <br>-<b>${latestAssertion.userDisplayName}
                                             <g:if test="${latestAssertion.created}">,&nbsp;
                                                     <%
                                                         try {

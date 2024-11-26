@@ -26,6 +26,15 @@ WHERE query_id IN (
 -- 4.2
 update alerts.query set email_template="/email/datasets" where email_template='/email/specieslists';
 
+--- disable fire_when_change for spatial layer
+UPDATE alerts.property_path
+SET fire_when_change = false
+WHERE query_id IN (
+    SELECT query_id
+    FROM query
+    WHERE email_template = '/email/layers'
+);
+
 -- 5. Data Resource using Collectory Service now share the same template with datasets. To update the template, run the following query:
 -- 5.1
 -- update alerts.query set email_template="/email/datasets" where email_template='/email/dataresource';
@@ -77,7 +86,7 @@ SELECT * FROM alerts.query where name='New images';
 update alerts.query set email_template='/email/biocacheImages'  where name='New images';
 
 --- Update query for species list
---- Find the query id which need to be updated
+--- Find the query id which need to be updated. ID:556
 UPDATE `alerts`.`query`
     SET `base_url` = 'https://lists.ala.org.au/ws',
         `id_json_path` = 'dataResourceUid',

@@ -47,8 +47,9 @@ a {
                             <table style="width: 100%">
                                 <tr style="vertical-align: top;">
                                     <td style="width: 70%">
+                                        <strong>${i+1}.</strong>
                                         <a href="${oclink}" style="color: #003A70;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;">
-                                                <strong>${i+1}. <em>${oc.name}</em></strong>
+                                                <strong><em>${oc.name}</em></strong>
                                         </a>
                                         <p style="padding-left: 15px;">
 

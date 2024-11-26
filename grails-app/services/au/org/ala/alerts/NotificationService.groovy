@@ -10,7 +10,6 @@ import org.grails.web.json.JSONElement
 import org.grails.web.json.JSONObject
 
 import javax.transaction.Transactional
-import java.util.zip.GZIPOutputStream
 import java.text.SimpleDateFormat
 import groovy.time.TimeCategory
 import org.hibernate.FlushMode
@@ -143,7 +142,7 @@ class NotificationService {
             qr.previousCheck = qr.lastChecked
             // store the last result from the webservice call
             qr.previousResult = qr.lastResult
-            qr.lastResult = gzipResult(processedJson)
+            qr.lastResult = qr.compress(processedJson)
             qr.lastChecked = checkDate
             //todo: review this algorithm for all queries
             qr.hasChanged = diffService.hasChanged(qr)
@@ -287,15 +286,7 @@ class NotificationService {
         qcr
     }
 
-    byte[] gzipResult(String json) {
-        //store the last result from the webservice call
-        ByteArrayOutputStream bout = new ByteArrayOutputStream()
-        GZIPOutputStream gzout = new GZIPOutputStream(bout)
-        gzout.write(json.toString().getBytes())
-        gzout.flush()
-        gzout.finish()
-        bout.toByteArray()
-    }
+
 
 
     /**

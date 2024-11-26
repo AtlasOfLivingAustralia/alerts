@@ -10,6 +10,7 @@ class NotificationController {
     def userService
     def authService
     def diffService
+    def queryResultService
 
     static allowedMethods = [save: "POST", update: "POST", delete: "POST"]
 
@@ -124,16 +125,22 @@ class NotificationController {
 
     def evaluateChangeDetectionAlgorithm = {
         def query = Query.get(params.queryId)
-        def queryResult = query?.queryResults?.find { queryResult ->
-            queryResult.id == params.queryResultId.toLong()
-        }
+
+        def queryResult = queryResultService.get(params.queryResultId)
         //NOTE: this is a hack since the lastResult will be copied into the previousResult in RefreshProperties method
         //We need to hack the current result with previousResult.
         def lastResult = queryResult.decompress(queryResult.lastResult)
         queryResult.lastResult = queryResult.previousResult
+        //Assume ONLY one property value
+        queryResult.propertyValues?[0]?.currentValue = queryResult.propertyValues?[0]?.previousValue
 
         notificationService.refreshProperties(queryResult, lastResult)
         boolean hasChanged = diffService.hasChanged(queryResult)
+
+        //Update the results
+        queryResult.previousResult = queryResult.lastResult
+        queryResult.lastResult =  queryResult.compress(lastResult)
+
         def records = notificationService.collectUpdatedRecords(queryResult)
         def results = ["hasChanged": hasChanged, "brief": queryResult.brief(),  "records": records]
         render results as JSON

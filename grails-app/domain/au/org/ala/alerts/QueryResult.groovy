@@ -130,11 +130,15 @@ class QueryResult {
 
     byte[] compress(String json) {
         //store the last result from the webservice call
-        ByteArrayOutputStream bout = new ByteArrayOutputStream()
-        GZIPOutputStream gzout = new GZIPOutputStream(bout)
-        gzout.write(json.toString().getBytes())
-        gzout.flush()
-        gzout.finish()
-        bout.toByteArray()
+        if (json) {
+            ByteArrayOutputStream bout = new ByteArrayOutputStream()
+            GZIPOutputStream gzout = new GZIPOutputStream(bout)
+            gzout.write(json.toString().getBytes())
+            gzout.flush()
+            gzout.finish()
+            bout.toByteArray()
+        } else {
+            null
+        }
     }
 }
