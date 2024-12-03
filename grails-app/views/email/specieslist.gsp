@@ -35,7 +35,7 @@ a {
                 </tr>
                 <tr>
                     <td style="background-color: #E8E8E8;color: #000;padding: 40px 30px 40px 30px;text-align: center;font-family: 'Arial', sans-serif;font-size: 22px;line-height: 1.5;">
-                        <div> ${totalRecords} ${totalRecords == 1 ? 'dataset' : 'datasets'} ${totalRecords == 1 ? 'has' : 'have'} been updated
+                        <div> ${totalRecords} ${totalRecords == 1 ? ' species list' : ' species lists'} ${totalRecords == 1 ? 'has' : 'have'} been updated
                         </div>
                     </td>
                 </tr>
@@ -43,15 +43,29 @@ a {
                 <g:each status="i" in="${records}" var="oc">
                     <tr>
                         <td style="padding: 20px;background-color: white;font-family: 'Arial', sans-serif;font-size: 14px;line-height: 1.5;">
-                            <g:set var="oclink" value="${oc.details?.alaPublicUrl}"></g:set>
+                            <g:set var="oclink" value="${query.baseUrlForUI}/speciesListItem/list/${oc.dataResourceUid}"></g:set>
                             <table style="width: 100%">
                                 <tr style="vertical-align: top;">
                                     <td style="width: 70%">
-                                        <strong>${i+1}.</strong>
-                                        <a href="${oclink}" style="color: #003A70;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;">
-                                                <strong><em>${oc.name}</em></strong>
-                                        </a>
+                                                <strong>${i+1}.<a href="${oclink}" style="color: #003A70;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;"> <em>${oc.listName}</em> </a></strong>
                                         <p style="padding-left: 15px;">
+                                            <%
+                                                // Initialize a list to collect tags
+                                                def tags = []
+                                                if (oc.isAuthoritative) tags << "Authoritative"
+                                                if (oc.isThreatened) tags << "Threatened"
+                                                if (oc.isInvasive) tags << "Invasive"
+                                            %>
+
+                                            Tags: ${tags ? tags.join(', ') : ''} <br/>
+
+                                            <g:if test="${oc.listType}">
+                                                Type: ${oc.listType}<br/>
+                                            </g:if>
+
+                                            <g:if test="${oc.authority}">
+                                                Total records: ${oc.authority}<br/>
+                                            </g:if>
 
                                             <g:if test="${oc.details?.licenseType}">
                                                 Licence: ${oc.details?.licenseType}<br/>
@@ -82,22 +96,26 @@ a {
                                             </a>
                                         </g:if>
 
-                                        <g:if test="${oc.details?.lastUpdated}">
+                                        <g:if test="${oc.lastUpdated}">
                                             <%
                                                 SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
                                                 dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"))
-                                                Date updatedDate = dateFormat.parse(oc.details?.lastUpdated)
+                                                Date updatedDate = dateFormat.parse(oc.lastUpdated)
                                             %>
                                             Updated: ${new SimpleDateFormat("dd MMM yyyy").format(updatedDate)}<br/>
                                         </g:if>
                                         <g:else>
-                                            <g:if test="${oc.details?.dateCreated}">
+                                            <g:if test="${oc.dateCreated}">
                                                 <%
-                                                    Date createdDate = dateFormat.parse(oc.details?.dateCreated)
+                                                    Date createdDate = dateFormat.parse(oc.dateCreated)
                                                 %>
                                                 Created:  ${new SimpleDateFormat("dd MMM yyyy").format(createdDate)}<br/>
                                             </g:if>
                                         </g:else>
+
+                                        <g:if test="${oc.itemCount}">
+                                            No of items: ${oc.itemCount}<br/>
+                                        </g:if>
 
                                     </td>
                                 </tr>

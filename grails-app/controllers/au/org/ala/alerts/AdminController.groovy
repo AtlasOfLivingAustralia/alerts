@@ -367,7 +367,7 @@ class AdminController {
 
         def frequency = 'weekly'
         QueryResult qr = notificationService.getQueryResult(query, Frequency.findByName(frequency))
-        qr.lastResult = notificationService.gzipResult(processedJson)
+        qr.lastResult = qr.compress(processedJson)
         //this logic only applies on preview page
         qr.previousCheck = qr.lastChecked
         qr.lastChecked = since
@@ -472,7 +472,7 @@ class AdminController {
 
             def frequency = 'weekly'
             QueryResult qr = notificationService.getQueryResult(query, Frequency.findByName(frequency))
-            qr.lastResult = notificationService.gzipResult(processedJson)
+            qr.lastResult = qr.compress(processedJson)
             File tempCSV = biosecurityCSVService.createTempCSV(qr)
             csvFiles.add(tempCSV.path)
         }
@@ -576,7 +576,7 @@ class AdminController {
                 QueryResult qs = notificationService.executeQuery(query, fre, true)
                 boolean hasChanged = diffService.hasChanged(qs)
                 def records = notificationService.collectUpdatedRecords(qs)
-                def results = ["hasChanged": hasChanged, "records": records]
+                def results = ["hasChanged": hasChanged, "records": records, "details": qs.brief()]
                 render results as JSON
             } else {
                 render([status: 1, message: "Cannot find query: ${id}"] as JSON)
@@ -605,7 +605,7 @@ class AdminController {
                 def recipient =
                     [email: currentUser.email, userUnsubToken: currentUser.unsubscribeToken, notificationUnsubToken: '']
                 emailService.sendGroupNotification(qs, fre, [recipient])
-                def results = ["hasChanged": hasChanged, "records": records, "recipient": currentUser.email]
+                def results = ["hasChanged": hasChanged, "records": records, "recipient": currentUser.email, details: qs.brief()]
                 render results as JSON
             } else {
                 render([status: 1, message: "Cannot find query: ${id}"] as JSON)
@@ -636,7 +636,7 @@ class AdminController {
                 def recipient =
                         [email: currentUser.email, userUnsubToken: currentUser.unsubscribeToken, notificationUnsubToken: '']
                 emailService.sendGroupNotification(qs, fre, [recipient])
-                def results = ["hasChanged": hasChanged, "records": records, "recipient": currentUser.email]
+                def results = ["hasChanged": hasChanged, "records": records, "recipient": currentUser.email, details: qs.brief()]
                 render results as JSON
             } else {
                 render([status: 1, message: "Cannot find query: ${id}"] as JSON)

@@ -15,6 +15,10 @@ class QueryService {
     def messageSource, dataSource
     def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
 
+    def get(id){
+        Query.get(id)
+    }
+
     Notification getNotificationForUser(Query query, User user) {
         Notification n = null
         //find the query

@@ -22,7 +22,7 @@
         <div class="default-font large-white-font" style="vertical-align: top;font-family: 'Lato', Helvetica, Arial, sans-serif;font-size: 24px;font-weight: 700;line-height: 1.42;letter-spacing: -0.4px;color: #ffffff;">Latest ALA Blog Updates</div>
         <br>
         <div class="default-font" style="vertical-align: top;font-family: 'Lato', Helvetica, Arial, sans-serif;font-size: 16px;font-weight: 500;line-height: 1.42;letter-spacing: -0.4px;color: #ffffff;">
-          <b>${new SimpleDateFormat("dd MMMM yyyy").format(new Date())}</b>
+          <b>${new SimpleDateFormat("dd MMM yyyy").format(new Date())}</b>
         </div>
       </div>
       <g:each status="i" in="${records}" var="blog">

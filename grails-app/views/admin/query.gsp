@@ -75,10 +75,7 @@
                                        <g:if test="${query.queryResults?.size() > 0}">
                                             <ul>
                                                 <g:each var="queryResult" in="${query.queryResults.sort { it.frequency?.name }}">
-                                                    <div>
-                                                        [<g:link controller="queryResult" action="getDetails" params="[id: queryResult.id]" target="_blank">${queryResult.id}</g:link>] <b title="Query Result ID:${queryResult.id}"> ${queryResult.frequency?.name} subscribers: </b> <span class="badge badge-primary">${query.countSubscribers(queryResult.frequency?.name)}</span>
-                                                        - Last checked: <g:link controller="ws" action="getQueryLogs" params="[id: query.id, frequency: queryResult.frequency?.name]" target="_blank"> <i class="fa fa-info-circle" aria-hidden="true"></i>${queryResult?.lastChecked}</g:link>
-                                                    </div>
+
                                                     <div>
                                                         <g:if test="${queryResult.hasChanged}">
                                                             <span class="badge badge-info">Changed</span>
@@ -88,11 +85,25 @@
                                                         </g:else>
                                                     </div>
                                                     <div>
+                                                        <b>${queryResult.frequency?.name?.toUpperCase()}</b> query result ID: <g:link controller="queryResult" action="getDetails" params="[id: queryResult.id]" target="_blank"> <span class="badge badge-primary">${queryResult.id}</span></g:link>
+                                                        <br/>
+                                                        <g:if test="${queryResult?.lastChecked}">
+                                                             Last checked: ${queryResult?.lastChecked}&nbsp;&nbsp;
+                                                        </g:if>
+                                                        <g:link controller="ws" action="getQueryLogs" params="[id: query.id, frequency: queryResult.frequency?.name]" target="_blank">Log</g:link>
+                                                        &nbsp;&nbsp;
+                                                        <g:if test="${queryResult?.queryUrlUsed}">
+                                                            <a href="${queryResult?.queryUrlUsed}" target="_blank" title="URL for search">
+                                                                Query URL
+                                                            </a>
+                                                        </g:if>
+                                                        <br/>
+                                                        Subscribers:${query.countSubscribers(queryResult.frequency?.name)}
+                                                    </div>
+                                                    <div>
                                                         <g:each var="pv" in="${queryResult.propertyValues}">
-                                                            ${pv.propertyPath}<br>
-                                                            Current Value: ${pv.currentValue}  &nbsp;
-                                                            Previous Value: ${pv.previousValue} <br>
-
+                                                            <span class="badge badge-light">${pv.propertyPath.id}</span> ${pv.propertyPath}<br>
+                                                            <span class="badge badge-light">${pv.id}</span> Current Value: ${pv.currentValue}; Previous Value: ${pv.previousValue} <br>
                                                         </g:each>
                                                     </div>
                                                     <div style="text-align: right;">
@@ -104,7 +115,7 @@
                                                          </div>
                                                         <g:if test="${queryType != 'biosecurity'}">
                                                             <div style="padding: 5px;">
-                                                            <label>Email me the latest updated records in database </label><g:link class="btn btn-info"  controller="admin" action="emailMeLastCheck" params="[queryId: query.id, frequency: queryResult.frequency?.name]" target="_blank">
+                                                            <label>Get the latest records, compare with the current result in the database, Email me the results </label><g:link class="btn btn-info"  controller="admin" action="emailMeLastCheck" params="[queryId: query.id, frequency: queryResult.frequency?.name]" target="_blank">
                                                                 Email me
                                                             </g:link>
                                                             </div>
@@ -121,7 +132,20 @@
                                                                     %>
                                                                     <input type="hidden" name="queryId" value="${query.id}" />
                                                                     <input type="hidden" name="frequency" value="${queryResult.frequency?.name}" />
-                                                                    <label for="checkDate">Collect records on the given date, and email new records </label>
+                                                                    <label for="checkDate">Run the query against the given date, and email new records
+                                                                        <i class="fa fa-info-circle" aria-hidden="true" style="color: #c44d34;"
+                                                                           title="It may be set as starting from that date, ending on that date, spanning a period around that date, or not used at all."></i>
+                                                                        The date range associated with the given date is determined by the
+
+                                                                        <g:if test="${queryResult?.queryUrlUsed}">
+                                                                            <a href="${queryResult?.queryUrlUsed}" target="_blank" title="URL for search">
+                                                                                <i class="fa fa-search" aria-hidden="true"></i> query
+                                                                            </a>
+                                                                        </g:if>
+                                                                        <g:else>
+                                                                             query
+                                                                        </g:else>
+                                                                     </label>
                                                                      <input type="date" id="checkDate" name="checkDate"value="${today}" class="form-control" />
                                                                     <button type="submit" class="btn btn-info mb-2">Email me, No DB update</button>
                                                                 </g:form>

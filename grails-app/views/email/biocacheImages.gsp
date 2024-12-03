@@ -25,17 +25,20 @@
     }
 
     .info-button {
-        border: 1pt solid #B53929; /* Flamingo color */
+        border: 1pt solid #003A70;
         text-decoration: none;
         font-size: 14px;
         padding: 10px 15px 10px 15px;
     }
+
+    a {
+        color: #003A70;
+    }
     </style>
 </head>
-<style>
-</style>
+
 <body style="background-color: #f4f4f4;margin: 0;padding: 0;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;">
-<table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f4f4f4;border-spacing: 0;border-collapse: collapse;">
+<table style="background-color: #f4f4f4;border-spacing: 0;border-collapse: collapse;">
     <tr>
         <td align="center" style="padding: 20px;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;">
             <table border="0" cellpadding="0" cellspacing="0" width="650" style="background-color: #ffffff;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;border-spacing: 0;border-collapse: collapse;">
@@ -49,9 +52,9 @@
                 </tr>
                 <!-- Header -->
                 <tr>
-                    <td  align="center" bgcolor="#B53929" background="${grailsApplication.config.grails.serverURL}/assets/email/biosecurity-alert-header.png" width="620" height="120" style="color:white;background-color:#B53929;padding: 20px 10px 20px 10px;text-align: center;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;background-image:url(${grailsApplication.config.grails.serverURL}/assets/email/biosecurity-alert-header.png);background-position: top center;background-size: cover;background-repeat: no-repeat">
+                    <td height="120" style="color:white;padding: 20px 10px 20px 10px;text-align: center;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;background-image:url(${grailsApplication.config.grails.serverURL}/assets/email/banner-ocean.png);background-position: top center;background-size: cover;background-repeat: no-repeat">
                         <h1 style="font-size: 24px; color: #fff;">ALA Alerts - ${query.name}</h1>
-                        <p style="font-size: 16px; color: #fff;"><strong>${new SimpleDateFormat("dd MMMM yyyy").format(new Date())}</strong></p>
+                        <p style="font-size: 16px; color: #fff;"><strong>${new SimpleDateFormat("dd MMM yyyy").format(new Date())}</strong></p>
                     </td>
                 </tr>
                 <tr>
@@ -62,7 +65,7 @@
                         </div>
                         <br/>
                         <div>
-                            <a class="btn info-button" href="${moreInfo}" style="color: #B53929;">View all records with new images</a>
+                            <a class="btn info-button" href="${moreInfo}">View all records with new images</a>
                         </div>
                     </td>
                 </tr>
@@ -83,7 +86,7 @@
                                             <%
                                                 try {
                                                     def parsedDate = Date.parse("yyyy-MM-dd'T'HH:mm:ss'Z'", occurrences[0]?.dataResourceInfo?.lastUpdated)
-                                                    out << "<p>Last updated: " + parsedDate.format('dd/MM/yyyy') +"</p>"
+                                                    out << "<p>Last updated: " + new SimpleDateFormat("dd MMM yyyy").format(parsedDate) +"</p>"
                                                 } catch (Exception e) {
                                                     out <<"<p>Last updated: " + occurrences[0]?.dataResourceInfo?.lastUpdated +"</p>"
                                                 }
@@ -101,7 +104,9 @@
                                             <img src="${oc.smallImageUrl}" alt="${message(code:"biocache.images.alt.image", args:[oc.scientificName])}" style="vertical-align: top; width:150px; height:150px;border-radius: 6px;line-height: 100%;"/></a>
                                         <br/>
                                         <i>${oc.scientificName} <br>
-                                            ${new SimpleDateFormat("dd MMMM yyyy").format(oc.eventDate)}
+                                            <g:if test="${oc.eventDate}">
+                                             ${new SimpleDateFormat("dd MMM yyyy").format(oc.eventDate)}
+                                            </g:if>
                                         </i>
                                     </td>
                                     <g:if test="${(j + 1) % 4 == 0 || j + 1 == occurrences.size()}">
