@@ -129,7 +129,6 @@ class QueryResult {
     }
 
     byte[] compress(String json) {
-        //store the last result from the webservice call
         if (json) {
             ByteArrayOutputStream bout = new ByteArrayOutputStream()
             GZIPOutputStream gzout = new GZIPOutputStream(bout)

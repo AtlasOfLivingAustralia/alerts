@@ -52,11 +52,15 @@
                                         <strong>${i+1}. <em><a href="${occurrencelink}">${oc.scientificName?: oc.vernacularName ?: oc.raw_raw_scientificName}</a></em></strong>
                                     </g:if>
                                     <p style="padding-left: 15px;">
-                                        <g:if test="${oc.taxonRankID > 5000}"><i></g:if>
-                                        ${oc.scientificName}<br/>
-                                        <g:if test="${oc.taxonRankID > 5000}"></i></g:if>
-                                        ${oc.stateProvince}<br/>
-                                        Family: ${oc.family}<br/>
+                                        <g:if test="${oc.vernacularName}">
+                                            ${oc.vernacularName}<br/>
+                                        </g:if>
+                                        <g:if test="${oc.stateProvince}">
+                                            ${oc.stateProvince}<br/>
+                                        </g:if>
+                                        <g:if test="${oc.family}">
+                                            Family: ${oc.family}<br/>
+                                        </g:if>
                                         <g:if test="${oc.dataProviderName}">
                                             Source: ${oc.dataProviderName}
                                         </g:if>

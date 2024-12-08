@@ -10,10 +10,12 @@
 </head>
 <style>
     .info-button {
-        border: 1pt solid #003A70; /* Flamingo color */
+        border: 1pt solid #C44D34;
         text-decoration: none;
         font-size: 14px;
         padding: 10px 15px 10px 15px;
+        color: black;
+        border-radius: 8px;
     }
 
      a {
@@ -44,7 +46,7 @@
                     <td style="background-color: #E8E8E8;color: #000;padding: 40px 30px 40px 30px;text-align: center;font-family: 'Arial', sans-serif;font-size: 22px;line-height: 1.5;">
                         <div> ${totalRecords} ${totalRecords == 1 ? 'dataset' : 'datasets'} ${totalRecords == 1 ? 'has' : 'have'} been updated
                         </div>
-                        <div>
+                        <div style="padding-top: 20px;">
                             <a class="btn info-button" href="${moreInfo}"><g:message code="datasets.view.details.of.the.added" /></a>
                         </div>
                     </td>
@@ -57,8 +59,9 @@
                             <table style="width: 100%">
                                 <tr style="vertical-align: top;">
                                     <td style="width: 70%">
-                                        <a href="${oclink}" style="font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;">
-                                            <strong>${i+1}. <em>${oc.label}</em></strong>
+                                        ${i+1}.
+                                        <a href="${oclink}" style="color: #003A70;text-decoration: none;">
+                                            <strong><em>${oc.label}</em></strong>
                                         </a>
 
                                         <p style="padding-left: 15px;">

@@ -47,7 +47,7 @@ a {
                             <table style="width: 100%">
                                 <tr style="vertical-align: top;">
                                     <td style="width: 70%">
-                                                <strong>${i+1}.<a href="${oclink}" style="color: #003A70;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;"> <em>${oc.listName}</em> </a></strong>
+                                                <strong>${i+1}. <a href="${oclink}" style="color: #003A70;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;"><em>${oc.listName}</em> </a></strong>
                                         <p style="padding-left: 15px;">
                                             <%
                                                 // Initialize a list to collect tags
@@ -56,8 +56,9 @@ a {
                                                 if (oc.isThreatened) tags << "Threatened"
                                                 if (oc.isInvasive) tags << "Invasive"
                                             %>
-
-                                            Tags: ${tags ? tags.join(', ') : ''} <br/>
+                                            <g:if test="${tags.size() > 0}">
+                                                Tags: ${tags.join(', ')} <br/>
+                                            </g:if>
 
                                             <g:if test="${oc.listType}">
                                                 Type: ${oc.listType}<br/>

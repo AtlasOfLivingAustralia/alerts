@@ -46,7 +46,7 @@
                             <tr style="vertical-align: top;">
                                 <td style="width: 33%">
 
-                                    <a href="${occurrencelink}" style="color: #C44D34;text-decoration: none;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;">
+                                    <a href="${occurrencelink}" style="color: #003A70;text-decoration: none;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;">
                                      <g:if test="${oc.scientificName?:oc.vernacularName ?: oc.raw_raw_scientificName}">
                                        <strong>${i+1}. <em>${oc.scientificName?:oc.vernacularName ?: oc.raw_raw_scientificName }</em></strong>
                                      </g:if>
