@@ -39,7 +39,7 @@ def main():
     output_text = template.render(values)
 
     # Write the output to the output file
-    with open(output_file, 'w') as output_file:
+    with open(args.output_file, 'w') as output_file:
         output_file.write(output_text)
 
 if __name__ == '__main__':
