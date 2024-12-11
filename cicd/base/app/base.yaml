@@ -27,6 +27,12 @@ Parameters:
   pClusterOidcIssuerUrl:
     Type: String
     Description: The OIDC issuer URL for the cluster
+  pCognitoStackName:
+    Type: String
+    Description: The name of the Cognito stack
+  pAppClientDomain:
+    Type: String
+    Description: The domain for the app client
 
 Conditions:
 
@@ -37,9 +43,24 @@ Conditions:
     - !Equals
       - !Ref pEnvironment
       - production
-  IsFirstBuild: !Equals [!Ref pBuild, "1"]
 
 Resources:
+
+  AlertsAppSecret:
+    Type: 'AWS::SecretsManager::Secret'
+    Properties:
+      Name: !Sub
+        - ${pProductName}-${ResourceName}
+        - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
+      Description: !Sub Alerts app ${pEnvironment} secrets
+      GenerateSecretString:
+        GenerateStringKey: db-password
+        PasswordLength: 12
+        ExcludeCharacters: "/@\" "
+        SecretStringTemplate: |
+          {
+            "db-password": ""
+          }
 
   AlertsRepository:
     Type: AWS::ECR::Repository
@@ -76,7 +97,7 @@ Resources:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: AES256
-      BucketName: !Sub 
+      BucketName: !Sub
               - ${pProductName}-${ResourceName}
               - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
       LifecycleConfiguration:
@@ -92,12 +113,13 @@ Resources:
         RestrictPublicBuckets: TRUE
       Tags:
         - Key: Name
-          Value: !Sub 
+          Value: !Sub
               - ${pProductName}-${ResourceName}
               - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
 
   AlertsRole:
     Type: AWS::IAM::Role
+    DependsOn: AlertsAppSecret
     Properties:
       AssumeRolePolicyDocument: !Sub |
         {
@@ -111,7 +133,7 @@ Resources:
                   "Action": "sts:AssumeRoleWithWebIdentity",
                   "Condition": {
                       "StringEquals": {
-                                        "${pClusterOidcIssuerUrl}:sub": "system:serviceaccount:${pProductName}:alerts-service-account",
+                                        "${pClusterOidcIssuerUrl}:sub": "system:serviceaccount:${pProductName}:alerts-service-account-${pCleanBranch}",
                                         "${pClusterOidcIssuerUrl}:aud": "sts.amazonaws.com"
                       }
                   }
@@ -137,7 +159,7 @@ Resources:
               Action:
                 - 'secretsmanager:getsecretvalue'
               Resource:
-                - !Sub ${AlertsSecret}-??????
+                - !Ref AlertsAppSecret
           PolicyName: secrets
         - PolicyDocument:
             Version: "2012-10-17"
@@ -180,15 +202,24 @@ Resources:
               Resource:
                 - '*'
           PolicyName: email
+        - PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - elasticloadbalancing:DescribeListenerAttributes
+                Resource:
+                  - '*'
+          PolicyName: describe-listener-attributes
       RoleName: !Sub
                    - ${pProductName}-${ResourceName}
                    - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
       Tags:
         - Key: Name
-          Value: !Sub 
+          Value: !Sub
               - ${pProductName}-${ResourceName}
               - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
- 
+
   AlertsInstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
@@ -198,23 +229,98 @@ Resources:
       Roles:
         - !Ref AlertsRole
 
-  AlertsSecret:
-    Type: AWS::SecretsManager::Secret
+  AppClient:
+    Type: AWS::Cognito::UserPoolClient
     Properties:
-      Name: !Sub 
-              - ${pProductName}-${ResourceName}
-              - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
-      Description: !Sub Alerts app ${pEnvironment} secrets
-      SecretString: !If
-              - IsFirstBuild
-              - |
-                {
-                   "oidc_secret" : "",
-                   "db-password" : "",
-                }
-              - !Ref "AWS::NoValue"
+      AccessTokenValidity: 60
+      AllowedOAuthFlows:
+        - code
+      AllowedOAuthFlowsUserPoolClient: True
+      AllowedOAuthScopes:
+        - email
+        - openid
+        - profile
+        - ala/roles
+        - ala/attrs
+      AuthSessionValidity: 3
+      CallbackURLs:
+        - !Sub "https://${pAppClientDomain}/callback?client_name=OidcClient"
+      ClientName: !Sub
+                    - ${pProductName}-${ResourceName}
+                    - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
+      DefaultRedirectURI: !Sub "https://${pAppClientDomain}/callback?client_name=OidcClient"
+      EnablePropagateAdditionalUserContextData: True
+      EnableTokenRevocation: True
+      ExplicitAuthFlows:
+        - ALLOW_ADMIN_USER_PASSWORD_AUTH
+        - ALLOW_CUSTOM_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+        - ALLOW_USER_SRP_AUTH
+      GenerateSecret: True
+      IdTokenValidity: 60
+      LogoutURLs:
+        - !Sub "https://${pAppClientDomain}"
+        - !Sub "https://${pAppClientDomain}/"
+        - !Sub "https://${pAppClientDomain}/notification/myAlerts"
+      PreventUserExistenceErrors: ENABLED
+      RefreshTokenValidity: 30
+      SupportedIdentityProviders:
+        - COGNITO
+        - Facebook
+        - Google
+        - AAF
+        - SignInWithApple
+      TokenValidityUnits:
+        AccessToken: minutes
+        IdToken: minutes
+        RefreshToken: days
+      UserPoolId: !ImportValue
+        Fn::Sub: ${pCognitoStackName}-UserPoolId
 
-
+  AppClientAlertsServerDev:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      AccessTokenValidity: 60
+      AllowedOAuthFlows:
+        - client_credentials
+      AllowedOAuthFlowsUserPoolClient: True
+      AllowedOAuthScopes:
+        - ala/internal
+        - ala/attrs
+        - users/read
+      AuthSessionValidity: 3
+      CallbackURLs:
+        - !Sub "https://${pAppClientDomain}/callback?client_name=OidcClient"
+      ClientName: !Sub
+                    - ${pProductName}-${ResourceName}-server-to-server
+                    - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
+      DefaultRedirectURI: !Sub "https://${pAppClientDomain}/callback?client_name=OidcClient"
+      EnablePropagateAdditionalUserContextData: True
+      EnableTokenRevocation: True
+      ExplicitAuthFlows:
+        - ALLOW_ADMIN_USER_PASSWORD_AUTH
+        - ALLOW_CUSTOM_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+        - ALLOW_USER_SRP_AUTH
+      GenerateSecret: True
+      IdTokenValidity: 60
+      LogoutURLs:
+        - !Sub "https://${pAppClientDomain}"
+        - !Sub "https://${pAppClientDomain}/notification/myAlerts"
+      PreventUserExistenceErrors: ENABLED
+      RefreshTokenValidity: 30
+      SupportedIdentityProviders:
+        - COGNITO
+        - Facebook
+        - Google
+        - AAF
+        - SignInWithApple
+      TokenValidityUnits:
+        AccessToken: minutes
+        IdToken: minutes
+        RefreshToken: days
+      UserPoolId: !ImportValue
+        Fn::Sub: ${pCognitoStackName}-UserPoolId
 
 Outputs:
 
@@ -227,9 +333,9 @@ Outputs:
     Value: !Ref AlertsRepository
 
   AlertsSecret:
-    Description: The Secrets name for alerts 
-    Value: !Ref AlertsSecret 
-  
+    Description: The Secrets name for alerts
+    Value: !Ref AlertsAppSecret
+
   BiosecurityAlertsBucket:
     Description: The S3 bucket for the Biosecurity Alerts service
     Value: !Ref BiosecurityAlertsBucket
@@ -237,3 +343,16 @@ Outputs:
   AlertsRoleArn:
     Description: The role ARN for the Alerts service
     Value: !GetAtt AlertsRole.Arn
+
+  UserPoolId:
+    Description: The Cognito User Pool ID
+    Value: !ImportValue
+      Fn::Sub: ${pCognitoStackName}-UserPoolId
+
+  AlertsAppClient:
+    Description: The app client for the alerts service
+    Value: !Ref AppClient
+
+  AlertsServerToServerAppClient:
+    Description: The app client for the alerts service
+    Value: !Ref AppClientAlertsServerDev

@@ -3,7 +3,7 @@ kind: Service
 metadata:
   labels:
     {{- include "ala-alerts.labels" . | nindent 4 }}
-  name: mysql-rds
+  name: "{{ .Values.rds.name }}"
 spec:
   type: ExternalName
   externalName: {{ .Values.rds.externalName }}

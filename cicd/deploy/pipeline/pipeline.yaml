@@ -35,6 +35,9 @@ Parameters:
   pProductName:
     Type: String
     Description: The name of the product
+  pDomainName:
+    Type: String
+    Description: The domain name
   pRestartExecutionOnUpdate:
     Type: String
     Description: Restart that pipeline if it's been updated
@@ -124,6 +127,27 @@ Resources:
         BuildSpec: !Sub cicd/${pProductComponent}/pipeline/deploy_notification_buildspec.yaml
       TimeoutInMinutes: 5
 
+  TeardownAlerts:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Sub
+        - ${pProductName}-${pProductComponent}-teardown-alerts-${ResourceName}
+        - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
+      Description: Teardown deployed alerts stack
+      ServiceRole:
+        Fn::ImportValue:
+          Fn::Sub: ${pBootstrapStackName}-CloudFormationServiceRoleArn
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/standard:7.0
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: !Sub cicd/${pProductComponent}/pipeline/teardown_alerts_buildspec.yaml
+      TimeoutInMinutes: 10
+
   Pipeline:
     Type: "AWS::CodePipeline::Pipeline"
     Properties:
@@ -181,6 +205,25 @@ Resources:
             Namespace: CheckoutSrcNS
             OutputArtifacts:
               - Name: 'SourceArtifact'
+            RunOrder: 1
+          - Name: CheckoutAnsibleRepo
+            ActionTypeId:
+              Category: Source
+              Owner: AWS
+              Provider: CodeStarSourceConnection
+              Version: 1
+            Configuration:
+              ConnectionArn:
+                Fn::ImportValue:
+                  Fn::Sub: ${pBootstrapStackName}-CodestarConnectionArn
+              FullRepositoryId: !Sub ${pGitHubOwner}/ansible-inventories
+              BranchName: master
+              OutputArtifactFormat: CODEBUILD_CLONE_REF
+              DetectChanges: !Ref pAutoDeploy
+            Namespace: CheckoutAdditionalRepoNS
+            OutputArtifacts:
+              - Name: 'AnsibleInventoriesSourceArtifact'
+            RunOrder: 2
       - Name: Deploy_Infrastructure_Build
         Actions:
           - Name: ExportConfig
@@ -224,10 +267,16 @@ Resources:
                   { "name":"DB_READ_ENDPOINT", "value":"#{ExportConfigNS.DB_READ_ENDPOINT}" },
                   { "name":"DB_WRITE_ENDPOINT", "value":"#{ExportConfigNS.DB_WRITE_ENDPOINT}" },
                   { "name":"EKS_CLUSTER_NAME", "value":"#{ExportConfigNS.EKS_CLUSTER_NAME}" },
-                  { "name":"BASE_STACK_NAME", "value":"#{ExportConfigNS.BASE_STACK_NAME}" }
+                  { "name":"HELM_RELEASE_NAME", "value":"#{ExportConfigNS.HELM_RELEASE_NAME}" },
+                  { "name":"BASE_STACK_NAME", "value":"#{ExportConfigNS.BASE_STACK_NAME}" },
+                  { "name":"HOSTED_ZONE", "value":"#{ExportConfigNS.HOSTED_ZONE}" },
+                  { "name":"DOMAIN_NAME", "value":"${pDomainName}" },
+                  { "name":"PRODUCT_NAME", "value":"#{ExportConfigNS.PRODUCT_NAME}" }
                 ]
+              PrimarySource: SourceArtifact
             InputArtifacts:
               - Name: 'SourceArtifact'
+              - Name: 'AnsibleInventoriesSourceArtifact'
             RunOrder: 2
 
           - Name: DeployNotification
@@ -267,6 +316,23 @@ Resources:
             Configuration:
               CustomData: Approval required to tear down this stack
             RunOrder: 1
+          - Name: TeardownAlerts
+            ActionTypeId:
+              Owner: AWS
+              Category: Build
+              Version: 1
+              Provider: CodeBuild
+            Configuration:
+              ProjectName: !Ref TeardownAlerts
+              EnvironmentVariables: !Sub |
+                [
+                  { "name":"CLEAN_BRANCH", "value":"${pCleanBranch}" },
+                  { "name":"EKS_CLUSTER_NAME", "value":"#{ExportConfigNS.EKS_CLUSTER_NAME}" },
+                  { "name":"HELM_RELEASE_NAME", "value":"#{ExportConfigNS.HELM_RELEASE_NAME}" }
+                ]
+            InputArtifacts:
+              - Name: 'SourceArtifact'
+            RunOrder: 2
           - Name: TeardownCodePipeline
             ActionTypeId:
               Owner: AWS
@@ -279,7 +345,7 @@ Resources:
               RoleArn:
                    Fn::ImportValue:
                      Fn::Sub: '${pBootstrapStackName}-CloudFormationServiceRoleArn'
-            RunOrder: 2
+            RunOrder: 3
 
   DeployAlertsCodeBuildLogGroup:
     Type: AWS::Logs::LogGroup
