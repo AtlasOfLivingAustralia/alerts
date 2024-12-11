@@ -343,11 +343,6 @@ Outputs:
     Description: The role ARN for the Alerts service
     Value: !GetAtt AlertsRole.Arn
 
-  UserPoolId:
-    Description: The Cognito User Pool ID
-    Value: !ImportValue
-      Fn::Sub: ${pCognitoStackName}-UserPoolId
-
   AlertsAppClient:
     Description: The app client for the alerts service
     Value: !Ref AppClient

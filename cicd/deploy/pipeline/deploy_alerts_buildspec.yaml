@@ -37,7 +37,7 @@ phases:
       - wget https://raw.githubusercontent.com/AtlasOfLivingAustralia/ala-install/refs/heads/master/ansible/roles/alerts/templates/alerts-config.properties
       - aws eks --region ap-southeast-2 update-kubeconfig --name $EKS_CLUSTER_NAME
       - |
-        USER_POOL_ID=$(aws cloudformation describe-stacks --stack-name $BASE_STACK_NAME \
+        USER_POOL_ID=$(aws cloudformation describe-stacks --stack-name $COGNITO_STACK_NAME \
           --query "Stacks[0].Outputs[?OutputKey=='UserPoolId'].OutputValue" --output text)
       - |
         CLIENT_ID=$(aws cloudformation describe-stacks --stack-name $BASE_STACK_NAME \
