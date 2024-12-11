@@ -119,7 +119,6 @@ Resources:
 
   AlertsRole:
     Type: AWS::IAM::Role
-    DependsOn: AlertsAppSecret
     Properties:
       AssumeRolePolicyDocument: !Sub |
         {
