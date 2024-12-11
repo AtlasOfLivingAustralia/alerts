@@ -270,7 +270,7 @@ Resources:
                   { "name":"HELM_RELEASE_NAME", "value":"#{ExportConfigNS.HELM_RELEASE_NAME}" },
                   { "name":"BASE_STACK_NAME", "value":"#{ExportConfigNS.BASE_STACK_NAME}" },
                   { "name":"HOSTED_ZONE", "value":"#{ExportConfigNS.HOSTED_ZONE}" },
-                  { "name":"DOMAIN_NAME", "value":"${ExportConfigNS.DOMAIN_NAME}" },
+                  { "name":"DOMAIN_NAME", "value":"${pDomainName}" },
                   { "name":"PRODUCT_NAME", "value":"#{ExportConfigNS.PRODUCT_NAME}" }
                 ]
               PrimarySource: SourceArtifact
