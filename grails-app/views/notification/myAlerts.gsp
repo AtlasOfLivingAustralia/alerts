@@ -23,13 +23,12 @@
           <header id="page-header">
               <div class="inner row-fluid">
                   <div class="content">
-                      <h1>
+                      <h2>
                           <g:message code="my.alerts.h1" args="[userPrefix]" />
                           <g:if test="${user.locked}">
-                              &nbsp;
                               <i class="fa fa-lock" data-toggle="tooltip" data-placement="bottom" title="${g.message(code:'my.alerts.user.isLocked.title')}"></i>
                           </g:if>
-                      </h1>
+                      </h2>
                   </div>
                   <div>
                       <% if (request.isUserInRole("ROLE_ADMIN")) { %>
@@ -50,112 +49,139 @@
           </g:if>
           <div id="page-body" role="main">
                 <g:set var="userId">${user.userId}</g:set>
-                <h3>
-                  <g:message code="my.alerts.send.me.alerts" />
+                <div>
+                  <p>
+                  Manage your ALA alerts, send to : ${user.email}
+                  </p>
+                  <p>
+                  <b>Send me alerts:</b>
                   <g:select name="userFrequency" from="${frequencies}" id="userFrequency" value="${user?.frequency?.name}" optionKey="name"
                             optionValue="${ { name->g.message(code: 'frequency.' + name) } }"
-                  />
-                </h3>
-            <div class="row">
-                <div class="col-md-6">
-                    <table>
-                        <tbody>
-                        <g:each in="${enabledQueries}" status="i" var="query">
-                            <tr class="${(i % 2) == 0 ? 'odd' : 'even'}">
-                                <td class="queryDescription">
-                                  <h3>${query.name}</h3>
-                                  ${query.description}
-                                </td>
-                                <td class="queryActions">
-                                    <div class="switch" data-on="danger">
-                                        <input id="${query.id}" class="query-cb" name="field2"  type="checkbox" checked />
-                                    </div>
-                                </td>
-                            </tr>
-                        </g:each>
-                        <g:each in="${disabledQueries}" status="i" var="query">
-                            <tr class="${(i % 2) == 0 ? 'odd' : 'even'}">
-                                <td class="queryDescription">
-                                  <h3>${query.name}</h3>
-                                  ${query.description}
-                                </td>
-                                <td class="queryActions">
-                                    <div class="switch" data-on="danger" >
-                                        <input  id="${query.id}" class="query-cb" name="field2"  type="checkbox" />
-                                    </div>
-                                </td>
-                            </tr>
-                        </g:each>
-
-                        %{--test if my annotation feature is turned on--}%
-                        <g:if test="${myannotation != null}">
-                            <g:set var="myannotationChecked" value="${myannotation.size() != 0}" />
-                            <tr>
-                                <td class="queryDescription">
-                                    <h3>My Annotations</h3>
-                                    Notify me when records I have flagged are updated.
-                                </td>
-                                <td class="queryActions">
-                                    <div class="switch" data-on="danger" >
-                                        <g:if test="${myannotationChecked}">
-                                            <input data-type='myannotation' class="query-cb" name="field2"  type="checkbox" checked/>
-                                        </g:if>
-                                        <g:else>
-                                            <input data-type='myannotation' class="query-cb" name="field2"  type="checkbox" />
-                                        </g:else>
-                                    </div>
-                                </td>
-                            </tr>
-                        </g:if>
-
-                        </tbody>
-                    </table>
-                    <g:if test="${customQueries}">
-                    <hr>
-                    <h2 id="customQueriesHdr"><g:message code="my.alerts.my.custom.alerts" /></h2>
-                    <table>
-                        <tbody id="customQueries">
-                        <g:each in="${customQueries}" status="i" var="query">
-                            <tr class="${(i % 2) == 0 ? 'odd' : 'even'}" id='custom-${query.id}'>
-                                <td class="queryDescription">
-                                  <h3>${query.name}</h3>
-                                  ${query.description}
-                                </td>
-                                <td class="queryActions">
-                                    <a href="javascript:void(0);" class='btn btn-ala deleteButton' id='${query.id}'><g:message code="my.alerts.delete.label" /></a>
-                                </td>
-                            </tr>
-                        </g:each>
-                        </tbody>
-                    </table>
-                    </g:if>
-                 </div>
-                <div class="col-md-6">
-                    <div class="well">
-                        <p><g:message code="my.alerts.enable.to.email" args="[user.email]" /></p>
-                        <p>
-                            <g:message code="my.alerts.sample.list.intro" args="[grailsApplication.config.skin.orgNameShort]" />
-                            <ul>
-                                <li>
-                                    <g:message code="my.alerts.data.resource.desc" args="[grailsApplication.config.collectory.searchURL, grailsApplication.config.collection.searchTitle]" />
-                                </li>
-                                <li>
-                                    <g:message code="my.alerts.species.desc" args="[grailsApplication.config.speciesPages.searchURL, grailsApplication.config.speciesPages.searchTitle]" />
-                                </li>
-                                <li>
-                                    <g:message code="my.alerts.region.desc" args="[grailsApplication.config.regions.searchURL, grailsApplication.config.regions.searchTitle]" />
-                                </li>
-                                <li>
-                                    <g:message code="my.alerts.new.record.desc" args="[grailsApplication.config.occurrence.searchURL, grailsApplication.config.occurrence.searchTitle]" />
-                                </li>
-                            </ul>
-                        </p>
-                        <p>
-                            <g:message code="my.alerts.look.for.btn" />
-                        </p>
-                    </div>
+                  /> &nbsp;
+                  This setting applies to all your active ALA alerts, including standard and custom alerts.
+                    </p>
                 </div>
-            </div>
+              <!-- Main Content starts -->
+              <div class="row">
+                      <ul class="nav nav-tabs" id="alertTabs" role="tablist">
+                          <li class="nav-item active" role="presentation">
+                              <a class="nav-link " id="standard-alerts-tab"  data-toggle="tab" href="#standard-alerts" role="tab" aria-controls="standard-alerts" >Standard Alerts</a>
+                          </li>
+                          <li class="nav-item" role="presentation">
+                              <a class="nav-link" id="custom-alerts-tab" data-toggle="tab" href="#custom-alerts"  role="tab" aria-controls="custom-alerts">Custom Alerts</a>
+                          </li>
+                      </ul>
+
+                      <!-- Tabs Content -->
+                      <div class="tab-content" id="alertTabsContent">
+                          <!-- Standard Alerts Tab -->
+                          <div class="tab-pane fade active in" id="standard-alerts" role="tabpanel" aria-labelledby="standard-alerts-tab">
+                            <div class="col-md-6">
+                                <div style="padding-top: 20px;">
+                                Enable alerts to have notifications sent to your email address.
+                                </div>
+                              <table>
+                                  <tbody>
+                                  <g:each in="${enabledQueries}" status="i" var="query">
+                                      <tr class="${(i % 2) == 0 ? 'odd' : 'even'}">
+                                          <td class="queryDescription">
+                                              <h3>${query.name}</h3>
+                                              ${query.description}
+                                          </td>
+                                          <td class="queryActions">
+                                              <div class="switch" data-on="danger">
+                                                  <input id="${query.id}" class="query-cb" name="field2" type="checkbox" checked />
+                                              </div>
+                                          </td>
+                                      </tr>
+                                  </g:each>
+                                  <g:each in="${disabledQueries}" status="i" var="query">
+                                      <tr class="${(i % 2) == 0 ? 'odd' : 'even'}">
+                                          <td class="queryDescription">
+                                              <h3>${query.name}</h3>
+                                              ${query.description}
+                                          </td>
+                                          <td class="queryActions">
+                                              <div class="switch" data-on="danger">
+                                                  <input id="${query.id}" class="query-cb" name="field2" type="checkbox" />
+                                              </div>
+                                          </td>
+                                      </tr>
+                                  </g:each>
+
+                                  <g:if test="${myannotation != null}">
+                                      <g:set var="myannotationChecked" value="${myannotation.size() != 0}" />
+                                      <tr>
+                                          <td class="queryDescription">
+                                              <h3>My Annotations</h3>
+                                              Notify me when records I have flagged are updated.
+                                          </td>
+                                          <td class="queryActions">
+                                              <div class="switch" data-on="danger">
+                                                  <g:if test="${myannotationChecked}">
+                                                      <input data-type='myannotation' class="query-cb" name="field2" type="checkbox" checked />
+                                                  </g:if>
+                                                  <g:else>
+                                                      <input data-type='myannotation' class="query-cb" name="field2" type="checkbox" />
+                                                  </g:else>
+                                              </div>
+                                          </td>
+                                      </tr>
+                                  </g:if>
+                                  </tbody>
+                              </table>
+                            </div>
+                          <div class="col-md-6">
+                              <br/>
+                              <div class="well">
+                                  <p>Your can set up specific alerts in various sections of the ALA, including</p>
+                                  <p>
+                                  <ul>
+                                      <li>
+                                          <g:message code="my.alerts.data.resource.desc" args="[grailsApplication.config.collectory.searchURL, grailsApplication.config.collection.searchTitle]" />
+                                      </li>
+                                      <li>
+                                          <g:message code="my.alerts.species.desc" args="[grailsApplication.config.speciesPages.searchURL, grailsApplication.config.speciesPages.searchTitle]" />
+                                      </li>
+                                      <li>
+                                          <g:message code="my.alerts.region.desc" args="[grailsApplication.config.regions.searchURL, grailsApplication.config.regions.searchTitle]" />
+                                      </li>
+                                      <li>
+                                          <g:message code="my.alerts.new.record.desc" args="[grailsApplication.config.occurrence.searchURL, grailsApplication.config.occurrence.searchTitle]" />
+                                      </li>
+                                  </ul>
+                              </p>
+                                  <p>
+                                      <g:message code="my.alerts.look.for.btn" />
+                                  </p>
+                              </div>
+                          </div>
+
+                          </div>
+
+                          <!-- Custom Alerts Tab -->
+                          <div class="tab-pane fade col-md-6" id="custom-alerts" role="tabpanel" aria-labelledby="custom-alerts-tab">
+                              <g:if test="${customQueries}">
+                                  <table>
+                                      <tbody id="customQueries">
+                                      <g:each in="${customQueries}" status="i" var="query">
+                                          <tr class="${(i % 2) == 0 ? 'odd' : 'even'}" id='custom-${query.id}'>
+                                              <td class="queryDescription">
+                                                  <h3>${query.name}</h3>
+                                                  ${query.description}
+                                              </td>
+                                              <td class="queryActions">
+                                                  <a href="javascript:void(0);" class='btn btn-ala deleteButton' id='${query.id}'><g:message code="my.alerts.delete.label" /></a>
+                                              </td>
+                                          </tr>
+                                      </g:each>
+                                      </tbody>
+                                  </table>
+                              </g:if>
+                          </div>
+                      </div>
+                  </div>
+ <!-- end main content -->
           </div>
       </div>
       <asset:javascript src="alerts.js"/>
