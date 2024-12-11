@@ -35,6 +35,9 @@ Parameters:
   pProductName:
     Type: String
     Description: The name of the product
+  pDomainName:
+    Type: String
+    Description: The domain name
   pRestartExecutionOnUpdate:
     Type: String
     Description: Restart that pipeline if it's been updated
@@ -267,6 +270,7 @@ Resources:
                   { "name":"HELM_RELEASE_NAME", "value":"#{ExportConfigNS.HELM_RELEASE_NAME}" },
                   { "name":"BASE_STACK_NAME", "value":"#{ExportConfigNS.BASE_STACK_NAME}" },
                   { "name":"HOSTED_ZONE", "value":"#{ExportConfigNS.HOSTED_ZONE}" },
+                  { "name":"DOMAIN_NAME", "value":"${ExportConfigNS.DOMAIN_NAME}" },
                   { "name":"PRODUCT_NAME", "value":"#{ExportConfigNS.PRODUCT_NAME}" }
                 ]
               PrimarySource: SourceArtifact

@@ -84,7 +84,7 @@ phases:
       - |
         helm upgrade --install $HELM_RELEASE_NAME . -n alerts \
           --set image.repository=$REPO --set image.tag=$IMAGE_TAG \
-          --set ingress.hostname=$PRODUCT_NAME-$CLEAN_BRANCH.$HOSTED_ZONE \
+          --set ingress.hostname=$DOMAIN_NAME \
           --set rds.externalName=$DB_WRITE_ENDPOINT --set ingress.certificateArn=$CERTIFICATE_ARN \
           --set secret.name=alerts-config-secret-$CLEAN_BRANCH \
           --set serviceAccount.name=alerts-service-account-$CLEAN_BRANCH \
