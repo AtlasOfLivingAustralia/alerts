@@ -330,6 +330,12 @@ Outputs:
   AlertsRepositoryName:
     Description: The ECR repository ARN for the Alerts service
     Value: !Ref AlertsRepository
+  
+  AlertsRepositoryUri:
+    Description: The ECR repository URI for the Alerts service
+    Value: !GetAtt AlertsRepository.RepositoryUri
+    Export:
+      Name: !Sub ${AWS::StackName}-AlertsRepositoryUri
 
   AlertsSecret:
     Description: The Secrets name for alerts
