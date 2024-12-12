@@ -263,15 +263,16 @@ Resources:
                     [
                       { "name":"ALERTS_SECRET_NAME", "value":"#{ExportConfigNS.ALERTS_SECRET_NAME}" },
                       { "name":"AWS_ACCOUNT_ID", "value":"${AWS::AccountId}" },
-                      { "name":"ECR_REPO", "value":"${EcrRepo}" },
+                      { "name":"BASE_STACK_NAME", "value":"#{ExportConfigNS.BASE_STACK_NAME}" },
                       { "name":"CLEAN_BRANCH", "value":"${pCleanBranch}" },
+                      { "name":"COGNITO_STACK_NAME", "value":"#{ExportConfigNS.COGNITO_STACK_NAME}" },
                       { "name":"DB_READ_ENDPOINT", "value":"#{ExportConfigNS.DB_READ_ENDPOINT}" },
                       { "name":"DB_WRITE_ENDPOINT", "value":"#{ExportConfigNS.DB_WRITE_ENDPOINT}" },
+                      { "name":"DOMAIN_NAME", "value":"${pDomainName}" },
+                      { "name":"ECR_REPO", "value":"${EcrRepo}" },
                       { "name":"EKS_CLUSTER_NAME", "value":"#{ExportConfigNS.EKS_CLUSTER_NAME}" },
                       { "name":"HELM_RELEASE_NAME", "value":"#{ExportConfigNS.HELM_RELEASE_NAME}" },
-                      { "name":"BASE_STACK_NAME", "value":"#{ExportConfigNS.BASE_STACK_NAME}" },
                       { "name":"HOSTED_ZONE", "value":"#{ExportConfigNS.HOSTED_ZONE}" },
-                      { "name":"DOMAIN_NAME", "value":"${pDomainName}" },
                       { "name":"PRODUCT_NAME", "value":"#{ExportConfigNS.PRODUCT_NAME}" }
                     ]
                 - EcrRepo: !ImportValue
