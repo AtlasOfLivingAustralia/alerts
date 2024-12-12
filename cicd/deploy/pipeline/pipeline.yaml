@@ -5,6 +5,9 @@ Parameters:
   pAutoDeploy:
     Type: String
     Description: Sets the pipeline to auto deploy on repo changes
+  pBaseStackName:
+    Type: String
+    Description: the name of the base stack
   pBootstrapStackName:
     Type: String
     Description: the name of the bootstrap stack
@@ -258,21 +261,24 @@ Resources:
               Provider: CodeBuild
             Configuration:
               ProjectName: !Ref DeployAlerts
-              EnvironmentVariables: !Sub |
-                [
-                  { "name":"ALERTS_SECRET_NAME", "value":"#{ExportConfigNS.ALERTS_SECRET_NAME}" },
-                  { "name":"AWS_ACCOUNT_ID", "value":"${AWS::AccountId}" },
-                  { "name":"ALERTS_ECR_REPOSITORY_NAME", "value":"#{ExportConfigNS.ALERTS_ECR_REPOSITORY_NAME}" },
-                  { "name":"CLEAN_BRANCH", "value":"${pCleanBranch}" },
-                  { "name":"DB_READ_ENDPOINT", "value":"#{ExportConfigNS.DB_READ_ENDPOINT}" },
-                  { "name":"DB_WRITE_ENDPOINT", "value":"#{ExportConfigNS.DB_WRITE_ENDPOINT}" },
-                  { "name":"EKS_CLUSTER_NAME", "value":"#{ExportConfigNS.EKS_CLUSTER_NAME}" },
-                  { "name":"HELM_RELEASE_NAME", "value":"#{ExportConfigNS.HELM_RELEASE_NAME}" },
-                  { "name":"BASE_STACK_NAME", "value":"#{ExportConfigNS.BASE_STACK_NAME}" },
-                  { "name":"HOSTED_ZONE", "value":"#{ExportConfigNS.HOSTED_ZONE}" },
-                  { "name":"DOMAIN_NAME", "value":"${pDomainName}" },
-                  { "name":"PRODUCT_NAME", "value":"#{ExportConfigNS.PRODUCT_NAME}" }
-                ]
+              EnvironmentVariables: !Sub 
+                - |
+                    [
+                      { "name":"ALERTS_SECRET_NAME", "value":"#{ExportConfigNS.ALERTS_SECRET_NAME}" },
+                      { "name":"AWS_ACCOUNT_ID", "value":"${AWS::AccountId}" },
+                      { "name":"ECR_REPO", "value":"${EcrRepo}" },
+                      { "name":"CLEAN_BRANCH", "value":"${pCleanBranch}" },
+                      { "name":"DB_READ_ENDPOINT", "value":"#{ExportConfigNS.DB_READ_ENDPOINT}" },
+                      { "name":"DB_WRITE_ENDPOINT", "value":"#{ExportConfigNS.DB_WRITE_ENDPOINT}" },
+                      { "name":"EKS_CLUSTER_NAME", "value":"#{ExportConfigNS.EKS_CLUSTER_NAME}" },
+                      { "name":"HELM_RELEASE_NAME", "value":"#{ExportConfigNS.HELM_RELEASE_NAME}" },
+                      { "name":"BASE_STACK_NAME", "value":"#{ExportConfigNS.BASE_STACK_NAME}" },
+                      { "name":"HOSTED_ZONE", "value":"#{ExportConfigNS.HOSTED_ZONE}" },
+                      { "name":"DOMAIN_NAME", "value":"${pDomainName}" },
+                      { "name":"PRODUCT_NAME", "value":"#{ExportConfigNS.PRODUCT_NAME}" }
+                    ]
+                - EcrRepo: !ImportValue
+                    Fn::Sub: '${pBaseStackName}-AlertsRepositoryUri'
               PrimarySource: SourceArtifact
             InputArtifacts:
               - Name: 'SourceArtifact'
