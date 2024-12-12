@@ -1,15 +1,15 @@
 {
   "Parameters" : {
-    "pBuild"                : "{{ codebuild_build_number }}",
+    "pAppClientDomain"      : "{{ app_client_domain }}"
     "pBackupBucket"          : "{{ backup_bucket }}",
+    "pBuild"                : "{{ codebuild_build_number }}",
     "pCleanBranch"          : "{{ clean_branch }}",
+    "pClusterOidcIssuerUrl" : "{{ cluster_oidc_issuer_url }}",
+    "pCognitoStackName"     : "{{ cognito_stack_name }}",
     "pEnvironment"          : "{{ environment }}",
+    "pOidcConnectProvider"  : "{{ oidc_connect_provider }}",
     "pProductComponent"     : "{{ product_component }}",
     "pProductName"          : "{{ product_name }}",
-    "pClusterOidcIssuerUrl" : "{{ cluster_oidc_issuer_url }}",
-    "pOidcConnectProvider"  : "{{ oidc_connect_provider }}",
-    "pCognitoStackName"     : "{{ cognito_stack_name }}",
-    "pAppClientDomain"      : "{{ app_client_domain }}"
   },
   "Tags" : {
     "product"     : "{{ product_name }}",
