@@ -17,6 +17,11 @@ phases:
       - java -version
       - update-alternatives --config java
       - update-alternatives --config javac
+      - update-alternatives --set java /usr/lib/jvm/java-11-openjdk-amd64/bin/java
+      - update-alternatives --set javac /usr/lib/jvm/java-11-openjdk-amd64/bin/javac
+      - java -version
+      - update-alternatives --config java
+      - update-alternatives --config javac
       - ./gradlew clean
       - ./gradlew assemble
 
