@@ -9,6 +9,8 @@ env:
 
 phases:
   install:
+    runtime-versions:
+      java: corretto11
     commands:
       - echo Installing dependencies...
       - cat /etc/lsb-release
@@ -17,6 +19,10 @@ phases:
       - chmod a+x /root/.sdkman/bin/sdkman-init.sh
       - source /root/.sdkman/bin/sdkman-init.sh && sdk install grails 6.0.0 /root/.sdkman/candidates/grails/6.0.0
       - apt-get install -y apt-transport-https ca-certificates software-properties-common
+      - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+      - add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+      - apt-get update
+      - apt-get install -y docker-ce
       #- apt-get -q -y install openjdk-11-jdk
       - java -version
       - update-alternatives --config java
