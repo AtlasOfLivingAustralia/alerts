@@ -16,6 +16,7 @@ phases:
       - curl -s "https://get.sdkman.io" | bash
       - chmod a+x /root/.sdkman/bin/sdkman-init.sh
       - source /root/.sdkman/bin/sdkman-init.sh && sdk install grails 6.0.0 /root/.sdkman/candidates/grails/6.0.0
+      - apt-get install -y apt-transport-https ca-certificates software-properties-common
       #- apt-get -q -y install openjdk-11-jdk
       - java -version
       - update-alternatives --config java
