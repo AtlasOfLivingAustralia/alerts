@@ -139,6 +139,7 @@ aws cloudformation deploy \
     --parameter-overrides \
         pAutoDeploy=$AUTO_DEPLOY \
         pBootstrapStackName=$BOOTSTRAP_STACK_NAME \
+        pBaseStackName=$BASE_STACK_NAME \
         pBucketsStackName=$BUCKETS_STACK_NAME \
         pCleanBranch=$clean_branch \
         pEnvironment=$environment \
