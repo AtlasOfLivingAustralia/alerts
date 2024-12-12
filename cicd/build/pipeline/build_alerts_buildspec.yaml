@@ -13,12 +13,12 @@ phases:
       - echo Installing dependencies...
       - cat /etc/lsb-release
       - apt update -y
-      - apt-get -q -y install openjdk-11-jdk
+      #- apt-get -q -y install openjdk-11-jdk
       - java -version
       - update-alternatives --config java
       - update-alternatives --config javac
-      - update-alternatives --set java /usr/lib/jvm/java-11-openjdk-amd64/bin/java
-      - update-alternatives --set javac /usr/lib/jvm/java-11-openjdk-amd64/bin/javac
+      - update-alternatives --set java /usr/lib/jvm/java-11-amazon-corretto/bin/java
+      - update-alternatives --set javac /usr/lib/jvm/java-11-amazon-corretto/bin/javac
       - java -version
       - update-alternatives --config java
       - update-alternatives --config javac
