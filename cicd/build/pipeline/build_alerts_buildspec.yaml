@@ -13,25 +13,17 @@ phases:
       java: corretto11
     commands:
       - echo Installing dependencies...
-      - cat /etc/lsb-release
       - apt update -y
-      - curl -s "https://get.sdkman.io" | bash
-      - chmod a+x /root/.sdkman/bin/sdkman-init.sh
-      - source /root/.sdkman/bin/sdkman-init.sh && sdk install grails 6.0.0 /root/.sdkman/candidates/grails/6.0.0
-      - apt-get install -y apt-transport-https ca-certificates software-properties-common
-      - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
-      - add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-      - apt-get update
-      - apt-get install -y docker-ce
-      #- apt-get -q -y install openjdk-11-jdk
+        && cat /etc/lsb-release
+        && curl -s "https://get.sdkman.io" | bash
+        && chmod a+x /root/.sdkman/bin/sdkman-init.sh
+        && source /root/.sdkman/bin/sdkman-init.sh && sdk install grails 6.0.0 /root/.sdkman/candidates/grails/6.0.0
+        && apt-get install -y apt-transport-https ca-certificates software-properties-common
+        && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+        && add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+        && apt-get update
+        && apt-get install -y docker-ce
       - java -version
-      - update-alternatives --config java
-      - update-alternatives --config javac
-      #- update-alternatives --set java /usr/lib/jvm/java-11-amazon-corretto/bin/java
-      #- update-alternatives --set javac /usr/lib/jvm/java-11-amazon-corretto/bin/javac
-      #- java -version
-      #- update-alternatives --config java
-      #- update-alternatives --config javac
       - ./gradlew clean
       - ./gradlew assemble
 
