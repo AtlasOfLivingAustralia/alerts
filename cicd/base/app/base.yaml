@@ -119,7 +119,6 @@ Resources:
 
   AlertsRole:
     Type: AWS::IAM::Role
-    DependsOn: AlertsAppSecret
     Properties:
       AssumeRolePolicyDocument: !Sub |
         {
@@ -331,6 +330,12 @@ Outputs:
   AlertsRepositoryName:
     Description: The ECR repository ARN for the Alerts service
     Value: !Ref AlertsRepository
+  
+  AlertsRepositoryUri:
+    Description: The ECR repository URI for the Alerts service
+    Value: !GetAtt AlertsRepository.RepositoryUri
+    Export:
+      Name: !Sub ${AWS::StackName}-AlertsRepositoryUri
 
   AlertsSecret:
     Description: The Secrets name for alerts
@@ -343,11 +348,6 @@ Outputs:
   AlertsRoleArn:
     Description: The role ARN for the Alerts service
     Value: !GetAtt AlertsRole.Arn
-
-  UserPoolId:
-    Description: The Cognito User Pool ID
-    Value: !ImportValue
-      Fn::Sub: ${pCognitoStackName}-UserPoolId
 
   AlertsAppClient:
     Description: The app client for the alerts service

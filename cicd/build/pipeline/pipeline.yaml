@@ -8,6 +8,9 @@ Parameters:
   pBootstrapStackName:
     Type: String
     Description: the name of the bootstrap stack
+  pBaseStackName:
+    Type: String
+    Description: the name of the base stack
   pBucketsStackName:
     Type: String
     Description: the name of the bucket stack
@@ -233,12 +236,16 @@ Resources:
               Provider: CodeBuild
             Configuration:
               ProjectName: !Ref BuildAlerts
-              EnvironmentVariables: !Sub |
-                [
-                  { "name":"ALERTS_ECR_REPOSITORY_NAME", "value":"#{ExportConfigNS.ALERTS_ECR_REPOSITORY_NAME}" },
-                  { "name":"AWS_ACCOUNT_ID", "value":"${AWS::AccountId}" },
-                  { "name":"CLEAN_BRANCH", "value":"${pCleanBranch}" }
-                ]
+              EnvironmentVariables: !Sub 
+               - |
+                   [
+                     { "name":"ECR_REPO", "value":"${EcrRepo}" },
+                     { "name":"AWS_ACCOUNT_ID", "value":"${AWS::AccountId}" },
+                     { "name":"CLEAN_BRANCH", "value":"${pCleanBranch}" }
+                   ]
+               - EcrRepo:
+                      Fn::ImportValue:
+                        Fn::Sub: "${pBaseStackName}-AlertsRepositoryUri"
             InputArtifacts:
               - Name: 'SourceArtifact'
             RunOrder: 2

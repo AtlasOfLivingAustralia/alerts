@@ -4,6 +4,8 @@ env:
   shell: bash
   variables:
     JAVA_TOOL_OPTIONS: -Dhttps.protocols=TLSv1.2
+  exported-variables:
+    - BUILD_TAG
 
 phases:
   install:
@@ -13,13 +15,10 @@ phases:
       - echo Installing dependencies...
       - apt update -y
         && cat /etc/lsb-release
-        && apt-get -q -y install unzip
-        && apt-get -q -y install zip
-        && apt-get -q -y install curl
         && curl -s "https://get.sdkman.io" | bash
         && chmod a+x /root/.sdkman/bin/sdkman-init.sh
         && source /root/.sdkman/bin/sdkman-init.sh && sdk install grails 6.0.0 /root/.sdkman/candidates/grails/6.0.0
-        && apt-get install -y apt-transport-https ca-certificates curl software-properties-common
+        && apt-get install -y apt-transport-https ca-certificates software-properties-common
         && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
         && add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
         && apt-get update
@@ -32,7 +31,7 @@ phases:
     commands:
       - echo Build started on $(date)
       - echo Building the project...
-      - ./gradlew build
+      - ./gradlew build --stacktrace
       - ./gradlew bootWar
 
   post_build:
@@ -45,11 +44,11 @@ phases:
       - echo Building the Docker image...
       - docker build -t ala-alerts .
       - echo Tagging the Docker image...
-      - export REPO=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ALERTS_ECR_REPOSITORY_NAME
-      - echo REPO=$REPO
+      - BUILD_TAG=$CLEAN_BRANCH-$CODEBUILD_BUILD_NUMBER
+      - echo build tag is $BUILD_TAG
       - echo tagging
-      - docker tag ala-alerts:latest $REPO:$CLEAN_BRANCH-$CODEBUILD_BUILD_NUMBER
-      - docker tag ala-alerts:latest $REPO:latest
+      - docker tag ala-alerts:latest $ECR_REPO:$BUILD_TAG
+      - docker tag ala-alerts:latest $ECR_REPO:latest
       - echo Pushing the Docker image to Amazon ECR...
-      - docker push $REPO:$CLEAN_BRANCH-$CODEBUILD_BUILD_NUMBER
-      - docker push $REPO:latest
+      - docker push $ECR_REPO:$BUILD_TAG
+      - docker push $ECR_REPO:latest

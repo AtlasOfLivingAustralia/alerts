@@ -14,7 +14,6 @@ env:
     - PRODUCT_COMPONENT
     - SLACK_DEPLOY_NOTIFICATION
     - SLACK_ALERT_CHANNEL
-    - ALERTS_ECR_REPOSITORY_NAME
 
 phases:
 
@@ -57,9 +56,7 @@ phases:
       - set -a ; source env.txt ; set +a
       # import stack export from the base cloudformation stack
       - echo importing stack output...
-      - ALERTS_ECR_REPOSITORY_NAME=$(aws cloudformation describe-stacks --stack-name $BASE_STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='AlertsRepositoryName'].OutputValue" --output text)
       - ALERTS_SECRETS=$(aws cloudformation describe-stacks --stack-name $BASE_STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='AlertsSecrets'].OutputValue" --output text)
-      - echo ALERTS_ECR_REPOSITORY_NAME=$ALERTS_ECR_REPOSITORY_NAME
       - echo ALERTS_SECRETS=$ALERTS_SECRETS
     finally:
       - #echo This always runs
