@@ -17,6 +17,17 @@
                 $('[data-toggle="tooltip"]').tooltip()
             })
         </script>
+
+        <style>
+            .query-cb {
+                height: 40px; /* Define the height of the input */
+                padding: 0 20px; /* Add padding for internal spacing */
+                border: 1px solid #000; /* Add a border for visibility */
+                border-radius: 20px; /* Set radius to half of the height */
+                outline: none; /* Remove focus outline */
+                box-sizing: border-box; /* Ensure padding doesn't affect size */
+            }
+        </style>
     </head>
     <body>
       <div id="content">
@@ -76,7 +87,7 @@
                       <div class="tab-content" id="alertTabsContent">
                           <!-- Standard Alerts Tab -->
                           <div class="tab-pane fade active in" id="standard-alerts" role="tabpanel" aria-labelledby="standard-alerts-tab">
-                            <div class="col-md-6">
+                            <div class="col-md-7">
                                 <div style="padding-top: 20px;">
                                 Enable alerts to have notifications sent to your email address.
                                 </div>
@@ -131,7 +142,7 @@
                                   </tbody>
                               </table>
                             </div>
-                          <div class="col-md-6">
+                          <div class="col-md-5">
                               <br/>
                               <div class="well">
                                   <p>Your can set up specific alerts in various sections of the ALA, including</p>

@@ -51,10 +51,7 @@
                                         </g:if>
                                     </a>
                                     <p style="padding-left: 15px;">
-                                        <g:if test="${oc.taxonRankID > 5000}"><i></g:if>
                                         ${oc.vernacularName}<br/>
-                                        <g:if test="${oc.taxonRankID > 5000}"></i></g:if>
-
                                         <g:if test="${oc.stateProvince}">
                                             ${oc.stateProvince}<br/>
                                         </g:if>

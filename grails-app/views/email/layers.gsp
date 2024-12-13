@@ -49,7 +49,7 @@
                 <tr style="vertical-align: top;">
                   <td style="width: 70%">
                     <a href="${oclink}" style="color: #003A70;text-decoration: none;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;">
-                      <strong>${i+1}. <em>${oc.displayname}</em></strong>
+                      <strong>${i+1}. <strong>${oc.displayname}</strong></strong>
                     </a>
                     <p style="padding-left: 15px;">
                       <g:if test="${oc.keywords}">
@@ -62,7 +62,7 @@
                         Extents: Latitude ${oc.minlatitude} to ${oc.maxlatitude}, Longitude ${oc.minlongitude} to ${oc.maxlongitude}<br/>
                       </g:if>
                       <g:if test="${oc.licence_notes}">
-                        Licence: <a href="${oc.licence_link}">${oc.licence_notes}</a><br/>
+                        Licence: <a href="${oc.licence_link}" style="color: #003A70;text-decoration: none;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;">${oc.licence_notes}</a><br/>
                       </g:if>
                       <br/>
                       <g:if test="${oc.description}">

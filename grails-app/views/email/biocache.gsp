@@ -49,7 +49,7 @@
                             <tr style="vertical-align: top;">
                                 <td style="width: 37%">
                                     <g:if test="${oc.scientificName?: oc.vernacularName ?: oc.raw_raw_scientificName}">
-                                        <strong>${i+1}. <em><a href="${occurrencelink}">${oc.scientificName?: oc.vernacularName ?: oc.raw_raw_scientificName}</a></em></strong>
+                                        <strong>${i+1}. <em><a href="${occurrencelink}" style="color: #003A70;text-decoration: none;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;">${oc.scientificName?: oc.vernacularName ?: oc.raw_raw_scientificName}</a></em></strong>
                                     </g:if>
                                     <p style="padding-left: 15px;">
                                         <g:if test="${oc.vernacularName}">

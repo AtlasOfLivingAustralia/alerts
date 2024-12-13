@@ -15,7 +15,7 @@
         font-size: 14px;
         padding: 10px 15px 10px 15px;
         color: black;
-        border-radius: 8px;
+        border-radius: 5px;
     }
 
      a {
@@ -61,7 +61,7 @@
                                     <td style="width: 70%">
                                         ${i+1}.
                                         <a href="${oclink}" style="color: #003A70;text-decoration: none;">
-                                            <strong><em>${oc.label}</em></strong>
+                                            <strong>${oc.label}</strong>
                                         </a>
 
                                         <p style="padding-left: 15px;">
