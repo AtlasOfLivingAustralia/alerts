@@ -196,9 +196,17 @@ Resources:
     Type: 'AWS::RDS::DBInstance'
     Condition: IsServerlessV2
     Properties:
-      Engine: aurora-mysql
       DBInstanceClass: db.serverless
+      DBInstanceIdentifier: !Sub ${pDbInstanceName}-serverless
+      DBParameterGroupName: !Ref DbParamGrp
+      DBSubnetGroupName: !Ref DbSubnetGrp
       DBClusterIdentifier: !Ref DbCluster
+      Engine: aurora-mysql
+      PubliclyAccessible: false
+      EnablePerformanceInsights: !Ref pPerformanceInsights
+      Tags:
+      - Key: Name
+        Value: Alerts DB primary
 
   RdsPrimary:
     Type: AWS::RDS::DBInstance
@@ -251,7 +259,7 @@ Resources:
       ServiceNamespace: rds
 
   AuroraScalingPolicy:
-    Type : "AWS::ApplicationAutoScaling::ScalingPolicy"
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
     Properties:
       PolicyName: Alerts Aurora scaling policy
       PolicyType: TargetTrackingScaling
