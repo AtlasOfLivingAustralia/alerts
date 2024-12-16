@@ -73,9 +73,6 @@ Parameters:
     Type: String
 
 Conditions: 
-  CreateReplica: !Equals
-                    - !Ref pCreateReplica
-                    - true
   IsDev: !Equals
             - !Ref pEnvironment
             - development
@@ -92,6 +89,12 @@ Conditions:
   IsServerlessV2: !Equals
                     - !Ref pEngineMode
                     - serverlessv2
+  CreateReplica: !And
+                   - !Equals
+                     - !Ref pCreateReplica
+                     - true
+                   - !Condition IsProvisioned
+
 
 Resources:
 
@@ -188,6 +191,14 @@ Resources:
           Value: Alerts DB Cluster
       VpcSecurityGroupIds:
         - !Ref DbSecurityGrp
+
+  RdsServerless:
+    Type: 'AWS::RDS::DBInstance'
+    Condition: IsServerlessV2
+    Properties:
+      Engine: aurora-mysql
+      DBInstanceClass: db.serverless
+      DBClusterIdentifier: !Ref DbCluster
 
   RdsPrimary:
     Type: AWS::RDS::DBInstance
