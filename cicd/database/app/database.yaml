@@ -171,9 +171,7 @@ Resources:
         - error
         - slowquery
       Engine: aurora-mysql
-      EngineMode: !If IsServerlessV2
-                    - !Ref AWS::NoValue
-                    - provisioned
+      EngineMode: !If [IsServerlessV2, !Ref AWS::NoValue, "provisioned"]
       EngineVersion: !Ref pDbVersion
       MasterUsername: !Ref pAdminUser
       MasterUserPassword: !Sub
