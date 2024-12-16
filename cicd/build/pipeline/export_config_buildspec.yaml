@@ -14,6 +14,17 @@ env:
     - PRODUCT_COMPONENT
     - SLACK_DEPLOY_NOTIFICATION
     - SLACK_ALERT_CHANNEL
+    - ALERTS_SECRET_NAME
+    - BASE_STACK_FILE_PFIX
+    - BASE_STACK_NAME
+    - CODEBUILD_BUILD_NUMBER
+    - COGNITO_STACK_NAME
+    - DB_READ_ENDPOINT
+    - DB_WRITE_ENDPOINT
+    - DOMAIN_NAME
+    - EKS_CLUSTER_NAME
+    - HELM_RELEASE_NAME
+    - HOSTED_ZONE
 
 phases:
 
@@ -58,6 +69,21 @@ phases:
       - echo importing stack output...
       - ALERTS_SECRETS=$(aws cloudformation describe-stacks --stack-name $BASE_STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='AlertsSecrets'].OutputValue" --output text)
       - echo ALERTS_SECRETS=$ALERTS_SECRETS
+      - ALERTS_SECRET_NAME_ARN=$(aws cloudformation describe-stacks --stack-name $BASE_STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='AlertsSecret'].OutputValue" --output text)
+      - ALERTS_SECRET_NAME=$(echo $ALERTS_SECRET_NAME_ARN | cut -d':' -f7 | rev | cut -d'-' -f2- | rev)
+      - echo ALERTS_SECRET_NAME=$ALERTS_SECRET_NAME
+      - |
+        if [[ "$CLEAN_BRANCH" != "develop" && "$CLEAN_BRANCH" != "testing" && "$CLEAN_BRANCH" != "staging" && "$CLEAN_BRANCH" != "production" ]]; then
+          ALERTS_SECRET_NAME="alerts-develop"
+        fi
+      - echo ALERTS_SECRET_NAME=$ALERTS_SECRET_NAME
+      - DB_READ_ENDPOINT=$(aws cloudformation describe-stacks --stack-name $DATABASE_STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='ReadEndpoint'].OutputValue" --output text)
+      - DB_WRITE_ENDPOINT=$(aws cloudformation describe-stacks --stack-name $DATABASE_STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='WriteEndpoint'].OutputValue" --output text)
+      - echo ALERTS_SECRET_NAME=$ALERTS_SECRET_NAME
+      - echo DB_READ_ENDPOINT=$DB_READ_ENDPOINT
+      - echo DB_WRITE_ENDPOINT=$DB_WRITE_ENDPOINT
+      - export EKS_CLUSTER_NAME=$(aws cloudformation list-exports --query "Exports[?Name=='$REGOLITH_STACK_NAME-ClusterName'].Value" --output text)
+      - echo EKS_CLUSTER_NAME=$EKS_CLUSTER_NAME
     finally:
       - #echo This always runs
 
