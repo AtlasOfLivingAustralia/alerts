@@ -37,6 +37,13 @@ Parameters:
     AllowedValues:
       - true
       - false
+  pEngineMode:
+    Description: Specify the EngineMode. provisioned or serverlessv2
+    Type: String
+    AllowedValues:
+      - provisioned
+      - serverlessv2
+    Default: provisioned
   pEnvironment:
     Description: Environment for this RDS instance
     AllowedValues:
@@ -79,6 +86,12 @@ Conditions:
                           - !Equals
                               - !Ref pRdsSnapshotRestore
                               - false
+  IsProvisioned: !Equals 
+                   - !Ref pEngineMode
+                   - provisioned
+  IsServerlessV2: !Equals
+                    - !Ref pEngineMode
+                    - serverlessv2
 
 Resources:
 
@@ -155,7 +168,7 @@ Resources:
         - error
         - slowquery
       Engine: aurora-mysql
-      EngineMode: provisioned
+      EngineMode: !If [IsServerlessV2, "serverless", "provisioned"]
       EngineVersion: !Ref pDbVersion
       MasterUsername: !Ref pAdminUser
       MasterUserPassword: !Sub
@@ -164,6 +177,11 @@ Resources:
       Port: 3306
       PreferredBackupWindow: 16:00-17:00
       PreferredMaintenanceWindow: tue:17:00-tue:19:00
+      ServerlessV2ScalingConfiguration: !If
+        - IsServerlessV2
+        - MinCapacity: 0
+          MaxCapacity: 10
+        - !Ref "AWS::NoValue"
       SnapshotIdentifier: !If [ RestoreFromSnapshot, !Ref pRdsSnapshotRestore, !Ref "AWS::NoValue" ]
       Tags:
         - Key: Name
@@ -173,6 +191,7 @@ Resources:
 
   RdsPrimary:
     Type: AWS::RDS::DBInstance
+    Condition: IsProvisioned
     Properties:
       AllowMajorVersionUpgrade: false
       AutoMinorVersionUpgrade: true
