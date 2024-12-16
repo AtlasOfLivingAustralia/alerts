@@ -89,11 +89,9 @@ Conditions:
   IsServerlessV2: !Equals
                     - !Ref pEngineMode
                     - serverlessv2
-  CreateReplica: !And
-                   - !Equals
-                     - !Ref pCreateReplica
-                     - true
-                   - !Condition IsProvisioned
+  CreateReplica: !Equals
+                    - !Ref pCreateReplica
+                    - true
 
 
 Resources:
@@ -152,7 +150,7 @@ Resources:
         Value: alerts RDS SG
 
   DbCluster:
-    Type: "AWS::RDS::DBCluster"
+    Type: AWS::RDS::DBCluster
     UpdateReplacePolicy: !If [ IsProd, "Snapshot", "Delete" ]
     DeletionPolicy: !If [ IsProd, "Snapshot", "Delete" ]
     DependsOn:
@@ -192,29 +190,12 @@ Resources:
       VpcSecurityGroupIds:
         - !Ref DbSecurityGrp
 
-  RdsServerless:
-    Type: 'AWS::RDS::DBInstance'
-    Condition: IsServerlessV2
-    Properties:
-      DBInstanceClass: db.serverless
-      DBInstanceIdentifier: !Sub ${pDbInstanceName}-serverless
-      DBParameterGroupName: !Ref DbParamGrp
-      DBSubnetGroupName: !Ref DbSubnetGrp
-      DBClusterIdentifier: !Ref DbCluster
-      Engine: aurora-mysql
-      PubliclyAccessible: false
-      EnablePerformanceInsights: !Ref pPerformanceInsights
-      Tags:
-      - Key: Name
-        Value: Alerts DB primary
-
   RdsPrimary:
     Type: AWS::RDS::DBInstance
-    Condition: IsProvisioned
     Properties:
       AllowMajorVersionUpgrade: false
       AutoMinorVersionUpgrade: true
-      DBInstanceClass: !Ref pInstanceClass
+      DBInstanceClass: !If [ IsProvisioned, !Ref pInstanceClass, db.serverless ]
       DBInstanceIdentifier: !Sub ${pDbInstanceName}-primary
       DBParameterGroupName: !Ref DbParamGrp
       DBSubnetGroupName: !Ref DbSubnetGrp
@@ -234,7 +215,7 @@ Resources:
     Properties:
       AllowMajorVersionUpgrade: false
       AutoMinorVersionUpgrade: true
-      DBInstanceClass: !Ref pInstanceClass
+      DBInstanceClass: !If [ IsProvisioned, !Ref pInstanceClass, db.serverless ]
       DBInstanceIdentifier: !Sub ${pDbInstanceName}-replica
       DBParameterGroupName: !Ref DbParamGrp
       DBSubnetGroupName: !Ref DbSubnetGrp
@@ -248,6 +229,7 @@ Resources:
 
   RdsScalableTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Condition: CreateReplica
     DependsOn:
       - DbCluster
     Properties:
@@ -260,6 +242,7 @@ Resources:
 
   AuroraScalingPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Condition: CreateReplica
     Properties:
       PolicyName: Alerts Aurora scaling policy
       PolicyType: TargetTrackingScaling
