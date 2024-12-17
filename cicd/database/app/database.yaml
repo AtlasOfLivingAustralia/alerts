@@ -175,6 +175,8 @@ Resources:
       MasterUserPassword: !Sub
                             - '{{resolve:secretsmanager:alerts-${ResourceName}:SecretString:db-password}}'
                             - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
+      MonitoringInterval: 60
+      PerformanceInsightsEnabled: !Ref pPerformanceInsights
       Port: 3306
       PreferredBackupWindow: 16:00-17:00
       PreferredMaintenanceWindow: tue:17:00-tue:19:00
@@ -184,6 +186,7 @@ Resources:
           MaxCapacity: 10
         - !Ref "AWS::NoValue"
       SnapshotIdentifier: !If [ RestoreFromSnapshot, !Ref pRdsSnapshotRestore, !Ref "AWS::NoValue" ]
+      StorageEncrypted: true
       Tags:
         - Key: Name
           Value: Alerts DB Cluster
