@@ -149,6 +149,20 @@ Resources:
       - Key: Name
         Value: alerts RDS SG
 
+  EnhancedMonitoringRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: rds.amazonaws.com
+            Action: sts:AssumeRole
+      Description: !Sub Enhanced monitoring role for ${pDbInstanceName}
+      ManagedPolicyArns:
+           - arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole
+
   DbCluster:
     Type: AWS::RDS::DBCluster
     UpdateReplacePolicy: !If [ IsProd, "Snapshot", "Delete" ]
@@ -176,6 +190,7 @@ Resources:
                             - '{{resolve:secretsmanager:alerts-${ResourceName}:SecretString:db-password}}'
                             - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
       MonitoringInterval: 60
+      MonitoringRoleArn: !Ref EnhancedMonitoringRole
       PerformanceInsightsEnabled: !Ref pPerformanceInsights
       Port: 3306
       PreferredBackupWindow: 16:00-17:00
