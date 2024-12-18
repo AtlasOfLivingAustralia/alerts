@@ -157,7 +157,7 @@ Resources:
         Statement:
           - Effect: Allow
             Principal:
-              Service: rds.amazonaws.com
+              Service: monitoring.rds.amazonaws.com
             Action: sts:AssumeRole
       Description: !Sub Enhanced monitoring role for ${pDbInstanceName}
       ManagedPolicyArns:
