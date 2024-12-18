@@ -5,12 +5,12 @@ Parameters:
   pAutoDeploy:
     Type: String
     Description: Sets the pipeline to auto deploy on repo changes
-  pBaseStackName:
-    Type: String
-    Description: the name of the base stack
   pBootstrapStackName:
     Type: String
     Description: the name of the bootstrap stack
+  pBaseStackName:
+    Type: String
+    Description: the name of the base stack
   pBucketsStackName:
     Type: String
     Description: the name of the bucket stack
@@ -85,13 +85,13 @@ Resources:
         BuildSpec: !Sub cicd/${pProductComponent}/pipeline/export_config_buildspec.yaml
       TimeoutInMinutes: 5
 
-  DeployAlerts:
+  BuildAlerts:
     Type: AWS::CodeBuild::Project
     Properties:
       Name: !Sub
-              - ${pProductName}-${pProductComponent}-deploy-alerts-${ResourceName}
-              - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
-      Description: Deploy alerts
+        - ${pProductName}-${pProductComponent}-build-alerts-${ResourceName}
+        - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
+      Description: Build the alerts project
       ServiceRole:
                Fn::ImportValue:
                  Fn::Sub: ${pBootstrapStackName}-CodeBuildServiceRoleArn
@@ -103,29 +103,29 @@ Resources:
         Image: aws/codebuild/standard:7.0
       Source:
         Type: CODEPIPELINE
-        BuildSpec: !Sub cicd/${pProductComponent}/pipeline/deploy_alerts_buildspec.yaml
-      TimeoutInMinutes: 20
+        BuildSpec: !Sub cicd/${pProductComponent}/pipeline/build_alerts_buildspec.yaml
+      TimeoutInMinutes: 30
 
-  DeployNotification:
+  DeployAlerts:
     Type: AWS::CodeBuild::Project
     Properties:
-      Name: !Sub 
-              - ${pProductName}-${pProductComponent}-deploy-notification-${ResourceName}
-              - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
-      Description: Send out the deploy notifications
+      Name: !Sub
+        - ${pProductName}-${pProductComponent}-deploy-alerts-${ResourceName}
+        - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
+      Description: Deploy alerts
       ServiceRole:
-               Fn::ImportValue:
-                 Fn::Sub: ${pBootstrapStackName}-CodeBuildServiceRoleArn
-      Artifacts:                           
-        Type: CODEPIPELINE                 
-      Environment:                         
-        Type: LINUX_CONTAINER              
-        ComputeType: BUILD_GENERAL1_SMALL  
-        Image: aws/codebuild/standard:7.0  
-      Source:                             
+        Fn::ImportValue:
+          Fn::Sub: ${pBootstrapStackName}-CodeBuildServiceRoleArn
+      Artifacts:
         Type: CODEPIPELINE
-        BuildSpec: !Sub cicd/${pProductComponent}/pipeline/deploy_notification_buildspec.yaml
-      TimeoutInMinutes: 5
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/standard:7.0
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: !Sub cicd/${pProductComponent}/pipeline/deploy_alerts_buildspec.yaml
+      TimeoutInMinutes: 20
 
   TeardownAlerts:
     Type: AWS::CodeBuild::Project
@@ -147,6 +147,27 @@ Resources:
         Type: CODEPIPELINE
         BuildSpec: !Sub cicd/${pProductComponent}/pipeline/teardown_alerts_buildspec.yaml
       TimeoutInMinutes: 10
+
+  DeployNotification:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Sub 
+              - ${pProductName}-${pProductComponent}-deploy-notification-${ResourceName}
+              - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
+      Description: Send out the deploy notifications
+      ServiceRole:
+               Fn::ImportValue:
+                 Fn::Sub: ${pBootstrapStackName}-CodeBuildServiceRoleArn
+      Artifacts:                           
+        Type: CODEPIPELINE                 
+      Environment:                         
+        Type: LINUX_CONTAINER              
+        ComputeType: BUILD_GENERAL1_SMALL  
+        Image: aws/codebuild/standard:7.0  
+      Source:                             
+        Type: CODEPIPELINE
+        BuildSpec: !Sub cicd/${pProductComponent}/pipeline/deploy_notification_buildspec.yaml
+      TimeoutInMinutes: 5
 
   Pipeline:
     Type: "AWS::CodePipeline::Pipeline"
@@ -205,7 +226,6 @@ Resources:
             Namespace: CheckoutSrcNS
             OutputArtifacts:
               - Name: 'SourceArtifact'
-            RunOrder: 1
           - Name: CheckoutAnsibleRepo
             ActionTypeId:
               Category: Source
@@ -250,6 +270,28 @@ Resources:
               - Name: ExportConfigArtifact
             RunOrder: 1
 
+          - Name: BuildAlerts
+            ActionTypeId:
+              Owner: AWS
+              Category: Build
+              Version: 1
+              Provider: CodeBuild
+            Configuration:
+              ProjectName: !Ref BuildAlerts
+              EnvironmentVariables: !Sub 
+               - |
+                   [
+                     { "name":"ECR_REPO", "value":"${EcrRepo}" },
+                     { "name":"AWS_ACCOUNT_ID", "value":"${AWS::AccountId}" },
+                     { "name":"CLEAN_BRANCH", "value":"${pCleanBranch}" }
+                   ]
+               - EcrRepo:
+                      Fn::ImportValue:
+                        Fn::Sub: "${pBaseStackName}-AlertsRepositoryUri"
+            InputArtifacts:
+              - Name: 'SourceArtifact'
+            RunOrder: 2
+
           - Name: DeployAlerts
             ActionTypeId:
               Owner: AWS
@@ -258,30 +300,30 @@ Resources:
               Provider: CodeBuild
             Configuration:
               ProjectName: !Ref DeployAlerts
-              EnvironmentVariables: !Sub 
+              EnvironmentVariables: !Sub
                 - |
-                    [
-                      { "name":"ALERTS_SECRET_NAME", "value":"#{ExportConfigNS.ALERTS_SECRET_NAME}" },
-                      { "name":"AWS_ACCOUNT_ID", "value":"${AWS::AccountId}" },
-                      { "name":"BASE_STACK_NAME", "value":"#{ExportConfigNS.BASE_STACK_NAME}" },
-                      { "name":"CLEAN_BRANCH", "value":"${pCleanBranch}" },
-                      { "name":"COGNITO_STACK_NAME", "value":"#{ExportConfigNS.COGNITO_STACK_NAME}" },
-                      { "name":"DB_READ_ENDPOINT", "value":"#{ExportConfigNS.DB_READ_ENDPOINT}" },
-                      { "name":"DB_WRITE_ENDPOINT", "value":"#{ExportConfigNS.DB_WRITE_ENDPOINT}" },
-                      { "name":"DOMAIN_NAME", "value":"${pDomainName}" },
-                      { "name":"ECR_REPO", "value":"${EcrRepo}" },
-                      { "name":"EKS_CLUSTER_NAME", "value":"#{ExportConfigNS.EKS_CLUSTER_NAME}" },
-                      { "name":"HELM_RELEASE_NAME", "value":"#{ExportConfigNS.HELM_RELEASE_NAME}" },
-                      { "name":"HOSTED_ZONE", "value":"#{ExportConfigNS.HOSTED_ZONE}" },
-                      { "name":"PRODUCT_NAME", "value":"#{ExportConfigNS.PRODUCT_NAME}" }
-                    ]
+                  [
+                    { "name":"ALERTS_SECRET_NAME", "value":"#{ExportConfigNS.ALERTS_SECRET_NAME}" },
+                    { "name":"AWS_ACCOUNT_ID", "value":"${AWS::AccountId}" },
+                    { "name":"BASE_STACK_NAME", "value":"#{ExportConfigNS.BASE_STACK_NAME}" },
+                    { "name":"CLEAN_BRANCH", "value":"${pCleanBranch}" },
+                    { "name":"COGNITO_STACK_NAME", "value":"#{ExportConfigNS.COGNITO_STACK_NAME}" },
+                    { "name":"DB_READ_ENDPOINT", "value":"#{ExportConfigNS.DB_READ_ENDPOINT}" },
+                    { "name":"DB_WRITE_ENDPOINT", "value":"#{ExportConfigNS.DB_WRITE_ENDPOINT}" },
+                    { "name":"DOMAIN_NAME", "value":"${pDomainName}" },
+                    { "name":"ECR_REPO", "value":"${EcrRepo}" },
+                    { "name":"EKS_CLUSTER_NAME", "value":"#{ExportConfigNS.EKS_CLUSTER_NAME}" },
+                    { "name":"HELM_RELEASE_NAME", "value":"#{ExportConfigNS.HELM_RELEASE_NAME}" },
+                    { "name":"HOSTED_ZONE", "value":"#{ExportConfigNS.HOSTED_ZONE}" },
+                    { "name":"PRODUCT_NAME", "value":"#{ExportConfigNS.PRODUCT_NAME}" }
+                  ]
                 - EcrRepo: !ImportValue
                     Fn::Sub: '${pBaseStackName}-AlertsRepositoryUri'
               PrimarySource: SourceArtifact
             InputArtifacts:
               - Name: 'SourceArtifact'
               - Name: 'AnsibleInventoriesSourceArtifact'
-            RunOrder: 2
+            RunOrder: 3
 
           - Name: DeployNotification
             ActionTypeId:
@@ -307,18 +349,18 @@ Resources:
             Namespace: DeployNotificationNS
             InputArtifacts:
               - Name: 'SourceArtifact'
-            RunOrder: 3
+            RunOrder: 4
 
       - Name: Teardown
         Actions:
-          - Name: ApprovalForPipelineTeardown
+          - Name: ApprovalForDeploymentTeardown
             ActionTypeId:
               Owner: AWS
               Category: Approval
               Version: 1
               Provider: Manual
             Configuration:
-              CustomData: Approval required to tear down this stack
+              CustomData: Approval required to tear down this alerts deployment
             RunOrder: 1
           - Name: TeardownAlerts
             ActionTypeId:
@@ -337,6 +379,15 @@ Resources:
             InputArtifacts:
               - Name: 'SourceArtifact'
             RunOrder: 2
+          - Name: ApprovalForPipelineTeardown
+            ActionTypeId:
+              Owner: AWS
+              Category: Approval
+              Version: 1
+              Provider: Manual
+            Configuration:
+              CustomData: Approval required to tear down this stack
+            RunOrder: 3
           - Name: TeardownCodePipeline
             ActionTypeId:
               Owner: AWS
@@ -349,7 +400,17 @@ Resources:
               RoleArn:
                    Fn::ImportValue:
                      Fn::Sub: '${pBootstrapStackName}-CloudFormationServiceRoleArn'
-            RunOrder: 3
+            RunOrder: 4
+
+  BuildAlertsCodeBuildLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Delete
+    Properties:
+      LogGroupName: !Sub /aws/codebuild/${BuildAlerts}
+      RetentionInDays: 30
+      Tags:
+        - Key: Name
+          Value: !Ref AWS::StackName
 
   DeployAlertsCodeBuildLogGroup:
     Type: AWS::Logs::LogGroup

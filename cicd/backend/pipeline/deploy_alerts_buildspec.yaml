@@ -72,7 +72,7 @@ phases:
       - |
         helm upgrade --install $HELM_RELEASE_NAME . -n alerts \
           --set image.repository=$ECR_REPO \
-          --set image.tag=$CLEAN_BRANCH \
+          --set image.tag=$BUILD_TAG \
           --set ingress.hostname=$DOMAIN_NAME \
           --set rds.externalName=$DB_WRITE_ENDPOINT \
           --set ingress.certificateArn=$CERTIFICATE_ARN \
