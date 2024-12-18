@@ -73,7 +73,7 @@ phases:
       - ALERTS_SECRET_NAME=$(echo $ALERTS_SECRET_NAME_ARN | cut -d':' -f7 | rev | cut -d'-' -f2- | rev)
       - echo ALERTS_SECRET_NAME=$ALERTS_SECRET_NAME
       - |
-        if [[ "$CLEAN_BRANCH" != "develop" && "$CLEAN_BRANCH" != "testing" && "$CLEAN_BRANCH" != "staging" && "$CLEAN_BRANCH" != "production" ]]; then
+        if [[ "$ENVIRONMENT" == "development" ]]; then
           ALERTS_SECRET_NAME="alerts-develop"
         fi
       - echo ALERTS_SECRET_NAME=$ALERTS_SECRET_NAME
