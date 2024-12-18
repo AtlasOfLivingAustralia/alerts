@@ -95,7 +95,7 @@ Conditions:
   HorizontalScaling: !And
                       - !Equals
                           - !Ref pEngineMode
-                          - serverlessv2
+                          - provisioned
                       - !Equals
                           - !Ref pCreateReplica
                           - true
