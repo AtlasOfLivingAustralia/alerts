@@ -92,7 +92,7 @@ Conditions:
   CreateReplica: !Equals
                     - !Ref pCreateReplica
                     - true
-  HorozontalScaling: !And
+  HorizontalScaling: !And
                       - !Equals
                           - !Ref pEngineMode
                           - serverlessv2
@@ -190,7 +190,7 @@ Resources:
         - error
         - slowquery
       Engine: aurora-mysql
-      EngineMode: !If [IsServerlessV2, !Ref AWS::NoValue, "provisioned"]
+      EngineMode: !If [IsServerlessV2, !Ref AWS::NoValue, provisioned]
       EngineVersion: !Ref pDbVersion
       MasterUsername: !Ref pAdminUser
       MasterUserPassword: !Sub
@@ -207,7 +207,7 @@ Resources:
         - MinCapacity: 0
           MaxCapacity: 10
         - !Ref "AWS::NoValue"
-      SnapshotIdentifier: !If [ RestoreFromSnapshot, !Ref pRdsSnapshotRestore, !Ref "AWS::NoValue" ]
+      SnapshotIdentifier: !If [ RestoreFromSnapshot, !Ref pRdsSnapshotRestore, !Ref AWS::NoValue ]
       StorageEncrypted: true
       Tags:
         - Key: Name
@@ -256,7 +256,7 @@ Resources:
 
   RdsScalableTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
-    Condition: HorozontalScaling
+    Condition: HorizontalScaling
     DependsOn:
       - DbCluster
     Properties:
@@ -269,7 +269,7 @@ Resources:
 
   AuroraScalingPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
-    Condition: HorozontalScaling
+    Condition: HorizontalScaling
     Properties:
       PolicyName: Alerts Aurora scaling policy
       PolicyType: TargetTrackingScaling
