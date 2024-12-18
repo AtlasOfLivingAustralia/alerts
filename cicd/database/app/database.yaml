@@ -92,6 +92,13 @@ Conditions:
   CreateReplica: !Equals
                     - !Ref pCreateReplica
                     - true
+  HorozontalScaling: !And
+                      - !Equals
+                          - !Ref pEngineMode
+                          - serverlessv2
+                      - !Equals
+                          - !Ref pCreateReplica
+                          - true
 
 
 Resources:
@@ -220,6 +227,7 @@ Resources:
       Engine: aurora-mysql
       DBClusterIdentifier: !Ref DbCluster
       PubliclyAccessible: false
+      PromotionTier: 1
       EnablePerformanceInsights: !Ref pPerformanceInsights
       Tags:
       - Key: Name
@@ -240,6 +248,7 @@ Resources:
       Engine: aurora-mysql
       DBClusterIdentifier: !Ref DbCluster
       PubliclyAccessible: false
+      PromotionTier: 2
       EnablePerformanceInsights: !Ref pPerformanceInsights
       Tags:
       - Key: Name
@@ -247,7 +256,7 @@ Resources:
 
   RdsScalableTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
-    Condition: CreateReplica
+    Condition: HorozontalScaling
     DependsOn:
       - DbCluster
     Properties:
@@ -260,7 +269,7 @@ Resources:
 
   AuroraScalingPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
-    Condition: CreateReplica
+    Condition: HorozontalScaling
     Properties:
       PolicyName: Alerts Aurora scaling policy
       PolicyType: TargetTrackingScaling
