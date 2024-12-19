@@ -40,28 +40,41 @@
                 <g:each status="i" in="${records}" var="oc">
                     <tr>
                         <td style="padding: 20px;background-color: white;font-family: 'Arial', sans-serif;font-size: 14px;line-height: 1.5;">
-                        <g:set var="occurrencelink" value="${query.baseUrlForUI}/occurrences/${oc.uid}"></g:set>
+                        <g:set var="occurrencelink" value="${query.baseUrlForUI}/occurrences/${oc.uuid}"></g:set>
                         <g:set var="assertionlink" value="${query.baseUrl}/occurrences/${oc.uuid}/assertions"></g:set>
                         <table style="width: 100%">
                             <tr style="vertical-align: top;">
                                 <td style="width: 33%">
 
-                                    <a href="${occurrencelink}" style="color: #003A70;text-decoration: none;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;">
-                                     <g:if test="${oc.scientificName?:oc.vernacularName ?: oc.raw_raw_scientificName}">
-                                       <strong>${i+1}. <em>${oc.scientificName?:oc.vernacularName ?: oc.raw_raw_scientificName }</em></strong>
-                                     </g:if>
-                                    </a>
-                                    <p style="padding-left: 15px;">
-                                        ${oc.vernacularName}<br/>
-                                        ${oc.stateProvince}<br/>
-                                        Family: ${oc.family}<br/>
-                                        <g:if test="${oc.dataProviderName}">
-                                           Source: ${oc.dataProviderName}
-                                        </g:if>
-                                    </p>
-
+                                    <table>
+                                        <tr>
+                                            <td style="white-space: nowrap; vertical-align: top; text-align: right; padding-right: 10px;">
+                                            <strong>${i+1}. </strong>
+                                            </td>
+                                            <td style="vertical-align: top;">
+                                            <a href="${occurrencelink}" style="color: #003A70;text-decoration: none;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;">
+                                                <g:if test="${oc.scientificName?:oc.vernacularName ?: oc.raw_raw_scientificName}">
+                                                    <strong><em>${oc.scientificName?:oc.vernacularName ?: oc.raw_raw_scientificName }</em></strong>
+                                                </g:if>
+                                            </a>
+                                            <p>
+                                                <g:if test="${oc.vernacularName}">
+                                                    ${oc.vernacularName}<br/>
+                                                </g:if>
+                                                <g:if test="${oc.stateProvince}">
+                                                    ${oc.stateProvince}<br/>
+                                                </g:if>
+                                                <g:if test="${oc.family}">
+                                                    Family: ${oc.family}<br/>
+                                                </g:if>
+                                                <g:if test="${oc.dataProviderName}">
+                                                    Source: ${oc.dataProviderName}
+                                                </g:if>
+                                            </td>
+                                        </tr>
+                                    </table>
                                 </td>
-                                <td class="annotation" nowrap="nowrap" style="width: 34%;word-wrap: break-word; white-space: normal;font-family: 'Arial', sans-serif;font-size: 12px;line-height: 1.5;">
+                                <td class="annotation" nowrap="nowrap" style="padding-left:10px;padding-top:8px;width: 34%;word-wrap: break-word; white-space: normal;font-family: 'Arial', sans-serif;font-size: 12px;line-height: 1.5;">
                                     <g:if test="${oc.processed_assertions?.size() > 0}">
                                         <%
                                             def latestAssertion = oc.processed_assertions[0] // Get the first (latest) assertion

@@ -59,35 +59,39 @@
                             <table style="width: 100%">
                                 <tr style="vertical-align: top;">
                                     <td style="width: 70%">
-                                        ${i+1}.
-                                        <a href="${oclink}" style="color: #003A70;text-decoration: none;">
-                                            <strong>${oc.label}</strong>
-                                        </a>
+                                        <table>
+                                            <tr>
+                                                <td style="white-space: nowrap; vertical-align: top; text-align: right; padding-right: 10px;">
+                                                    <strong>${i+1}. </strong>
+                                                </td>
+                                                <td style="vertical-align: top;">
+                                                    <a href="${oclink}" style="color: #003A70;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;">
+                                                        <strong><em>${oc.label}</em></strong>
+                                                    </a>
+                                                    <p>
+                                                        <g:if test="${oc.count}">
+                                                            Total records: ${oc.count}<br/>
+                                                        </g:if>
 
-                                        <p style="padding-left: 15px;">
-                                            <g:if test="${oc.count}">
-                                                Total records: ${oc.count}<br/>
-                                            </g:if>
-
-                                            <g:if test="${oc.details?.licenseType}">
-                                                Licence: ${oc.details?.licenseType}<br/>
-                                            </g:if>
-                                            <g:if test="${oc.details?.resourceType}">
-                                                Content type: ${oc.details?.resourceType}<br/>
-                                            </g:if>
-
-
-                                            <br/>
-                                            <g:if test="${oc.details?.pubShortDescription}">
-                                                ${StringUtils.abbreviate(oc.details?.pubShortDescription, 200)}<br/>
-                                            </g:if>
-                                            <g:else>
-                                                <g:if test="${oc.details?.pubDescription}">
-                                                    ${StringUtils.abbreviate(oc.details?.pubDescription, 200)}<br/>
-                                                </g:if>
-                                            </g:else>
-                                        </p>
-
+                                                        <g:if test="${oc.details?.licenseType}">
+                                                            Licence: ${oc.details?.licenseType}<br/>
+                                                        </g:if>
+                                                        <g:if test="${oc.details?.resourceType}">
+                                                            Content type: ${oc.details?.resourceType}<br/>
+                                                        </g:if>
+                                                        <br/>
+                                                        <g:if test="${oc.details?.pubShortDescription}">
+                                                            ${StringUtils.abbreviate(oc.details?.pubShortDescription, 200)}<br/>
+                                                        </g:if>
+                                                        <g:else>
+                                                            <g:if test="${oc.details?.pubDescription}">
+                                                                ${StringUtils.abbreviate(oc.details?.pubDescription, 200)}<br/>
+                                                            </g:if>
+                                                        </g:else>
+                                                    </p>
+                                                </td>
+                                            </tr>
+                                        </table>
                                     </td>
                                     <td style="width: 33%; text-align: right;" >
 

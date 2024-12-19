@@ -164,12 +164,17 @@ class NotificationService {
             def duration = TimeCategory.minus(endTime, startTime)
             qr.addLog("Time cost: ${duration}")
             if(!dryRun) {
-                QueryResult.withTransaction {
-                    if (!qr.save(validate: true, flush: true)) {
-                        qr.errors.allErrors.each {
-                            log.error(it)
+                try {
+                    QueryResult.withTransaction {
+                        if (!qr.save(validate: true)) {
+                            qr.errors.allErrors.each {
+                                log.error(it)
+                            }
                         }
                     }
+                } catch (Exception e) {
+                    //todo check why sometimes scheduler cannot save the queryresult
+                    log.error("An unexpected error occurred in saving queryresult: ${qr}", e)
                 }
             }
             else {
@@ -646,10 +651,9 @@ class NotificationService {
         log.debug("Checking frequency : " + frequencyName)
         Date now = new Date()
         Frequency frequency = Frequency.findByName(frequencyName)
-        execQueryForFrequency(frequency, sendEmails)
-        //update the frequency last checked
-        frequency = Frequency.findByName(frequencyName)
         if (frequency) {
+            execQueryForFrequency(frequency, sendEmails)
+            //update the frequency last checked
             frequency.lastChecked = now
             Frequency.withTransaction {
                 if (!frequency.save(validate: true, flush: true)) {

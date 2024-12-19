@@ -1,7 +1,5 @@
 package au.org.ala.alerts
 
-import com.jayway.jsonpath.JsonPath
-
 import java.text.SimpleDateFormat
 import java.util.zip.GZIPInputStream
 import java.util.zip.GZIPOutputStream
@@ -75,7 +73,7 @@ class QueryResult {
     }
 
     String toString() {
-        "${frequency?.name}: ${lastChanged ? 'Changed' : 'No Change'} on ${lastChecked}"
+        "${frequency?.name}: ${query?.name} : ${id} ${lastChanged ? 'Changed' : 'No Change'} on ${lastChecked}"
     }
 
     Map brief() {
