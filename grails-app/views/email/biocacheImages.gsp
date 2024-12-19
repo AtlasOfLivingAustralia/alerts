@@ -36,11 +36,11 @@
     </style>
 </head>
 
-<body style="background-color: #f4f4f4;margin: 0;padding: 0;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;">
+<body style="background-color: #f4f4f4;margin: 0;padding: 0;font-family: 'Roboto', sans-serif;font-size: 16px;line-height: 1.5;">
 <table style="background-color: #f4f4f4;border-spacing: 0;border-collapse: collapse;">
     <tr>
-        <td align="center" style="padding: 20px;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;">
-            <table border="0" cellpadding="0" cellspacing="0" width="650" style="background-color: #ffffff;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;border-spacing: 0;border-collapse: collapse;">
+        <td align="center" style="padding: 20px;font-family: 'Roboto', sans-serif;font-size: 16px;line-height: 1.5;">
+            <table border="0" cellpadding="0" cellspacing="0" width="650" style="background-color: #ffffff;font-family: 'Roboto', sans-serif;font-size: 16px;line-height: 1.5;border-spacing: 0;border-collapse: collapse;">
                 <!-- Logo -->
                 <tr>
                     <td style="text-align: center; padding: 20px; background-color: #fff;">
@@ -51,13 +51,13 @@
                 </tr>
                 <!-- Header -->
                 <tr>
-                    <td height="120" style="color:white;background-color:#003A70;padding: 20px 10px 20px 10px;text-align: center;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;background-image:url(${grailsApplication.config.grails.serverURL}/assets/email/banner-ocean.png);background-position: top center;background-size: cover;background-repeat: no-repeat">
+                    <td height="120" style="color:white;background-color:#003A70;padding: 20px 10px 20px 10px;text-align: center;font-family: 'Roboto', sans-serif;font-size: 16px;line-height: 1.5;background-image:url(${grailsApplication.config.grails.serverURL}/assets/email/banner-ocean.png);background-position: top center;background-size: cover;background-repeat: no-repeat">
                         <h1 style="font-size: 24px; color: #fff;">ALA Alerts - ${query.name}</h1>
                         <p style="font-size: 16px; color: #fff;"><strong>${new SimpleDateFormat("dd MMM yyyy").format(new Date())}</strong></p>
                     </td>
                 </tr>
                 <tr>
-                    <td style="background-color: #E8E8E8;color: #000;padding: 40px 30px 40px 30px;text-align: center;font-family: 'Arial', sans-serif;font-size: 22px;line-height: 1.5;">
+                    <td style="background-color: #E8E8E8;color: #000;padding: 40px 30px 40px 30px;text-align: center;font-family: 'Roboto', sans-serif;font-size: 22px;line-height: 1.5;">
                         <g:set var="totalRecords" value="${records.values().sum { it.size() }}" />
                         <div>
                         ${totalRecords} ${totalRecords == 1 ? ' record with images ' : ' records with images'} ${totalRecords == 1 ? 'has' : 'have'} been added
@@ -71,7 +71,7 @@
             <!-- Records Section -->
                 <g:each status="i" in="${records.keySet()}" var="dataResourceId">
                     <tr>
-                        <td style="padding: 20px;background-color: white;font-family: 'Arial', sans-serif;font-size: 14px;line-height: 1.5;">
+                        <td style="padding: 20px;background-color: white;font-family: 'Roboto', sans-serif;font-size: 14px;line-height: 1.5;">
                             <g:set var="occurrences" value="${records[dataResourceId]}" />
                             <g:set var="dataResourceName" value="${occurrences[0]?.dataResourceName?:dataResourceId}" />
                             <g:set var="dataResourcePublicUrl" value="${occurrences[0]?.dataResourceInfo?.alaPublicUrl}" />
@@ -99,7 +99,7 @@
                                         <tr>
                                     </g:if>
                                     <td style="width: 25%; vertical-align: top;">
-                                        <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}" style="color: #003A70;font-family: 'Arial', sans-serif;font-size: 16px;line-height: 1.5;">
+                                        <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}" style="color: #003A70;font-family: 'Roboto', sans-serif;font-size: 16px;line-height: 1.5;">
                                             <img src="${oc.smallImageUrl}" alt="${message(code:"biocache.images.alt.image", args:[oc.scientificName])}" style="vertical-align: top; width:150px; height:150px;border-radius: 6px;line-height: 100%;"/></a>
                                         <br/>
                                         <i>${oc.scientificName}</i><br>

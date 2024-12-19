@@ -9,7 +9,7 @@
     <p><a href="${moreInfo}"><g:message code="datasets.view.details.of.the.added" /></a></p>
 
     <style type="text/css">
-    	body { font-family:Arial; }
+    	body { font-family:Roboto; }
     	table { border-collapse: collapse; border: 1px solid #CCC; padding:2px; }
 		td, th { border: 1px solid #CCC; padding:4px; }
         img { max-width:150px; max-height:150px; }

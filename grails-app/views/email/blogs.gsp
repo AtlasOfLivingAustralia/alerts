@@ -12,16 +12,16 @@
     <title>${title}</title>
   </head>
   <body style="background-color: #f4f4f4;padding: 0;line-height: 1.5;-webkit-font-smoothing: antialiased;-webkit-text-size-adjust: 100%;-ms-text-size-adjust: 100%;width: 100% !important;margin: 0 !important;">
-    <div class="main-shadow-div default-font" style="vertical-align: top;font-family: 'Lato', Helvetica, Arial, sans-serif;font-size: 16px;font-weight: 500;line-height: 1.42;letter-spacing: -0.4px;mso-table-lspace: 0;mso-table-rspace: 0;box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1);width: 100%;max-width: 620px;margin: 20px auto 0;">
+    <div class="main-shadow-div default-font" style="vertical-align: top;font-family: 'Lato', Helvetica, Roboto, sans-serif;font-size: 16px;font-weight: 500;line-height: 1.42;letter-spacing: -0.4px;mso-table-lspace: 0;mso-table-rspace: 0;box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1);width: 100%;max-width: 620px;margin: 20px auto 0;">
       <div class="center-white-div" style="display: flex;vertical-align: top;justify-content: center;align-items: center;background-color: #ffffff;padding: 20px 20px 10px 20px;">
         <a href="https://www.ala.org.au" style="text-decoration: none;">
         <img src="${grailsApplication.config.grails.serverURL + '/assets/email/logo-dark.png'}" height="60" alt="" style="border: 0;line-height: 100%;outline: 0;">
         </a>
       </div>
       <div class="background-image-div padding " style="padding: 20px 10px 20px 10px;vertical-align: top; text-align:center;background-image: url(${grailsApplication.config.grails.serverURL}/assets/email/banner-ocean.png);">
-        <div class="default-font large-white-font" style="vertical-align: top;font-family: 'Lato', Helvetica, Arial, sans-serif;font-size: 24px;font-weight: 700;line-height: 1.42;letter-spacing: -0.4px;color: #ffffff;">Latest ALA Blog Updates</div>
+        <div class="default-font large-white-font" style="vertical-align: top;font-family: 'Lato', Helvetica, Roboto, sans-serif;font-size: 24px;font-weight: 700;line-height: 1.42;letter-spacing: -0.4px;color: #ffffff;">Latest ALA Blog Updates</div>
         <br>
-        <div class="default-font" style="vertical-align: top;font-family: 'Lato', Helvetica, Arial, sans-serif;font-size: 16px;font-weight: 500;line-height: 1.42;letter-spacing: -0.4px;color: #ffffff;">
+        <div class="default-font" style="vertical-align: top;font-family: 'Lato', Helvetica, Roboto, sans-serif;font-size: 16px;font-weight: 500;line-height: 1.42;letter-spacing: -0.4px;color: #ffffff;">
           <b>${new SimpleDateFormat("dd MMM yyyy").format(new Date())}</b>
         </div>
       </div>
