@@ -98,7 +98,7 @@ Resources:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: AES256
       BucketName: !Sub
-              - ${pProductName}-${ResourceName}
+              - ala-${pProductName}-${ResourceName}
               - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
       LifecycleConfiguration:
         Rules:
