@@ -207,8 +207,8 @@ Resources:
       MonitoringInterval: !Ref pEnhancedMonitoring
       MonitoringRoleArn: !If
                            - EnhancedMonitoring
-                           - !Ref AWS::NoValue
                            - !GetAtt EnhancedMonitoringRole.Arn
+                           - !Ref AWS::NoValue
       PerformanceInsightsEnabled: !Ref pPerformanceInsights
       Port: 3306
       PreferredBackupWindow: 16:00-17:00
