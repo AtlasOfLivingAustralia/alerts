@@ -44,6 +44,10 @@ Parameters:
       - provisioned
       - serverlessv2
     Default: provisioned
+  pEnhancedMonitoring:
+    Description: enhanced monitoring interval in seconds, 0 to disable
+    Type: Number
+    Default: 0
   pEnvironment:
     Description: Environment for this RDS instance
     AllowedValues:
@@ -80,9 +84,9 @@ Conditions:
             - !Ref pEnvironment
             - production
   RestoreFromSnapshot: !Not
-                          - !Equals
-                              - !Ref pRdsSnapshotRestore
-                              - false
+                         - !Equals
+                           - !Ref pRdsSnapshotRestore
+                           - false
   IsProvisioned: !Equals 
                    - !Ref pEngineMode
                    - provisioned
@@ -92,13 +96,17 @@ Conditions:
   CreateReplica: !Equals
                     - !Ref pCreateReplica
                     - true
+  EnhancedMonitoring: !Not 
+                        - !Equals
+                          - !Ref pEnhancedMonitoring
+                          - 0
   HorizontalScaling: !And
                       - !Equals
-                          - !Ref pEngineMode
-                          - provisioned
+                        - !Ref pEngineMode
+                        - provisioned
                       - !Equals
-                          - !Ref pCreateReplica
-                          - true
+                        - !Ref pCreateReplica
+                        - true
 
 
 Resources:
@@ -196,8 +204,11 @@ Resources:
       MasterUserPassword: !Sub
                             - '{{resolve:secretsmanager:alerts-${ResourceName}:SecretString:db-password}}'
                             - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
-      MonitoringInterval: 60
-      MonitoringRoleArn: !GetAtt EnhancedMonitoringRole.Arn
+      MonitoringInterval: !Ref pEnhancedMonitoring
+      MonitoringRoleArn: !If
+                           - EnhancedMonitoring
+                           - !GetAtt EnhancedMonitoringRole.Arn
+                           - !Ref AWS::NoValue
       PerformanceInsightsEnabled: !Ref pPerformanceInsights
       Port: 3306
       PreferredBackupWindow: 16:00-17:00
