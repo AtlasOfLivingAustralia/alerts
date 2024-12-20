@@ -1,0 +1,171 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: 'Opensearch Database'
+
+Parameters:
+  pAdminUser:
+    Description: The username for the RDS admin user
+    Type: String
+    Default: admin
+  pBacktrackWindow:
+    Description: Backtrack window in seconds
+    Type: Number
+  pBackupRetention:
+    Description: Backup retention period in days
+    Type: Number
+  pBuild:
+    Description: The CodeBuild build number
+    Type: Number
+  pCleanBranch:
+    Description: The clean branch
+    Type: String
+  pCreateReplica:
+    Description: Create a read replica
+    Type: String
+    AllowedValues:
+      - true
+      - false
+  pDbInstanceName:
+    Description: The db instance name. This gets used as part of the hostname to connect to the db
+    Type: String
+  pDbVersion:
+    Type: String
+    Description: The version of MySQL for the RDS instance
+  pDeletionProtection:
+    Description: Enable deletion protection
+    Type: String
+    AllowedValues:
+      - true
+      - false
+  pEngineMode:
+    Description: Specify the EngineMode. provisioned or serverlessv2
+    Type: String
+    AllowedValues:
+      - provisioned
+      - serverlessv2
+    Default: provisioned
+  pEnvironment:
+    Description: Environment for this RDS instance
+    AllowedValues:
+      - development
+      - testing
+      - staging
+      - production
+    Type: String
+  pInstanceClass:
+    Description: The RDS instance class
+    Type: String
+  pProductName:
+    Description: The product name
+    Type: String
+  pPerformanceInsights:
+    Description: Enable performance insights
+    Type: String
+    AllowedValues:
+      - true
+      - false
+  pRdsSnapshotRestore:
+    Description: The snapshot to restore from
+    Type: String
+    Default: false
+  pVpcStackName:
+    Description: The name of the Bedrock VPC stack
+    Type: String
+
+Conditions: 
+  IsDev: !Equals
+            - !Ref pEnvironment
+            - development
+  IsProd: !Equals
+            - !Ref pEnvironment
+            - production
+  RestoreFromSnapshot: !Not
+                          - !Equals
+                              - !Ref pRdsSnapshotRestore
+                              - false
+  IsProvisioned: !Equals 
+                   - !Ref pEngineMode
+                   - provisioned
+  IsServerlessV2: !Equals
+                    - !Ref pEngineMode
+                    - serverlessv2
+  CreateReplica: !Equals
+                    - !Ref pCreateReplica
+                    - true
+  HorizontalScaling: !And
+                      - !Equals
+                          - !Ref pEngineMode
+                          - provisioned
+                      - !Equals
+                          - !Ref pCreateReplica
+                          - true
+
+
+Resources:
+
+  OpenSearchDb:
+    Type: AWS::OpenSearchService::Domain
+    Properties:
+      DomainName: !Sub ${pDbInstanceName}-cluster
+      ElasticsearchVersion: 7.10
+      NodeToNodeEncryptionOptions: 
+        Enabled: true
+      EncryptionAtRestOptions: 
+        Enabled: true
+      DomainEndpointOptions: 
+        EnforceHTTPS: true
+        TLSSecurityPolicy: Policy-Min-TLS-1-2-2019-07
+      EBSOptions: 
+        EBSEnabled: true
+        VolumeSize: 10
+        VolumeType: gp2
+      AdvancedOptions: 
+        rest.action.multi.allow_explicit_index: "true"
+        indices.query.bool.max_clause_count: "8192"
+        thread_pool.write.queue_size: "1000"
+        thread_pool.write.size: "1000"
+        thread_pool.write.max: "1000"
+        thread_pool.search.queue_size: "1000"
+        thread_pool.search.size: "1000"
+        thread_pool.search.max: "1000"
+        thread_pool.bulk.queue_size: "1000"
+        thread_pool.bulk.size: "1000"
+        thread_pool.bulk.max: "1000"
+        thread_pool.index.queue_size: "1000"
+        thread_pool.index.size: "1000"
+        thread_pool.index.max: "1000"
+        thread_pool.get.queue_size: "1000"
+        thread_pool.get.size: "1000"
+        thread_pool.get.max: "1000"
+        thread_pool.fetch_shard_started.queue_size: "1000"
+        thread_pool.fetch_shard_started.size: "1000"
+        thread_pool.fetch_shard_started.max: "1000"
+        thread_pool.fetch_shard_store.queue_size: "1000"
+        thread_pool.fetch_shard_store.size: "1000"
+        thread_pool.fetch_shard_store.max: "1000"
+        thread_pool.fetch_shard_store.active: "1000"
+        thread_pool.fetch_shard_store.core: "1000"
+        thread_pool.fetch_shard_store.keep_alive: "1000"
+        thread_pool.fetch_shard_store.type: "1000"
+        thread_pool.fetch_shard_store.min: "1000"
+
+
+  SlowQueryLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties: 
+      LogGroupName: !Sub /aws/rds/cluster/${pDbInstanceName}-cluster/slowquery
+      RetentionInDays: 30
+
+
+Outputs:
+  WriteEndpoint:
+    Description: The write endpoint of the database
+    Value: !GetAtt DbCluster.Endpoint.Address
+    Export:
+      Name: !Sub ${AWS::StackName}-WriteEndpoint
+  ReadEndpoint:
+    Description: The read endpoint of the database
+    Value: !GetAtt DbCluster.ReadEndpoint.Address
+    Export:
+      Name: !Sub ${AWS::StackName}-ReadEndpoint
+
