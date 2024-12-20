@@ -84,9 +84,9 @@ Conditions:
             - !Ref pEnvironment
             - production
   RestoreFromSnapshot: !Not
-                          - !Equals
-                              - !Ref pRdsSnapshotRestore
-                              - false
+                         - !Equals
+                           - !Ref pRdsSnapshotRestore
+                           - false
   IsProvisioned: !Equals 
                    - !Ref pEngineMode
                    - provisioned
@@ -96,13 +96,17 @@ Conditions:
   CreateReplica: !Equals
                     - !Ref pCreateReplica
                     - true
+  EnhancedMonitoring: !Not 
+                        - !Equals
+                          - !Ref pEnhancedMonitoring
+                          - 0
   HorizontalScaling: !And
                       - !Equals
-                          - !Ref pEngineMode
-                          - provisioned
+                        - !Ref pEngineMode
+                        - provisioned
                       - !Equals
-                          - !Ref pCreateReplica
-                          - true
+                        - !Ref pCreateReplica
+                        - true
 
 
 Resources:
@@ -202,7 +206,7 @@ Resources:
                             - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
       MonitoringInterval: !Ref pEnhancedMonitoring
       MonitoringRoleArn: !If
-                           - !Equals [ !Ref pEnhancedMonitoring, 0 ]
+                           - EnhancedMonitoring
                            - !Ref AWS::NoValue
                            - !GetAtt EnhancedMonitoringRole.Arn
       PerformanceInsightsEnabled: !Ref pPerformanceInsights
