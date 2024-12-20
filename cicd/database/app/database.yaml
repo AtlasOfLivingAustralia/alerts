@@ -44,6 +44,10 @@ Parameters:
       - provisioned
       - serverlessv2
     Default: provisioned
+  pEnhancedMonitoring:
+    Description: enhanced monitoring interval in seconds, 0 to disable
+    Type: Number
+    Default: 0
   pEnvironment:
     Description: Environment for this RDS instance
     AllowedValues:
@@ -196,7 +200,7 @@ Resources:
       MasterUserPassword: !Sub
                             - '{{resolve:secretsmanager:alerts-${ResourceName}:SecretString:db-password}}'
                             - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
-      MonitoringInterval: 60
+      MonitoringInterval: !Ref pEnhancedMonitoring
       MonitoringRoleArn: !GetAtt EnhancedMonitoringRole.Arn
       PerformanceInsightsEnabled: !Ref pPerformanceInsights
       Port: 3306
