@@ -201,7 +201,10 @@ Resources:
                             - '{{resolve:secretsmanager:alerts-${ResourceName}:SecretString:db-password}}'
                             - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
       MonitoringInterval: !Ref pEnhancedMonitoring
-      MonitoringRoleArn: !GetAtt EnhancedMonitoringRole.Arn
+      MonitoringRoleArn: !If
+                           - !Equals [ !Ref pEnhancedMonitoring, 0 ]
+                           - !Ref AWS::NoValue
+                           - !GetAtt EnhancedMonitoringRole.Arn
       PerformanceInsightsEnabled: !Ref pPerformanceInsights
       Port: 3306
       PreferredBackupWindow: 16:00-17:00
