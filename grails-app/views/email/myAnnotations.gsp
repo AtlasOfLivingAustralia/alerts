@@ -45,7 +45,6 @@
                         <table style="width: 100%">
                             <tr style="vertical-align: top;">
                                 <td style="width: 33%">
-
                                     <table>
                                         <tr>
                                             <td style="white-space: nowrap; vertical-align: top; text-align: right; padding-right: 10px;">
@@ -75,9 +74,9 @@
                                     </table>
                                 </td>
                                 <td class="annotation" nowrap="nowrap" style="padding-left:10px;padding-top:8px;width: 34%;word-wrap: break-word; white-space: normal;font-family: 'Roboto', sans-serif;font-size: 12px;line-height: 1.5;">
-                                    <g:if test="${oc.processed_assertions?.size() > 0}">
+                                    <g:if test="${oc.verified_assertions?.size() > 0}">
                                         <%
-                                            def latestAssertion = oc.processed_assertions[0] // Get the first (latest) assertion
+                                            def latestAssertion = oc.verified_assertions[0] // Get the first (latest) assertion
                                         %>
                                         Comments:<br/><i>${StringUtils.abbreviate(latestAssertion.comment,100)}</i>
                                         <br/>-${latestAssertion.userDisplayName}

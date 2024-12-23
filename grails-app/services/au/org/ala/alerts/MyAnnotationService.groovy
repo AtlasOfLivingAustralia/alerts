@@ -46,15 +46,26 @@ class MyAnnotationService{
         }catch (PathNotFoundException e){
             log.warn("Current result is empty or doesn't have any records containing a field ${recordJsonPath} defined in recordJsonPath")
         }
-        // if an occurrence record doesn't exist in previous result (added) or has different open_assertions or verified_assertions or corrected_assertions than previous (changed).
+        // if an occurrence record doesn't exist in previous result (added) or has different verified_assertions than previous (changed).
         def records = curRecordsMap.findAll {
             def record = it.value
-            !oldRecordsMap.containsKey(record.uuid) ||
-                    record.open_assertions != oldRecordsMap.get(record.uuid).open_assertions ||
-                    record.verified_assertions != oldRecordsMap.get(record.uuid).verified_assertions ||
-                    record.corrected_assertions != oldRecordsMap.get(record.uuid).corrected_assertions
-        }.values()
+            // if the record has verified assertions and it is a list - some legacy records may have a String instead of a list
+            if (!record.verified_assertions?.isEmpty() && record.verified_assertions instanceof List) {
+                if (oldRecordsMap.containsKey(record.uuid)) {
+                    if (oldRecordsMap.get(record.uuid).verified_assertions?.isEmpty()) {
+                        return true
+                    } else {
+                        return record.verified_assertions.collect { it.uuid }.join(',') != oldRecordsMap.get(record.uuid).verified_assertions.collect { it.uuid }.join(',')
+                    }
+                } else {
+                    return true
+                }
+            } else {
+                //No verified assertions in current records
+                return false
+            }
 
+        }.values()
 
         //if an occurrence record exists in previous result but not in current, it means the annotation is deleted.
         //We need to add these records as a 'modified' record
@@ -88,28 +99,14 @@ class MyAnnotationService{
                         JSONArray assertions = assertionsData.json as JSONArray
                         occurrence.put('user_assertions', assertions)
 
-                        def (origUserAssertions, openAssertions, verifiedAssertions, correctedAssertions) = filterMyAssertions(assertions, userId)
-                        // only include record has at least 1 (50001/50002/50003) assertion
+                        def verifiedAssertions = findVerifiedAssertions(assertions, userId)
+                        // only include record has at least 1 (50001/50002/50003) assertions that VERIFY the user's assertions
                         // They will be used for diffService (records that will be included in alert email)
-                        if (!openAssertions.isEmpty() || !verifiedAssertions.isEmpty() || !correctedAssertions.isEmpty()) {
-
-                            // find the open/verfied/corrected annotations which COMMENTed on all the assertions created by the users
-                            def processedAssertionIds = openAssertions.collect { it.uuid } + verifiedAssertions.collect { it.uuid } + correctedAssertions.collect { it.uuid }
-                            def processedAssertions = assertions.findAll{
-                                processedAssertionIds.contains(it.relatedUuid)
-                            }
-                            occurrence.put('processed_assertions', processedAssertions)
-
-                            // Those open/verified/corrected assertions will be used to retrieve diff (records that will be included in alert email)
-                            openAssertions.sort { it.uuid }
-                            verifiedAssertions.sort { it.uuid }
-                            correctedAssertions.sort { it.uuid }
-                            occurrence.put('open_assertions', openAssertions.collect { it.uuid }.join(','))
-                            occurrence.put('verified_assertions', verifiedAssertions.collect { it.uuid }.join(','))
-                            occurrence.put('corrected_assertions', correctedAssertions.collect { it.uuid }.join(','))
+                        if ( !verifiedAssertions.isEmpty()) {
+                            occurrence.put('verified_assertions', verifiedAssertions)
+                            reconstructedOccurrences.push(occurrence)
                         }
                     }
-                    reconstructedOccurrences.push(occurrence)
                 }
             }
             reconstructedOccurrences.sort { it.uuid }
@@ -123,34 +120,23 @@ class MyAnnotationService{
 
     /**
      * Search the assertions which the USER has made
-     * return those have been open-issued, verified or corrected
+     * return assertions which verify or comment the user's assertions
      * @param assertions
      * @param userId
      * @return
      */
-
-    private static def filterMyAssertions(JSONArray assertions, String userId) {
-        def origUserAssertions = []
-        def openAssertions = []
+    private static def findVerifiedAssertions(JSONArray assertions, String userId) {
         def verifiedAssertions = []
-        def correctedAssertions = []
         if (assertions) {
             // all the original user assertions (issues users flagged)
-            origUserAssertions = assertions.findAll { it.uuid && !it.relatedUuid && it.userId == userId }
-
-            // all the 50001 (open issue) assertions (could belong to userId or other users)
-            def openIssueIds = assertions.findAll { it.uuid && it.relatedUuid && it.code == 50000 && it.qaStatus == 50001 }.collect { it.relatedUuid }
-
-            // all the 50002 (verified) assertions (could belong to userId or other users)
-            def verifiedIds = assertions.findAll { it.uuid && it.relatedUuid && it.code == 50000 && it.qaStatus == 50002 }.collect { it.relatedUuid }
-
-            // all the 50003 (corrected) assertions (could belong to userId or other users)
-            def correctedIds = assertions.findAll { it.uuid && it.relatedUuid && it.code == 50000 && it.qaStatus == 50003 }.collect { it.relatedUuid }
-
-            openAssertions = origUserAssertions.findAll { openIssueIds.contains(it.uuid) }
-            verifiedAssertions = origUserAssertions.findAll { verifiedIds.contains(it.uuid) }
-            correctedAssertions = origUserAssertions.findAll { correctedIds.contains(it.uuid) }
+            def origUserAssertions = assertions.findAll { it.uuid && !it.relatedUuid && it.userId == userId }
+            // Find assertions which commented on the original user assertions
+            def myOriginalUuids = origUserAssertions*.uuid
+            // todo - need to check if 50003 or 50001 is the correct status for Verified assertions
+            verifiedAssertions = myOriginalUuids.collectMany { uuid ->
+                assertions.findAll { it.relatedUuid == uuid && ( it.qaStatus == 50003 || it.qaStatus == 50001)}
+            }
         }
-        return [origUserAssertions, openAssertions, verifiedAssertions, correctedAssertions,]
+        return  verifiedAssertions
     }
 }
