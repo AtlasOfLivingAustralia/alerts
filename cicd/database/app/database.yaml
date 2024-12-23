@@ -301,14 +301,12 @@ Resources:
 
   ErrorLogGroup:
     Type: AWS::Logs::LogGroup
-    Condition: ExportLogs
     Properties: 
       LogGroupName: !Sub /aws/rds/cluster/${pDbInstanceName}-cluster/error
       RetentionInDays: 30
 
   SlowQueryLogGroup:
     Type: AWS::Logs::LogGroup
-    Condition: ExportLogs
     Properties: 
       LogGroupName: !Sub /aws/rds/cluster/${pDbInstanceName}-cluster/slowquery
       RetentionInDays: 30
