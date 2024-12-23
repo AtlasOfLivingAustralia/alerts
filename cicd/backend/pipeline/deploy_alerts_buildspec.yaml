@@ -4,8 +4,6 @@ env:
   shell: bash
   variables:
     JAVA_TOOL_OPTIONS: -Dhttps.protocols=TLSv1.2
-  secrets-manager:
-    DB_PASSWORD: $ALERTS_SECRET_NAME:db-password
 
 phases:
   install:
@@ -22,39 +20,9 @@ phases:
   build:
     commands:
       - echo Build started on $(date)
-      - wget https://raw.githubusercontent.com/AtlasOfLivingAustralia/ala-install/refs/heads/master/ansible/roles/alerts/templates/alerts-config.properties
       - aws eks --region ap-southeast-2 update-kubeconfig --name $EKS_CLUSTER_NAME
-      - |
-        USER_POOL_ID=$(aws cloudformation describe-stacks --stack-name $COGNITO_STACK_NAME \
-          --query "Stacks[0].Outputs[?OutputKey=='UserPoolId'].OutputValue" --output text)
-      - |
-        CLIENT_ID=$(aws cloudformation describe-stacks --stack-name $BASE_STACK_NAME \
-          --query "Stacks[0].Outputs[?OutputKey=='AlertsAppClient'].OutputValue" --output text)
-      - |
-        CLIENT_SECRET=$(aws cognito-idp describe-user-pool-client --user-pool-id $USER_POOL_ID \
-          --client-id $CLIENT_ID --query "UserPoolClient.ClientSecret" --output text)
-      - |
-        SERVER_TO_SERVER_CLIENT_ID=$(aws cloudformation describe-stacks --stack-name $BASE_STACK_NAME \
-          --query "Stacks[0].Outputs[?OutputKey=='AlertsServerToServerAppClient'].OutputValue" --output text)
-      - |
-        SERVER_TO_SERVER_CLIENT_SECRET=$(aws cognito-idp describe-user-pool-client --user-pool-id $USER_POOL_ID \
-          --client-id $SERVER_TO_SERVER_CLIENT_ID --query "UserPoolClient.ClientSecret" --output text)
       - kubectl config set-context --current --namespace=alerts
-      - |
-        python3 cicd/gen_app_config.py -t alerts-config.properties \
-          -v $CODEBUILD_SRC_DIR_AnsibleInventoriesSourceArtifact/alerts/alerts-feature-branch \
-          -b $CLEAN_BRANCH \
-          -o alerts-config.properties
-      - sed -i "s/dataSource.password=/dataSource.password=$DB_PASSWORD/" alerts-config.properties
-      - sed -i "s/security.oidc.clientId=/security.oidc.clientId=$CLIENT_ID/" alerts-config.properties
-      - sed -i "s/security.oidc.secret=/security.oidc.secret=$CLIENT_SECRET/" alerts-config.properties
-      - sed -i "s/webservice.client-id=/webservice.client-id=$SERVER_TO_SERVER_CLIENT_ID/" alerts-config.properties
-      - sed -i "s/webservice.client-secret=/webservice.client-secret=$SERVER_TO_SERVER_CLIENT_SECRET/" alerts-config.properties
-      - sed -i "s/mysql-rds\/alerts/mysql-rds-$CLEAN_BRANCH\/alertsdevelopment/" alerts-config.properties
-      - sed -i "s/ala-alerts-test/alerts-$CLEAN_BRANCH/" alerts-config.properties
-      - sed -i '1i server.port=8000' alerts-config.properties
-      - kubectl delete secret alerts-config-secret-$CLEAN_BRANCH || true
-      - kubectl create secret generic alerts-config-secret-$CLEAN_BRANCH --from-file=alerts-config.properties
+      - echo "Creating service account for alerts..."
       - |
         ALERTS_ROLE_ARN=$(aws cloudformation describe-stacks --stack-name $BASE_STACK_NAME \
           --query "Stacks[0].Outputs[?OutputKey=='AlertsRoleArn'].OutputValue" --output text)
@@ -64,6 +32,8 @@ phases:
           --namespace alerts --cluster $EKS_CLUSTER_NAME --attach-role-arn $ALERTS_ROLE_ARN \
           --approve --override-existing-serviceaccounts \
           --tags "product=alerts,environment=development,branch=${CLEAN_BRANCH}"
+      - echo "Service account created."
+      - echo "Deploying alerts via helm..."
       - cd helm
       - |
         export CERTIFICATE_ARN=$(aws acm list-certificates --region ap-southeast-2 \
@@ -78,7 +48,8 @@ phases:
           --set ingress.certificateArn=$CERTIFICATE_ARN \
           --set secret.name=alerts-config-secret-$CLEAN_BRANCH \
           --set serviceAccount.name=alerts-service-account-$CLEAN_BRANCH \
-          --set rds.name=mysql-rds-$CLEAN_BRANCH
+          --set rds.name=mysql-rds-$CLEAN_BRANCH \
+          -f $CODEBUILD_SRC_DIR_ExportConfigArtifact/helm_values.yaml
       - kubectl rollout restart deployment $HELM_RELEASE_NAME
   post_build:
     commands:
@@ -89,8 +60,3 @@ artifacts:
   base-directory: $CODEBUILD_SRC_DIR
   files:
     - '**/*'
-  secondary-artifacts:
-    AnsibleInventoriesSourceArtifact:
-      base-directory: $CODEBUILD_SRC_DIR_AnsibleInventoriesSourceArtifact
-      files:
-        - '**/*'
