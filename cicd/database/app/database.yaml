@@ -56,6 +56,12 @@ Parameters:
       - staging
       - production
     Type: String
+  pExportLogs:
+    Description: Enable or disable exporting logs to CloudWatch
+    Type: String
+    AllowedValues:
+      - true
+      - false
   pInstanceClass:
     Description: The RDS instance class
     Type: String
@@ -96,6 +102,9 @@ Conditions:
   CreateReplica: !Equals
                     - !Ref pCreateReplica
                     - true
+  ExportLogs: !Equals
+                - !Ref pExportLogs
+                - true
   EnhancedMonitoring: !Not 
                         - !Equals
                           - !Ref pEnhancedMonitoring
@@ -194,9 +203,7 @@ Resources:
       DBClusterParameterGroupName: !Ref ClusterParamGrp
       DBSubnetGroupName: !Ref DbSubnetGrp
       DeletionProtection: !Ref pDeletionProtection
-      EnableCloudwatchLogsExports:
-        - error
-        - slowquery
+      EnableCloudwatchLogsExports: !If [ ExportLogs, ['error', 'slowquery'], !Ref AWS::NoValue]
       Engine: aurora-mysql
       EngineMode: !If [IsServerlessV2, !Ref AWS::NoValue, provisioned]
       EngineVersion: !Ref pDbVersion
