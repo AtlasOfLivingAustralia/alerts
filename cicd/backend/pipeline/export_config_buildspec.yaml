@@ -89,7 +89,6 @@ phases:
         if [[ "$ENVIRONMENT" == "development" ]]; then
           ALERTS_SECRET_NAME="alerts-testing"
           DB_PASSWORD=$(aws secretsmanager get-secret-value --output text --query SecretString --secret-id $ALERTS_SECRET_NAME | python3 -c 'import json, sys; print(json.load(sys.stdin)["db-password"])')
-          DB_HOSTNAME=mysql-rds-testing
           DB_NAME="alertstesting"
           S3_BUCKET_NAME="ala-alerts-testing"
         fi
