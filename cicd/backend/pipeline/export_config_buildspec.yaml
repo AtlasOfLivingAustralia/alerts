@@ -83,14 +83,15 @@ phases:
       - echo Entered the build phase...
       - DB_NAME=$PRODUCT_NAME$([[ "$ENVIRONMENT" == "development" ]] && echo "$CLEAN_BRANCH" || echo "$ENVIRONMENT")
       - DB_HOSTNAME=$DB_HOSTNAME-$([[ "$ENVIRONMENT" == "development" ]] && echo "$CLEAN_BRANCH" || echo "$ENVIRONMENT")
-      - S3_BUCKET_NAME=$S3_BUCKET_NAME-$([[ "$ENVIRONMENT" == "development" ]] && echo "$CLEAN_BRANCH" || echo "$ENVIRONMENT")
+      - S3_BUCKET_NAME=ala-$PRODUCT_NAME-$([[ "$ENVIRONMENT" == "development" ]] && echo "$CLEAN_BRANCH" || echo "$ENVIRONMENT")
       # comment out the following block if you are deploying database stack for your development environment
       - |
         if [[ "$ENVIRONMENT" == "development" ]]; then
-           ALERTS_SECRET_NAME="alerts-testing"
-           DB_PASSWORD=$(aws secretsmanager get-secret-value --output text --query SecretString --secret-id $ALERTS_SECRET_NAME | python3 -c 'import json, sys; print(json.load(sys.stdin)["db-password"])')
-           DB_HOSTNAME=mysql-rds-testing
-           DB_NAME="${PRODUCT_NAME}testing"
+          ALERTS_SECRET_NAME="alerts-testing"
+          DB_PASSWORD=$(aws secretsmanager get-secret-value --output text --query SecretString --secret-id $ALERTS_SECRET_NAME | python3 -c 'import json, sys; print(json.load(sys.stdin)["db-password"])')
+          DB_HOSTNAME=mysql-rds-testing
+          DB_NAME="alertstesting"
+          S3_BUCKET_NAME="ala-alerts-testing"
         fi
       - |
         USER_POOL_ID=$(aws cloudformation describe-stacks --stack-name $COGNITO_STACK_NAME \
