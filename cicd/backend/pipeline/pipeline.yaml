@@ -291,6 +291,7 @@ Resources:
                   [
                     { "name":"AWS_ACCOUNT_ID", "value":"${AWS::AccountId}" },
                     { "name":"ENVIRONMENT", "value":"${pEnvironment}" },
+                    { "name":"PRODUCT_COMPONENT", "value":"${pProductComponent}" },
                     { "name":"BASE_STACK_NAME", "value":"#{ExportConfigNS.BASE_STACK_NAME}" },
                     { "name":"CLEAN_BRANCH", "value":"${pCleanBranch}" },
                     { "name":"COGNITO_STACK_NAME", "value":"#{ExportConfigNS.COGNITO_STACK_NAME}" },
