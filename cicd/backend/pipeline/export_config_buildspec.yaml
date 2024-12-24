@@ -82,7 +82,7 @@ phases:
     commands:
       - echo Entered the build phase...
       - DB_NAME=$PRODUCT_NAME$([[ "$ENVIRONMENT" == "development" ]] && echo "$CLEAN_BRANCH" || echo "$ENVIRONMENT")
-      - DB_HOSTNAME=$DB_HOSTNAME-$([[ "$ENVIRONMENT" == "development" ]] && echo "$CLEAN_BRANCH" || echo "$ENVIRONMENT")
+      - DB_HOSTNAME=$([[ "$ENVIRONMENT" == "development" ]] && echo "$CLEAN_BRANCH" || echo "$ENVIRONMENT")
       - S3_BUCKET_NAME=ala-$PRODUCT_NAME-$([[ "$ENVIRONMENT" == "development" ]] && echo "$CLEAN_BRANCH" || echo "$ENVIRONMENT")
       # comment out the following block if you are deploying database stack for your development environment
       - |
