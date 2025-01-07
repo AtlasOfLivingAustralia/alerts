@@ -126,10 +126,11 @@ Resources:
       Description: Alerts DB instance parameter grp
       Family: aurora-mysql8.0
       Parameters:
-        long_query_time: 2
-        slow_query_log: 1
+        general_log: 0
         log_queries_not_using_indexes: 0
+        long_query_time: 2
         performance_schema: 1
+        slow_query_log: 1
 
   ClusterParamGrp:
     Type: AWS::RDS::DBClusterParameterGroup
