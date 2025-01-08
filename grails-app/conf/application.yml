@@ -179,7 +179,8 @@ userdetails:
 useSpeciesListsAlerts: true
 useSpatialAlerts: true
 useBlogsAlerts: true
-useCitizenScienceAlerts: true
+#useCitizenScienceAlerts: false
+
 biosecurity:
     cronExpression: '0 0 11 ? * THU'
     query:
