@@ -3,10 +3,8 @@ package au.org.ala.alerts
 import com.jayway.jsonpath.JsonPath
 import grails.gorm.transactions.NotTransactional
 import grails.converters.JSON
-import org.apache.commons.io.IOUtils
 import org.apache.commons.lang.time.DateUtils
 import org.grails.web.json.JSONArray
-import org.grails.web.json.JSONElement
 import org.grails.web.json.JSONObject
 
 import javax.transaction.Transactional

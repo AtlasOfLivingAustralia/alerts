@@ -126,17 +126,24 @@ class MyAnnotationService{
      * @return
      */
     private static def findVerifiedAssertions(JSONArray assertions, String userId) {
-        def verifiedAssertions = []
+        def sortedAssertions = []
         if (assertions) {
             // all the original user assertions (issues users flagged)
             def origUserAssertions = assertions.findAll { it.uuid && !it.relatedUuid && it.userId == userId }
             // Find assertions which commented on the original user assertions
             def myOriginalUuids = origUserAssertions*.uuid
-            // todo - need to check if 50003 or 50001 is the correct status for Verified assertions
-            verifiedAssertions = myOriginalUuids.collectMany { uuid ->
-                assertions.findAll { it.relatedUuid == uuid && ( it.qaStatus == 50003 || it.qaStatus == 50001)}
+            def verifiedAssertions = myOriginalUuids.collectMany { uuid ->
+                assertions.findAll { it.relatedUuid == uuid && ( it.qaStatus == 50001 || it.qaStatus == 50002 || it.qaStatus == 50003) }
+            }
+
+            try {
+                sortedAssertions = verifiedAssertions.sort { a, b ->
+                    Date.parse("yyyy-MM-dd'T'HH:mm:ssX", b.created) <=> Date.parse("yyyy-MM-dd'T'HH:mm:ssX", a.created)
+                }
+            } catch (Exception e) {
+                sortedAssertions = verifiedAssertions
             }
         }
-        return  verifiedAssertions
+        return  sortedAssertions
     }
 }
