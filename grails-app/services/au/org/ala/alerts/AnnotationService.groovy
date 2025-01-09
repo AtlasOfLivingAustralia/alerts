@@ -20,6 +20,8 @@ import com.jayway.jsonpath.PathNotFoundException
 import grails.converters.JSON
 import org.grails.web.json.JSONArray
 import org.grails.web.json.JSONObject
+import groovy.json.JsonOutput
+
 
 import java.text.SimpleDateFormat
 
@@ -99,9 +101,9 @@ class AnnotationService {
             def record = it.value
             def previousRecord = oldRecordsMap.get(record.uuid)
             if (previousRecord) {
-                String currentAssertions = JSON.stringify(filterAssertions(record.user_assertions))
-                String previousAssertions = JSON.stringify(filterAssertions(previousRecord.user_assertions))
-                currentAssertions || previousAssertions
+                String currentAssertions = JsonOutput.toJson(record.user_assertions)
+                String previousAssertions = JsonOutput.toJson(previousRecord.user_assertions)
+                currentAssertions != previousAssertions
             } else {
                 true
             }
