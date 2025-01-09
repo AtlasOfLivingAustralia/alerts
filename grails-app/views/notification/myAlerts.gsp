@@ -142,52 +142,53 @@
                                   </tbody>
                               </table>
                             </div>
-                          <div class="col-md-5">
-                              <br/>
-                              <div class="well">
-                                  <p>Your can set up specific alerts in various sections of the ALA, including</p>
-                                  <p>
-                                  <ul>
-                                      <li>
-                                          <g:message code="my.alerts.data.resource.desc" args="[grailsApplication.config.collectory.searchURL, grailsApplication.config.collection.searchTitle]" />
-                                      </li>
-                                      <li>
-                                          <g:message code="my.alerts.species.desc" args="[grailsApplication.config.speciesPages.searchURL, grailsApplication.config.speciesPages.searchTitle]" />
-                                      </li>
-                                      <li>
-                                          <g:message code="my.alerts.region.desc" args="[grailsApplication.config.regions.searchURL, grailsApplication.config.regions.searchTitle]" />
-                                      </li>
-                                      <li>
-                                          <g:message code="my.alerts.new.record.desc" args="[grailsApplication.config.occurrence.searchURL, grailsApplication.config.occurrence.searchTitle]" />
-                                      </li>
-                                  </ul>
-                              </p>
-                                  <p>
-                                      <g:message code="my.alerts.look.for.btn" />
-                                  </p>
-                              </div>
-                          </div>
-
                           </div>
 
                           <!-- Custom Alerts Tab -->
-                          <div class="tab-pane fade col-md-6" id="custom-alerts" role="tabpanel" aria-labelledby="custom-alerts-tab">
+                          <div class="tab-pane fade" id="custom-alerts" role="tabpanel" aria-labelledby="custom-alerts-tab">
                               <g:if test="${customQueries}">
-                                  <table>
-                                      <tbody id="customQueries">
-                                      <g:each in="${customQueries}" status="i" var="query">
-                                          <tr class="${(i % 2) == 0 ? 'odd' : 'even'}" id='custom-${query.id}'>
-                                              <td class="queryDescription">
-                                                  <h3>${query.name}</h3>
-                                                  ${query.description}
-                                              </td>
-                                              <td class="queryActions">
-                                                  <a href="javascript:void(0);" class='btn btn-ala deleteButton' id='${query.id}'><g:message code="my.alerts.delete.label" /></a>
-                                              </td>
-                                          </tr>
-                                      </g:each>
-                                      </tbody>
-                                  </table>
+                                  <div class="col-md-7">
+                                     <table>
+                                         <tbody id="customQueries">
+                                          <g:each in="${customQueries}" status="i" var="query">
+                                              <tr class="${(i % 2) == 0 ? 'odd' : 'even'}" id='custom-${query.id}'>
+                                                  <td class="queryDescription">
+                                                      <h3>${query.name}</h3>
+                                                      ${query.description}
+                                                  </td>
+                                                  <td class="queryActions">
+                                                      <a href="javascript:void(0);" class='btn btn-ala deleteButton' id='${query.id}'><g:message code="my.alerts.delete.label" /></a>
+                                                  </td>
+                                              </tr>
+                                          </g:each>
+                                          </tbody>
+                                      </table>
+                                  </div>
+                                  <div class="col-md-5">
+                                      <br/>
+                                      <div class="well">
+                                          <p>Your can set up specific alerts in various sections of the ALA, including</p>
+                                          <p>
+                                          <ul>
+                                              <li>
+                                                  <g:message code="my.alerts.data.resource.desc" args="[grailsApplication.config.collectory.searchURL, grailsApplication.config.collection.searchTitle]" />
+                                              </li>
+                                              <li>
+                                                  <g:message code="my.alerts.species.desc" args="[grailsApplication.config.speciesPages.searchURL, grailsApplication.config.speciesPages.searchTitle]" />
+                                              </li>
+                                              <li>
+                                                  <g:message code="my.alerts.region.desc" args="[grailsApplication.config.regions.searchURL, grailsApplication.config.regions.searchTitle]" />
+                                              </li>
+                                              <li>
+                                                  <g:message code="my.alerts.new.record.desc" args="[grailsApplication.config.occurrence.searchURL, grailsApplication.config.occurrence.searchTitle]" />
+                                              </li>
+                                          </ul>
+                                      </p>
+                                          <p>
+                                              <g:message code="my.alerts.look.for.btn" />
+                                          </p>
+                                      </div>
+                                  </div>
                               </g:if>
                           </div>
                       </div>
