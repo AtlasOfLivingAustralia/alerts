@@ -27,6 +27,7 @@ env:
     - EKS_CLUSTER_NAME
     - HELM_RELEASE_NAME
     - HOSTED_ZONE
+    - SECRET_NAME
 
 phases:
 
