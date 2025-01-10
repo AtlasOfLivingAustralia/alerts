@@ -111,20 +111,107 @@ phases:
         echo "config:
           base:
             alerts_base_url: "${DOMAIN_NAME}"
+            alerts_context_path: "${ALERTS_CONTEXT_PATH}"
+          cas:
+            auth_base_url: "${CAS_AUTH_BASE_URL}"
+            alerts_apikey_whitelist: "${CAS_ALERTS_APIKEY_WHITELIST}"
           db:
+            driver_class_name: "${DB_DRIVER_CLASS_NAME}"
             alerts_db_hostname: "${DB_HOSTNAME}"
             database_name: "${DB_NAME}"
+            alerts_db_username: "${DB_USERNAME}"
             alerts_db_password: "${DB_PASSWORD}"
+            mysql_connection_ssl: "${MYSQL_CONNECTION_SSL}"
+            dataSource_dbCreate: "${DB_CREATE_MODE}"
+          enable_myannotation: "${ENABLE_MYANNOTATION}"
+          enable_specieslists_alerts: "${ENABLE_SPECIESLISTS_ALERTS}"
+          enable_spatial_alerts: "${ENABLE_SPATIAL_ALERTS}"
+          enable_blogs_alerts: "${ENABLE_BLOGS_ALERTS}"
+          enable_citizen_science_alerts: "${ENABLE_CITIZEN_SCIENCE_ALERTS}"
+          external:
+            biocache_url: "${BIOCACHE_URL}"
+            biocache_service_url: "${BIOCACHE_SERVICE_URL}"
+            spatial_url: "${SPATIAL_URL}"
+            collectory_url: "${COLLECTORY_URL}"
+            alerts_collectory_service_url: "${ALERTS_COLLECTORY_SERVICE_URL}"
+            alerts_userdetails_url: "${ALERTS_USERDETAILS_URL}"
+            lists_url: "${LISTS_URL}"
+          mail:
+            enable_email: "${ENABLE_EMAIL}"
+            mail_ses_enabled: "${MAIL_SES_ENABLED}"
+          header_and_footer_baseurl: "${HEADER_AND_FOOTER_BASEURL}"
+          header_and_footer_version: "${HEADER_AND_FOOTER_VERSION}"
+          ala_base_url: "${ALA_BASE_URL}"
+          bie_base_url: "${BIE_BASE_URL}"
+          bie_search_path: "${BIE_SEARCH_PATH}"
+          alerts_skin_layout: "${ALERTS_SKIN_LAYOUT}"
+          skin_home_url: "${SKIN_HOME_URL}"
+          skin_orgNameLong: "${SKIN_ORG_NAME_LONG}"
+          orgNameShort: "${ORG_NAME_SHORT}"
+          orgSupportEmail: "${ORG_SUPPORT_EMAIL}"
+          alerts_site_default_language: "${ALERTS_SITE_DEFAULT_LANGUAGE}"
+          skin_favicon: "${SKIN_FAVICON}"
+          privacy_policy_url: "${PRIVACY_POLICY_URL}"
+          occurrence_searchTitle: "${OCCURRENCE_SEARCH_TITLE}"
+          occurrence_searchUrl: "${OCCURRENCE_SEARCH_URL}"
+          regions_searchTitle: "${REGIONS_SEARCH_TITLE}"
+          regions_searchUrl: "${REGIONS_SEARCH_URL}"
+          speciesPages_searchTitle: "${SPECIES_PAGES_SEARCH_TITLE}"
+          speciesPages_searchUrl: "${SPECIES_PAGES_SEARCH_URL}"
+          collection_searchTitle: "${COLLECTION_SEARCH_TITLE}"
+          collection_searchUrl: "${COLLECTION_SEARCH_URL}"
           google_apikey: "${GOOGLE_APIKEY}"
+          biosecurity:
+            biosecurity_more_info: "${BIOSECURITY_MORE_INFO}"
+            biosecurity_query_url: "${BIOSECURITY_QUERY_URL}"
+          species_list_server: "${SPECIES_LIST_SERVER}"
+          csv:
+            biosecurity_csv_local_enabled: "${BIOSECURITY_CSV_LOCAL_ENABLED}"
+            biosecurity_csv_s3_enabled: "${BIOSECURITY_CSV_S3_ENABLED}"
           s3:
+            grails_plugin_awssdk_region: "${GRAILS_PLUGIN_AWSSDK_REGION}"
             grails_plugin_awssdk_s3_bucket: "${S3_BUCKET_NAME}"
+            grails_plugin_awssdk_s3_profile: "${GRAILS_PLUGIN_AWSSDK_S3_PROFILE}"
           cognito:
             oidc:
               alerts_client_id: "${CLIENT_ID}"
               alerts_client_secret: "${CLIENT_SECRET}"
+              discoveryUri: "${OIDC_DISCOVERY_URI}"
+              logoutUrl: "${OIDC_LOGOUT_URL}"
+              alaUseridClaim: "${OIDC_ALA_USERID_CLAIM}"
+              logoutAction: "${OIDC_LOGOUT_ACTION}"
+              scope: "${OIDC_SCOPE}"
+            core:
+              roleAttribute: "${CORE_ROLE_ATTRIBUTE}"
+              affiliation_survey_enabled: "${CORE_AFFILIATION_SURVEY_ENABLED}"
+              auth_cookie_name: "${CORE_AUTH_COOKIE_NAME}"
+            cookie:
+              auth_cookie_enabled: "${COOKIE_AUTH_COOKIE_ENABLED}"
+              auth_cookie_domain: "${COOKIE_AUTH_COOKIE_DOMAIN}"
+            jwt:
+              rolesFromAccessToken: "${JWT_ROLES_FROM_ACCESS_TOKEN}"
+              userIdClaim: "${JWT_USER_ID_CLAIM}"
+              roleClaims: "${JWT_ROLE_CLAIMS}"
+              discoveryUri: "${JWT_DISCOVERY_URI}"
+          apikey:
+            apikey_check_enabled: "${APIKEY_CHECK_ENABLED}"
+            apikey_auth_url: "\{APIKEY_AUTH_URL}"
+            apikey_check_url: "${APIKEY_CHECK_URL}"
+            apikey_userdetails_url: "${APIKEY_USERDETAILS_URL}"
           webservice:
+            webservice_jwt: "${WEBSERVICE_JWT}"
+            alerts_webservice_jwt_scopes: "${ALERTS_WEBSERVICE_JWT_SCOPES}"
             alerts_client_id: "${SERVER_TO_SERVER_CLIENT_ID}"
-            alerts_client_secret: "${SERVER_TO_SERVER_CLIENT_SECRET}"" > overrides.yaml
+            alerts_client_secret: "${SERVER_TO_SERVER_CLIENT_SECRET}"
+          usersync_batchsize: "${USERSYNC_BATCHSIZE}"
+          userdetails:
+            userdetails_url: "${USERDETAILS_URL}"
+            userdetails_web_url: "${USERDETAILS_WEB_URL}"
+            userdetails_api_url: "${USERDETAILS_API_URL}"
+          openapi:
+            openapi_oauth_url: "${OPENAPI_OAUTH_URL}"
+            terms_url: "${TERMS_URL}"
+            support_email: "${SUPPORT_EMAIL}"" > helm_values.yaml
 
     finally:
       - #echo This always runs
