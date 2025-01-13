@@ -4,7 +4,6 @@ import ala.postie.BiosecurityQueriesJob
 
 class BootStrap {
 
-    javax.sql.DataSource dataSource
     def grailsApplication
     def messageSource
     def siteLocale
@@ -119,7 +118,7 @@ class BootStrap {
 
         title = messageSource.getMessage("query.citizen.records.title", null, siteLocale)
         descr = messageSource.getMessage("query.citizen.records.descr", null, siteLocale)
-        if (grailsApplication.config.useCitizenScienceAlerts.toBoolean() &&
+        if (grailsApplication.config.useCitizenScienceAlerts?.toBoolean() &&
                 Query.findAllByName(title).isEmpty()) {
             Query newCitizenScienceRecords = (new Query([
                     baseUrl: grailsApplication.config.biocacheService.baseURL,
@@ -142,7 +141,7 @@ class BootStrap {
 
         title = messageSource.getMessage("query.citizen.records.imgs.title", null, siteLocale)
         descr = messageSource.getMessage("query.citizen.records.imgs.descr", null, siteLocale)
-        if (grailsApplication.config.useCitizenScienceAlerts.toBoolean() &&
+        if (grailsApplication.config.useCitizenScienceAlerts?.toBoolean() &&
                 Query.findAllByName(title).isEmpty()) {
             Query newCitizenScienceRecordsWithImages = (new Query([
                     baseUrl: grailsApplication.config.biocacheService.baseURL,

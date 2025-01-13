@@ -17,12 +17,9 @@ package au.org.ala.alerts
 
 import com.jayway.jsonpath.JsonPath
 import com.jayway.jsonpath.PathNotFoundException
-import grails.converters.JSON
 import org.grails.web.json.JSONArray
 import org.grails.web.json.JSONObject
 import groovy.json.JsonOutput
-
-
 import java.text.SimpleDateFormat
 
 /**
@@ -69,11 +66,10 @@ class AnnotationService {
     }
 
     /**
-     * If fireNotZero property is true, diff method will not be called
+     * If fireNotZero property is true, this method will not be called
      *
-     * for normal alerts, comparing occurrence uuid is enough to show the difference.
-     * for my annotation alerts, same occurrence record could exist in both result but have different assertions.
-     * so comparing occurrence uuid is not enough, we need to compare 50001/50002/50003 sections inside each occurrence record
+     * This method compare the difference of Annotations between previous and last result.
+     * for annotation query, it returns the records that have new annotations after the given DATE. So it does not require to call this method.
 
      * return a list of records that their annotations have been changed or deleted
      * @param String previous
