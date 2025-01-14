@@ -33,10 +33,12 @@ class ImageService {
         def dataResourceInfos = collectionService.findResourceByUids(collectionUrl, drIds)
         drIds.each { id ->
             def dataResourceInfo = dataResourceInfos[id]
-            groupedByDataResource[id].each { record ->
-                record["dataResourceInfo"] = [:]
-                record["dataResourceInfo"].lastUpdated = dataResourceInfo.lastUpdated
-                record["dataResourceInfo"].alaPublicUrl = dataResourceInfo.alaPublicUrl
+            if (dataResourceInfo) {
+                groupedByDataResource[id].each { record ->
+                    record["dataResourceInfo"] = [:]
+                    record["dataResourceInfo"].lastUpdated = dataResourceInfo.lastUpdated
+                    record["dataResourceInfo"].alaPublicUrl = dataResourceInfo.alaPublicUrl
+                }
             }
         }
         return groupedByDataResource

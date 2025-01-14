@@ -1,5 +1,8 @@
 package ala.postie
 
+import grails.plugins.schwartz.monitor.listener.QuartzJobListener
+import org.quartz.JobExecutionContext
+
 class HourlyQueriesJob {
 
     static triggers = {
@@ -11,6 +14,6 @@ class HourlyQueriesJob {
     def execute() {
         log.info("****** Starting hourly update ****** " + new Date())
         notificationService.execQueryForFrequency('hourly')
-        log.info("****** Finished hourly update ******" + new Date())
+        log.info("****** Finished hourly update ****** " + new Date())
     }
 }

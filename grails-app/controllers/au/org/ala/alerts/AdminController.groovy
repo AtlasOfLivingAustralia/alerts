@@ -741,6 +741,27 @@ class AdminController {
         }
     }
 
+    /**
+     * Reset the previous / current results stored in QueryResult
+     * @return
+     */
+    @AlaSecured(value = ['ROLE_ADMIN'], anyRole = true)
+    @Transactional
+    def resetQueryResult() {
+        try{
+            def id = params.id.toInteger()
+            if(id){
+                queryResultService.reset(id)
+                render([status: 0, message: "Query result has been reset"] as JSON)
+            } else {
+                render([status: 1, message: "Missing ID"] as JSON)
+            }
+        } catch (Exception e) {
+            render([status: 1, message: "Error in resetting query result: ${e.message}"] as JSON)
+        }
+    }
+
+
     @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true, redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to view that page.")
     def listBiosecurityAuditCSV() {
         def result = [:]
