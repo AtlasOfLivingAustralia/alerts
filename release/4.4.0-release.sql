@@ -23,8 +23,8 @@ WHERE query_id IN (
     WHERE email_template = '/email/specieslists'
 );
 
--- 4.2
-update alerts.query set email_template="/email/datasets" where email_template='/email/specieslists';
+-- -- 4.2
+-- update alerts.query set email_template="/email/datasets" where email_template='/email/specieslists';
 
 --- disable fire_when_change for spatial layer
 UPDATE alerts.property_path
@@ -95,3 +95,26 @@ UPDATE `alerts`.`query`
         `email_template` = '/email/specieslist',
         `base_url_forui` = 'https://lists.ala.org.au'
     WHERE (`id` = 'Replace it');
+
+
+--- Update query of datasets to match query of datasetResource
+
+--- If datasetResource query already exists, then update the query id of the subscribers to datasetResource query id
+--- Find the query id which needs to migrate subscribers to datasetResource. e.g. query id: 7
+select * from notification where query_id = [id];
+--- find subscribers details
+select * from user where id in (SELECT user_id FROM alerts.notification where query_id=[id]);
+
+update query_id=[dataresourse id] where query_id=[id];
+--- check if there are duplicate subscribers
+--- delete datasets query by clicking on delete button in the query admin page
+
+--- If datasetResource query does not exist, then create a new query with the following details
+UPDATE `alerts`.`query`
+SET `base_url` = 'https://biocache-ws.ala.org.au/ws',
+    `id_json_path` = 'i18nCode',
+    `query_path` = '/occurrences/search?q=*:*&facet=true&flimit=-1&facets=dataResourceUid&pageSize=0',
+    `record_json_path` = '$.facetResults[0].fieldResult[*]',
+    `email_template` = '/email/specieslist',
+    `base_url_forui` = 'https://collections-test.ala.org.au'
+WHERE (`id` = 'Replace it');
