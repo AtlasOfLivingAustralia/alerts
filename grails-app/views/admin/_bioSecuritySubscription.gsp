@@ -8,8 +8,8 @@
 <g:set var="logs" value="${logs}"/>
 
 
-<div name="subscription_${query.id}" class="row bioscecrurity-padding" style="background-color: ${(i+startIdx) % 2 == 0 ? '#f0f0f0' : '#ffffff'};">
-    <div class="col-md-4 indented-text">
+<div id="subscription_${query.id}" class="row bioscecrurity-padding" style="background-color: ${(i+startIdx) % 2 == 0 ? '#f0f0f0' : '#ffffff'};">
+    <div class="col-md-4 indented-text" id="${query.listId}">
         <g:if test ="${query.listId != null && !(query.listId instanceof String && query.listId.toLowerCase() == 'null')}">            &nbsp;&nbsp;
             <g:link controller="query" action="show" id="${query.id}">
                 <span><i class="fa fa-info-circle" aria-hidden="true" title="Show the query"></i></span>

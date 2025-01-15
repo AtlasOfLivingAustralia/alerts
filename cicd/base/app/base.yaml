@@ -6,12 +6,33 @@ Parameters:
   pBuild:
     Type: String
     Description: The build number
+  pBackupBucket:
+    Type: String
+    Description: The backup bucket
   pCleanBranch:
     Type: String
     Description: The clean branch, can be used in resource names
   pEnvironment:
     Type: String
     Description: The AWS environment this belongs to
+  pProductComponent:
+    Type: String
+    Description: The product component
+  pProductName:
+    Type: String
+    Description: The name of the product
+  pOidcConnectProvider:
+    Type: String
+    Description: The OIDC connect provider
+  pClusterOidcIssuerUrl:
+    Type: String
+    Description: The OIDC issuer URL for the cluster
+  pCognitoStackName:
+    Type: String
+    Description: The name of the Cognito stack
+  pAppClientDomain:
+    Type: String
+    Description: The domain for the app client
 
 Conditions:
 
@@ -25,6 +46,22 @@ Conditions:
 
 Resources:
 
+  AlertsAppSecret:
+    Type: 'AWS::SecretsManager::Secret'
+    Properties:
+      Name: !Sub
+        - ${pProductName}-${ResourceName}
+        - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
+      Description: !Sub Alerts app ${pEnvironment} secrets
+      GenerateSecretString:
+        GenerateStringKey: db-password
+        PasswordLength: 12
+        ExcludeCharacters: "/@\" "
+        SecretStringTemplate: |
+          {
+            "db-password": ""
+          }
+
   AlertsRepository:
     Type: AWS::ECR::Repository
     Properties:
@@ -34,7 +71,7 @@ Resources:
       ImageScanningConfiguration:
         ScanOnPush: true
       RepositoryName: !Sub
-                         - alerts-${ResourceName}
+                         - ${pProductName}-${ResourceName}
                          - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
       RepositoryPolicyText:
         Version: 2012-10-17
@@ -52,23 +89,237 @@ Resources:
         - Key: Branch
           Value: !Ref pCleanBranch
 
-  AlertsSecret:
-    Type: 'AWS::SecretsManager::Secret'
+  BiosecurityAlertsBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Delete
     Properties:
-      Name: !Sub 
-              - alerts-${ResourceName}
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      BucketName: !Sub
+              - ala-${pProductName}-${ResourceName}
               - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
-      Description: !Sub Alerts app ${pEnvironment} secrets
-      GenerateSecretString: 
-        GenerateStringKey: db-password
-        PasswordLength: 12
-        ExcludeCharacters: "/@\" "
-        SecretStringTemplate: |
-          {
-            "db-password": ""
-          }
+      LifecycleConfiguration:
+        Rules:
+          - Id: delete
+            AbortIncompleteMultipartUpload:
+               DaysAfterInitiation: 1
+            Status: Enabled
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: TRUE
+        BlockPublicPolicy: TRUE
+        IgnorePublicAcls: TRUE
+        RestrictPublicBuckets: TRUE
+      Tags:
+        - Key: Name
+          Value: !Sub
+              - ${pProductName}-${ResourceName}
+              - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
 
+  AlertsRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument: !Sub |
+        {
+          "Version": "2012-10-17",
+          "Statement": [
+              {
+                  "Effect": "Allow",
+                  "Principal": {
+                      "Federated": "${pOidcConnectProvider}"
+                  },
+                  "Action": "sts:AssumeRoleWithWebIdentity",
+                  "Condition": {
+                      "StringEquals": {
+                                        "${pClusterOidcIssuerUrl}:sub": "system:serviceaccount:${pProductName}:alerts-service-account-${pCleanBranch}",
+                                        "${pClusterOidcIssuerUrl}:aud": "sts.amazonaws.com"
+                      }
+                  }
+              },
+              {
+                "Effect": "Allow",
+                "Principal": {
+                  "Service":  "ec2.amazonaws.com"
+                
+                },
+                "Action": "sts:AssumeRole"
+              }
+          ]
+        }
+      Description: !Sub 'Ec2 instance profile role for ${AWS::StackName} ${pEnvironment} build ${pBuild}'
+      ManagedPolicyArns:
+        - !Sub arn:aws:iam::${AWS::AccountId}:policy/cpt/cptSSMInstanceCoreCloudWatchPatch
+      Policies:
+        - PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+            - Effect: Allow
+              Action:
+                - 'secretsmanager:getsecretvalue'
+              Resource:
+                - !Ref AlertsAppSecret
+          PolicyName: secrets
+        - PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+            - Effect: Allow
+              Action:
+                - s3:DeleteObject
+                - s3:DeleteObjectVersion
+                - s3:GetBucketLocation
+                - s3:GetObject
+                - s3:ListBucket
+                - s3:PutObject
+              Resource:
+                - !Sub arn:aws:s3:::${pBackupBucket}
+                - !Sub arn:aws:s3:::${pBackupBucket}/*
+          PolicyName: backups
+        - PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+            - Effect: Allow
+              Action:
+                - s3:DeleteObject
+                - s3:DeleteObjectVersion
+                - s3:GetBucketLocation
+                - s3:GetObject
+                - s3:ListBucket
+                - s3:PutObject
+              Resource:
+                - !Sub arn:aws:s3:::${BiosecurityAlertsBucket}
+                - !Sub arn:aws:s3:::${BiosecurityAlertsBucket}/*
+          PolicyName: biosecurity-bucket
+        - PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+            - Effect: Allow
+              Action:
+                - ses:SendEmail
+                - ses:SendTemplatedEmail
+                - ses:SendRawEmail
+              Resource:
+                - '*'
+          PolicyName: email
+        - PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - elasticloadbalancing:DescribeListenerAttributes
+                Resource:
+                  - '*'
+          PolicyName: describe-listener-attributes
+      RoleName: !Sub
+                   - ${pProductName}-${ResourceName}
+                   - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
+      Tags:
+        - Key: Name
+          Value: !Sub
+              - ${pProductName}-${ResourceName}
+              - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
 
+  AlertsInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      InstanceProfileName: !Sub
+                              - ${pProductName}-${ResourceName}
+                              - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
+      Roles:
+        - !Ref AlertsRole
+
+  AppClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      AccessTokenValidity: 60
+      AllowedOAuthFlows:
+        - code
+      AllowedOAuthFlowsUserPoolClient: True
+      AllowedOAuthScopes:
+        - email
+        - openid
+        - profile
+        - ala/roles
+        - ala/attrs
+      AuthSessionValidity: 3
+      CallbackURLs:
+        - !Sub "https://${pAppClientDomain}/callback?client_name=OidcClient"
+      ClientName: !Sub
+                    - ${pProductName}-${ResourceName}
+                    - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
+      DefaultRedirectURI: !Sub "https://${pAppClientDomain}/callback?client_name=OidcClient"
+      EnablePropagateAdditionalUserContextData: True
+      EnableTokenRevocation: True
+      ExplicitAuthFlows:
+        - ALLOW_ADMIN_USER_PASSWORD_AUTH
+        - ALLOW_CUSTOM_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+        - ALLOW_USER_SRP_AUTH
+      GenerateSecret: True
+      IdTokenValidity: 60
+      LogoutURLs:
+        - !Sub "https://${pAppClientDomain}"
+        - !Sub "https://${pAppClientDomain}/"
+        - !Sub "https://${pAppClientDomain}/notification/myAlerts"
+      PreventUserExistenceErrors: ENABLED
+      RefreshTokenValidity: 30
+      SupportedIdentityProviders:
+        - COGNITO
+        - Facebook
+        - Google
+        - AAF
+        - SignInWithApple
+      TokenValidityUnits:
+        AccessToken: minutes
+        IdToken: minutes
+        RefreshToken: days
+      UserPoolId: !ImportValue
+        Fn::Sub: ${pCognitoStackName}-UserPoolId
+
+  AppClientAlertsServerDev:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      AccessTokenValidity: 60
+      AllowedOAuthFlows:
+        - client_credentials
+      AllowedOAuthFlowsUserPoolClient: True
+      AllowedOAuthScopes:
+        - ala/internal
+        - ala/attrs
+        - users/read
+      AuthSessionValidity: 3
+      CallbackURLs:
+        - !Sub "https://${pAppClientDomain}/callback?client_name=OidcClient"
+      ClientName: !Sub
+                    - ${pProductName}-${ResourceName}-server-to-server
+                    - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
+      DefaultRedirectURI: !Sub "https://${pAppClientDomain}/callback?client_name=OidcClient"
+      EnablePropagateAdditionalUserContextData: True
+      EnableTokenRevocation: True
+      ExplicitAuthFlows:
+        - ALLOW_ADMIN_USER_PASSWORD_AUTH
+        - ALLOW_CUSTOM_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+        - ALLOW_USER_SRP_AUTH
+      GenerateSecret: True
+      IdTokenValidity: 60
+      LogoutURLs:
+        - !Sub "https://${pAppClientDomain}"
+        - !Sub "https://${pAppClientDomain}/notification/myAlerts"
+      PreventUserExistenceErrors: ENABLED
+      RefreshTokenValidity: 30
+      SupportedIdentityProviders:
+        - COGNITO
+        - Facebook
+        - Google
+        - AAF
+        - SignInWithApple
+      TokenValidityUnits:
+        AccessToken: minutes
+        IdToken: minutes
+        RefreshToken: days
+      UserPoolId: !ImportValue
+        Fn::Sub: ${pCognitoStackName}-UserPoolId
 
 Outputs:
 
@@ -79,7 +330,29 @@ Outputs:
   AlertsRepositoryName:
     Description: The ECR repository ARN for the Alerts service
     Value: !Ref AlertsRepository
+  
+  AlertsRepositoryUri:
+    Description: The ECR repository URI for the Alerts service
+    Value: !GetAtt AlertsRepository.RepositoryUri
+    Export:
+      Name: !Sub ${AWS::StackName}-AlertsRepositoryUri
 
   AlertsSecret:
-    Description: The Secrets name for alerts 
-    Value: !Ref AlertsSecret
+    Description: The Secrets name for alerts
+    Value: !Ref AlertsAppSecret
+
+  BiosecurityAlertsBucket:
+    Description: The S3 bucket for the Biosecurity Alerts service
+    Value: !Ref BiosecurityAlertsBucket
+
+  AlertsRoleArn:
+    Description: The role ARN for the Alerts service
+    Value: !GetAtt AlertsRole.Arn
+
+  AlertsAppClient:
+    Description: The app client for the alerts service
+    Value: !Ref AppClient
+
+  AlertsServerToServerAppClient:
+    Description: The app client for the alerts service
+    Value: !Ref AppClientAlertsServerDev

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Atlas of Living Australia
+ * Copyright (C) 2024 Atlas of Living Australia
  * All Rights Reserved.
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -12,8 +12,6 @@
  */
 
 package au.org.ala.alerts
-
-import au.org.ala.userdetails.UserDetailsFromIdListRequest
 import au.org.ala.userdetails.UserDetailsFromIdListResponse
 import au.org.ala.web.UserDetails
 import grails.converters.JSON
@@ -174,7 +172,7 @@ class UserService {
         log.debug "getUser - userDetails = ${userDetails}"
 
         if (!userDetails?.userId) {
-            log.error "User isn't logged in - or there is a problem with CAS configuration"
+            log.error("User isn't logged in - or there is a problem with CAS configuration")
             return null
         }
 
@@ -188,13 +186,15 @@ class UserService {
                     log.error(it)
                 }
             }
-            // new user gets "Blogs and News" weekly by default (opt out)
-            def notificationInstance = new Notification()
-            notificationInstance.query = Query.findByName(messageSource.getMessage("query.ala.blog.title", null, siteLocale))
-            notificationInstance.user = user
-            if (!notificationInstance.save(flush: true)) {
-                notificationInstance.errors.allErrors.each {
-                    log.error(it)
+            if (grailsApplication.config.getProperty('useBlogsAlerts', Boolean, true)) {
+                // new user gets "Blogs and News" weekly by default (opt out)
+                def notificationInstance = new Notification()
+                notificationInstance.query = Query.findByName(messageSource.getMessage("query.ala.blog.title", null, siteLocale))
+                notificationInstance.user = user
+                if (!notificationInstance.save(flush: true)) {
+                    notificationInstance.errors.allErrors.each {
+                        log.error(it)
+                    }
                 }
             }
         }

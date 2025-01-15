@@ -22,7 +22,7 @@ import java.text.SimpleDateFormat
 import groovyx.net.http.HTTPBuilder
 import groovy.json.JsonSlurper
 import java.nio.file.Files
-import java.nio.file.Paths
+
 
 @AlaSecured(value = 'ROLE_ADMIN', redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to view that page.")
 class AdminController {
@@ -39,7 +39,7 @@ class AdminController {
     def messageSource
     def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
 
-    def subscriptionsPerPage = grailsApplication.config.biosecurity?.subscriptionsPerPage? grailsApplication.config.biosecurity.subscriptionsPerPage.toInteger() : 10
+    def subscriptionsPerPage = grailsApplication.config.getProperty('biosecurity.subscriptionsPerPage', Integer, 100)
     def index() {}
 
 
@@ -367,7 +367,7 @@ class AdminController {
 
         def frequency = 'weekly'
         QueryResult qr = notificationService.getQueryResult(query, Frequency.findByName(frequency))
-        qr.lastResult = notificationService.gzipResult(processedJson)
+        qr.lastResult = qr.compress(processedJson)
         //this logic only applies on preview page
         qr.previousCheck = qr.lastChecked
         qr.lastChecked = since
@@ -375,8 +375,6 @@ class AdminController {
 
 
         def records = notificationService.retrieveRecordForQuery(qr.query, qr)
-        def userAssertions = queryService.isBioSecurityQuery(qr.query) ? emailService.getBiosecurityAssertions(qr.query, records as List) : [:]
-        def speciesListInfo = emailService.getSpeciesListInfo(qr.query)
 
         String urlPrefix = "${grailsApplication.config.getProperty("grails.serverURL")}${grailsApplication.config.getProperty('security.cas.contextPath', '')}"
         def localeSubject = messageSource.getMessage("emailservice.update.subject", [query.name] as Object[], siteLocale)
@@ -397,8 +395,6 @@ class AdminController {
                         message: query.updateMessage,
                         query: query,
                         moreInfo: qr.queryUrlUIUsed,
-                        speciesListInfo: speciesListInfo,
-                        userAssertions: userAssertions,
                         listcode: queryService.isMyAnnotation(query) ? "biocache.view.myannotation.list" : "biocache.view.list",
                         stopNotification: urlPrefix + '/notification/myAlerts',
                         records: records.take(maxRecords),
@@ -476,7 +472,7 @@ class AdminController {
 
             def frequency = 'weekly'
             QueryResult qr = notificationService.getQueryResult(query, Frequency.findByName(frequency))
-            qr.lastResult = notificationService.gzipResult(processedJson)
+            qr.lastResult = qr.compress(processedJson)
             File tempCSV = biosecurityCSVService.createTempCSV(qr)
             csvFiles.add(tempCSV.path)
         }
@@ -578,9 +574,9 @@ class AdminController {
             Frequency fre = Frequency.findByName(frequency)
             if (query && fre) {
                 QueryResult qs = notificationService.executeQuery(query, fre, true)
-                boolean hasChanged = notificationService.hasChanged(qs)
+                boolean hasChanged = diffService.hasChanged(qs)
                 def records = notificationService.collectUpdatedRecords(qs)
-                def results = ["hasChanged": hasChanged, "records": records]
+                def results = ["hasChanged": hasChanged, "records": records, "details": qs.brief()]
                 render results as JSON
             } else {
                 render([status: 1, message: "Cannot find query: ${id}"] as JSON)
@@ -603,19 +599,50 @@ class AdminController {
             Frequency fre = Frequency.findByName(frequency)
             if (query && fre) {
                 QueryResult qs = notificationService.executeQuery(query, fre, true, true)
-                boolean hasChanged = notificationService.hasChanged(qs)
+                boolean hasChanged = diffService.hasChanged(qs)
                 def records = notificationService.collectUpdatedRecords(qs)
                 User currentUser = userService.getUser()
                 def recipient =
                     [email: currentUser.email, userUnsubToken: currentUser.unsubscribeToken, notificationUnsubToken: '']
                 emailService.sendGroupNotification(qs, fre, [recipient])
-                def results = ["hasChanged": hasChanged, "records": records, "recipient": currentUser.email]
+                def results = ["hasChanged": hasChanged, "records": records, "recipient": currentUser.email, details: qs.brief()]
                 render results as JSON
             } else {
                 render([status: 1, message: "Cannot find query: ${id}"] as JSON)
             }
         } else {
             render([status: 1, message: "Missing queryId or frequency"] as JSON)
+        }
+    }
+
+    /**
+     * NO Database update, Email sent to current user
+     * Query on the check date and email the result to current user
+     * @return
+     */
+    def emailAlertsOnCheckDate(){
+        def id = params.queryId
+        def frequency = params.frequency
+        def checkDate = params.checkDate
+        if (id && frequency && checkDate) {
+            Query query = Query.get(id)
+            Frequency fre = Frequency.findByName(frequency)
+            Date date = new SimpleDateFormat("yyyy-MM-dd").parse(checkDate)
+            if (query && fre) {
+                QueryResult qs = notificationService.executeQuery(query, fre, false, true, date)
+                boolean hasChanged = diffService.hasChanged(qs)
+                def records = notificationService.collectUpdatedRecords(qs)
+                User currentUser = userService.getUser()
+                def recipient =
+                        [email: currentUser.email, userUnsubToken: currentUser.unsubscribeToken, notificationUnsubToken: '']
+                emailService.sendGroupNotification(qs, fre, [recipient])
+                def results = ["hasChanged": hasChanged, "records": records, "recipient": currentUser.email, details: qs.brief()]
+                render results as JSON
+            } else {
+                render([status: 1, message: "Cannot find query: ${id}"] as JSON)
+            }
+        } else {
+            render([status: 1, message: "Missing queryId or frequency or check date"] as JSON)
         }
     }
 
@@ -634,7 +661,7 @@ class AdminController {
             Frequency fre = Frequency.findByName(frequency)
             if (query && fre) {
                 QueryResult qs = notificationService.executeQuery(query, fre, false, false)
-                boolean hasChanged = notificationService.hasChanged(qs)
+                boolean hasChanged = diffService.hasChanged(qs)
                 def records = notificationService.collectUpdatedRecords(qs)
                 User currentUser = userService.getUser()
                 def recipient =
@@ -714,18 +741,43 @@ class AdminController {
         }
     }
 
+    /**
+     * Reset the previous / current results stored in QueryResult
+     * @return
+     */
+    @AlaSecured(value = ['ROLE_ADMIN'], anyRole = true)
+    @Transactional
+    def resetQueryResult() {
+        try{
+            def id = params.id.toInteger()
+            if(id){
+                queryResultService.reset(id)
+                render([status: 0, message: "Query result has been reset"] as JSON)
+            } else {
+                render([status: 1, message: "Missing ID"] as JSON)
+            }
+        } catch (Exception e) {
+            render([status: 1, message: "Error in resetting query result: ${e.message}"] as JSON)
+        }
+    }
+
+
     @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true, redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to view that page.")
     def listBiosecurityAuditCSV() {
-        def result  = biosecurityCSVService.list()
+        def result = [:]
+        try {
+            result  = biosecurityCSVService.list()
+        } catch (Exception e) {
+            log.error("Error in listing Biosecurity CSV files: ${e.message}")
+            result = [status: 1, message: "Error in listing Biosecurity CSV files: ${e.message}"]
+        }
         render(view: 'biosecurityCSV', model: result)
     }
 
     @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true,redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to view that page.")
     def aggregateBiosecurityAuditCSV(String folderName) {
-        def BASE_DIRECTORY = grailsApplication.config.biosecurity.csv.local.directory
-        def folder = new File(BASE_DIRECTORY, folderName)
-        if (!folder.exists() || !folder.isDirectory()) {
-            render(status: 404, text: "Data not found")
+        if (!biosecurityCSVService.folderExists(folderName)) {
+            render(status: 404, text: 'Data not found')
             return
         }
 
@@ -742,17 +794,17 @@ class AdminController {
 
     @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true,redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to view that page.")
     def downloadBiosecurityAuditCSV(String filename) {
-        def BASE_DIRECTORY = grailsApplication.config.biosecurity.csv.local.directory
-        def file = new File(BASE_DIRECTORY, filename)
-        if (!file.exists() || file.isDirectory()) {
+        String contents = biosecurityCSVService.getFile(filename)
+        if (!contents) {
             render(status: 404, text: "Data not found")
             return
         }
-
-        def saveToFile = Paths.get(filename).collect { it.toString() }.join("_")
-        response.contentType = 'application/octet-stream'
-        response.setHeader('Content-Disposition', "attachment; filename=\"${saveToFile}\"")
-        response.outputStream << file.bytes
+        response.contentType = 'text/csv'
+        response.setHeader("Content-disposition", "attachment; filename=\"${filename.tokenize(File.separator).last()}\"")
+        response.outputStream.withWriter("UTF-8") { writer ->
+            writer << contents
+        }
+        response.outputStream.flush()
     }
 
     /**
@@ -781,22 +833,14 @@ class AdminController {
 
     @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
     def deleteBiosecurityAuditCSV(String filename) {
-        Map message = [status : 1, message: ""]
-        def BASE_DIRECTORY = grailsApplication.config.biosecurity.csv.local.directory
-        def file = new File(BASE_DIRECTORY, filename)
-        if (!file.exists() || file.isDirectory()) {
-            message['status'] = 1
-            message['message'] = "File not found"
-        } else {
-            if (file.renameTo(new File(BASE_DIRECTORY,  filename +'_deleted'))){
-                message['status'] = 0
-                message['message'] = "The file has been temporarily deleted. You can contact the system administrator to recover it."
-            } else {
-                message['status'] = 1
-                message['message'] = "File deletion failed"
-            }
-        }
+        Map message = biosecurityCSVService.deleteFile(filename)
+        render(status: 200, contentType: 'application/json', text: message as JSON)
+    }
 
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
+    def moveLocalFilesToS3() {
+        Boolean dryRun = params.boolean('dryRun', true)
+        Map message = biosecurityCSVService.moveLocalFilesToS3(dryRun)
         render(status: 200, contentType: 'application/json', text: message as JSON)
     }
 }

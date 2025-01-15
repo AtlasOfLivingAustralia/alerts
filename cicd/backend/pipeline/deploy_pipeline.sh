@@ -139,6 +139,7 @@ aws cloudformation deploy \
     --parameter-overrides \
         pAutoDeploy=$AUTO_DEPLOY \
         pBootstrapStackName=$BOOTSTRAP_STACK_NAME \
+        pBaseStackName=$BASE_STACK_NAME \
         pBucketsStackName=$BUCKETS_STACK_NAME \
         pCleanBranch=$clean_branch \
         pEnvironment=$environment \
@@ -148,5 +149,6 @@ aws cloudformation deploy \
         pPipelineFingerprint=$PIPELINE_MD5 \
         pProductComponent=$PRODUCT_COMPONENT \
         pProductName=$PRODUCT_NAME \
+        pDomainName=$DOMAIN_NAME \
         pRestartExecutionOnUpdate=$RESTART_PIPELINE_ON_UPDATE \
 

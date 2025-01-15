@@ -89,8 +89,8 @@ a.btn-ala {
 }
 
 .indented-text {
-    text-indent: -2ch;
-    padding-left: 3ch;
+    text-indent: -1.8ch;
+    padding-left: 3.5ch;
 }
 
 .badge-primary {
@@ -112,6 +112,10 @@ a.btn-ala {
     display: flex;
     justify-content: space-between;
     align-items: center;
+}
+
+.clickable {
+    cursor: pointer;
 }
 
 

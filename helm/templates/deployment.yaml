@@ -14,7 +14,7 @@ spec:
       labels:
         {{- include "ala-alerts.selectorLabels" . | nindent 8 }}
     spec:
-      serviceAccountName: alerts-ses-email-sender
+      serviceAccountName: {{ .Values.serviceAccount.name }}
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -39,7 +39,7 @@ spec:
       volumes:
         - name: config-volume
           secret:
-            secretName: alerts-config-secret
+            secretName: {{ .Values.secret.name }}
         - name: logback-volume
           configMap:
             name: logback-config

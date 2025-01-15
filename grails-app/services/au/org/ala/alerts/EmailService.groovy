@@ -2,17 +2,15 @@ package au.org.ala.alerts
 
 import grails.util.Environment
 import grails.util.Holders
-import org.grails.web.json.JSONArray
-import java.text.SimpleDateFormat
 
 class EmailService {
+    def groovyPageRenderer
     def notificationService
     def queryService
     def grailsApplication
     def messageSource
     def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
-    // this is the date format of 'created' in user assertions
-    def dateformat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+
 
     /**
      * Todo check if it is only for testing purpose
@@ -28,16 +26,15 @@ class EmailService {
         def emailModel = generateEmailModel(notification, queryResult)
         def user = notification.user
         def localeSubject = messageSource.getMessage("emailservice.update.subject", [notification.query.name] as Object[], siteLocale)
+        String emailBody = groovyPageRenderer.render(template: notification.query.emailTemplate, plugin: "email-confirmation", model: emailModel)
+
         if (grailsApplication.config.getProperty("mail.enabled", Boolean, false) && !user.locked) {
             log.info "Sending email to ${user.email} for ${notification.query.name}"
             sendMail {
                 from grailsApplication.config.mail.details.alertAddressTitle + "<" + grailsApplication.config.mail.details.sender + ">"
                 subject localeSubject
                 bcc user.email
-                body(view: notification.query.emailTemplate,
-                        plugin: "email-confirmation",
-                        model: emailModel
-                )
+                html emailBody
             }
         } else if (grailsApplication.config.getProperty("mail.enabled", Boolean, false) && user.locked) {
             log.warn "Email not sent to locked user: ${user.email}"
@@ -97,11 +94,6 @@ class EmailService {
         log.debug("Using email template: " + query.emailTemplate)
 
         def records =  notificationService.retrieveRecordForQuery(query, queryResult)
-        def userAssertions = queryService.isBioSecurityQuery(query) ? getBiosecurityAssertions(query, records as List) : [:]
-        def speciesListInfo = getSpeciesListInfo(query)
-
-        //It returns the total number of records when the property 'fireWhenNotZero' is enabled
-        //Integer fireWhenNotZero = queryService.totalNumberWhenNotZeroPropertyEnabled(queryResult)
 
         int totalRecords = records.size()
         int maxRecords = grailsApplication.config.getProperty("biosecurity.query.maxRecords", Integer, 500)
@@ -112,7 +104,7 @@ class EmailService {
                 log.info "Sending emails for ${query.name} to ${emails.size() <= 2 ? emails.join('; ') : emails.take(2).join('; ') + ' and ' + emails.size() + ' other users.'}"
                 recipients.each { recipient ->
                     if (!recipient.locked) {
-                        sendGroupEmail(query, [recipient.email], queryResult, records.take(maxRecords), frequency, totalRecords, recipient.userUnsubToken as String, recipient.notificationUnsubToken as String, speciesListInfo, userAssertions)
+                        sendGroupEmail(query, [recipient.email], queryResult, records.take(maxRecords), frequency, totalRecords, recipient.userUnsubToken as String, recipient.notificationUnsubToken as String)
                     } else {
                         log.warn "Email not sent to locked user: ${recipient}"
                     }
@@ -134,91 +126,46 @@ class EmailService {
         }
     }
 
-    public void sendGroupEmail(Query query, subsetOfAddresses, QueryResult queryResult, records, Frequency frequency, int totalRecords, String userUnsubToken, String notificationUnsubToken, Map speciesListInfo, Map userAssertions) {
+    void sendGroupEmail(Query query, subsetOfAddresses, QueryResult queryResult, records, Frequency frequency, int totalRecords, String userUnsubToken, String notificationUnsubToken) {
         String urlPrefix = "${grailsApplication.config.security.cas.appServerName}${grailsApplication.config.getProperty('security.cas.contextPath', '')}"
         def localeSubject = messageSource.getMessage("emailservice.update.subject", [query.name] as Object[], siteLocale)
         // pass the last check date to template
+
+        // lastChecked is used into template :  records since lastChecked date
+        // That is why we need to assign the previousCheck of queryResult to query.lastChecked
+        // todo : separate the since and to with lastChecked and previousCheck in the QueryResult or query
         query.lastChecked = queryResult.previousCheck
+
         String title = query.name
         if (Environment.current == Environment.DEVELOPMENT || Environment.current == Environment.TEST) {
             title = "[${Environment.current}] " + query.name
         }
+
+        String emailBody = groovyPageRenderer.render(view:  query.emailTemplate,
+                plugin: "email-confirmation",
+                model: [title: localeSubject,
+                       message: query.updateMessage,
+                       query: query,
+                       moreInfo: queryResult.queryUrlUIUsed,
+                       listcode: queryService.isMyAnnotation(query) ? "biocache.view.myannotation.list" : "biocache.view.list",
+                       stopNotification: urlPrefix + '/notification/myAlerts',
+                       records: records,
+                       frequency: messageSource.getMessage('frequency.' + frequency, null, siteLocale),
+                       totalRecords: (totalRecords >= 0 ? totalRecords : records.size()),
+                       unsubscribeAll: urlPrefix + "/unsubscribe?token=" + userUnsubToken,
+                       unsubscribeOne: urlPrefix + "/unsubscribe?token=" + notificationUnsubToken
+               ]
+        )
+
         try {
             sendMail {
                 from grailsApplication.config.mail.details.alertAddressTitle + "<" + grailsApplication.config.mail.details.sender + ">"
                 subject title
                 bcc subsetOfAddresses
-                body(view: query.emailTemplate,
-                    plugin: "email-confirmation",
-                    model: [title: localeSubject,
-                        message: query.updateMessage,
-                        query: query,
-                        moreInfo: queryResult.queryUrlUIUsed,
-                        speciesListInfo: speciesListInfo,
-                        userAssertions: userAssertions,
-                        listcode: queryService.isMyAnnotation(query) ? "biocache.view.myannotation.list" : "biocache.view.list",
-                        stopNotification: urlPrefix + '/notification/myAlerts',
-                        records: records,
-                        frequency: messageSource.getMessage('frequency.' + frequency, null, siteLocale),
-                        totalRecords: (totalRecords >= 0 ? totalRecords : records.size()),
-                        unsubscribeAll: urlPrefix + "/unsubscribe?token=" + userUnsubToken,
-                        unsubscribeOne: urlPrefix + "/unsubscribe?token=" + notificationUnsubToken
-                    ])
+                html(emailBody)
             }
         } catch (Exception e) {
             log.error("Error sending email to addresses: " + subsetOfAddresses, e)
         }
-    }
-
-    private Map getBiosecurityAssertions(Query query, List records) {
-       records.collectEntries { [it.uuid, getBiosecurityAssertionForRecord(query.baseUrl, it.uuid as String)] }
-    }
-
-    private List getBiosecurityAssertionForRecord(String baseUrl, String recordId) {
-        JSONArray biosecurityAssertions = notificationService.getAssertionsOfARecord(baseUrl, recordId)
-        return biosecurityAssertions?.findAll {it.qaStatus == 50005 || it.code == 200021}?.collect { it ->
-            if (it.comment) {
-                String created = ""
-                if (it.created) {
-                    created = new SimpleDateFormat("yyyy-MM-dd").format(dateformat.parse(it.created))
-                }
-                if (created && it.userDisplayName) {
-                    return it.comment + " (" + messageSource.getMessage("emailservice.format.name_and_date", [it.userDisplayName, created] as Object[], 'By {0} on {1}', siteLocale) + ")"
-                } else if (it.userDisplayName) {
-                    return it.comment + " (" + messageSource.getMessage("emailservice.format.name", [it.userDisplayName] as Object[], 'By {0}', siteLocale) + ")"
-                } else if (created) {
-                    return it.comment + "(" + created + ")"
-                } else {
-                    return it.comment
-                }
-            } else {
-                return null;
-            }
-        }?.findAll{it != null}
-    }
-    /**
-     * Get the species list info
-     *
-     * @param query
-     * @return a Map contains list name and list URL
-     */
-
-    Map getSpeciesListInfo(Query query) {
-        // if it's biosecurity query, we try to get list details
-        if (query.emailTemplate == '/email/biosecurity') {
-            // species list name already in query name, we just need to parse it
-            String matchStr = messageSource.getMessage("query.biosecurity.title", null, siteLocale) + ' '
-            int idx = query.name.indexOf(matchStr)
-            String listname = ""
-            String listid = query.listId
-            String listURL =  grailsApplication.config.getProperty("lists.baseURL") + '/speciesListItem/list/' + listid
-            if (idx != -1) {
-                listname = query.name.substring(idx + matchStr.length())
-            }
-
-            return [name : listname, url: listURL, drId: listid]
-        }
-
-        [:]
     }
 }

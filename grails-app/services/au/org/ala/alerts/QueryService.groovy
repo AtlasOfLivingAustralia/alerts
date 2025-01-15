@@ -15,6 +15,10 @@ class QueryService {
     def messageSource, dataSource
     def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
 
+    def get(id){
+        Query.get(id)
+    }
+
     Notification getNotificationForUser(Query query, User user) {
         Notification n = null
         //find the query
@@ -52,18 +56,27 @@ class QueryService {
     }
 
     Boolean isMyAnnotation(Query query) {
-        // Currently only 'my annotation' alert is user specific (among all non-custom queries)
-        query.name.startsWith(messageSource.getMessage("query.myannotations.title", null, siteLocale))
+        query.emailTemplate == '/email/myAnnotations'
+    }
+
+    Boolean isAnnotation(Query query) {
+        query.emailTemplate == '/email/annotations'
     }
 
     Boolean isBioSecurityQuery(Query query) {
         query.emailTemplate == '/email/biosecurity'
     }
 
-    String getUserId(Query query) {
-        if (!isMyAnnotation(query)) return null
-        String queryPath = query.queryPath
-        queryPath.substring(queryPath.indexOf('assertion_user_id:') + 'assertion_user_id:'.length(), queryPath.indexOf('&dir=desc'))
+    Boolean isDatasetQuery(Query query) {
+        query.emailTemplate == '/email/datasets'
+    }
+
+    Boolean isDatasetResource(Query query) {
+        query.emailTemplate == '/email/dataresource'
+    }
+
+    Boolean isBiocacheImages(Query query) {
+        query.emailTemplate == '/email/biocacheImages'
     }
 
     /**
@@ -313,7 +326,7 @@ class QueryService {
                 description   : messageSource.getMessage("query.myannotations.descr", null, siteLocale),
                 queryPath     : constructMyAnnotationQueryPath(userId),
                 queryPathForUI: '/occurrences/search?fq=assertion_user_id:' + userId + '&dir=desc',
-                emailTemplate : '/email/biocache',
+                emailTemplate : '/email/myAnnotations',
                 recordJsonPath: '\$.occurrences[*]',
         ])
     }
@@ -546,7 +559,7 @@ class QueryService {
             ne("name", "My Annotations")
         }
 
-        List<Query> annotations =  Query.createCriteria().list {
+        List<Query> myAnnotations =  Query.createCriteria().list {
             eq("name", "My Annotations")
             createAlias("notifications", "n")
             createAlias("n.user", "u")
@@ -556,7 +569,7 @@ class QueryService {
         Map<String, List<Query>> groupedByTemplate = queries.groupBy { it.emailTemplate }.collectEntries { key, value ->
             [ (key.replace("/email/", "")) : value.sort { it.name }]
         }
-        groupedByTemplate['annotations'] = annotations
+        groupedByTemplate['myAnnotations'] = myAnnotations
 
         return groupedByTemplate
     }

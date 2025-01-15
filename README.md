@@ -44,5 +44,15 @@ Change logs
 DB schema update:
 ``` ALTER TABLE alerts.query_result MODIFY logs TEXT NULL; ```
 
-### 4.2.0 Release
+### 4.3.0 Release
 No DB changes
+
+
+### 4.4.0 Release
+Apply new templates for alerts
+
+#### Change logs
+Database update: Check release/4.4.0-release.sql
+
+
+

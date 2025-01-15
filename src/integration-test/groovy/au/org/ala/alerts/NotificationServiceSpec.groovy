@@ -322,7 +322,7 @@ class NotificationServiceSpec extends Specification {
         service.executeQuery(datasets, hourly)
         QueryResult queryResult = service.getQueryResult(datasets, hourly)
         // manually change saved Json and saved property values to trigger email sending
-        queryResult.lastResult = service.gzipResult(sampleJson.toString())
+        queryResult.lastResult = queryResult.compress(sampleJson.toString())
         queryResult.propertyValues.first().currentValue = "1"
         queryResult.save(flush: true)
         when:
@@ -364,7 +364,7 @@ class NotificationServiceSpec extends Specification {
         service.executeQuery(datasets, daily)
         QueryResult queryResult = service.getQueryResult(datasets, daily)
         // manually change saved Json and saved property values to trigger email sending
-        queryResult.lastResult = service.gzipResult(sampleJson.toString())
+        queryResult.lastResult = queryResult.compress(sampleJson.toString())
         queryResult.propertyValues.first().currentValue = "1"
         queryResult.save(flush: true)
         when:
@@ -406,7 +406,7 @@ class NotificationServiceSpec extends Specification {
         service.executeQuery(lists, hourly)
         QueryResult queryResult = service.getQueryResult(lists, hourly)
         // manually change saved Json and saved property values to trigger email sending
-        queryResult.lastResult = service.gzipResult(sampleJson.toString())
+        queryResult.lastResult = queryResult.compress(sampleJson.toString())
         queryResult.propertyValues.first().currentValue = "1"
         queryResult.save(flush: true)
         when:
@@ -448,7 +448,7 @@ class NotificationServiceSpec extends Specification {
         service.executeQuery(lists, daily)
         QueryResult queryResult = service.getQueryResult(lists, daily)
         // manually change saved Json and saved property values to trigger email sending
-        queryResult.lastResult = service.gzipResult(sampleJson.toString())
+        queryResult.lastResult = queryResult.compress(sampleJson.toString())
         queryResult.propertyValues.first().currentValue = "1"
         queryResult.save(flush: true)
         when:
@@ -490,7 +490,7 @@ class NotificationServiceSpec extends Specification {
         service.executeQuery(layers, hourly)
         QueryResult queryResult = service.getQueryResult(layers, hourly)
         // manually change saved Json and saved property values to trigger email sending
-        queryResult.lastResult = service.gzipResult(sampleJson.toString())
+        queryResult.lastResult = queryResult.compress(sampleJson.toString())
         queryResult.propertyValues.first().currentValue = "1"
         queryResult.save(flush: true)
         when:
@@ -533,7 +533,7 @@ class NotificationServiceSpec extends Specification {
         service.executeQuery(blogs, hourly)
         QueryResult queryResult = service.getQueryResult(blogs, hourly)
         // manually change saved Json and saved property values to trigger email sending
-        queryResult.lastResult = service.gzipResult(sampleJsonString)
+        queryResult.lastResult = queryResult.compress(sampleJsonString)
         queryResult.propertyValues.first().currentValue = "1"
         queryResult.save(flush: true)
         when:
@@ -575,7 +575,7 @@ class NotificationServiceSpec extends Specification {
         service.executeQuery(blogs, daily)
         QueryResult queryResult = service.getQueryResult(blogs, daily)
         // manually change saved Json and saved property values to trigger email sending
-        queryResult.lastResult = service.gzipResult(sampleJsonString)
+        queryResult.lastResult = queryResult.compress(sampleJsonString)
         queryResult.propertyValues.first().currentValue = "1"
         queryResult.save(flush: true)
         when:

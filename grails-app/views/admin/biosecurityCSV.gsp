@@ -52,12 +52,26 @@
 </head>
 <body>
     <div>
-        <h2>All Biosecurity Alerts Data</h2>
-        Download a comprehensive CSV file detailing all occurrence records from every biosecurity alert sent. This includes both scheduled and manually triggered emails
-        <br/>
+        <h4 class="pull-right">
+            <span class="label label-info">
+                %{-- Indicate the storage type being used with a BS label --}%
+                ${grailsApplication.config.getProperty('biosecurity.csv.s3.enabled', Boolean) == true
+                    ? "s3://${grailsApplication.config.getProperty('grails.plugin.awssdk.s3.bucket')}/${grailsApplication.config.getProperty('biosecurity.csv.s3.directory')}/"
+                    : "/${grailsApplication.config.getProperty('biosecurity.csv.local.directory')}"}
+            </span>
+        </h4>
+        <h2>Biosecurity Alerts Reports</h2>
+        <p>Download a comprehensive CSV file detailing all occurrence records from every biosecurity alert sent. This includes both scheduled and manually triggered emails</p>
+
         <a class="btn btn-primary " href="${createLink(controller: 'admin', action: 'aggregateBiosecurityAuditCSV', params: [folderName:'/'])}">
-        <i class="fa fa-cloud-download" aria-hidden="true" ></i>  Download Full CSV Report
+            <i class="fa fa-cloud-download" aria-hidden="true" ></i>&nbsp;&nbsp;Download Full CSV Report
         </a>
+        <g:if test="${grailsApplication.config.getProperty('biosecurity.csv.s3.enabled', Boolean) == true}">
+            &nbsp;&nbsp;
+            <a class="btn btn-default pull-right" href="${createLink(controller: 'admin', action: 'moveLocalFilesToS3')}">
+                <i class="fa fa-copy" aria-hidden="true" ></i>&nbsp;&nbsp;Copy all local files to S3
+            </a>
+        </g:if>
         <hr>
     </div>
 
@@ -86,7 +100,8 @@
         </div>
     </g:if>
     <g:else>
-        ${message}
+        <h4>Error</h4>
+        <code>${message}</code>
     </g:else>
 
 </body>

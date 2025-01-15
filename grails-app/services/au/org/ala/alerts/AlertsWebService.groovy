@@ -30,6 +30,8 @@ class AlertsWebService {
         try {
             conn.setConnectTimeout(10000)
             conn.setReadTimeout(50000)
+            conn.setRequestProperty('User-Agent', grailsApplication.config.getProperty("customUserAgent", "ALA-alerts"))
+
             if (apiKey != null) {
                 conn.setRequestProperty('apiKey', apiKey)
             }
@@ -44,7 +46,7 @@ class AlertsWebService {
             return JSON.parse(stream, "UTF-8")
         } catch (Exception e) {
             def error = "Failed to get json from web service (${url}). ${e.getClass()} ${e.getMessage()}, ${e}"
-            log.error error
+            log.error(error)
             throw new RestClientException(error, e)
         }
     }

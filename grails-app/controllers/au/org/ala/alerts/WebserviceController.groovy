@@ -39,6 +39,7 @@ import static io.swagger.v3.oas.annotations.enums.ParameterIn.HEADER
 class WebserviceController {
 
     def queryService
+    def queryResultService
     def userService
     def notificationService
     def biosecurityService
@@ -363,6 +364,7 @@ class WebserviceController {
         n.delete(flush: true)
         redirectIfSupplied(params)
     }
+
 
     @Operation(
             method = "POST",

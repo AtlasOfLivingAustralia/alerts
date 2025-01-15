@@ -168,6 +168,10 @@
         }
 
         function unsubscribe( queryId, userId, email) {
+            if (!confirm("Are you sure you want to remove this email?")) {
+                return; // Exit the function if the user cancels
+            }
+
             let url  ="${request.contextPath}/ws/unsubscribeBiosecurity?queryid="+queryId+"&userid=" + userId + "&useremail="+email
             $.ajax({
                 url: url,
@@ -208,29 +212,32 @@
         }
 
         function triggerSubscriptions() {
-            let url = "${request.contextPath}/ws/triggerBiosecurityAlerts"
-            $.ajax({
-                url: url,
-                type: 'GET',
-                success: function (data) {
-                    data.forEach(function(item) {
-                        let status = item[0];
-                        let message = item[1];
+            const userInput = prompt(`This action will trigger all alerts. Type ‘yes’ if you understand and wish to proceed. `);
+            if (userInput && userInput.toLowerCase() === 'yes') {
+                let url = "${request.contextPath}/ws/triggerBiosecurityAlerts"
+                $.ajax({
+                    url: url,
+                    type: 'GET',
+                    success: function (data) {
+                        data.forEach(function (item) {
+                            let status = item[0];
+                            let message = item[1];
 
-                        if (status === 0) {
-                            console.info( message);
-                        } else {
-                            console.error(message);
-                        }
-                    });
-                },
-                error: function (xhr, status, error) {
-                    // Handle errors
-                    console.error(xhr.responseText);
-                }
-            });
+                            if (status === 0) {
+                                console.info(message);
+                            } else {
+                                console.error(message);
+                            }
+                        });
+                    },
+                    error: function (xhr, status, error) {
+                        // Handle errors
+                        console.error(xhr.responseText);
+                    }
+                });
 
-            alert("Subscriptions have been triggered. Monitor the console logs for progress updates.")
+                alert("Subscriptions have been triggered. Monitor the console logs for progress updates.")
+            }
         }
 
         // Initialize popovers again after any records are loaded by Ajax
@@ -399,7 +406,7 @@
                 <div class="row" style="text-align: right">
                     <div class="col-sm-10" >Download CSV list of all occurrences from all biosecurity alerts sent (scheduled and manual)</div>
                     <div class="col-sm-2" >
-                        <a class="btn btn-info" href="${createLink(controller: 'admin', action: 'listBiosecurityAuditCSV')}" target="_blank">Reporting</a>
+                        <a class="btn btn-info" href="${createLink(controller: 'admin', action: 'listBiosecurityAuditCSV')}" target="_blank">CSV Reporting</a>
                     </div>
                 </div>
                 <p></p>

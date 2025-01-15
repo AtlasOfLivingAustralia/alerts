@@ -4,7 +4,6 @@ import ala.postie.BiosecurityQueriesJob
 
 class BootStrap {
 
-    javax.sql.DataSource dataSource
     def grailsApplication
     def messageSource
     def siteLocale
@@ -66,7 +65,7 @@ class BootStrap {
                     queryPath: '/occurrences/search?fq=user_assertions:*&q=last_assertion_date:[___DATEPARAM___%20TO%20*]&sort=last_assertion_date&dir=desc&pageSize=20&facets=basis_of_record',
                     queryPathForUI: '/occurrences/search?fq=user_assertions:*&q=last_assertion_date:[___DATEPARAM___%20TO%20*]&sort=last_assertion_date&dir=desc',
                     dateFormat: """yyyy-MM-dd'T'HH:mm:ss'Z'""",
-                    emailTemplate: '/email/biocache',
+                    emailTemplate: '/email/annotations',
                     recordJsonPath: '\$.occurrences[*]',
                     idJsonPath: 'uuid'
             ])).save()
@@ -119,7 +118,7 @@ class BootStrap {
 
         title = messageSource.getMessage("query.citizen.records.title", null, siteLocale)
         descr = messageSource.getMessage("query.citizen.records.descr", null, siteLocale)
-        if (grailsApplication.config.useCitizenScienceAlerts.toBoolean() &&
+        if (grailsApplication.config.useCitizenScienceAlerts?.toBoolean() &&
                 Query.findAllByName(title).isEmpty()) {
             Query newCitizenScienceRecords = (new Query([
                     baseUrl: grailsApplication.config.biocacheService.baseURL,
@@ -142,7 +141,7 @@ class BootStrap {
 
         title = messageSource.getMessage("query.citizen.records.imgs.title", null, siteLocale)
         descr = messageSource.getMessage("query.citizen.records.imgs.descr", null, siteLocale)
-        if (grailsApplication.config.useCitizenScienceAlerts.toBoolean() &&
+        if (grailsApplication.config.useCitizenScienceAlerts?.toBoolean() &&
                 Query.findAllByName(title).isEmpty()) {
             Query newCitizenScienceRecordsWithImages = (new Query([
                     baseUrl: grailsApplication.config.biocacheService.baseURL,
@@ -173,7 +172,7 @@ class BootStrap {
                     resourceName:  grailsApplication.config.mail.details.defaultResourceName,
                     updateMessage: 'more.spatial.update.message',
                     description: descr,
-                    queryPath: '/ws/layers.json',
+                    queryPath: '/layers.json',
                     queryPathForUI: '/layers',
                     emailTemplate: '/email/layers',
                     recordJsonPath: '\$[*]',
@@ -211,7 +210,7 @@ class BootStrap {
                     resourceName:  grailsApplication.config.mail.details.defaultResourceName,
                     updateMessage: 'more.datasets.update.message',
                     description: descr,
-                    queryPath: '/ws/dataResource',
+                    queryPath: '/dataResource',
                     queryPathForUI: '/datasets',
                     emailTemplate: '/email/datasets',
                     recordJsonPath: '\$[*]',
@@ -232,7 +231,7 @@ class BootStrap {
                     resourceName:  grailsApplication.config.mail.details.defaultResourceName,
                     updateMessage: 'more.specieslist.update.message',
                     description: descr,
-                    queryPath: '/ws/speciesList?max=___MAX___&offset=___OFFSET___',
+                    queryPath: '/speciesList?max=___MAX___&offset=___OFFSET___',
                     queryPathForUI: '/public/speciesLists?q=&max=25&sort=dateCreated&order=desc',
                     emailTemplate: '/email/specieslists',
                     recordJsonPath: '\$.lists[*]',

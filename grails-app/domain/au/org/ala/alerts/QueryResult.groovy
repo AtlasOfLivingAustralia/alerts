@@ -1,7 +1,5 @@
 package au.org.ala.alerts
 
-import com.jayway.jsonpath.JsonPath
-
 import java.text.SimpleDateFormat
 import java.util.zip.GZIPInputStream
 import java.util.zip.GZIPOutputStream
@@ -75,12 +73,13 @@ class QueryResult {
     }
 
     String toString() {
-        "${frequency?.name}: ${lastChanged ? 'Changed' : 'No Change'} on ${lastChecked}"
+        "${frequency?.name}: ${query?.name} : ${id} ${lastChanged ? 'Changed' : 'No Change'} on ${lastChecked}"
     }
 
     Map brief() {
         [queryId: query?.id, query: query?.name, frequency: frequency?.name, queryResultId: id, lastChecked: lastChecked, hasChanged: hasChanged, lastChanged: lastChanged,
-         property: displayProperties()
+         property: displayProperties(),
+         sizeOfcurrentResult: lastResult ? decompress(lastResult).size() : 0, sizeOfPreviousResult: previousResult ? decompress(previousResult).size() : 0
         ]
     }
 
@@ -128,12 +127,15 @@ class QueryResult {
     }
 
     byte[] compress(String json) {
-        //store the last result from the webservice call
-        ByteArrayOutputStream bout = new ByteArrayOutputStream()
-        GZIPOutputStream gzout = new GZIPOutputStream(bout)
-        gzout.write(json.toString().getBytes())
-        gzout.flush()
-        gzout.finish()
-        bout.toByteArray()
+        if (json) {
+            ByteArrayOutputStream bout = new ByteArrayOutputStream()
+            GZIPOutputStream gzout = new GZIPOutputStream(bout)
+            gzout.write(json.toString().getBytes())
+            gzout.flush()
+            gzout.finish()
+            bout.toByteArray()
+        } else {
+            null
+        }
     }
 }

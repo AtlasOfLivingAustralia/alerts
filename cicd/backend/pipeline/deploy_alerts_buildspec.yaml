@@ -1,0 +1,97 @@
+version: 0.2
+
+env:
+  shell: bash
+  variables:
+    JAVA_TOOL_OPTIONS: -Dhttps.protocols=TLSv1.2
+  secrets-manager:
+    DB_PASSWORD: $ALERTS_SECRET_NAME:db-password
+
+phases:
+  install:
+    commands:
+      - echo Installing dependencies...
+      - cat /etc/lsb-release
+      - apt update -y
+        && apt-get -q -y install openjdk-11-jdk
+        && pip3 install jinja2
+        && curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+        && chmod 700 get_helm.sh
+        && ./get_helm.sh
+
+  build:
+    commands:
+      - echo Build started on $(date)
+      - wget https://raw.githubusercontent.com/AtlasOfLivingAustralia/ala-install/refs/heads/master/ansible/roles/alerts/templates/alerts-config.properties
+      - aws eks --region ap-southeast-2 update-kubeconfig --name $EKS_CLUSTER_NAME
+      - |
+        USER_POOL_ID=$(aws cloudformation describe-stacks --stack-name $COGNITO_STACK_NAME \
+          --query "Stacks[0].Outputs[?OutputKey=='UserPoolId'].OutputValue" --output text)
+      - |
+        CLIENT_ID=$(aws cloudformation describe-stacks --stack-name $BASE_STACK_NAME \
+          --query "Stacks[0].Outputs[?OutputKey=='AlertsAppClient'].OutputValue" --output text)
+      - |
+        CLIENT_SECRET=$(aws cognito-idp describe-user-pool-client --user-pool-id $USER_POOL_ID \
+          --client-id $CLIENT_ID --query "UserPoolClient.ClientSecret" --output text)
+      - |
+        SERVER_TO_SERVER_CLIENT_ID=$(aws cloudformation describe-stacks --stack-name $BASE_STACK_NAME \
+          --query "Stacks[0].Outputs[?OutputKey=='AlertsServerToServerAppClient'].OutputValue" --output text)
+      - |
+        SERVER_TO_SERVER_CLIENT_SECRET=$(aws cognito-idp describe-user-pool-client --user-pool-id $USER_POOL_ID \
+          --client-id $SERVER_TO_SERVER_CLIENT_ID --query "UserPoolClient.ClientSecret" --output text)
+      - kubectl config set-context --current --namespace=alerts
+      - |
+        python3 cicd/gen_app_config.py -t alerts-config.properties \
+          -v $CODEBUILD_SRC_DIR_AnsibleInventoriesSourceArtifact/alerts/alerts-feature-branch \
+          -b $CLEAN_BRANCH \
+          -o alerts-config.properties
+      - sed -i "s/dataSource.password=/dataSource.password=$DB_PASSWORD/" alerts-config.properties
+      - sed -i "s/security.oidc.clientId=/security.oidc.clientId=$CLIENT_ID/" alerts-config.properties
+      - sed -i "s/security.oidc.secret=/security.oidc.secret=$CLIENT_SECRET/" alerts-config.properties
+      - sed -i "s/webservice.client-id=/webservice.client-id=$SERVER_TO_SERVER_CLIENT_ID/" alerts-config.properties
+      - sed -i "s/webservice.client-secret=/webservice.client-secret=$SERVER_TO_SERVER_CLIENT_SECRET/" alerts-config.properties
+      - sed -i "s/mysql-rds\/alerts/mysql-rds-$CLEAN_BRANCH\/alertsdevelopment/" alerts-config.properties
+      - sed -i "s/ala-alerts-test/alerts-$CLEAN_BRANCH/" alerts-config.properties
+      - sed -i '1i server.port=8000' alerts-config.properties
+      - kubectl delete secret alerts-config-secret-$CLEAN_BRANCH || true
+      - kubectl create secret generic alerts-config-secret-$CLEAN_BRANCH --from-file=alerts-config.properties
+      - |
+        ALERTS_ROLE_ARN=$(aws cloudformation describe-stacks --stack-name $BASE_STACK_NAME \
+          --query "Stacks[0].Outputs[?OutputKey=='AlertsRoleArn'].OutputValue" --output text)
+      - printf "$(kubectl config current-context)\n"
+      - |
+        eksctl create iamserviceaccount --name alerts-service-account-$CLEAN_BRANCH \
+          --namespace alerts --cluster $EKS_CLUSTER_NAME --attach-role-arn $ALERTS_ROLE_ARN \
+          --approve --override-existing-serviceaccounts \
+          --tags "product=alerts,environment=development,branch=${CLEAN_BRANCH}"
+      - cd helm
+      - |
+        export CERTIFICATE_ARN=$(aws acm list-certificates --region ap-southeast-2 \
+          --query "CertificateSummaryList[?DomainName=='*.$HOSTED_ZONE' && Status=='ISSUED'].CertificateArn" --output text)
+      - BUILD_TAG=$CLEAN_BRANCH-$CODEBUILD_BUILD_NUMBER
+      - env
+      - |
+        helm upgrade --install $HELM_RELEASE_NAME . -n alerts \
+          --set image.repository=$ECR_REPO \
+          --set image.tag=$BUILD_TAG \
+          --set ingress.hostname=$DOMAIN_NAME \
+          --set rds.externalName=$DB_WRITE_ENDPOINT \
+          --set ingress.certificateArn=$CERTIFICATE_ARN \
+          --set secret.name=alerts-config-secret-$CLEAN_BRANCH \
+          --set serviceAccount.name=alerts-service-account-$CLEAN_BRANCH \
+          --set rds.name=mysql-rds-$CLEAN_BRANCH
+      - kubectl rollout restart deployment $HELM_RELEASE_NAME
+  post_build:
+    commands:
+      - echo Post-build phase...
+      - echo Build completed on $(date)
+
+artifacts:
+  base-directory: $CODEBUILD_SRC_DIR
+  files:
+    - '**/*'
+  secondary-artifacts:
+    AnsibleInventoriesSourceArtifact:
+      base-directory: $CODEBUILD_SRC_DIR_AnsibleInventoriesSourceArtifact
+      files:
+        - '**/*'
