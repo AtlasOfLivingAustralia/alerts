@@ -12,6 +12,7 @@
  */
 
 package au.org.ala.alerts
+
 import au.org.ala.userdetails.UserDetailsFromIdListResponse
 import au.org.ala.web.UserDetails
 import grails.converters.JSON
@@ -19,10 +20,6 @@ import grails.plugin.cache.Cacheable
 import grails.util.Holders
 import grails.util.Environment
 
-
-import grails.gorm.transactions.Transactional
-
-@Transactional
 class UserService {
 
     static transactional = true
@@ -172,7 +169,7 @@ class UserService {
         log.debug "getUser - userDetails = ${userDetails}"
 
         if (!userDetails?.userId) {
-            log.error("User isn't logged in - or there is a problem with CAS configuration")
+            log.error "User isn't logged in - or there is a problem with CAS configuration"
             return null
         }
 
@@ -181,9 +178,11 @@ class UserService {
         if (user == null) {
             log.debug "User is not in user table - creating new record for " + userDetails
             user = new User([email: userDetails.email, userId: userDetails.userId, locked: userDetails.locked, frequency: Frequency.findByName("weekly")])
-            if (!user.save(flush: true, failOnError: true)) {
-                user.errors.allErrors.each {
-                    log.error(it)
+            User.withTransaction {
+                if (!user.save(flush: true, failOnError: true)) {
+                    user.errors.allErrors.each {
+                        log.error(it)
+                    }
                 }
             }
             if (grailsApplication.config.getProperty('useBlogsAlerts', Boolean, true)) {
@@ -191,9 +190,11 @@ class UserService {
                 def notificationInstance = new Notification()
                 notificationInstance.query = Query.findByName(messageSource.getMessage("query.ala.blog.title", null, siteLocale))
                 notificationInstance.user = user
-                if (!notificationInstance.save(flush: true)) {
-                    notificationInstance.errors.allErrors.each {
-                        log.error(it)
+                User.withTransaction {
+                    if (!notificationInstance.save(flush: true)) {
+                        notificationInstance.errors.allErrors.each {
+                            log.error(it)
+                        }
                     }
                 }
             }
@@ -239,9 +240,11 @@ class UserService {
         if (userDetails?.userId && userDetails?.email) {
             log.debug "User is not in user table - creating new record for " + userDetails
             user = new User([email: userDetails.email, userId: userDetails.userId, locked: userDetails.locked, frequency: Frequency.findByName("weekly")])
-            if (!user.save(flush: true, failOnError: true)) {
-                user.errors.allErrors.each {
-                    log.error(it)
+            User.withTransaction {
+                if (!user.save(flush: true, failOnError: true)) {
+                    user.errors.allErrors.each {
+                        log.error(it)
+                    }
                 }
             }
         }

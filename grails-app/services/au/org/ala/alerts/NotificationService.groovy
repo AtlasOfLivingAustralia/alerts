@@ -25,7 +25,6 @@ class NotificationService {
     def grailsApplication
     def dateFormatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
 
-    @Transactional
     QueryResult getQueryResult(Query query, Frequency frequency) {
         QueryResult qr = QueryResult.findByQueryAndFrequency(query, frequency)
         if (qr == null) {
