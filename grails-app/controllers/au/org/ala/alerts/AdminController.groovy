@@ -372,8 +372,6 @@ class AdminController {
         qr.previousCheck = qr.lastChecked
         qr.lastChecked = since
         query.lastChecked = since
-
-
         def records = notificationService.retrieveRecordForQuery(qr.query, qr)
 
         String urlPrefix = "${grailsApplication.config.getProperty("grails.serverURL")}${grailsApplication.config.getProperty('security.cas.contextPath', '')}"
@@ -383,7 +381,7 @@ class AdminController {
         def unsubscribeOneUrl
 
         def alaUser = authService.userDetails()
-        def user = userService.getUserByEmail(alaUser?.email)
+        def user =  User.findByEmail(alaUser?.email)
         def unsubscribeToken = notificationService.getUnsubscribeToken(user, query)
         if (user && unsubscribeToken) {
             unsubscribeOneUrl = urlPrefix + "/unsubscribe?token=${unsubscribeToken}"
