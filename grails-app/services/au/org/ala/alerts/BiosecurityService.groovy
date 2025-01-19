@@ -54,7 +54,7 @@ class BiosecurityService {
      */
     def triggerBiosecuritySubscription(Query query) {
         //If has not been checked before, then set the lastChecked to 7 days before
-        Date lastChecked = query.lastChecked ?: DateUtils.addDays(new Date(), -1 * grailsApplication.config.getProperty("biosecurity.legacy.firstLoadedDateAge", Integer, 7))
+        Date lastChecked = queryService.getLastCheckedDate(query) ?: DateUtils.addDays(new Date(), -1 * grailsApplication.config.getProperty("biosecurity.legacy.firstLoadedDateAge", Integer, 7))
         triggerBiosecuritySubscription(query, lastChecked)
     }
 
