@@ -23,7 +23,10 @@ class Query {
     String recordJsonPath
 
     transient String listId //species list id
-    transient Date lastChecked // Date when the last execution performed
+    // Date when the last execution performed.
+    // NOTE: Except Biosecurity, other queries may have 4 lastChecked dates, matching the 4 frequencies
+    // Only used for passing the checked date to the Email template
+    transient Date lastChecked
 
     static hasMany = [notifications: Notification, queryResults: QueryResult, propertyPaths: PropertyPath]
 
