@@ -90,7 +90,6 @@ phases:
         if [[ "$ENVIRONMENT" == "development" ]]; then
           DB_PASSWORD=$(aws secretsmanager get-secret-value --output text --query SecretString --secret-id alerts-testing | python3 -c 'import json, sys; print(json.load(sys.stdin)["db-password"])')
           DB_NAME="alertstesting"
-          S3_BUCKET_NAME="ala-alerts-testing"
         fi
       - |
         USER_POOL_ID=$(aws cloudformation describe-stacks --stack-name $COGNITO_STACK_NAME \
