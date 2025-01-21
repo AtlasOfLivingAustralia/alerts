@@ -35,9 +35,6 @@ Parameters:
   pProductName:
     Type: String
     Description: The name of the product
-  pSecretName:
-    Type: String
-    Description: The name of the secret
   pRestartExecutionOnUpdate:
     Type: String
     Description: Restart that pipeline if it's been updated
