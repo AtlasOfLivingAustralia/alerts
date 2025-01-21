@@ -212,29 +212,32 @@
         }
 
         function triggerSubscriptions() {
-            let url = "${request.contextPath}/ws/triggerBiosecurityAlerts"
-            $.ajax({
-                url: url,
-                type: 'GET',
-                success: function (data) {
-                    data.forEach(function(item) {
-                        let status = item[0];
-                        let message = item[1];
+            const userInput = prompt(`This action will trigger all alerts. Type ‘yes’ if you understand and wish to proceed. `);
+            if (userInput && userInput.toLowerCase() === 'yes') {
+                let url = "${request.contextPath}/ws/triggerBiosecurityAlerts"
+                $.ajax({
+                    url: url,
+                    type: 'GET',
+                    success: function (data) {
+                        data.forEach(function (item) {
+                            let status = item[0];
+                            let message = item[1];
 
-                        if (status === 0) {
-                            console.info( message);
-                        } else {
-                            console.error(message);
-                        }
-                    });
-                },
-                error: function (xhr, status, error) {
-                    // Handle errors
-                    console.error(xhr.responseText);
-                }
-            });
+                            if (status === 0) {
+                                console.info(message);
+                            } else {
+                                console.error(message);
+                            }
+                        });
+                    },
+                    error: function (xhr, status, error) {
+                        // Handle errors
+                        console.error(xhr.responseText);
+                    }
+                });
 
-            alert("Subscriptions have been triggered. Monitor the console logs for progress updates.")
+                alert("Subscriptions have been triggered. Monitor the console logs for progress updates.")
+            }
         }
 
         // Initialize popovers again after any records are loaded by Ajax

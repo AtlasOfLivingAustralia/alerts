@@ -41,6 +41,9 @@ Parameters:
   pDomainName:
     Type: String
     Description: The domain name
+  pSecretName:
+    Type: String
+    Description: The name of the secret
   pRestartExecutionOnUpdate:
     Type: String
     Description: Restart that pipeline if it's been updated
@@ -226,24 +229,6 @@ Resources:
             Namespace: CheckoutSrcNS
             OutputArtifacts:
               - Name: 'SourceArtifact'
-          - Name: CheckoutAnsibleRepo
-            ActionTypeId:
-              Category: Source
-              Owner: AWS
-              Provider: CodeStarSourceConnection
-              Version: 1
-            Configuration:
-              ConnectionArn:
-                Fn::ImportValue:
-                  Fn::Sub: ${pBootstrapStackName}-CodestarConnectionArn
-              FullRepositoryId: !Sub ${pGitHubOwner}/ansible-inventories
-              BranchName: master
-              OutputArtifactFormat: CODEBUILD_CLONE_REF
-              DetectChanges: !Ref pAutoDeploy
-            Namespace: CheckoutAdditionalRepoNS
-            OutputArtifacts:
-              - Name: 'AnsibleInventoriesSourceArtifact'
-            RunOrder: 2
       - Name: Deploy_Infrastructure_Build
         Actions:
           - Name: ExportConfig
@@ -261,7 +246,8 @@ Resources:
                    { "name":"ENVIRONMENT", "value":"${pEnvironment}" },
                    { "name":"PIPELINE_FINGERPRINT", "value":"#{variables.PIPELINE_FINGERPRINT}" },
                    { "name":"PRODUCT_COMPONENT", "value":"${pProductComponent}" },
-                   { "name":"SRC_BRANCH", "value":"${pGitHubBranch}" }
+                   { "name":"SRC_BRANCH", "value":"${pGitHubBranch}" },
+                   { "name":"ALERTS_SECRET_NAME", "value":"${pSecretName}" }
                  ]
             Namespace: ExportConfigNS
             InputArtifacts:
@@ -303,8 +289,9 @@ Resources:
               EnvironmentVariables: !Sub
                 - |
                   [
-                    { "name":"ALERTS_SECRET_NAME", "value":"#{ExportConfigNS.ALERTS_SECRET_NAME}" },
                     { "name":"AWS_ACCOUNT_ID", "value":"${AWS::AccountId}" },
+                    { "name":"ENVIRONMENT", "value":"${pEnvironment}" },
+                    { "name":"PRODUCT_COMPONENT", "value":"${pProductComponent}" },
                     { "name":"BASE_STACK_NAME", "value":"#{ExportConfigNS.BASE_STACK_NAME}" },
                     { "name":"CLEAN_BRANCH", "value":"${pCleanBranch}" },
                     { "name":"COGNITO_STACK_NAME", "value":"#{ExportConfigNS.COGNITO_STACK_NAME}" },
@@ -322,7 +309,7 @@ Resources:
               PrimarySource: SourceArtifact
             InputArtifacts:
               - Name: 'SourceArtifact'
-              - Name: 'AnsibleInventoriesSourceArtifact'
+              - Name: 'ExportConfigArtifact'
             RunOrder: 3
 
           - Name: DeployNotification

@@ -68,21 +68,23 @@ class DiffService {
         // The following check is determined by the last propertyValue, since it overwrites the previous one
 
         queryResult.propertyValues.each { pv ->
-            log.debug("[QUERY " + queryResult.query.id + "] " +
-                    " Has changed check:" + pv.propertyPath.name
-                    + ", value:" + pv.currentValue
-                    + ", previous:" + pv.previousValue
-                    + ", fireWhenNotZero:" + pv.propertyPath.fireWhenNotZero
-                    + ", fireWhenChange:" + pv.propertyPath.fireWhenChange
-            )
+            if (pv) {
+                log.debug("[QUERY " + queryResult.query.id + "] " +
+                        " Has changed check:" + pv.propertyPath.name
+                        + ", value:" + pv.currentValue
+                        + ", previous:" + pv.previousValue
+                        + ", fireWhenNotZero:" + pv.propertyPath.fireWhenNotZero
+                        + ", fireWhenChange:" + pv.propertyPath.fireWhenChange
+                )
 
-            // Two different types of queries: Biocache and Blog/News
-            // Biocache: totalRecords and last_loaded_records
-            // Blog/News: last_blog_id
-            if (pv.propertyPath.fireWhenNotZero) {
-                changed = pv.currentValue?.toInteger() ?: 0 > 0
-            } else if (pv.propertyPath.fireWhenChange) {
-                changed = pv.previousValue != pv.currentValue
+                // Two different types of queries: Biocache and Blog/News
+                // Biocache: totalRecords and last_loaded_records
+                // Blog/News: last_blog_id
+                if (pv.propertyPath.fireWhenNotZero) {
+                    changed = pv.currentValue?.toInteger() ?: 0 > 0
+                } else if (pv?.propertyPath.fireWhenChange) {
+                    changed = pv.previousValue != pv.currentValue
+                }
             }
         }
 

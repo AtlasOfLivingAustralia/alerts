@@ -3,10 +3,8 @@ package au.org.ala.alerts
 import com.jayway.jsonpath.JsonPath
 import grails.gorm.transactions.NotTransactional
 import grails.converters.JSON
-import org.apache.commons.io.IOUtils
 import org.apache.commons.lang.time.DateUtils
 import org.grails.web.json.JSONArray
-import org.grails.web.json.JSONElement
 import org.grails.web.json.JSONObject
 
 import javax.transaction.Transactional
@@ -27,7 +25,6 @@ class NotificationService {
     def grailsApplication
     def dateFormatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
 
-    @Transactional
     QueryResult getQueryResult(Query query, Frequency frequency) {
         QueryResult qr = QueryResult.findByQueryAndFrequency(query, frequency)
         if (qr == null) {
@@ -164,12 +161,17 @@ class NotificationService {
             def duration = TimeCategory.minus(endTime, startTime)
             qr.addLog("Time cost: ${duration}")
             if(!dryRun) {
-                QueryResult.withTransaction {
-                    if (!qr.save(validate: true, flush: true)) {
-                        qr.errors.allErrors.each {
-                            log.error(it)
+                try {
+                    QueryResult.withTransaction {
+                        if (!qr.save(validate: true)) {
+                            qr.errors.allErrors.each {
+                                log.error(it)
+                            }
                         }
                     }
+                } catch (Exception e) {
+                    //todo check why sometimes scheduler cannot save the queryresult
+                    log.error("An unexpected error occurred in saving queryresult: ${qr}", e)
                 }
             }
             else {
@@ -646,10 +648,9 @@ class NotificationService {
         log.debug("Checking frequency : " + frequencyName)
         Date now = new Date()
         Frequency frequency = Frequency.findByName(frequencyName)
-        execQueryForFrequency(frequency, sendEmails)
-        //update the frequency last checked
-        frequency = Frequency.findByName(frequencyName)
         if (frequency) {
+            execQueryForFrequency(frequency, sendEmails)
+            //update the frequency last checked
             frequency.lastChecked = now
             Frequency.withTransaction {
                 if (!frequency.save(validate: true, flush: true)) {
