@@ -110,7 +110,7 @@ phases:
       - |
         echo "config:
           base:
-            alerts_base_url: "${DOMAIN_NAME}"
+            alerts_base_url: "https://${DOMAIN_NAME}"
             alerts_context_path: "${ALERTS_CONTEXT_PATH}"
           cas:
             auth_base_url: "${CAS_AUTH_BASE_URL}"
