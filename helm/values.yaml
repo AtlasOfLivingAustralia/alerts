@@ -41,8 +41,12 @@ ingress:
   tls: []
 
 resources:
+  requests:
+    cpu: "1"          # 1 vCPU
+    memory: "4096Mi"  # 4GB
   limits:
-    memory: 4096Mi
+    cpu: "1"          # 1 vCPU
+    memory: "4096Mi"  # 4GB
 
 livenessProbe:
   httpGet:
