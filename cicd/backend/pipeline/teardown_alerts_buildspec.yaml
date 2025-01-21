@@ -20,9 +20,13 @@ phases:
       - echo Build started on $(date)
       - aws eks --region ap-southeast-2 update-kubeconfig --name $EKS_CLUSTER_NAME
       - kubectl config set-context --current --namespace=alerts
-      - kubectl delete secret alerts-config-secret-$CLEAN_BRANCH || true
       - eksctl delete iamserviceaccount --name=alerts-service-account-$CLEAN_BRANCH --namespace=alerts --cluster=$EKS_CLUSTER_NAME
-      - helm uninstall $HELM_RELEASE_NAME -n alerts
+      - |
+        if helm list -n alerts | grep -q $HELM_RELEASE_NAME; then
+          helm uninstall $HELM_RELEASE_NAME -n alerts
+        else
+          echo "Release $HELM_RELEASE_NAME does not exist."
+        fi
   post_build:
     commands:
       - echo Post-build phase...
