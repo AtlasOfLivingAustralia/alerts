@@ -195,7 +195,7 @@ phases:
               discoveryUri: "${JWT_DISCOVERY_URI}"
           apikey:
             apikey_check_enabled: "${APIKEY_CHECK_ENABLED}"
-            apikey_auth_url: "\{APIKEY_AUTH_URL}"
+            apikey_auth_url: "${APIKEY_AUTH_URL}"
             apikey_check_url: "${APIKEY_CHECK_URL}"
             apikey_userdetails_url: "${APIKEY_USERDETAILS_URL}"
           webservice:
