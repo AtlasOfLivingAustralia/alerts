@@ -210,7 +210,14 @@ phases:
           openapi:
             openapi_oauth_url: "${OPENAPI_OAUTH_URL}"
             terms_url: "${TERMS_URL}"
-            support_email: "${SUPPORT_EMAIL}"" > helm-values.yaml
+            support_email: "${SUPPORT_EMAIL}"
+        resources:
+          requests:
+            cpu: "${CPU_REQUEST}"      
+            memory: "${MEMORY_REQUEST}" 
+          limits:
+            cpu: "${CPU_LIMIT}"      
+            memory: "${MEMORY_LIMIT}"" > helm-values.yaml
 
     finally:
       - #echo This always runs
