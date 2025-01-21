@@ -88,8 +88,7 @@ phases:
       # comment out the following block if you are deploying database stack for your development environment
       - |
         if [[ "$ENVIRONMENT" == "development" ]]; then
-          ALERTS_SECRET_NAME="alerts-testing"
-          DB_PASSWORD=$(aws secretsmanager get-secret-value --output text --query SecretString --secret-id $ALERTS_SECRET_NAME | python3 -c 'import json, sys; print(json.load(sys.stdin)["db-password"])')
+          DB_PASSWORD=$(aws secretsmanager get-secret-value --output text --query SecretString --secret-id alerts-testing | python3 -c 'import json, sys; print(json.load(sys.stdin)["db-password"])')
           DB_NAME="alertstesting"
           S3_BUCKET_NAME="ala-alerts-testing"
         fi
