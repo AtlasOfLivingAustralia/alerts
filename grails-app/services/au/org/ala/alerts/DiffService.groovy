@@ -215,11 +215,10 @@ class DiffService {
                     records = dataResourceService.diff(queryResult)
                 } else if ( queryService.isBiocacheImages(queryResult.query)) {
                     records = imageService.diff(queryResult)
-                } else if ( queryService.isBiocacheImages(queryResult.query)) {
-                    records = datasetService.diff(queryResult)
                 } else {
                     records = findNewRecordsById(previous, last, queryResult.query.recordJsonPath, queryResult.query.idJsonPath)
                 }
+                queryResult.totalRecords = records.size()
             } else {
                 log.warn "queryId: " + queryResult.query.id + ", queryResult:" + queryResult.id + " last or previous objects contains HTML and not JSON"
             }

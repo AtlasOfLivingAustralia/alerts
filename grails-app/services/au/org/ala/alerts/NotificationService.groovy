@@ -14,7 +14,7 @@ import org.hibernate.FlushMode
 
 class NotificationService {
 
-    int PAGING_MAX = 1000
+    int PAGING_MAX = 500
     def sessionFactory
     def httpService
     def emailService
@@ -33,20 +33,6 @@ class NotificationService {
         qr
     }
 
-    def retrieveRecordForQuery(query, queryResult) {
-        if  (query.recordJsonPath) {
-            // return all of the new records if query is configured to fire on a non-zero value OR if previous value does not exist.
-            if (queryService.firesWhenNotZero(query)) {
-                diffService.getNewRecords(queryResult)
-                // return diff of new and old records for all other cases
-            } else {
-                diffService.getNewRecordsFromDiff(queryResult)
-            }
-        } else {
-            []
-        }
-    }
-
     /**
      * CORE method of searching if there are new records for a given query and frequency.
      * EXCEPT BioSecurity Query which is handled elsewhere.
@@ -60,7 +46,6 @@ class NotificationService {
      */
 
     QueryResult executeQuery(Query query, Frequency frequency, boolean runLastCheck=false, boolean dryRun=false, Date checkDate= new Date()) {
-
         def session = sessionFactory.currentSession
         session.setFlushMode(FlushMode.MANUAL) // Set the flush mode to MANUAL
 
@@ -80,15 +65,13 @@ class NotificationService {
         try {
             def processedJson
 
-            if (!urlString.contains("___MAX___")) {
-                // queries without paging
-                    processedJson = processQuery(query, urlString)
-            } else {
-                // queries with paging
+            if (urlString.contains("___MAX___")) {
                 int max = PAGING_MAX
                 int offset = 0
                 def result = []
                 boolean finished = false
+                // todo : should be an independent method for Lists
+                // NOTES: the method only works for Lists
                 def allLists = []
 
                 while (!finished) {
@@ -130,9 +113,14 @@ class NotificationService {
                     json.lists = JSON.parse((allLists as JSON).toString()) as JSONArray
                     processedJson = json.toString()
                 }
+            } else {
+                processedJson = processQuery(query, urlString)
             }
 
-            //update the stored properties
+            // todo:
+            // Review: Duplicated with the process of identifying record changes after
+            // It is only for updating the stored properties
+            // Considering remove
             refreshProperties(qr, processedJson)
 
             // set check time
@@ -141,7 +129,7 @@ class NotificationService {
             qr.previousResult = qr.lastResult
             qr.lastResult = qr.compress(processedJson)
             qr.lastChecked = checkDate
-            //todo: review this algorithm for all queries
+            //todo: review if it is necessary to store
             qr.hasChanged = diffService.hasChanged(qr)
             qr.queryUrlUsed = urlString
             qr.queryUrlUIUsed = urlStringForUI
@@ -170,7 +158,6 @@ class NotificationService {
                         }
                     }
                 } catch (Exception e) {
-                    //todo check why sometimes scheduler cannot save the queryresult
                     log.error("An unexpected error occurred in saving queryresult: ${qr}", e)
                 }
             }
@@ -223,7 +210,7 @@ class NotificationService {
                     processedJson = processQueryBiosecurity(query, since, to)
                 }
             } else {
-                // queries with paging
+                // It is works on species lists request
                 int max = PAGING_MAX
                 int offset = 0
                 def allLists = []
@@ -584,7 +571,7 @@ class NotificationService {
                         // these query and queryResult read/write methods are called by the scheduled jobs
                         Integer totalRecords = null
                         QueryResult queryResult = QueryResult.findByQueryAndFrequency(query, frequency)
-                        def records = retrieveRecordForQuery(query, queryResult)
+                        def records = collectUpdatedRecords(queryResult)
                         Integer fireWhenNotZero = queryService.totalNumberWhenNotZeroPropertyEnabled(queryResult)
                         totalRecords = records.size()
 
@@ -875,17 +862,20 @@ class NotificationService {
 
     /**
      * Copied from EmailService
-     * Todo : Not full correct, need to be fixed
+     * Todo : Not full correct, need to be checked
+     * Different queries may need different methods to calculate the total number of records
      * @param queryResult
      * @return
      */
-    //@NotTransactional
     def collectUpdatedRecords(queryResult) {
         if  (queryResult.query?.recordJsonPath) {
             // return all of the new records if query is configured to fire on a non-zero value OR if previous value does not exist.
             if (queryService.firesWhenNotZero(queryResult.query)) {
-                diffService.getNewRecords(queryResult)
-                // return diff of new and old records for all other cases
+                def records = diffService.getNewRecords(queryResult)
+                //Some queries, like biocache,has a pageSize, so it only returns a subset of the total records + totalRecords
+                def jsonResult = JSON.parse( queryResult.decompress(queryResult.lastResult)) as JSONObject
+                queryResult.totalRecords = jsonResult.totalRecords !=0 ? jsonResult.totalRecords: records.size()
+                return records
             } else {
                 diffService.getNewRecordsFromDiff(queryResult)
             }

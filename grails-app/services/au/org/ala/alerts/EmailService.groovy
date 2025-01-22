@@ -68,7 +68,7 @@ class EmailService {
      * @return
      */
     def Map generateEmailModel(Query query, String frequency, QueryResult queryResult) {
-        def records = notificationService.retrieveRecordForQuery(query, queryResult)
+        def records = notificationService.collectUpdatedRecords(query, queryResult)
         def totalRecords = queryService.totalNumberWhenNotZeroPropertyEnabled(queryResult)
         [
             title           : query.name,
@@ -93,12 +93,12 @@ class EmailService {
 
         log.debug("Using email template: " + query.emailTemplate)
 
-        def records =  notificationService.retrieveRecordForQuery(query, queryResult)
+        def records =  notificationService.collectUpdatedRecords(queryResult)
 
-        int totalRecords = records.size()
+        int totalRecords = queryResult.totalRecords
         int maxRecords = grailsApplication.config.getProperty("biosecurity.query.maxRecords", Integer, 500)
 
-        if (queryResult.hasChanged || Environment.current == Environment.DEVELOPMENT ) {
+        if (totalRecords > 0 || Environment.current == Environment.DEVELOPMENT ) {
             if (grailsApplication.config.getProperty("mail.enabled", Boolean, false)) {
                 def emails = recipients.collect { it.email }
                 log.info "Sending emails for ${query.name} to ${emails.size() <= 2 ? emails.join('; ') : emails.take(2).join('; ') + ' and ' + emails.size() + ' other users.'}"
@@ -125,6 +125,7 @@ class EmailService {
             def status = ["status": 0, "message": "No email sent for [${query.id}]. ${query.name} ."]
         }
     }
+
 
     void sendGroupEmail(Query query, subsetOfAddresses, QueryResult queryResult, records, Frequency frequency, int totalRecords, String userUnsubToken, String notificationUnsubToken) {
         String urlPrefix = "${grailsApplication.config.security.cas.appServerName}${grailsApplication.config.getProperty('security.cas.contextPath', '')}"

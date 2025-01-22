@@ -164,10 +164,11 @@
                                           </tbody>
                                       </table>
                                   </div>
+                              </g:if>
                                   <div class="col-md-5">
                                       <br/>
                                       <div class="well">
-                                          <p>Your can set up specific alerts in various sections of the ALA, including</p>
+                                          <p>You can set up specific alerts in various sections of the ALA, including</p>
                                           <p>
                                           <ul>
                                               <li>
@@ -189,7 +190,7 @@
                                           </p>
                                       </div>
                                   </div>
-                              </g:if>
+
                           </div>
                       </div>
                   </div>
