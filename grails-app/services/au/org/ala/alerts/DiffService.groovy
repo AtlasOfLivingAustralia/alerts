@@ -223,7 +223,7 @@ class DiffService {
                 log.warn "queryId: " + queryResult.query.id + ", queryResult:" + queryResult.id + " last or previous objects contains HTML and not JSON"
             }
         } catch (Exception ex) {
-            log.error("queryId: ${queryResult.query.id}, JsonPath error: ${ex}")
+            log.error("queryId: ${queryResult.query.id}, Runtime error: ${ex.getMessage()}")
         }
 
         return records

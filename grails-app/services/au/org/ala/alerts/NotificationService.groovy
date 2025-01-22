@@ -117,7 +117,7 @@ class NotificationService {
                 processedJson = processQuery(query, urlString)
             }
 
-            // todo:
+            // todo: Legacy code.
             // Review: Duplicated with the process of identifying record changes after
             // It is only for updating the stored properties
             // Considering remove
@@ -129,7 +129,8 @@ class NotificationService {
             qr.previousResult = qr.lastResult
             qr.lastResult = qr.compress(processedJson)
             qr.lastChecked = checkDate
-            //todo: review if it is necessary to store
+            // todo: review if it fully supports all queries
+            // Legacy code. It does not support MyAnnotation
             qr.hasChanged = diffService.hasChanged(qr)
             qr.queryUrlUsed = urlString
             qr.queryUrlUIUsed = urlStringForUI
