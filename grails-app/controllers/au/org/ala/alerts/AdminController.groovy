@@ -372,7 +372,7 @@ class AdminController {
         qr.previousCheck = qr.lastChecked
         qr.lastChecked = since
         query.lastChecked = since
-        def records = notificationService.retrieveRecordForQuery(qr.query, qr)
+        def records = notificationService.collectUpdatedRecords(qr)
 
         String urlPrefix = "${grailsApplication.config.getProperty("grails.serverURL")}${grailsApplication.config.getProperty('security.cas.contextPath', '')}"
         def localeSubject = messageSource.getMessage("emailservice.update.subject", [query.name] as Object[], siteLocale)
@@ -603,7 +603,7 @@ class AdminController {
                 def recipient =
                     [email: currentUser.email, userUnsubToken: currentUser.unsubscribeToken, notificationUnsubToken: '']
                 emailService.sendGroupNotification(qs, fre, [recipient])
-                def results = ["hasChanged": hasChanged, "records": records, "recipient": currentUser.email, details: qs.brief()]
+                def results = ["hasChanged": hasChanged, "totalRecords": qs.totalRecords, "records": records, "recipient": currentUser.email, details: qs.brief()]
                 render results as JSON
             } else {
                 render([status: 1, message: "Cannot find query: ${id}"] as JSON)

@@ -12,6 +12,15 @@
     a {
         color: #003A70;
     }
+
+    .info-button {
+        border: 1pt solid #C44D34;
+        text-decoration: none;
+        font-size: 14px;
+        padding: 10px 15px 10px 15px;
+        color: black;
+        border-radius: 8px;
+    }
 </style>
 <body style="background-color: #f4f4f4;margin: 0;padding: 0;font-family: 'Roboto', sans-serif;font-size: 16px;line-height: 1.5;">
 <table style="width: 100%; background-color: #f4f4f4;border-spacing: 0;border-collapse: collapse;">
@@ -35,7 +44,10 @@
                 </tr>
                 <tr>
                     <td style="background-color: #E8E8E8;color: #000;padding: 40px 30px 40px 30px;text-align: center;font-family: 'Roboto', sans-serif;font-size: 22px;line-height: 1.5;">
-                        <div> ${totalRecords} occurrence ${totalRecords == 1 ? 'record' : 'records'} ${totalRecords == 1 ? 'has' : 'have'} been updated
+                        <div> <g:formatNumber number="${totalRecords}" format="###,###" /> occurrence ${totalRecords == 1 ? 'record' : 'records'} ${totalRecords == 1 ? 'has' : 'have'} been added
+                        </div>
+                        <div>
+                            <a class="btn info-button" href="${moreInfo}">View all new records</a>
                         </div>
                     </td>
                 </tr>
@@ -61,8 +73,8 @@
                                         <g:if test="${oc.family}">
                                             Family: ${oc.family}<br/>
                                         </g:if>
-                                        <g:if test="${oc.dataProviderName}">
-                                            Source: ${oc.dataProviderName}
+                                        <g:if test="${oc.dataResourceName}">
+                                            Source: ${oc.dataResourceName}
                                         </g:if>
                                     </p>
                                 </td>

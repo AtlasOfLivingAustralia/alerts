@@ -18,6 +18,11 @@ class QueryResult {
     byte[] previousResult
     String logs
     transient boolean succeed = true
+    /**
+     * Store the total number of records from Biocache queries, e.g. occurrences, images, etc.
+     * However, some queries, e.g. myAnnotation, lists, their own diffService need to update this value.
+     */
+    transient int totalRecords = 0
 
     String[] getLog() {
         return logs ? logs.split("\n") : []
