@@ -23,6 +23,11 @@ spec:
             - containerPort: 8000
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          args:
+            - "-Dgrails.env={{ .Values.environment }}"
+          env:
+            - name: TZ
+              value: "Australia/Sydney"
           volumeMounts:
             - name: config-volume
               mountPath: /data/alerts/config/alerts-config.properties
