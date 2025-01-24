@@ -85,7 +85,7 @@ class AdminController {
     @Transactional
     def fixupBiocacheQueries() {
         def toUpdate = []
-        Query.findAllByQueryPathForUI('/occurrences/search?q=*:*&fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc').each {
+        Query.findAllByQueryPathForUI('/occurrences/search?q=*:*&fq=first_loaded_date:' + '[___DATEPARAM___ TO *]'.encodeAsURL() + '&sort=first_loaded_date&dir=desc').each {
             it.queryPathForUI = it.queryPath.substring(3)
             toUpdate << it
         }
@@ -93,7 +93,7 @@ class AdminController {
         toUpdate.clear()
 
 
-        Query.findAllByQueryPathForUI('/occurrences/search?q=*:*&fq=user_assertions:*&fq=last_assertion_date:[___DATEPARAM___%20TO%20*]&sort=last_assertion_date&dir=desc').each {
+        Query.findAllByQueryPathForUI('/occurrences/search?q=*:*&fq=user_assertions:*&fq=last_assertion_date:' + '[___DATEPARAM___ TO *]'.encodeAsURL() + '&sort=last_assertion_date&dir=desc').each {
             it.queryPathForUI = it.queryPath.substring(3)
             toUpdate << it
         }
@@ -101,7 +101,7 @@ class AdminController {
         toUpdate.clear()
 
 
-        Query.findAllByQueryPathForUI('/occurrences/search?q=*:*&fq=last_assertion_date:[___DATEPARAM___%20TO%20*]&sort=last_assertion_date&dir=desc').each {
+        Query.findAllByQueryPathForUI('/occurrences/search?q=*:*&fq=last_assertion_date:' + '[___DATEPARAM___ TO *]'.encodeAsURL() + '&sort=last_assertion_date&dir=desc').each {
             it.queryPathForUI = it.queryPath.substring(3)
             toUpdate << it
         }
