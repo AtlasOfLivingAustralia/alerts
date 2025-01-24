@@ -27,7 +27,7 @@ spec:
           args:
             - "-Dgrails.env={{ .Values.environment }}"
             - "-jar"
-            - "app.jar"
+            - "app.war"
           env:
             - name: TZ
               value: "Australia/Sydney"
