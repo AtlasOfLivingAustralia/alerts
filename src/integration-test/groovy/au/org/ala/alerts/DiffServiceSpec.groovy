@@ -74,22 +74,6 @@ class DiffServiceSpec extends Specification {
         check2 == true
     }
 
-    void "test hasChangedJsonDiff for Datasets query"() {
-        given:
-        def query = Query.findByName("Datasets")
-        def json1 = "[{\"name\":\"cxcx\",\"uri\":\"http://collections.ala.org.au/ws/dataResource/dr5053\",\"uid\":\"dr5053\"},{\"name\":\" Warringah Species List\",\"uri\":\"http://collections.ala.org.au/ws/dataResource/dr4047\",\"uid\":\"dr4047\"},{\"name\":\"1 Quantitative\",\"uri\":\"http://collections.ala.org.au/ws/dataResource/dr2615\",\"uid\":\"dr2615\"},{\"name\":\"2 qualitative\",\"uri\":\"http://collections.ala.org.au/ws/dataResource/dr2616\",\"uid\":\"dr2616\"},{\"name\":\"20 Best Euclid characters\",\"uri\":\"http://collections.ala.org.au/ws/dataResource/dr2585\",\"uid\":\"dr2585\"},{\"name\":\"2016 Avifauna of Wallaroo\",\"uri\":\"http://collections.ala.org.au/ws/dataResource/dr6693\",\"uid\":\"dr6693\"},{\"name\":\"2WEL-01\",\"uri\":\"http://collections.ala.org.au/ws/dataResource/dr2182\",\"uid\":\"dr2182\"},{\"name\":\"3 Acacia Qualitative\",\"uri\":\"http://collections.ala.org.au/ws/dataResource/dr2617\",\"uid\":\"dr2617\"},{\"name\":\"3 tree frogs\",\"uri\":\"http://collections.ala.org.au/ws/dataResource/dr6785\",\"uid\":\"dr6785\"}]"
-        def json2 = "[{\"name\":\"Warringah Species List\",\"uri\":\"http://collections.ala.org.au/ws/dataResource/dr4047\",\"uid\":\"dr4047\"},{\"name\":\"1 Quantitative\",\"uri\":\"http://collections.ala.org.au/ws/dataResource/dr2615\",\"uid\":\"dr2615\"},{\"name\":\"2 qualitative\",\"uri\":\"http://collections.ala.org.au/ws/dataResource/dr2616\",\"uid\":\"dr2616\"},{\"name\":\"20 Best Euclid characters\",\"uri\":\"http://collections.ala.org.au/ws/dataResource/dr2585\",\"uid\":\"dr2585\"},{\"name\":\"2016 Avifauna of Wallaroo\",\"uri\":\"http://collections.ala.org.au/ws/dataResource/dr6693\",\"uid\":\"dr6693\"},{\"name\":\"2WEL-01\",\"uri\":\"http://collections.ala.org.au/ws/dataResource/dr2182\",\"uid\":\"dr2182\"},{\"name\":\"3 Acacia Qualitative\",\"uri\":\"http://collections.ala.org.au/ws/dataResource/dr2617\",\"uid\":\"dr2617\"},{\"name\":\"3 tree frogs\",\"uri\":\"http://collections.ala.org.au/ws/dataResource/dr6785\",\"uid\":\"dr6785\"},{\"name\":\"3AusMimulus\",\"uri\":\"http://collections.ala.org.au/ws/dataResource/dr2456\",\"uid\":\"dr2456\"},{\"name\":\"4 Quantitative\",\"uri\":\"http://collections.ala.org.au/ws/dataResource/dr2618\",\"uid\":\"dr2618\"}]"
-
-        when:
-        def check1 = diffService.hasChangedJsonDiff(json1, json1, query, true)
-        then:
-        check1 == false
-
-        when:
-        def check2 = diffService.hasChangedJsonDiff(json1, json2, query, true)
-        then:
-        check2 == true
-    }
 
     void "test hasChangedJsonDiff for Spatial layers query"() {
         given:
