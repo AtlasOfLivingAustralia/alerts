@@ -122,7 +122,6 @@ class NotificationController {
      * Debug the algorithm used to detect changes in the latest result / previous result
      *
      */
-
     def evaluateChangeDetectionAlgorithm = {
         def query = Query.get(params.queryId)
 
@@ -142,7 +141,23 @@ class NotificationController {
         queryResult.lastResult =  queryResult.compress(lastResult)
 
         def records = notificationService.collectUpdatedRecords(queryResult)
-        def results = ["hasChanged": hasChanged, "brief": queryResult.brief(),  "records": records]
+
+        def emailSent = false
+        if (params.emailMe) {
+            User currentUser = userService.getUser()
+            if (currentUser) {
+                def recipient =
+                        [email: currentUser.email, userUnsubToken: currentUser.unsubscribeToken, notificationUnsubToken: '']
+                //Pseudo Frequency
+                Frequency fre = Frequency.findByName("weekly")
+                emailService.sendGroupNotification(queryResult, fre, [recipient])
+                emailSent = true
+            } else {
+                log.warn("No user found to send email to.")
+            }
+        }
+
+        def results = ["hasChanged": hasChanged, emailSent: emailSent, totalRecords: queryResult.totalRecords, "brief": queryResult.brief(),  "records": records]
         render results as JSON
     }
 

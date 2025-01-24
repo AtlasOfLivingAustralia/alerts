@@ -215,16 +215,15 @@ class DiffService {
                     records = dataResourceService.diff(queryResult)
                 } else if ( queryService.isBiocacheImages(queryResult.query)) {
                     records = imageService.diff(queryResult)
-                } else if ( queryService.isBiocacheImages(queryResult.query)) {
-                    records = datasetService.diff(queryResult)
                 } else {
                     records = findNewRecordsById(previous, last, queryResult.query.recordJsonPath, queryResult.query.idJsonPath)
                 }
+                queryResult.totalRecords = records.size()
             } else {
                 log.warn "queryId: " + queryResult.query.id + ", queryResult:" + queryResult.id + " last or previous objects contains HTML and not JSON"
             }
         } catch (Exception ex) {
-            log.error("queryId: ${queryResult.query.id}, JsonPath error: ${ex}")
+            log.error("queryId: ${queryResult.query.id}, Runtime error: ${ex.getMessage()}")
         }
 
         return records
@@ -281,10 +280,6 @@ class DiffService {
             if (diff.contains(record.get(idJsonPath))) {
                 records.add(record)
             }
-        }
-        int maxRecords = grailsApplication.config.getProperty("biosecurity.query.maxRecords", Integer, 500)
-        if (records.size() > maxRecords) {
-            records = records.subList(0, maxRecords)
         }
 
         return records

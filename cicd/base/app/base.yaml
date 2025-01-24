@@ -33,6 +33,9 @@ Parameters:
   pAppClientDomain:
     Type: String
     Description: The domain for the app client
+  pSecretName:
+    Type: String
+    Description: The name of the secret
 
 Conditions:
 
@@ -49,18 +52,22 @@ Resources:
   AlertsAppSecret:
     Type: 'AWS::SecretsManager::Secret'
     Properties:
-      Name: !Sub
-        - ${pProductName}-${ResourceName}
-        - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
+      Name: !Sub ${pSecretName}
       Description: !Sub Alerts app ${pEnvironment} secrets
       GenerateSecretString:
+        SecretStringTemplate: |
+          {
+            "db-password": "",
+            "google-api-key": ""
+          }
         GenerateStringKey: db-password
         PasswordLength: 12
         ExcludeCharacters: "/@\" "
-        SecretStringTemplate: |
-          {
-            "db-password": ""
-          }
+      Tags:
+        - Key: Name
+          Value: !Sub
+            - ${pProductName}-${ResourceName}
+            - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
 
   AlertsRepository:
     Type: AWS::ECR::Repository
