@@ -44,7 +44,7 @@
                 </tr>
                 <tr>
                     <td style="background-color: #E8E8E8;color: #000;padding: 40px 30px 40px 30px;text-align: center;font-family: 'Roboto', sans-serif;font-size: 22px;line-height: 1.5;">
-                        <div> ${totalRecords} ${totalRecords == 1 ? 'dataset' : 'datasets'} ${totalRecords == 1 ? 'has' : 'have'} been updated
+                        <div> ${totalRecords} ${totalRecords == 1 ? 'dataset' : 'datasets'} ${totalRecords == 1 ? 'has' : 'have'} been added
                         </div>
                         <div style="padding-top: 20px;">
                             <a class="btn info-button" href="${moreInfo}"><g:message code="datasets.view.details.of.the.added" /></a>

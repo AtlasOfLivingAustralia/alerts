@@ -281,10 +281,6 @@ class DiffService {
                 records.add(record)
             }
         }
-        int maxRecords = grailsApplication.config.getProperty("biosecurity.query.maxRecords", Integer, 500)
-        if (records.size() > maxRecords) {
-            records = records.subList(0, maxRecords)
-        }
 
         return records
     }

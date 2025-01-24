@@ -60,11 +60,11 @@
                     <td style="background-color: #E8E8E8;color: #000;padding: 40px 30px 40px 30px;text-align: center;font-family: 'Roboto', sans-serif;font-size: 22px;line-height: 1.5;">
                         <g:set var="totalRecords" value="${totalRecords}" />
                         <div>
-                        <g:formatNumber number="${totalRecords}" format="###,###" /> ${totalRecords == 1 ? ' record with images ' : ' records with images'} ${totalRecords == 1 ? 'has' : 'have'} been added
+                        <g:formatNumber number="${totalRecords}" format="###,###" /> ${totalRecords == 1 ? ' new record with images ' : 'new records with images'} ${totalRecords == 1 ? 'has' : 'have'} been added
                         </div>
                         <br/>
                         <div>
-                            <a class="btn info-button" href="${moreInfo}">View all records with new images</a>
+                            <a class="btn info-button" href="${moreInfo}">View all new records with images</a>
                         </div>
                     </td>
                 </tr>
