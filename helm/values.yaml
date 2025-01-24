@@ -80,7 +80,7 @@ rds:
   name: "mysql-rds"
   externalName: "mysql-rds"
 
-environment: "production"
+podEnvironment: "production"
 
 # Config file properties
 config:
