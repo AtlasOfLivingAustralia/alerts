@@ -201,6 +201,13 @@ Resources:
                 FilePaths:
                   Includes:
                     - !Sub cicd/${pProductComponent}/**
+                    - grails-app/**
+                    - src/**
+                    - helm/**
+                    - build.gradle
+                    - Dockerfile
+                    - gradle.properties
+                    - settings.gradle
             SourceActionName: CheckoutSrc
       Variables:
         - Name: SRC_BRANCH
