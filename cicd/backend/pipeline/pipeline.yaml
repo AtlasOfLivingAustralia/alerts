@@ -200,7 +200,10 @@ Resources:
                     - !If [ AutoDeploy, !Ref pGitHubBranch, bogo-branch ]
                 FilePaths:
                   Includes:
-                    - !Sub cicd/${pProductComponent}/**
+                    - '**/*'
+                  Excludes:
+                    - 'cicd/base/**'
+                    - 'cicd/database/**'
             SourceActionName: CheckoutSrc
       Variables:
         - Name: SRC_BRANCH
