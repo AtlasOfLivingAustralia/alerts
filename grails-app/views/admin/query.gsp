@@ -90,7 +90,7 @@
                                         <p><i class="fa fa-info-circle" aria-hidden="true" title="The URL MAY be used to build a UI link for this query."></i> <i>ref. ${query.baseUrlForUI}</i></p>
                                     </div>
                                     <i class="fa fa-cog" aria-hidden="true"></i> <i><b>JSON record path:</b>${query.recordJsonPath} <b>JSON ID path:</b>${query.idJsonPath}</i>
-                                    %{--                                <div>--}%
+                                    %{-- <div>--}%
     %{--                                    <g:if test="${query.notifications}">--}%
     %{--                                            <g:each var="notification" in="${query.notifications}">--}%
     %{--                                                <li>${notification.user?.email}</li> --}%
@@ -140,18 +140,20 @@
                                                     <div style="text-align: right;">
                                                         <hr>
                                                          <div style="padding: 5px;">
-                                                            <label>Evaluate the new record discovery algorithm by comparing the latest and previous results in database </label><g:link class="btn btn-info"  controller="notification" action="evaluateChangeDetectionAlgorithm" params="[queryId: query.id, queryResultId: queryResult.id]" target="_blank">
-                                                                Evaluate
+                                                            <label>Evaluate the new record discovery algorithm using <i class="fa fa-info-circle" aria-hidden="true" style="color: #c44d34;"
+                                                                                                                        title="It won't query our data services"></i>
+                                                                <span style="color:#c44d34;">the last check results</span> in Alerts.</label><g:link class="btn btn-info"  controller="notification" action="evaluateChangeDetectionAlgorithm" params="[queryId: query.id, queryResultId: queryResult.id, emailMe:true]" target="_blank">
+                                                                Evaluate & email me
                                                             </g:link>
                                                          </div>
                                                         <g:if test="${queryType != 'biosecurity'}">
                                                             <div style="padding: 5px;">
-                                                            <label>Get the latest records, compare with the current result in the database, Email me the results </label><g:link class="btn btn-info"  controller="admin" action="emailMeLastCheck" params="[queryId: query.id, frequency: queryResult.frequency?.name]" target="_blank">
-                                                                Email me
+                                                            <label>Query the latest records from the data services, compare them with the current records in Alerts, and email me the findings.</label><g:link class="btn btn-info"  controller="admin" action="emailMeLastCheck" params="[queryId: query.id, frequency: queryResult.frequency?.name]" target="_blank">
+                                                                Query & Email me
                                                             </g:link>
                                                             </div>
                                                             <div style="padding: 5px;">
-                                                                <label>Collect the latest records, compare them with the current results in the database, and display the changes.</label> <g:link class="btn btn-info"  controller="admin" action="dryRunQuery" params="[queryId: query.id, frequency: queryResult.frequency?.name]" target="_blank">
+                                                                <label>Query the latest records, compare them with the current records in Alerts, and display the changes.</label> <g:link class="btn btn-info"  controller="admin" action="dryRunQuery" params="[queryId: query.id, frequency: queryResult.frequency?.name]" target="_blank">
                                                                     Dry run (no DB update, no emails)
                                                                 </g:link>
                                                             </div>

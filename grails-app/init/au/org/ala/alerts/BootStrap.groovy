@@ -200,7 +200,7 @@ class BootStrap {
             new PropertyPath([name: "dataset_count", jsonPath: "\$.facetResults[0].fieldResult", query: newOccurrenceDatasets, fireWhenChange: true]).save()
         }
 
-        title = messageSource.getMessage("query.datasets.title", null, siteLocale)
+/*        title = messageSource.getMessage("query.datasets.title", null, siteLocale)
         descr = messageSource.getMessage("query.datasets.descr", null, siteLocale)
         if(Query.findAllByName(title).isEmpty()){
             Query newDatasets = (new Query([
@@ -217,7 +217,7 @@ class BootStrap {
                     idJsonPath: 'uid'
             ])).save()
             new PropertyPath([name: "dataset_count", jsonPath: "\$", query: newDatasets, fireWhenChange: true]).save()
-        }
+        }*/
 
         title = messageSource.getMessage("query.species.lists.title", null, siteLocale)
         descr = messageSource.getMessage("query.species.lists.descr", null, siteLocale)
