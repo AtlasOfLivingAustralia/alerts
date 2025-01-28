@@ -25,7 +25,7 @@ spec:
             {{- toYaml .Values.resources | nindent 12 }}
           command: [ "java" ]
           args:
-            - "-Dgrails.env={{ .Values.podEnvironment }}"
+            - "-Dgrails.env={{ .Values.config.podEnvironment }}"
             - "-jar"
             - "app.war"
           env:

@@ -211,7 +211,7 @@ phases:
             openapi_oauth_url: "${OPENAPI_OAUTH_URL}"
             terms_url: "${TERMS_URL}"
             support_email: "${SUPPORT_EMAIL}"
-        podEnvironment: "${POD_ENVIRONMENT}"
+          podEnvironment: "${POD_ENVIRONMENT}"
         resources:
           requests:
             cpu: "${CPU_REQUEST}"      

@@ -80,8 +80,6 @@ rds:
   name: "mysql-rds"
   externalName: "mysql-rds"
 
-podEnvironment: "production"
-
 # Config file properties
 config:
   base:
@@ -188,3 +186,4 @@ config:
     openapi_oauth_url: ""
     terms_url: ""
     support_email: ""
+  podEnvironment: "production"
