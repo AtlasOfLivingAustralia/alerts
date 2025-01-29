@@ -31,6 +31,8 @@ spec:
           env:
             - name: TZ
               value: "Australia/Sydney"
+            - name: JAVA_OPTS
+              value: "-Xms1g -Xmx1g -Xss256k -XX:+UseG1GC -XX:+UnlockExperimentalVMOptions -XX:+UseStringDeduplication"
           volumeMounts:
             - name: config-volume
               mountPath: /data/alerts/config/alerts-config.properties
