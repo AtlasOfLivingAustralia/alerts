@@ -277,8 +277,6 @@ Resources:
             Namespace: EmptyBucketNS
             InputArtifacts:
               - Name: SourceArtifact
-            OutputArtifacts:
-              - Name: EmptyBucketArtifact
             RunOrder: 2
           - Name: TeardownBaseStack
             ActionTypeId:
