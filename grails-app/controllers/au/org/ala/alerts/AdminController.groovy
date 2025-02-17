@@ -372,7 +372,7 @@ class AdminController {
         qr.previousCheck = qr.lastChecked
         qr.lastChecked = since
         query.lastChecked = since
-        def records = notificationService.collectUpdatedRecords(qr)
+        def records = diffService.getRecordChanges(qr)
 
         String urlPrefix = "${grailsApplication.config.getProperty("grails.serverURL")}${grailsApplication.config.getProperty('security.cas.contextPath', '')}"
         def localeSubject = messageSource.getMessage("emailservice.update.subject", [query.name] as Object[], siteLocale)
@@ -572,10 +572,14 @@ class AdminController {
             Frequency fre = Frequency.findByName(frequency)
             if (query && fre) {
                 QueryResult qs = notificationService.executeQuery(query, fre, true)
-                boolean hasChanged = diffService.hasChanged(qs)
-                def records = notificationService.collectUpdatedRecords(qs)
-                def results = ["hasChanged": hasChanged, "records": records, "details": qs.brief()]
-                render results as JSON
+                //def records = diffService.getRecordChanges(qs)
+                if (qs.succeeded) {
+                    def records = qs.newRecords
+                    def results = ["hasChanged": qs.hasChanged, "records": records, "details": qs.brief()]
+                    render results as JSON
+                } else {
+                    render([status: 1, message: qs.logs as JSON])
+                }
             } else {
                 render([status: 1, message: "Cannot find query: ${id}"] as JSON)
             }
@@ -597,14 +601,18 @@ class AdminController {
             Frequency fre = Frequency.findByName(frequency)
             if (query && fre) {
                 QueryResult qs = notificationService.executeQuery(query, fre, true, true)
-                boolean hasChanged = diffService.hasChanged(qs)
-                def records = notificationService.collectUpdatedRecords(qs)
-                User currentUser = userService.getUser()
-                def recipient =
-                    [email: currentUser.email, userUnsubToken: currentUser.unsubscribeToken, notificationUnsubToken: '']
-                emailService.sendGroupNotification(qs, fre, [recipient])
-                def results = ["hasChanged": hasChanged, "totalRecords": qs.totalRecords, "records": records, "recipient": currentUser.email, details: qs.brief()]
-                render results as JSON
+                if (qs.succeeded) {
+                    def records = qs.newRecords
+                    User currentUser = userService.getUser()
+                    def recipient =
+                        [email: currentUser.email, userUnsubToken: currentUser.unsubscribeToken, notificationUnsubToken: '']
+                    emailService.sendGroupNotification(qs, fre, [recipient])
+                    def results = ["hasChanged": qs.hasChanged, "totalRecords": qs.totalRecords, "records": records, "recipient": currentUser.email, details: qs.brief()]
+                    render results as JSON
+                } else {
+                    def results = ["status": qs.succeeded, "error": qs.logs]
+                    render results as JSON
+                }
             } else {
                 render([status: 1, message: "Cannot find query: ${id}"] as JSON)
             }
@@ -628,14 +636,18 @@ class AdminController {
             Date date = new SimpleDateFormat("yyyy-MM-dd").parse(checkDate)
             if (query && fre) {
                 QueryResult qs = notificationService.executeQuery(query, fre, false, true, date)
-                boolean hasChanged = diffService.hasChanged(qs)
-                def records = notificationService.collectUpdatedRecords(qs)
-                User currentUser = userService.getUser()
-                def recipient =
-                        [email: currentUser.email, userUnsubToken: currentUser.unsubscribeToken, notificationUnsubToken: '']
-                emailService.sendGroupNotification(qs, fre, [recipient])
-                def results = ["hasChanged": hasChanged, "records": records, "recipient": currentUser.email, details: qs.brief()]
-                render results as JSON
+                if (qs.succeeded) {
+                    def records = qs.newRecords
+                    User currentUser = userService.getUser()
+                    def recipient =
+                            [email: currentUser.email, userUnsubToken: currentUser.unsubscribeToken, notificationUnsubToken: '']
+                    emailService.sendGroupNotification(qs, fre, [recipient])
+                    def results = ["hasChanged": qs.hasChanged, "records": records, "recipient": currentUser.email, details: qs.brief()]
+                    render results as JSON
+                } else {
+                    def results = ["status": qs.succeeded, "error": qs.logs]
+                    render results as JSON
+                }
             } else {
                 render([status: 1, message: "Cannot find query: ${id}"] as JSON)
             }
@@ -659,13 +671,12 @@ class AdminController {
             Frequency fre = Frequency.findByName(frequency)
             if (query && fre) {
                 QueryResult qs = notificationService.executeQuery(query, fre, false, false)
-                boolean hasChanged = diffService.hasChanged(qs)
-                def records = notificationService.collectUpdatedRecords(qs)
+                def records = diffService.getRecordChanges(qs)
                 User currentUser = userService.getUser()
                 def recipient =
                         [email: currentUser.email, userUnsubToken: currentUser.unsubscribeToken, notificationUnsubToken: '']
                 emailService.sendGroupNotification(qs, fre, [recipient])
-                def results = ["hasChanged": hasChanged, "records": records, "recipient": currentUser.email]
+                def results = ["hasChanged": qs.hasChanged, "records": records, "recipient": currentUser.email]
                 render results as JSON
             } else {
                 render([status: 1, message: "Cannot find query: ${id}"] as JSON)
@@ -693,8 +704,8 @@ class AdminController {
             Frequency fre = Frequency.findByName(frequency)
             if (query && fre) {
                 QueryResult queryResult = notificationService.executeQuery(query, fre, false, true)
-                def records = notificationService.collectUpdatedRecords(queryResult)
-                def results = ["status": queryResult.succeed, "hasChanged": queryResult.hasChanged, "logs": queryResult.getLog(), "records": records, "details": queryResult.brief()]
+                def records = diffService.getRecordChanges(queryResult)
+                def results = ["status": queryResult.succeeded, "hasChanged": queryResult.hasChanged, "logs": queryResult.getLog(), "records": records, "details": queryResult.brief()]
                 render results as JSON
             } else {
                 render([status: 1, message: "Cannot find query: ${id}"] as JSON)
@@ -726,8 +737,8 @@ class AdminController {
 
         queries.eachWithIndex { query, index ->
             QueryResult queryResult = notificationService.executeQuery(query, Frequency.findByName(frequency), false, true)
-            def records = notificationService.collectUpdatedRecords(queryResult)
-            def results = ["POS": "${index+1}/${total}", "status": queryResult.succeed, "hasChanged": queryResult.hasChanged, "logs": queryResult.getLog(), "brief": queryResult.brief()]
+            def records = diffService.getRecordChanges(queryResult)
+            def results = ["POS": "${index+1}/${total}", "status": queryResult.succeeded, "hasChanged": queryResult.hasChanged, "logs": queryResult.getLog(), "brief": queryResult.brief()]
 
             writer.write("${results["POS"]}. ${query.id} - ${query.name} - ${frequency}\n")
             writer.write("Status: ${results["status"]}, Changed:${results["hasChanged"]} \n")

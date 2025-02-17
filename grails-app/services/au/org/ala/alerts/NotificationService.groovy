@@ -39,7 +39,7 @@ class NotificationService {
      *
      * @param query
      * @param frequency
-     * @param runLastCheck It has the highest priority. It will set the date range from N days before the previous check date, based on the given frequency, to the last check date
+     * @param runLastCheck It has the highest priority. It may set the date range from N days before the previous check date to the last check date based on the query.
      * @param dryRun If true, the method will not update the database
      * @param checkDate the date to check the query. It is the current date by default
      * @return true if the result has changed
@@ -66,12 +66,12 @@ class NotificationService {
             def processedJson
 
             if (urlString.contains("___MAX___")) {
+                // todo : should be an independent method for Lists
+                // NOTES: the method only works for Lists
                 int max = PAGING_MAX
                 int offset = 0
                 def result = []
                 boolean finished = false
-                // todo : should be an independent method for Lists
-                // NOTES: the method only works for Lists
                 def allLists = []
 
                 while (!finished) {
@@ -116,37 +116,33 @@ class NotificationService {
             } else {
                 processedJson = processQuery(query, urlString)
             }
-
-            // todo: Legacy code.
-            // Review: Duplicated with the process of identifying record changes after
-            // It is only for updating the stored properties
-            // Considering remove
-            refreshProperties(qr, processedJson)
-
             // set check time
             qr.previousCheck = qr.lastChecked
             // store the last result from the webservice call
             qr.previousResult = qr.lastResult
             qr.lastResult = qr.compress(processedJson)
             qr.lastChecked = checkDate
-            // todo: review if it fully supports all queries
-            // Legacy code. It does not support MyAnnotation
-            qr.hasChanged = diffService.hasChanged(qr)
             qr.queryUrlUsed = urlString
             qr.queryUrlUIUsed = urlStringForUI
 
-            log.debug("[QUERY " + query.id + "] Has changed?: " + qr.hasChanged)
-            qr.addLog("Completed. ${qr.hasChanged ? 'Changed' : 'No change'}")
+            // Find the new and updated records
+            qr.newRecords = diffService.getRecordChanges(qr)
+            if (qr.newRecords.size() > 0) {
+                qr.hasChanged = true
+                qr.lastChanged = checkDate
+            } else {
+                qr.hasChanged = false
+            }
 
+            log.debug("[QUERY " + query.id + "] Has changed?: " + qr.hasChanged)
+            qr.succeeded = true
+            qr.addLog("Completed ${qr.succeeded}. ${qr.hasChanged ? 'Changed' : 'No change'}")
         } catch (Exception e) {
-            log.error("[QUERY " + query.id + "] URL: " + urlString + " " + e.getMessage(), e)
+            log.error("Failed: ${query.id}, ${query.name}, ${frequency.name}, URL: ${urlString},  ${e.getMessage()}")
             qr.addLog("Failed: ${e.getMessage()}")
-            qr.succeed = false
+            qr.succeeded = false
         } finally {
             Date endTime = new Date()
-            if (qr.hasChanged) {
-                qr.lastChanged = endTime
-            }
             def duration = TimeCategory.minus(endTime, startTime)
             qr.addLog("Time cost: ${duration}")
             if(!dryRun) {
@@ -277,8 +273,6 @@ class NotificationService {
     }
 
 
-
-
     /**
      * runLastCheck has the highest priority, if it is true, the date range will start from the previous check data to the last check date
      *
@@ -381,6 +375,7 @@ class NotificationService {
      * @param json
      * @return
      */
+    @Deprecated
     private def compareProperties(QueryResult queryResult, json) {
 
         def propertyPaths = [:]
@@ -431,10 +426,8 @@ class NotificationService {
                 queryResult = occurrences.toString()
             }
         } else {
-            //todo : Link may be broken, shall we stop the query?
-            log.error("Failed to process query ${query.name}")
-            log.error("URL: ${url}")
-            log.error("${resp.error}")
+            String error = "${query.name} failed to access : ${url}, [${resp.status}]: ${resp.error}"
+            throw new RuntimeException("${error}")
         }
         return queryResult
     }
@@ -572,7 +565,7 @@ class NotificationService {
                         // these query and queryResult read/write methods are called by the scheduled jobs
                         Integer totalRecords = null
                         QueryResult queryResult = QueryResult.findByQueryAndFrequency(query, frequency)
-                        def records = collectUpdatedRecords(queryResult)
+                        def records = diffService.getRecordChanges(queryResult)
                         Integer fireWhenNotZero = queryService.totalNumberWhenNotZeroPropertyEnabled(queryResult)
                         totalRecords = records.size()
 
@@ -666,7 +659,8 @@ class NotificationService {
             // biosecurity queries are handled elsewhere
             if (!queryService.isBioSecurityQuery(query)) {
                 log.debug("Running query: " + query.name)
-                boolean hasUpdated = executeQuery(query, frequency)?.hasChanged
+                QueryResult qr = executeQuery(query, frequency)
+                boolean hasUpdated = qr?.succeeded && qr?.hasChanged
                 Boolean forceUpdate = grailsApplication.config.getProperty('mail.details.forceAllAlertsGetSent', Boolean, false)
 
                 if (forceUpdate || hasUpdated && sendEmails) {
@@ -858,30 +852,6 @@ class NotificationService {
         } else {
             log.error("User or query not found for userId: " + user?.id + ", queryId: " + query?.name)
             return null;
-        }
-    }
-
-    /**
-     * Copied from EmailService
-     * Todo : Not full correct, need to be checked
-     * Different queries may need different methods to calculate the total number of records
-     * @param queryResult
-     * @return
-     */
-    def collectUpdatedRecords(queryResult) {
-        if  (queryResult.query?.recordJsonPath) {
-            // return all of the new records if query is configured to fire on a non-zero value OR if previous value does not exist.
-            if (queryService.firesWhenNotZero(queryResult.query)) {
-                def records = diffService.getNewRecords(queryResult)
-                //Some queries, like biocache,has a pageSize, so it only returns a subset of the total records + totalRecords
-                def jsonResult = JSON.parse( queryResult.decompress(queryResult.lastResult)) as JSONObject
-                queryResult.totalRecords = jsonResult.totalRecords !=0 ? jsonResult.totalRecords: records.size()
-                return records
-            } else {
-                diffService.getNewRecordsFromDiff(queryResult)
-            }
-        } else {
-            []
         }
     }
 }

@@ -15,6 +15,8 @@ package au.org.ala.alerts
 
 import com.jayway.jsonpath.JsonPath
 import com.jayway.jsonpath.PathNotFoundException
+import grails.converters.JSON
+import org.grails.web.json.JSONObject
 
 import java.util.zip.GZIPInputStream
 
@@ -28,7 +30,106 @@ class DiffService {
     def datasetService
     def imageService
     def dataResourceService
-    def grailsApplication
+
+    /**
+     * Detects the changes in the records of a query result.
+     *
+     * This is the only method that should be called directly from external sources.
+     *
+     * Originally copied from EmailService
+     * @param queryResult
+     * @return
+     */
+    def getRecordChanges(queryResult) {
+        if  (queryResult.query?.recordJsonPath) {
+            // return all of the new records if query is configured to fire on a non-zero value OR if previous value does not exist.
+            if (queryService.firesWhenNotZero(queryResult.query)) {
+                def records = getNewRecords(queryResult)
+                //Some queries, like bioCache,has a pageSize, so it only returns a subset of the total records
+                def jsonResult = JSON.parse( queryResult.decompress(queryResult.lastResult)) as JSONObject
+                queryResult.totalRecords = jsonResult.totalRecords !=0 ? jsonResult.totalRecords: records.size()
+                return records
+            } else {
+                return getNewRecordsFromDiff(queryResult)
+            }
+        } else {
+            return []
+        }
+    }
+    /**
+     * The entry method for retrieving new records when the query URL contains Date parameters (also known as fireWhenNotZero: true).
+     * @param queryResult
+     * @return
+     */
+    def getNewRecords(QueryResult queryResult) {
+        def records = []
+        // decompress both and compare lists
+        if (queryResult.query.recordJsonPath) {
+            String last = decompressZipped(queryResult.lastResult)
+            if (last) {
+                records =  JsonPath.read(last, queryResult.query.recordJsonPath)
+            }
+
+            if (queryService.isBiocacheImages(queryResult.query)) {
+                records = imageService.diff(records)
+            }
+        }
+        return records
+    }
+
+    /**
+     * The entry API method for retrieving new records via full comparison
+     * - for those the query URLs without Date parameters (also known as fireWhenNotZero: false).
+     *
+     * It returns the new or updated records by comparing the last and previous results in QueryResult.
+     *
+     * @param queryResult
+     * @return
+     */
+    def getNewRecordsFromDiff(QueryResult queryResult) {
+
+        def records = []
+        String last = "{}"
+        String previous = "{}"
+        if (queryResult.lastResult != null ) {
+            last = decompressZipped(queryResult.lastResult)
+        }
+
+        // If previous result is null, assign an empty Json object String
+        if ( queryResult.previousResult != null) {
+            previous = decompressZipped(queryResult.previousResult)
+        }
+
+        try {
+            if (!last.startsWith("<") && !previous.startsWith("<")) {
+                // Don't try and process 401, 301, 500, etc., responses that contain HTML
+                if (queryService.isMyAnnotation(queryResult.query)) {
+                    // for normal alerts, comparing occurrence uuid is enough to show the difference.
+                    // for my annotation alerts, same occurrence record could exist in both result but have different assertions.
+                    // so comparing occurrence uuid is not enough, we need to compare 50001/50002/50003 sections inside each occurrence record
+                    records = myAnnotationService.diff(previous, last, queryResult.query.recordJsonPath)
+                } else if (queryService.isAnnotation(queryResult.query)) {
+                    records = annotationService.diff(previous, last, queryResult.query.recordJsonPath)
+                } else if (queryService.isDatasetQuery(queryResult.query)) {
+                    records = datasetService.diff(queryResult)
+                } else if (queryService.isDatasetResource(queryResult.query)) {
+                    records = dataResourceService.diff(queryResult)
+                } else if ( queryService.isBiocacheImages(queryResult.query)) {
+                    records = imageService.diff(queryResult)
+                } else {
+                    records = findNewRecordsById(previous, last, queryResult.query.recordJsonPath, queryResult.query.idJsonPath)
+                }
+                queryResult.totalRecords = records.size()
+            } else {
+                log.warn "queryId: " + queryResult.query.id + ", queryResult:" + queryResult.id + " last or previous objects contains HTML and not JSON"
+            }
+        } catch (Exception ex) {
+            log.error("queryId: ${queryResult.query.id}, Runtime error: ${ex.getMessage()}")
+        }
+
+        return records
+    }
+
 
     Boolean hasChangedJsonDiff(QueryResult queryResult) {
         if (queryResult.lastResult != null) {
@@ -57,6 +158,7 @@ class DiffService {
      * @param queryResult
      * @return
      */
+    @Deprecated
     Boolean hasChanged(QueryResult queryResult) {
         Boolean changed = false
 
@@ -169,65 +271,6 @@ class DiffService {
         }
     }
 
-    def getNewRecords(QueryResult queryResult) {
-        def records = []
-        // decompress both and compare lists
-        if (queryResult.query.recordJsonPath) {
-            String last = decompressZipped(queryResult.lastResult)
-            if (last) {
-                records =  JsonPath.read(last, queryResult.query.recordJsonPath)
-            }
-
-            if (queryService.isBiocacheImages(queryResult.query)) {
-                records = imageService.diff(records)
-            }
-        }
-        return records
-    }
-
-    def getNewRecordsFromDiff(QueryResult queryResult) {
-
-        def records = []
-        String last = "{}"
-        String previous = "{}"
-        if (queryResult.lastResult != null ) {
-            last = decompressZipped(queryResult.lastResult)
-        }
-
-        // If previous result is null, assign an empty Json object String
-        if ( queryResult.previousResult != null) {
-            previous = decompressZipped(queryResult.previousResult)
-        }
-
-        try {
-            if (!last.startsWith("<") && !previous.startsWith("<")) {
-                // Don't try and process 401, 301, 500, etc., responses that contain HTML
-                if (queryService.isMyAnnotation(queryResult.query)) {
-                    // for normal alerts, comparing occurrence uuid is enough to show the difference.
-                    // for my annotation alerts, same occurrence record could exist in both result but have different assertions.
-                    // so comparing occurrence uuid is not enough, we need to compare 50001/50002/50003 sections inside each occurrence record
-                    records = myAnnotationService.diff(previous, last, queryResult.query.recordJsonPath)
-                } else if (queryService.isAnnotation(queryResult.query)) {
-                    records = annotationService.diff(previous, last, queryResult.query.recordJsonPath)
-                } else if (queryService.isDatasetQuery(queryResult.query)) {
-                    records = datasetService.diff(queryResult)
-                } else if (queryService.isDatasetResource(queryResult.query)) {
-                    records = dataResourceService.diff(queryResult)
-                } else if ( queryService.isBiocacheImages(queryResult.query)) {
-                    records = imageService.diff(queryResult)
-                } else {
-                    records = findNewRecordsById(previous, last, queryResult.query.recordJsonPath, queryResult.query.idJsonPath)
-                }
-                queryResult.totalRecords = records.size()
-            } else {
-                log.warn "queryId: " + queryResult.query.id + ", queryResult:" + queryResult.id + " last or previous objects contains HTML and not JSON"
-            }
-        } catch (Exception ex) {
-            log.error("queryId: ${queryResult.query.id}, Runtime error: ${ex.getMessage()}")
-        }
-
-        return records
-    }
 
     /**
      *  Find new records by compare the last and previous results in QueryResult

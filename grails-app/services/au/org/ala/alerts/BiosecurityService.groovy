@@ -30,8 +30,8 @@ class BiosecurityService {
     def grailsApplication
     def emailService
     def webService
-    def diffService
     def biosecurityCSVService
+    def diffService
 
     def biosecurityAlerts() {
         def results = []
@@ -77,29 +77,28 @@ class BiosecurityService {
         QueryResult qr = notificationService.getQueryResult(query, Frequency.findByName(frequency))
 
         try {
+            qr.newLog("")
             def processedJson = processQueryBiosecurity(query, since, now)
-
-            def recordsFound = JsonPath.read(processedJson, '$.totalRecords')
-            result.logs << "${recordsFound} record(s) found since ${sdf.format(since)}."
-
             // set check time
             qr.previousCheck = since
-
             // store the last result from the webservice call
             qr.previousResult = qr.lastResult
             qr.lastResult = qr.compress(processedJson)
             qr.lastChecked = now
-            /**
-             * refreshProperties has to be called before hasChanged
-             */
-            notificationService.refreshProperties(qr, processedJson)
-            qr.hasChanged = diffService.hasChanged(qr)
-            qr.newLog("")
 
-            log.debug("[QUERY " + query.id + "] Has changed?: " + qr.hasChanged)
-            if (qr.hasChanged) {
+            //def recordsFound = JsonPath.read(processedJson, '$.totalRecords')
+            qr.newRecords =  diffService.getNewRecords(qr)
+            qr.totalRecords = qr.newRecords?.size()
+            if ( qr.totalRecords > 0) {
+                qr.hasChanged = true
                 qr.lastChanged = since
+            } else {
+                qr.hasChanged = false
             }
+            log.debug("[QUERY " + query.id + "] Has changed?: " + qr.hasChanged)
+            result.logs << "${qr.totalRecords} record(s) found since ${sdf.format(since)}."
+
+
 
             def todayNDaysAgo = DateUtils.addDays(since, -1 * grailsApplication.config.getProperty("biosecurity.legacy.eventDateAge", Integer, 150))
             def firstLoadedDate = sdf.format(since)
