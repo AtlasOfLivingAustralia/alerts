@@ -5,7 +5,7 @@ import grails.util.Holders
 
 class EmailService {
     def groovyPageRenderer
-    def notificationService
+    def diffService
     def queryService
     def grailsApplication
     def messageSource
@@ -17,6 +17,7 @@ class EmailService {
      * @param notification
      * @return
      */
+    @Deprecated
     def sendNotificationEmail(Notification notification) {
 
         log.debug("Using email template: " + notification.query.emailTemplate)
@@ -68,7 +69,7 @@ class EmailService {
      * @return
      */
     def Map generateEmailModel(Query query, String frequency, QueryResult queryResult) {
-        def records = notificationService.collectUpdatedRecords(query, queryResult)
+        def records = diffService.collectUpdatedRecords(query, queryResult)
         def totalRecords = queryService.totalNumberWhenNotZeroPropertyEnabled(queryResult)
         [
             title           : query.name,
@@ -88,41 +89,52 @@ class EmailService {
         sendGroupNotification(queryResult, frequency, recipients)
     }
 
+    /**
+     * Key method to send emails to a group of recipients.
+     *
+     * @param queryResult
+     * @param frequency
+     * @param recipients
+     */
     def sendGroupNotification(QueryResult queryResult, Frequency frequency, List<Map> recipients) {
         Query query = queryResult.query
 
         log.debug("Using email template: " + query.emailTemplate)
+        if (queryResult.succeeded) {
+            int totalRecords = queryResult.totalRecords
+            def records = queryResult.newRecords
+            int maxRecords = grailsApplication.config.getProperty("biosecurity.query.maxRecords", Integer, 500)
 
-        def records =  notificationService.collectUpdatedRecords(queryResult)
-
-        int totalRecords = queryResult.totalRecords
-        int maxRecords = grailsApplication.config.getProperty("biosecurity.query.maxRecords", Integer, 500)
-
-        if (totalRecords > 0 || Environment.current == Environment.DEVELOPMENT ) {
-            if (grailsApplication.config.getProperty("mail.enabled", Boolean, false)) {
-                def emails = recipients.collect { it.email }
-                log.info "Sending emails for ${query.name} to ${emails.size() <= 2 ? emails.join('; ') : emails.take(2).join('; ') + ' and ' + emails.size() + ' other users.'}"
-                recipients.each { recipient ->
-                    if (!recipient.locked) {
-                        sendGroupEmail(query, [recipient.email], queryResult, records.take(maxRecords), frequency, totalRecords, recipient.userUnsubToken as String, recipient.notificationUnsubToken as String)
-                    } else {
-                        log.warn "Email not sent to locked user: ${recipient}"
+            if (totalRecords > 0 || Environment.current == Environment.DEVELOPMENT) {
+                if (grailsApplication.config.getProperty("mail.enabled", Boolean, false)) {
+                    def emails = recipients.collect { it.email }
+                    log.info "Sending emails for ${query.name} to ${emails.size() <= 2 ? emails.join('; ') : emails.take(2).join('; ') + ' and ' + emails.size() + ' other users.'}"
+                    recipients.each { recipient ->
+                        if (!recipient.locked) {
+                            sendGroupEmail(query, [recipient.email], queryResult, records.take(maxRecords), frequency, totalRecords, recipient.userUnsubToken as String, recipient.notificationUnsubToken as String)
+                        } else {
+                            log.warn "Email not sent to locked user: ${recipient}"
+                        }
                     }
+                } else {
+                    log.info("Email would have been sent to: ${recipients*.email.join(',')} for ${query.name}.")
+                    log.debug("message:" + query.updateMessage)
+                    log.debug("moreInfo:" + queryResult.queryUrlUIUsed)
+                    log.debug("stopNotification:" + grailsApplication.config.security.cas.appServerName + grailsApplication.config.security.cas.contextPath + '/notification/myAlerts')
+                    log.debug("records:" + records)
+                    log.debug("frequency:" + frequency)
+                    log.debug("totalRecords:" + (totalRecords >= 0 ? totalRecords : records.size()))
                 }
+                log.info("Email with ${totalRecords} record(s) sent for [${query.id}]. ${query.name}.")
+                def status = ["status": 0, "message": "Emails were dispatched to the Mail service."]
             } else {
-                log.info("Email would have been sent to: ${recipients*.email.join(',')} for ${query.name}.")
-                log.debug("message:" + query.updateMessage)
-                log.debug("moreInfo:" + queryResult.queryUrlUIUsed)
-                log.debug("stopNotification:" + grailsApplication.config.security.cas.appServerName + grailsApplication.config.security.cas.contextPath + '/notification/myAlerts')
-                log.debug("records:" + records)
-                log.debug("frequency:" + frequency)
-                log.debug("totalRecords:" + (totalRecords >= 0 ? totalRecords : records.size()))
+                log.info("No email sent for [${queryResult.frequency.name}] - [${query.id}]. ${query.name}, as there were no changes.")
+                def status = ["status": 0, "message": "No email sent for [${query.id}]. ${query.name} ."]
             }
-            log.info("Email with ${totalRecords} record(s) sent for [${query.id}]. ${query.name}.")
-            def status = ["status": 0, "message": "Emails were dispatched to the Mail service."]
         } else {
-            log.info("No email sent for [${queryResult.frequency.name}] - [${query.id}]. ${query.name}, as there were no changes.")
-            def status = ["status": 0, "message": "No email sent for [${query.id}]. ${query.name} ."]
+            String error = "No email sent for [${queryResult?.frequency?.name}] - [${query.id}]) ${query?.name}, as the query failed."
+            log.error(error)
+            def status = ["status": 1, "message": "${error}", "logs": queryResult.logs]
         }
     }
 

@@ -79,7 +79,6 @@ class BiosecurityCSVService {
      */
     void generateAuditCSV(QueryResult qs) {
         def task = {
-            def records = diffService.getNewRecords(qs) // TODO: unused var - remove?
             File outputFile = createTempCSV(qs)
             String folderName = new SimpleDateFormat("yyyy-MM-dd").format(new Date())
             String fileName = sanitizeFileName("${qs.query.name}")+ ".csv"

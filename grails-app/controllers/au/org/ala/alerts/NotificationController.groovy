@@ -126,21 +126,14 @@ class NotificationController {
         def query = Query.get(params.queryId)
 
         def queryResult = queryResultService.get(params.queryResultId)
-        //NOTE: this is a hack since the lastResult will be copied into the previousResult in RefreshProperties method
-        //We need to hack the current result with previousResult.
-        def lastResult = queryResult.decompress(queryResult.lastResult)
-        queryResult.lastResult = queryResult.previousResult
-        //Assume ONLY one property value
-        queryResult.propertyValues?[0]?.currentValue = queryResult.propertyValues?[0]?.previousValue
+        // Since the previous and current results are loaded from database,
+        // the diffService.getRecordChanges() should be called to get the new records
+        queryResult.newRecords = diffService.getRecordChanges(queryResult)
 
-        notificationService.refreshProperties(queryResult, lastResult)
-        boolean hasChanged = diffService.hasChanged(queryResult)
-
-        //Update the results
-        queryResult.previousResult = queryResult.lastResult
-        queryResult.lastResult =  queryResult.compress(lastResult)
-
-        def records = notificationService.collectUpdatedRecords(queryResult)
+        boolean hasChanged =  queryResult.newRecords.size() > 0
+        if (hasChanged != queryResult.hasChanged) {
+            log.error("Warning: Calculated hasChanged flag is not consistent with result in database. Calculated: ${hasChanged}, in database: ${queryResult.hasChanged}")
+        }
 
         def emailSent = false
         if (params.emailMe) {
@@ -157,7 +150,7 @@ class NotificationController {
             }
         }
 
-        def results = ["hasChanged": hasChanged, emailSent: emailSent, totalRecords: queryResult.totalRecords, "brief": queryResult.brief(),  "records": records]
+        def results = ["hasChanged": hasChanged, emailSent: emailSent, totalRecords: queryResult.totalRecords, "brief": queryResult.brief(),  "records": queryResult.newRecords]
         render results as JSON
     }
 
