@@ -9,6 +9,17 @@
     <title><g:message code="alert.title" args="[query.resourceName]" /></title>
 </head>
 <style>
+    a {
+        color: #003A70;
+    }
+    .info-button {
+        border: 1pt solid #C44D34;
+        text-decoration: none;
+        font-size: 14px;
+        padding: 10px 15px 10px 15px;
+        color: black;
+        border-radius: 8px;
+    }
 </style>
 <body style="background-color: #f4f4f4;margin: 0;padding: 0;font-family: 'Roboto', sans-serif;font-size: 16px;line-height: 1.5;">
 <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f4f4f4;border-spacing: 0;border-collapse: collapse;">
@@ -33,6 +44,9 @@
                 <tr>
                     <td style="background-color: #E8E8E8;color: #000;padding: 40px 30px 40px 30px;text-align: center;font-family: 'Roboto', sans-serif;font-size: 22px;line-height: 1.5;">
                         <div>Annotations on ${totalRecords} occurrence ${totalRecords == 1 ? 'record' : 'records'} have been updated
+                        </div>
+                        <div style="padding-top: 20px;">
+                            <a class="btn info-button" href="${moreInfo}">View all records</a>
                         </div>
                     </td>
                 </tr>
