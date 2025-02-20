@@ -28,7 +28,9 @@ class NotificationService {
     QueryResult getQueryResult(Query query, Frequency frequency) {
         QueryResult qr = QueryResult.findByQueryAndFrequency(query, frequency)
         if (qr == null) {
-            qr = new QueryResult([query: query, frequency: frequency])
+            QueryResult.withTransaction {
+                qr = new QueryResult([query: query, frequency: frequency])
+            }
         }
         qr
     }
@@ -66,53 +68,8 @@ class NotificationService {
             def processedJson
 
             if (urlString.contains("___MAX___")) {
-                // todo : should be an independent method for Lists
-                // NOTES: the method only works for Lists
-                int max = PAGING_MAX
-                int offset = 0
-                def result = []
-                boolean finished = false
-                def allLists = []
-
-                while (!finished) {
-                    // Construct the URL
-                    def url = new URL(urlString
-                            .replaceAll('___MAX___', String.valueOf(max))
-                            .replaceAll('___OFFSET___', String.valueOf(offset))
-                    )
-
-                    // Process the query
-                    result = processQuery(query, url.toString()) // API errors will result in an empty string ("")
-
-                    // Check if we have results
-                    if (!result || result?.size() == 0) {
-                        finished = true
-                        continue
-                    }
-
-                    // Increment offset for next iteration
-                    offset += max
-
-                    try {
-                        def latestValue = JsonPath.read(result, query.recordJsonPath)
-                        if (latestValue.size() == 0) {
-                            finished = true
-                        } else {
-                            processedJson = result
-                            allLists.addAll(latestValue)
-                        }
-                    } catch (Exception e) {
-                        //expected behaviour for missing properties
-                        finished = true
-                    }
-                }
-                // only for species lists
-                def json = JSON.parse(processedJson) as JSONObject
-                if (json.lists) {
-                    // set json.lists to allLists such that json.toString() does not convert allLists items to strings
-                    json.lists = JSON.parse((allLists as JSON).toString()) as JSONArray
-                    processedJson = json.toString()
-                }
+                //Only can handle the species lists
+                processedJson = processQuery(query, urlString, PAGING_MAX)
             } else {
                 processedJson = processQuery(query, urlString)
             }
@@ -138,15 +95,20 @@ class NotificationService {
             qr.succeeded = true
             qr.addLog("Completed ${qr.succeeded}. ${qr.hasChanged ? 'Changed' : 'No change'}")
         } catch (Exception e) {
-            log.error("Failed: ${query.id}, ${query.name}, ${frequency.name}, URL: ${urlString},  ${e.getMessage()}")
-            qr.addLog("Failed: ${e.getMessage()}")
+            log.error("Failed: ${query.id}, ${query.name}, ${frequency.name}, URL: ${urlString}")
+            log.error("Error: ${e.getMessage()}")
+            qr.addLog("Error: ${e.getMessage()}")
             qr.succeeded = false
         } finally {
             Date endTime = new Date()
             def duration = TimeCategory.minus(endTime, startTime)
-            qr.addLog("Time cost: ${duration}")
-            if(!dryRun) {
-                try {
+
+            if(!dryRun ){
+                if (qr.succeeded) {
+                    String msg = "Completed [${query.id}, ${query.name}, ${frequency.name}]. Time cost: ${duration}"
+                    qr.addLog(msg)
+                    log.info(msg)
+
                     QueryResult.withTransaction {
                         if (!qr.save(validate: true)) {
                             qr.errors.allErrors.each {
@@ -154,8 +116,8 @@ class NotificationService {
                             }
                         }
                     }
-                } catch (Exception e) {
-                    log.error("An unexpected error occurred in saving queryresult: ${qr}", e)
+                } else {
+                    log.info("Aborted. [${query.id}, ${query.name}, ${frequency.name}]. Time cost: ${duration}")
                 }
             }
             else {
@@ -286,7 +248,7 @@ class NotificationService {
         def queryPath = query.queryPath
         def queryPathForUI = query.queryPathForUI
 
-        //if there is a date format, then there's a param to replace
+        //if there is a date format, a param relating with Date needs to be replaced
         if (query.dateFormat) {
             if (runLastCheck) {
                 QueryResult qs = query.getQueryResult(frequency.name)
@@ -295,7 +257,7 @@ class NotificationService {
                 }
             }
 
-            def additionalTimeoffset = grailsApplication.config.getProperty('mail.details.forceAllAlertsGetSent', Boolean, false) ? 24 * 180 : 1
+            def additionalTimeoffset =  1
             def dateToUse = DateUtils.addSeconds(checkDate, -1 * frequency.periodInSeconds * additionalTimeoffset)
             // date one year prior from today.
             def dateLastYear = DateUtils.addYears(checkDate, -1)
@@ -335,6 +297,7 @@ class NotificationService {
      * @param queryResult
      * @return
      */
+    @Deprecated
     Boolean hasPropertiesChanged(def query, def propertyPathMap, def jsonPrevious, def jsonCurrent) {
         Boolean changed = false
 
@@ -412,11 +375,70 @@ class NotificationService {
         propertyPaths
     }
 
+    /**
+     * todo : Suspect this method ONLY works for Lists
+     *
+     * Iterate the query with paging to get all the lists
+     * @param query
+     * @param url
+     * @param pageSize
+     * @return
+     */
+    String processQuery(Query query, String urlString, int pageSize) {
+        int offset = 0
+        def processedJson = ""
+        def result = ""
+        boolean finished = false
+        def allLists = []
+
+        while (!finished) {
+            // Construct the URL
+            def url = new URL(urlString
+                    .replaceAll('___MAX___', String.valueOf(pageSize))
+                    .replaceAll('___OFFSET___', String.valueOf(offset))
+            )
+
+            // Process the query
+            result = processQuery(query, url.toString()) // API errors will result in an empty string ("")
+
+            // Check if we have results
+            if (!result || result?.size() == 0) {
+                finished = true
+                continue
+            }
+
+            // Increment offset for next iteration
+            offset += pageSize
+
+            try {
+                def latestValue = JsonPath.read(result, query.recordJsonPath)
+                if (latestValue.size() == 0) {
+                    finished = true
+                } else {
+                    processedJson = result
+                    allLists.addAll(latestValue)
+                }
+            } catch (Exception e) {
+                //expected behaviour for missing properties
+                finished = true
+            }
+        }
+
+        // Suspicious code: Seems ONLY for lists.
+        // If it is not a list, only return the last result - processedJson
+        def json = JSON.parse(processedJson) as JSONObject
+        if (json.lists) {
+            // set json.lists to allLists such that json.toString() does not convert allLists items to strings
+            json.lists = JSON.parse((allLists as JSON).toString()) as JSONArray
+            processedJson = json.toString()
+        }
+        return processedJson
+    }
 
      String processQuery(Query query, String url) {
         String queryResult = "{}"
         def resp = httpService.getJson(url)
-        if (resp.status == 200) {
+        if (resp.status == 200 || resp.status == 201) {
             def occurrences = resp.json
             if (queryService.isMyAnnotation(query)) {
                 queryResult = myAnnotationService.appendAssertions(query, occurrences)
@@ -426,68 +448,13 @@ class NotificationService {
                 queryResult = occurrences.toString()
             }
         } else {
-            String error = "${query.name} failed to access : ${url}, [${resp.status}]: ${resp.error}"
+            String msg = resp.error.length() > 100 ? resp.error.take(100) + "..." : resp.error
+            String error = "Failed to access : ${url}, [${resp.status}]: ${msg}"
             throw new RuntimeException("${error}")
         }
         return queryResult
     }
 
-    /**
-     * Update the values of the properties, e.g. totalRecords, lastLoadedRecords etc defined int PropertyPath
-     *
-     * @param queryResult
-     * @param json
-     * @return
-     */
-    @NotTransactional
-    def refreshProperties(QueryResult queryResult, json) {
-        log.debug("[QUERY " + queryResult?.query?.id ?: 'NULL' + "] Refreshing properties for query: " + queryResult.query.name + " : " + queryResult.frequency)
-        try {
-                queryResult.query.propertyPaths.each { propertyPath ->
-                    //Used to read the ID from the JSON, if needed
-                    String idJsonPath = queryResult.query.idJsonPath?: 'id'
-
-                    //read the value from the request
-                    def latestValue = null
-                    try {
-                        latestValue = JsonPath.read(json, propertyPath.jsonPath)
-                    } catch (Exception e) {
-                        //expected behaviour if JSON doesnt contain the element
-                    }
-
-                    //get property value for this property path
-                    PropertyValue propertyValue = getPropertyValue(propertyPath, queryResult)
-
-                    propertyValue.previousValue = propertyValue.currentValue
-
-                    if (latestValue != null && latestValue instanceof List) {
-                        //Assume that the size of the list is the total number of records
-                        //We need to decide to store the total number or the first?/last? ID (Assume it is defined in idJsonPath)
-                        //depends on the propertyPath e.g. fireWhenNotZero, fireWhenChange etc
-                        if (propertyPath.fireWhenNotZero ) {
-                            propertyValue.currentValue = latestValue.size().toString()
-                        } else if (propertyPath.fireWhenChange){
-                            //idJsonPath is defined in query represents the 'id' of the record
-                            propertyValue.currentValue = latestValue.first()[idJsonPath]?.toString()
-                        }
-                     } else {
-                        propertyValue.currentValue = latestValue
-                    }
-                    queryResult.addToPropertyValues(propertyValue)
-                }
-
-        } catch (Exception e) {
-            log.error("[QUERY " + queryResult?.query?.id ?: 'NULL' + "] There was a problem reading the supplied JSON.", e)
-        }
-    }
-
-    PropertyValue getPropertyValue(PropertyPath pp, QueryResult queryResult) {
-        PropertyValue pv = queryResult.id == null ? null : PropertyValue.findByPropertyPathAndQueryResult(pp, queryResult)
-        if (pv == null) {
-            pv = new PropertyValue([propertyPath: pp, queryResult: queryResult])
-        }
-        pv
-    }
 
     /**
      * We are now using the original query code for testing, instead of using a duplicated version.
@@ -589,48 +556,19 @@ class NotificationService {
         log.debug("Queries checked: " + checkedCount + ", updated: " + checkedAndUpdatedCount)
     }
 
-    @Deprecated
-    /**
-     * We are now using the original query code for testing, instead of using a duplicated version.
-     */
-    def debugQueriesForUser(User user, PrintWriter writer) {
-        log.debug("Checking queries for user: " + user)
-        def checkedCount = 0
-        def checkedAndUpdatedCount = 0
-        def queries = (List<Query>) Query.executeQuery(
-                """select q from Query q
-                  inner join q.notifications n
-                  inner join n.user u
-                  where u = :user
-                  group by q""", [user: user])
-
-        queries.each { query ->
-            QueryCheckResult qcr = checkStatusDontUpdate(query, user.frequency)
-            checkedCount++
-            if (qcr.queryResult.hasChanged) {
-                checkedAndUpdatedCount++
-            }
-            writer.write(query.id + ": " + query.toString())
-            writer.write("\nUpdated (" + user.frequency.name + "):" + qcr.queryResult.hasChanged)
-            writer.write("\nTime taken: " + qcr.timeTaken / 1000 + ' secs \n')
-            writer.write(("-" * 80) + "\n")
-            writer.flush()
-        }
-    }
-
-
 
     /**
      * Check the queries for a specific frequency EXCEPT for biosecurity queries.
      * @param frequencyName
-     * @return
+     * @return logs for each query
      */
-    def execQueryForFrequency(String frequencyName, boolean sendEmails = true) {
-        log.debug("Checking frequency : " + frequencyName)
+    def execQueryForFrequency(String frequencyName, boolean sendEmails = true, boolean dryRun = false) {
+        log.info("Checking frequency : ${frequencyName}, emails ${sendEmails} dryRun ${dryRun}")
+        def logs = []
         Date now = new Date()
         Frequency frequency = Frequency.findByName(frequencyName)
         if (frequency) {
-            execQueryForFrequency(frequency, sendEmails)
+            logs = execQueryForFrequency(frequency, sendEmails, dryRun)
             //update the frequency last checked
             frequency.lastChecked = now
             Frequency.withTransaction {
@@ -643,11 +581,19 @@ class NotificationService {
         } else {
             log.warn "Frequency not found for ${frequencyName}"
         }
+        return logs
     }
 
+    /**
+     * Check the queries for a specific frequency EXCEPT for biosecurity queries.
+     * @param frequency
+     * @param sendEmails
+     * @param dryRun
+     * @return los for results of each query
+     */
     //select q.id, u.frequency from query q inner join notification n on n.query_id=q.id inner join user u on n.user_id=u.id;
-    List<Map> execQueryForFrequency(Frequency frequency, Boolean sendEmails) {
-        List<Map> recipients = []
+    List<Map> execQueryForFrequency(Frequency frequency, Boolean sendEmails, Boolean dryRun = false) {
+        def logs = []
         def queries = Query.executeQuery(
                 """select q from Query q
                   inner join q.notifications n
@@ -659,16 +605,16 @@ class NotificationService {
             // biosecurity queries are handled elsewhere
             if (!queryService.isBioSecurityQuery(query)) {
                 log.debug("Running query: " + query.name)
-                QueryResult qr = executeQuery(query, frequency)
+                QueryResult qr = executeQuery(query, frequency, false, dryRun)
+                def info = [id: query.id, name: query.name, succeeded: qr.succeeded, hasChanged: qr.hasChanged]
+
+                // Add error message if the query failed
+                if (!qr.succeeded) {
+                    info['error'] = qr.logs
+                }
                 boolean hasUpdated = qr?.succeeded && qr?.hasChanged
-                Boolean forceUpdate = grailsApplication.config.getProperty('mail.details.forceAllAlertsGetSent', Boolean, false)
 
-                if (forceUpdate || hasUpdated && sendEmails) {
-                    log.debug("Query has been updated. Sending emails....")
-                    //send separate emails for now
-                    //if there is a change, generate an email list
-                    //send an email
-
+                if (hasUpdated) {
                     def users = Query.executeQuery(
                             """select u.email, max(u.unsubscribeToken), max(n.unsubscribeToken)
                       from User u
@@ -678,52 +624,25 @@ class NotificationService {
                       and (u.locked is null or u.locked != 1)
                       group by u""", [query: query, frequency: frequency])
 
-                    recipients = users.collect { user ->
+                    def recipients = users.collect { user ->
                         [email: user[0], userUnsubToken: user[1], notificationUnsubToken: user[2]]
                     }
                     log.debug("Sending emails to...." + recipients*.email.join(","))
-                    if (!users.isEmpty()) {
-                        emailService.sendGroupNotification(query, frequency, recipients)
+                    def emails = recipients*.email
+                    info['newRecords'] = qr.newRecords.size()
+                    info['recipients'] = emails.size() > 3
+                            ? emails.take(3).join(", ") + ", etc"
+                            : emails.join(", ")
+
+                    if (!users.isEmpty() && sendEmails) {
+                        emailService.sendGroupNotification(qr, frequency, recipients)
                     }
                 }
+                logs << info
             }
         }
-        recipients
+        logs
     }
-
-
-
-    /**
-     * Check the queries of a specific user.
-     *
-     * @param user
-     * @param sendEmails
-     * @return
-     */
-    def checkQueriesForUser(User user, Boolean sendEmails) {
-
-        log.debug("Checking queries for user: " + user)
-
-        def queries = (List<Query>) Query.executeQuery(
-                """select q from Query q
-                  inner join q.notifications n
-                  inner join n.user u
-                  where u = :user
-                  group by q""", [user: user])
-
-        queries.each { query ->
-            log.debug("Running query: " + query.name)
-            boolean hasUpdated = executeQuery(query, user.frequency)?.hasChanged
-            if (hasUpdated && sendEmails) {
-                log.debug("Query has been updated. Sending emails to...." + user)
-                //send separate emails for now
-                //if there is a change, generate an email list
-                //send an email
-                emailService.sendGroupNotification(query, user.frequency, [[email: user.email, userToken: user.unsubscribeToken, notificationToken: ""]])
-            }
-        }
-    }
-
 
     def addAlertForUser(User user, Long queryId) {
         log.debug('add my alert :  ' + queryId + ' for user : ' + user)

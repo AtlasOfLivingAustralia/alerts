@@ -231,7 +231,7 @@ class BootStrap {
                     resourceName:  grailsApplication.config.mail.details.defaultResourceName,
                     updateMessage: 'more.specieslist.update.message',
                     description: descr,
-                    queryPath: '/speciesList?max=___MAX___&offset=___OFFSET___',
+                    queryPath: '/speciesList?max=___MAX___&offset=___OFFSET___&isAuthoritative=eq%3Atrue',
                     queryPathForUI: '/public/speciesLists?q=&max=25&sort=dateCreated&order=desc',
                     emailTemplate: '/email/specieslists',
                     recordJsonPath: '\$.lists[*]',
