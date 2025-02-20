@@ -27,8 +27,9 @@ class QueryResult {
      * This flag to indicate if the PROCESSING query was successful
      * This flag MUST be set ONLY when requesting a new query to the server.
      * If you load the query result from database, you should not check this flag
+     * Or you should set it manually
      */
-    transient boolean succeeded = true
+    transient boolean succeeded = false
     /**
      * Store the total number of records from Biocache queries, e.g. occurrences, images, etc,
      * since those queries have pageSize, the count of returned records is not the total records.

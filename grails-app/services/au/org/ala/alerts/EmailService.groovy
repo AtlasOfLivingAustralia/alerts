@@ -68,9 +68,10 @@ class EmailService {
      * @param queryResult
      * @return
      */
+    @Deprecated
     def Map generateEmailModel(Query query, String frequency, QueryResult queryResult) {
-        def records = diffService.collectUpdatedRecords(query, queryResult)
-        def totalRecords = queryService.totalNumberWhenNotZeroPropertyEnabled(queryResult)
+        def records = diffService.getNewRecords(queryResult)
+        def totalRecords = queryResult.totalRecords
         [
             title           : query.name,
             message         : query.updateMessage,
@@ -82,11 +83,6 @@ class EmailService {
             records         : records,
             totalRecords    : totalRecords >= 0 ? totalRecords : records.size()
         ]
-    }
-
-    def sendGroupNotification(Query query, Frequency frequency, List<Map> recipients) {
-        QueryResult queryResult = QueryResult.findByQueryAndFrequency(query, frequency)
-        sendGroupNotification(queryResult, frequency, recipients)
     }
 
     /**

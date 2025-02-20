@@ -64,14 +64,13 @@ class BiosecurityService {
      * @param query
      * @param since The local date to check the subscription since
      */
-    @Transactional
     def triggerBiosecuritySubscription(Query query, Date since) {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
         Date now = new Date()
 
         def message = "Checking records of ${query?.id}. ${query?.name} from ${sdf.format(since)} to ${sdf.format(now)}."
         log.info(message)
-        def result = [status: 1, message: message, logs: [message]]
+        def result = [status: 1, message: message, logs: [ "Processing at ${sdf.format(now)} ", message]]
 
         def frequency = 'weekly'
         QueryResult qr = notificationService.getQueryResult(query, Frequency.findByName(frequency))
@@ -95,10 +94,9 @@ class BiosecurityService {
             } else {
                 qr.hasChanged = false
             }
+            qr.succeeded = true
             log.debug("[QUERY " + query.id + "] Has changed?: " + qr.hasChanged)
             result.logs << "${qr.totalRecords} record(s) found since ${sdf.format(since)}."
-
-
 
             def todayNDaysAgo = DateUtils.addDays(since, -1 * grailsApplication.config.getProperty("biosecurity.legacy.eventDateAge", Integer, 150))
             def firstLoadedDate = sdf.format(since)
@@ -131,22 +129,34 @@ class BiosecurityService {
             }
 
             result.logs << "Completed!"
-            result.message = "Completion of Subscription check: ${query?.id}. ${query?.name}."
+            result.message = "Completion of Subscription: [${query?.id}]. ${query?.name}."
             result.status = 0
 
         } catch (Exception e) {
-            log.error("Failed to trigger subscription [ ${query?.id}  ${query?.name} ]", e)
-            result = [status: 1, message: "Failed to trigger subscription [ ${query?.id}  ${query?.name} ]" + e.message]
+            qr.succeeded = false
+            String error = "Failed to trigger subscription [ ${query?.id}  ${query?.name} ]"
+            log.error(e.message)
+            result.status = 1
+            result.message = error
+            result.logs << e.message
         } finally {
-            log.info("[Status: ${result.status}] - ${result.message}")
-
-            qr.addLog(result.logs.join("\n"))
-
-            if (!qr.save(validate: true, flush: true,failOnError: true)){
-                qr.errors.allErrors.each {
-                    log.error(it)
+            log.info(result.message)
+            if (qr.succeeded) {
+                /**
+                 * todo - it only writes queryResult into the database at this moment
+                 *
+                 * However, the queryResult cannot be persisted in the database when an exception is thrown and caught above
+                 * It does not affect the normal operation of the system
+                 */
+                if (!qr.save(validate: true)) {
+                    qr.errors.allErrors.each {
+                        log.error(it)
+                    }
                 }
+            } else {
+                log.error("Aborted! Subscribers will not receive emails.")
             }
+
             return result
         }
     }
@@ -166,9 +176,8 @@ class BiosecurityService {
                 def headers = ["User-Agent": "${grailsApplication.config.getProperty("customUserAgent", "alerts")}"]
                 def speciesList = webService.get(url, [:], ContentType.APPLICATION_JSON, true, false, headers)
                 if (speciesList.statusCode != 200 && speciesList.statusCode != 201) {
-                    log.error("Failed to access: " + url)
                     log.error("Error: " + speciesList.error)
-                    break;
+                    throw new RuntimeException("Failed to process the Species List: ${speciesList.statusCode} " + url)
                 }
                 speciesList.resp?.each { listItem ->
                     processListItemBiosecurity(occurrences, listItem, since, to)
@@ -179,7 +188,7 @@ class BiosecurityService {
 
             }
             //Extra infos for CSV
-            def finalResults =  occurrences.values().collect { record ->
+            def finalResults = occurrences.values().collect { record ->
                 record["dateSent"] = new SimpleDateFormat("dd/MM/yyyy").format(to)
                 record["listName"] = query.name
                 record["listId"] = drId
@@ -187,9 +196,9 @@ class BiosecurityService {
                 return record
             }
 
-            return ([occurrences: finalResults.sort { a, b -> a.eventDate <=> b.eventDate}, totalRecords: finalResults.size()] as JSON).toString()
+            return ([occurrences: finalResults.sort { a, b -> a.eventDate <=> b.eventDate }, totalRecords: finalResults.size()] as JSON).toString()
         } else {
-            return ([occurrences: [], totalRecords: 0] as JSON).toString()
+            return ([status: false, error: 'No species list Id provided', occurrences: [], totalRecords: 0] as JSON).toString()
         }
     }
 
@@ -256,8 +265,8 @@ class BiosecurityService {
                     fetchExtraInfo(occurrence.uuid, occurrence)
                 }
             } catch (Exception e) {
-                log.error("failed to get occurrences at URL: " + url)
-                log.error(e.message)
+                log.error("Biosecurity: ${e.message}")
+                throw new Exception("Biosecurity: failed to process occurrences: ${url}")
             }
         }
     }
