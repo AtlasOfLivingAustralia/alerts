@@ -53,7 +53,9 @@ class QueryResultService {
             qs.lastResult = null
             qs.hasChanged = false
             qs.lastChecked = qs.lastChanged = null
-            qs.save(flush:true)
+            QueryResult.withTransaction {
+                qs.save(flush:true)
+            }
         }
     }
 }

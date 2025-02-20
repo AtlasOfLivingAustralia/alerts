@@ -37,6 +37,9 @@
             <li><g:link controller="admin" action="deleteOrphanAlerts">Delete orphaned queries</g:link> - Remove queries no longer associated with Alert Notification/Subscription.</li>
             <li><g:link controller="admin" action="dryRunAllQueriesForFrequency" params="[frequency: 'daily']" target="_blank">Debug daily alerts</g:link> - Dry-run of daily alerts to determine if emails will be triggered on the next schedule. </li>
             <li class="admin"><a class="btn btn-info" href="${request.contextPath}/admin/query">Debug and Test</a> - For testers and developers</li>
+            <li class="admin"><a class="btn btn-info" href="${g.createLink(controller: 'admin', action: 'triggerHourlyQueries')}" target="_blank">
+                Simulating an Hourly Scheduler Job
+            </a> Will NOT update the database, and emails will ONLY be sent in the development environment.</li>
         </ul>
         <h4>Fix empty/invalid notification_token</h4>
         <ul>
