@@ -48,14 +48,6 @@
 </head>
 <body>
     <div>
-        <div class="panel panel-default">
-            <div class="panel-heading">Dry run tests. No DB updates, No emails sent </div>
-            <div class="panel-body">
-                <a class="btn btn-info" href = "/admin/dryRunAllQueriesForFrequency?frequency=daily" target="_blank">Dry run daily tasks</a>
-            </div>
-        </div>
-     </div>
-    <div>
         <ul class="nav nav-tabs" id="myTab" role="tablist">
             <g:each var="queryType" in="${queries.keySet()}" status="i">
                 <li class="nav-item">
@@ -155,11 +147,11 @@
                                                                 Query & Email me.
                                                             </g:link>
                                                             </div>
-                                                            <div style="padding: 5px;">
-                                                                <label>Query the latest records, compare them with the current records in Alerts, and display the changes.</label> <g:link class="btn btn-info"  controller="admin" action="dryRunQuery" params="[queryId: query.id, frequency: queryResult.frequency?.name]" target="_blank">
-                                                                    Dry run (no DB update, no emails)
-                                                                </g:link>
-                                                            </div>
+%{--                                                            <div style="padding: 5px;">--}%
+%{--                                                                <label>Query the latest records, compare them with the current records in Alerts, and display the changes.</label> <g:link class="btn btn-info"  controller="admin" action="dryRunQuery" params="[queryId: query.id, frequency: queryResult.frequency?.name]" target="_blank">--}%
+%{--                                                                    Dry run (no DB update, no emails)--}%
+%{--                                                                </g:link>--}%
+%{--                                                            </div>--}%
                                                             <div style="margin-top: 20px; margin-bottom: 20px;">
                                                                 <g:form class="form-inline" controller="admin" action="emailAlertsOnCheckDate" method="POST" target="_blank">
                                                                     <%@ page import="java.time.LocalDate" %>
@@ -181,7 +173,7 @@
 
                                                                      </label>
                                                                      <input type="date" id="checkDate" name="checkDate" value="${today}" class="form-control" />
-                                                                    <button type="submit" class="btn btn-info mb-2">Email me, No DB update</button>
+                                                                    <button type="submit" class="btn btn-info mb-2">Email me</button>
                                                                 </g:form>
                                                             </div>
                                                             <div>

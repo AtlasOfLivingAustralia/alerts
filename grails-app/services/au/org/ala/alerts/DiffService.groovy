@@ -124,7 +124,7 @@ class DiffService {
                 log.warn "queryId: " + queryResult.query.id + ", queryResult:" + queryResult.id + " last or previous objects contains HTML and not JSON"
             }
         } catch (Exception ex) {
-            log.error("queryId: ${queryResult.query.id}, Runtime error: ${ex.getMessage()}")
+            log.error("Diff Exception: [${queryResult.query.id}, ${queryResult.query?.name}]: Runtime error: ${ex.getMessage()}")
         }
 
         return records
@@ -312,7 +312,7 @@ class DiffService {
             ids1 = JsonPath.read(last, fullRecordJsonPath)
             ids2 = JsonPath.read(previous, fullRecordJsonPath)
         } catch (PathNotFoundException e){
-            log.info("it's not an error. Result doesn't contain any records since the returned json does not contain any 'recordJsonPath', if result is empty.")
+            log.debug("it's not an error. Result doesn't contain any records since the returned json does not contain any 'recordJsonPath', if result is empty.")
         }
 
         // pull together the records that have been added

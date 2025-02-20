@@ -16,6 +16,7 @@ package au.org.ala.alerts
 import au.org.ala.web.AlaSecured
 import grails.converters.JSON
 import grails.gorm.transactions.Transactional
+import grails.util.Environment
 import grails.util.Holders
 
 import java.text.SimpleDateFormat
@@ -362,45 +363,49 @@ class AdminController {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd")
         Date since =  sdf.parse(date)
         Date now = new Date()
+        try {
+            def processedJson = biosecurityService.processQueryBiosecurity(query, since, now)
 
-        def processedJson = biosecurityService.processQueryBiosecurity(query, since, now)
+            def frequency = 'weekly'
+            QueryResult qr = notificationService.getQueryResult(query, Frequency.findByName(frequency))
+            qr.lastResult = qr.compress(processedJson)
+            //this logic only applies on preview page
+            qr.previousCheck = qr.lastChecked
+            qr.lastChecked = since
+            query.lastChecked = since
+            def records = diffService.getRecordChanges(qr)
 
-        def frequency = 'weekly'
-        QueryResult qr = notificationService.getQueryResult(query, Frequency.findByName(frequency))
-        qr.lastResult = qr.compress(processedJson)
-        //this logic only applies on preview page
-        qr.previousCheck = qr.lastChecked
-        qr.lastChecked = since
-        query.lastChecked = since
-        def records = diffService.getRecordChanges(qr)
+            String urlPrefix = "${grailsApplication.config.getProperty("grails.serverURL")}${grailsApplication.config.getProperty('security.cas.contextPath', '')}"
+            def localeSubject = messageSource.getMessage("emailservice.update.subject", [query.name] as Object[], siteLocale)
 
-        String urlPrefix = "${grailsApplication.config.getProperty("grails.serverURL")}${grailsApplication.config.getProperty('security.cas.contextPath', '')}"
-        def localeSubject = messageSource.getMessage("emailservice.update.subject", [query.name] as Object[], siteLocale)
+            //Get unsubscribe token
+            def unsubscribeOneUrl
 
-        //Get unsubscribe token
-        def unsubscribeOneUrl
-
-        def alaUser = authService.userDetails()
-        def user =  User.findByEmail(alaUser?.email)
-        def unsubscribeToken = notificationService.getUnsubscribeToken(user, query)
-        if (user && unsubscribeToken) {
-            unsubscribeOneUrl = urlPrefix + "/unsubscribe?token=${unsubscribeToken}"
-        }
-        int maxRecords = grailsApplication.config.getProperty("biosecurity.query.maxRecords", Integer, 500)
-        render(view: query.emailTemplate,
+            def alaUser = authService.userDetails()
+            def user = User.findByEmail(alaUser?.email)
+            def unsubscribeToken = notificationService.getUnsubscribeToken(user, query)
+            if (user && unsubscribeToken) {
+                unsubscribeOneUrl = urlPrefix + "/unsubscribe?token=${unsubscribeToken}"
+            }
+            int maxRecords = grailsApplication.config.getProperty("biosecurity.query.maxRecords", Integer, 500)
+            render(view: query.emailTemplate,
 //                plugin: "email-confirmation",
-                model: [title: localeSubject,
-                        message: query.updateMessage,
-                        query: query,
-                        moreInfo: qr.queryUrlUIUsed,
-                        listcode: queryService.isMyAnnotation(query) ? "biocache.view.myannotation.list" : "biocache.view.list",
-                        stopNotification: urlPrefix + '/notification/myAlerts',
-                        records: records.take(maxRecords),
-                        frequency: messageSource.getMessage('frequency.' + frequency, null, siteLocale),
-                        totalRecords: records.size(),
-                        unsubscribeAll: urlPrefix + "/unsubscribe?token=test",
-                        unsubscribeOne: unsubscribeOneUrl
-                ])
+                    model: [title           : localeSubject,
+                            message         : query.updateMessage,
+                            query           : query,
+                            moreInfo        : qr.queryUrlUIUsed,
+                            listcode        : queryService.isMyAnnotation(query) ? "biocache.view.myannotation.list" : "biocache.view.list",
+                            stopNotification: urlPrefix + '/notification/myAlerts',
+                            records         : records.take(maxRecords),
+                            frequency       : messageSource.getMessage('frequency.' + frequency, null, siteLocale),
+                            totalRecords    : records.size(),
+                            unsubscribeAll  : urlPrefix + "/unsubscribe?token=test",
+                            unsubscribeOne  : unsubscribeOneUrl
+                    ])
+        } catch (Exception e) {
+            log.error("Error in previewing Biosecurity alert: ${e.message}")
+            render(text: e.message, contentType: "text/plain", encoding: "UTF-8")
+        }
     }
 
     /**
@@ -578,7 +583,7 @@ class AdminController {
                     def results = ["hasChanged": qs.hasChanged, "records": records, "details": qs.brief()]
                     render results as JSON
                 } else {
-                    render([status: 1, message: qs.logs as JSON])
+                    render([status: 1, message: qs.logs] as JSON)
                 }
             } else {
                 render([status: 1, message: "Cannot find query: ${id}"] as JSON)
@@ -671,13 +676,18 @@ class AdminController {
             Frequency fre = Frequency.findByName(frequency)
             if (query && fre) {
                 QueryResult qs = notificationService.executeQuery(query, fre, false, false)
-                def records = diffService.getRecordChanges(qs)
-                User currentUser = userService.getUser()
-                def recipient =
-                        [email: currentUser.email, userUnsubToken: currentUser.unsubscribeToken, notificationUnsubToken: '']
-                emailService.sendGroupNotification(qs, fre, [recipient])
-                def results = ["hasChanged": qs.hasChanged, "records": records, "recipient": currentUser.email]
-                render results as JSON
+                if (qs.succeeded) {
+                    def records = qs.newRecords
+                    User currentUser = userService.getUser()
+                    def recipient =
+                            [email: currentUser.email, userUnsubToken: currentUser.unsubscribeToken, notificationUnsubToken: '']
+                    emailService.sendGroupNotification(qs, fre, [recipient])
+                    def results = ["hasChanged": qs.hasChanged, "records": records, "recipient": currentUser.email]
+                    render results as JSON
+                } else  {
+                    render ([status: 1, message: qs.logs] as JSON)
+                }
+
             } else {
                 render([status: 1, message: "Cannot find query: ${id}"] as JSON)
             }
@@ -704,9 +714,13 @@ class AdminController {
             Frequency fre = Frequency.findByName(frequency)
             if (query && fre) {
                 QueryResult queryResult = notificationService.executeQuery(query, fre, false, true)
-                def records = diffService.getRecordChanges(queryResult)
-                def results = ["status": queryResult.succeeded, "hasChanged": queryResult.hasChanged, "logs": queryResult.getLog(), "records": records, "details": queryResult.brief()]
-                render results as JSON
+                if (queryResult.succeeded) {
+                    def records = queryResult.newRecords
+                    def results = ["status": queryResult.succeeded, "hasChanged": queryResult.hasChanged, "logs": queryResult.getLog(), "records": records, "details": queryResult.brief()]
+                    render results as JSON
+                } else {
+                    render([status: 1, message: queryResult.logs] as JSON)
+                }
             } else {
                 render([status: 1, message: "Cannot find query: ${id}"] as JSON)
             }
@@ -716,11 +730,28 @@ class AdminController {
     }
 
     /**
+     * Simulating hourly jobs
+     *
+     * Only send emails in Development environment
+     * And NO database updates
+     */
+    def triggerQueriesByFrequency(String frequency) {
+        def allowedFrequencies = ['hourly', 'weekly', 'daily', 'monthly']
+        def jobFrequency = (frequency in allowedFrequencies) ? frequency : 'daily'
+
+        log.info("****** Simulating ${jobFrequency} jobs, NO Database updates****** " + new Date())
+        def logs = notificationService.execQueryForFrequency(jobFrequency, Environment.current == Environment.DEVELOPMENT, true)
+        log.info("****** End ${jobFrequency} job simulation ****** " + new Date())
+        render(logs.sort { [it.succeeded ? 1 : 0, it.hasChanged ? 0 : 1] } as JSON)
+    }
+
+    /**
      * No database updated, No email sent
      *
      * Run a task to execute the query for a specific frequency
      *
      */
+    @Deprecated //Use triggerHourlyQueries instead
     def dryRunAllQueriesForFrequency(){
         def freq = params.frequency
         Frequency frequency = Frequency.findByName(freq)
@@ -755,7 +786,6 @@ class AdminController {
      * @return
      */
     @AlaSecured(value = ['ROLE_ADMIN'], anyRole = true)
-    @Transactional
     def resetQueryResult() {
         try{
             def id = params.id.toInteger()
