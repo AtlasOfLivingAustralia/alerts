@@ -102,13 +102,12 @@ class NotificationService {
         } finally {
             Date endTime = new Date()
             def duration = TimeCategory.minus(endTime, startTime)
+            String msg = "${qr.succeeded ? (qr.hasChanged ? qr.newRecords.size() + ' new records found' : 'Completed - No new records') : 'Aborted'}. [${query.id}, ${query.name}, ${frequency.name}]. Time cost: ${duration}"
+            qr.addLog(msg)
+            log.info(msg)
 
             if(!dryRun ){
                 if (qr.succeeded) {
-                    String msg = "Completed [${query.id}, ${query.name}, ${frequency.name}]. Time cost: ${duration}"
-                    qr.addLog(msg)
-                    log.info(msg)
-
                     QueryResult.withTransaction {
                         if (!qr.save(validate: true)) {
                             qr.errors.allErrors.each {
@@ -116,8 +115,6 @@ class NotificationService {
                             }
                         }
                     }
-                } else {
-                    log.info("Aborted. [${query.id}, ${query.name}, ${frequency.name}]. Time cost: ${duration}")
                 }
             }
             else {
@@ -563,7 +560,7 @@ class NotificationService {
      * @return logs for each query
      */
     def execQueryForFrequency(String frequencyName, boolean sendEmails = true, boolean dryRun = false) {
-        log.info("Checking frequency : ${frequencyName}, emails ${sendEmails} dryRun ${dryRun}")
+        log.info("Checking frequency : ${frequencyName}, emails ${sendEmails}, dryRun ${dryRun}")
         def logs = []
         Date now = new Date()
         Frequency frequency = Frequency.findByName(frequencyName)

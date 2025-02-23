@@ -40,7 +40,7 @@
                 <g:each status="i" in="${records}" var="oc">
                     <tr>
                         <td style="padding: 20px;background-color: white;font-family: 'Roboto', sans-serif;font-size: 14px;line-height: 1.5;">
-                        <g:set var="occurrencelink" value="${query.baseUrlForUI}/occurrences/${oc.uuid}"></g:set>
+                        <g:set var="occurrencelink" value="${query.baseUrlForUI}/occurrences/${oc.uuid}#userAnnotationsList"></g:set>
                         <g:set var="assertionlink" value="${query.baseUrl}/occurrences/${oc.uuid}/assertions"></g:set>
                         <table style="width: 100%">
                             <tr style="vertical-align: top;">
