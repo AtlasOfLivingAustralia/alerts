@@ -129,7 +129,7 @@ class NotificationController {
         // Since the previous and current results are loaded from database,
         // the diffService.getRecordChanges() should be called to get the new records
         queryResult.newRecords = diffService.getRecordChanges(queryResult)
-
+        queryResult.succeeded = true
         boolean hasChanged =  queryResult.newRecords.size() > 0
         if (hasChanged != queryResult.hasChanged) {
             log.error("Warning: Calculated hasChanged flag is not consistent with result in database. Calculated: ${hasChanged}, in database: ${queryResult.hasChanged}")

@@ -735,10 +735,13 @@ class AdminController {
      * Only send emails in Development environment
      * And NO database updates
      */
-    def triggerHourlyQueries() {
-        log.info("****** Simulating hourly jobs, NO Database updates****** " + new Date())
-        def logs = notificationService.execQueryForFrequency('hourly', Environment.current == Environment.DEVELOPMENT, true)
-        log.info("****** End hourly job simulation ****** " + new Date())
+    def triggerQueriesByFrequency(String frequency) {
+        def allowedFrequencies = ['hourly', 'weekly', 'daily', 'monthly']
+        def jobFrequency = (frequency in allowedFrequencies) ? frequency : 'daily'
+
+        log.info("****** Simulating ${jobFrequency} jobs, NO Database updates****** " + new Date())
+        def logs = notificationService.execQueryForFrequency(jobFrequency, Environment.current == Environment.DEVELOPMENT, true)
+        log.info("****** End ${jobFrequency} job simulation ****** " + new Date())
         render(logs.sort { [it.succeeded ? 1 : 0, it.hasChanged ? 0 : 1] } as JSON)
     }
 
@@ -748,6 +751,7 @@ class AdminController {
      * Run a task to execute the query for a specific frequency
      *
      */
+    @Deprecated //Use triggerHourlyQueries instead
     def dryRunAllQueriesForFrequency(){
         def freq = params.frequency
         Frequency frequency = Frequency.findByName(freq)
