@@ -48,14 +48,6 @@
 </head>
 <body>
     <div>
-        <div class="panel panel-default">
-            <div class="panel-heading">Dry run tests. No DB updates, No emails sent </div>
-            <div class="panel-body">
-                <a class="btn btn-info" href = "/admin/dryRunAllQueriesForFrequency?frequency=daily" target="_blank">Dry run daily tasks</a>
-            </div>
-        </div>
-     </div>
-    <div>
         <ul class="nav nav-tabs" id="myTab" role="tablist">
             <g:each var="queryType" in="${queries.keySet()}" status="i">
                 <li class="nav-item">
