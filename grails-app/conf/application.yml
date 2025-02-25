@@ -221,6 +221,7 @@ environments:
     development:
         grails:
             serverURL: "http://localhost:8080"
+            resolveDNS: true
             mail:
                 host: "localhost"
                 port: 1025
@@ -234,6 +235,10 @@ environments:
                         bucket: ala-alerts-test
                         profile: comp-ala-developer
                         region: ap-southeast-2
+        server:
+            http2:
+                enabled: true
+            connection-timeout: 60s
         security:
             cas:
                 appServerName: "http://localhost:8080"
@@ -259,6 +264,7 @@ environments:
     test:
         grails:
             serverURL: "http://dev.ala.org.au:8080"
+            resolveDNS: true
             mail:
                 host: "localhost"
                 port: 25
@@ -279,6 +285,7 @@ environments:
     production:
         grails:
             serverURL: "https://auth.ala.org.au/alerts"
+            resolveDNS: true
             mail:
                 host: "localhost"
                 port: 25

@@ -13,6 +13,11 @@ metadata:
     alb.ingress.kubernetes.io/certificate-arn: {{ .Values.ingress.certificateArn }}
     alb.ingress.kubernetes.io/ssl-redirect: '443'
     alb.ingress.kubernetes.io/success-codes: 200,404,301,302
+    alb.ingress.kubernetes.io/healthcheck-interval-seconds: '10'
+    alb.ingress.kubernetes.io/healthcheck-timeout-seconds: '5'
+    alb.ingress.kubernetes.io/healthcheck-healthy-threshold: '2'
+    alb.ingress.kubernetes.io/healthcheck-unhealthy-threshold: '2'
+    alb.ingress.kubernetes.io/backend-protocol-version: HTTP2
     external-dns.alpha.kubernetes.io/hostname: {{ .Values.ingress.hostname }}
     {{- include "ala-alerts.labels" . | nindent 4 }}
 spec:
