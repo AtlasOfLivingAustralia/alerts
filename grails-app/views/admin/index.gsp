@@ -45,8 +45,10 @@
                     <option value="weekly">Weekly</option>
                     <option value="monthly">Monthly</option>
                 </select>
-                Scheduled Job <a class="btn btn-info" id="simulatedFrequencyLink" href="${g.createLink(controller: 'admin', action: 'triggerQueriesByFrequency', params: [frequency: 'daily'])}" target="_blank">Run</a>
-                - Will NOT update the database, and emails will ONLY be sent in the Development environment.
+                Scheduled Job
+                <a class="btn btn-info" id="simulatedFrequencyLink" href="${g.createLink(controller: 'admin', action: 'triggerQueriesByFrequency', params: [frequency: 'daily'])}" target="_blank">Run</a>
+                <label>  <g:checkBox name="testMode" checked="${grailsApplication.config.testMode ?: false}" />  Email me a copy </label>
+                <br/><i> - Will NOT update the database, and emails will ONLY be sent in the Development environment. </i>
             </li>
         </ul>
         <h4>Fix empty/invalid notification_token</h4>
@@ -99,11 +101,21 @@
 
 <script>
     $(document).ready(function() {
-        $('#frequencySimulated').change(function() {
-            let selectedValue = $(this).val();
+        // Update the link simulating the Quartz job
+        function updateSimulationQueryLink() {
+            let selectedValue = $('#frequencySimulated').val();
+            let testModeChecked = $('[name=testMode]').is(':checked'); // Check if the checkbox is checked
             let queryLink = $('#simulatedFrequencyLink');
-            queryLink.attr('href', "${g.createLink(controller: 'admin', action: 'triggerQueriesByFrequency')}?frequency=" + selectedValue);
-        });
+
+            let url = "${g.createLink(controller: 'admin', action: 'triggerQueriesByFrequency')}";
+            url += "?frequency=" + selectedValue;
+            if (testModeChecked) {
+                url += "&testMode=true"; // Append testMode only if checked
+            }
+            queryLink.attr('href', url);
+        }
+
+        $('#frequencySimulated, [name=testMode]').change(updateSimulationQueryLink);
     });
 </script>
 </body>

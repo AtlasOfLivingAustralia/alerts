@@ -730,16 +730,19 @@ class AdminController {
     }
 
     /**
-     * Simulating hourly jobs
+     * Simulating Quartz jobs
      *
      * Only send emails in Development environment
      * And NO database updates
      */
-    def triggerQueriesByFrequency(String frequency) {
+    def triggerQueriesByFrequency(String frequency, Boolean testMode) {
         def allowedFrequencies = ['hourly', 'weekly', 'daily', 'monthly']
         def jobFrequency = (frequency in allowedFrequencies) ? frequency : 'daily'
+        // Set the test mode.
+        // It is used to determine if a copy of email should be sent to the current user
+        grailsApplication.config.testMode = testMode ?: false
 
-        log.info("****** Simulating ${jobFrequency} jobs, NO Database updates****** " + new Date())
+        log.info("****** Simulating ${jobFrequency} jobs, Test mode: ${grailsApplication.config.testMode}, NO Database updates   ****** " + new Date())
         def logs = notificationService.execQueryForFrequency(jobFrequency, Environment.current == Environment.DEVELOPMENT, true)
         log.info("****** End ${jobFrequency} job simulation ****** " + new Date())
         render(logs.sort { [it.succeeded ? 1 : 0, it.hasChanged ? 0 : 1] } as JSON)

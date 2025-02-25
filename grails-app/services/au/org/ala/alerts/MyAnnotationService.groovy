@@ -81,7 +81,7 @@ class MyAnnotationService{
         }
         Collection missingRecords = missingEntries.values()
         if (missingRecords.size() > 0) {
-            log.debug("Found ${missingRecords.size()} missing records: ${missingRecords.collect { it.uuid }}")
+            log.info("Found ${missingRecords.size()} missing records: ${missingRecords.collect { it.uuid }}")
             mutableRecords.addAll(missingRecords)
         }
 

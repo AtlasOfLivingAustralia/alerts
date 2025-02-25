@@ -17,6 +17,7 @@ class NotificationService {
     int PAGING_MAX = 500
     def sessionFactory
     def httpService
+    def userService
     def emailService
     def diffService
     def queryService
@@ -633,6 +634,13 @@ class NotificationService {
 
                     if (!users.isEmpty() && sendEmails) {
                         emailService.sendGroupNotification(qr, frequency, recipients)
+                    }
+
+                    User currentUser = userService.getUser()
+                    if (currentUser && grailsApplication.config.testMode) {
+                        def me =
+                                [email: currentUser.email, userUnsubToken: currentUser.unsubscribeToken, notificationUnsubToken: '']
+                        emailService.sendGroupNotification(qr, frequency, [me])
                     }
                 }
                 logs << info
