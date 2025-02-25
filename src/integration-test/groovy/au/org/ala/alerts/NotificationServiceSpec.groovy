@@ -133,8 +133,8 @@ class NotificationServiceSpec extends Specification {
         assert users.size() > 0
 
         when:
-        def recipients = service.execQueryForFrequency(hourly, true)
-        then: recipients.size() > 0
+        def alerts = service.execQueryForFrequency(hourly, true)
+        then: alerts.size() > 0
     }
 
     void "test sending email for new records hourly"() {
@@ -171,8 +171,8 @@ class NotificationServiceSpec extends Specification {
         assert users.size() > 0
 
         when:
-        def recipients = service.execQueryForFrequency(hourly, true)
-        then: recipients.size() > 0
+        def alerts = service.execQueryForFrequency(hourly, true)
+        then: alerts.size() > 0
     }
 
     void "test sending email for new images hourly"() {
@@ -209,8 +209,8 @@ class NotificationServiceSpec extends Specification {
         assert users.size() > 0
 
         when:
-        def recipients = service.execQueryForFrequency(hourly, true)
-        then: recipients.size() > 0
+        def alerts = service.execQueryForFrequency(hourly, false)
+        then: alerts.size() > 0
     }
 
     void "test sending email for citizen science records hourly"() {
@@ -247,8 +247,8 @@ class NotificationServiceSpec extends Specification {
         assert users.size() > 0
 
         when:
-        def recipients = service.execQueryForFrequency(hourly, true)
-        then: recipients.size() > 0
+        def alerts = service.execQueryForFrequency(hourly, false)
+        then: alerts.size() > 0
     }
 
     void "test sending email for citizen science records with images hourly"() {
@@ -285,8 +285,8 @@ class NotificationServiceSpec extends Specification {
         assert users.size() > 0
 
         when:
-        def recipients = service.execQueryForFrequency(hourly, true)
-        then: recipients.size() > 0
+        def alerts = service.execQueryForFrequency(hourly, true)
+        then: alerts.size() > 0
     }
 
     void "test sending email for datasets hourly"() {
@@ -327,8 +327,8 @@ class NotificationServiceSpec extends Specification {
         queryResult.save(flush: true)
         when:
         //  due the the values set above, a change will be detected on checkQueryForFrequency,  in turn triggering a diff email.
-        def recipients = service.execQueryForFrequency(hourly, true)
-        then: recipients.size() > 0
+        def alerts = service.execQueryForFrequency(hourly, false)
+        then: alerts.size() > 0
     }
 
     void "test sending email for datasets daily"() {
@@ -369,8 +369,8 @@ class NotificationServiceSpec extends Specification {
         queryResult.save(flush: true)
         when:
         //  due the the values set above, a change will be detected on checkQueryForFrequency,  in turn triggering a diff email.
-        def recipients = service.execQueryForFrequency(daily, true)
-        then: recipients.size() > 0
+        def alerts = service.execQueryForFrequency(daily, true)
+        then: alerts.size() > 0
     }
 
     void "test sending email for species lists hourly"() {
@@ -411,8 +411,8 @@ class NotificationServiceSpec extends Specification {
         queryResult.save(flush: true)
         when:
         //  due the the values set above, a change will be detected on checkQueryForFrequency,  in turn triggering a diff email.
-        def recipients = service.execQueryForFrequency(hourly, true)
-        then: recipients.size() > 0
+        def alerts = service.execQueryForFrequency(hourly, true)
+        then: alerts.size() > 0
     }
 
     void "test sending email for species lists daily"() {
@@ -453,8 +453,8 @@ class NotificationServiceSpec extends Specification {
         queryResult.save(flush: true)
         when:
         //  due the the values set above, a change will be detected on checkQueryForFrequency,  in turn triggering a diff email.
-        def recipients = service.execQueryForFrequency(daily, true)
-        then: recipients.size() > 0
+        def alerts = service.execQueryForFrequency(daily, true)
+        then: alerts.size() > 0
     }
 
     void "test sending email for spatial layers"() {
@@ -495,8 +495,8 @@ class NotificationServiceSpec extends Specification {
         queryResult.save(flush: true)
         when:
         //  due the the values set above, a change will be detected on checkQueryForFrequency, in turn triggering a diff email.
-        def recipients = service.execQueryForFrequency(hourly, true)
-        then: recipients.size() > 0
+        def alerts = service.execQueryForFrequency(hourly, true)
+        then: alerts.size() > 0
     }
 
     void "test sending email for news hourly"() {
@@ -538,8 +538,8 @@ class NotificationServiceSpec extends Specification {
         queryResult.save(flush: true)
         when:
         //  due the the values set above, a change will be detected on checkQueryForFrequency, in turn triggering a diff email.
-        def recipients = service.execQueryForFrequency(hourly, true)
-        then: recipients.size() > 0
+        def alerts = service.execQueryForFrequency(hourly, true)
+        then: alerts.size() > 0
     }
 
     void "test sending email for news daily"() {
@@ -580,7 +580,7 @@ class NotificationServiceSpec extends Specification {
         queryResult.save(flush: true)
         when:
         //  due the the values set above, a change will be detected on checkQueryForFrequency, in turn triggering a diff email.
-        def recipients = service.execQueryForFrequency(daily, true)
-        then: recipients.size() > 0
+        def alerts = service.execQueryForFrequency(daily, true)
+        then: alerts.size() > 0
     }
 }

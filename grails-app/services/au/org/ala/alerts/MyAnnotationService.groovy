@@ -39,15 +39,17 @@ class MyAnnotationService{
         try {
             oldRecordsMap = JsonPath.read(previous, recordJsonPath).collectEntries { [(it.uuid): it] }
         }catch (PathNotFoundException e){
-            log.warn("Previous result is empty or doesn't have any records containing a field ${recordJsonPath} defined in recordJsonPath")
+            log.debug("Previous result is empty or doesn't have any records containing a field ${recordJsonPath} defined in recordJsonPath")
         }
         try {
             curRecordsMap = JsonPath.read(last, recordJsonPath).collectEntries { [(it.uuid): it] }
         }catch (PathNotFoundException e){
-            log.warn("Current result is empty or doesn't have any records containing a field ${recordJsonPath} defined in recordJsonPath")
+            log.debug("Current result is empty or doesn't have any records containing a field ${recordJsonPath} defined in recordJsonPath")
         }
         // if an occurrence record doesn't exist in previous result (added) or has different verified_assertions than previous (changed).
-        def records = curRecordsMap.findAll {
+
+        // NOTE: values of a linkedHashMap is immutable, so we need to create a new list if we will add new records after
+        Collection records = curRecordsMap.findAll {
             def record = it.value
             // if the record has verified assertions and it is a list - some legacy records may have a String instead of a list
             if (!record.verified_assertions?.isEmpty() && record.verified_assertions instanceof List) {
@@ -67,11 +69,23 @@ class MyAnnotationService{
 
         }.values()
 
+        // make a copy of the records list to make it mutable
+        def mutableRecords = new ArrayList(records)
         //if an occurrence record exists in previous result but not in current, it means the annotation is deleted.
         //We need to add these records as a 'modified' record
-        records.addAll(oldRecordsMap.findAll { !curRecordsMap.containsKey(it.value.uuid) }.values())
+        //mutableRecords.addAll(oldRecordsMap.findAll { !curRecordsMap.containsKey(it.value.uuid) }.values())
 
-        return records
+        def missingEntries = oldRecordsMap.findAll { entry ->
+            def record = entry.value  // Get the value from the map entry
+            !curRecordsMap.containsKey(record.uuid) // Check if the uuid is missing in curRecordsMap
+        }
+        Collection missingRecords = missingEntries.values()
+        if (missingRecords.size() > 0) {
+            log.info("Found ${missingRecords.size()} missing records: ${missingRecords.collect { it.uuid }}")
+            mutableRecords.addAll(missingRecords)
+        }
+
+        return mutableRecords
     }
 
     /**

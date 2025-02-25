@@ -35,8 +35,21 @@
                 View each alert type with counts for users</g:link> - View the list of all available custom and default alerts with user subscription count.</li>
 
             <li><g:link controller="admin" action="deleteOrphanAlerts">Delete orphaned queries</g:link> - Remove queries no longer associated with Alert Notification/Subscription.</li>
-            <li><g:link controller="admin" action="dryRunAllQueriesForFrequency" params="[frequency: 'daily']" target="_blank">Debug daily alerts</g:link> - Dry-run of daily alerts to determine if emails will be triggered on the next schedule. </li>
+%{--            <li><g:link controller="admin" action="dryRunAllQueriesForFrequency" params="[frequency: 'daily']" target="_blank">Debug daily alerts</g:link> - Dry-run of daily alerts to determine if emails will be triggered on the next schedule. </li>--}%
             <li class="admin"><a class="btn btn-info" href="${request.contextPath}/admin/query">Debug and Test</a> - For testers and developers</li>
+            <li class="admin">
+                Simulating a
+                <select id="frequencySimulated" class="form-select">
+                    <option value="hourly">Hourly</option>
+                    <option value="daily" selected>Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                </select>
+                Scheduled Job
+                <a class="btn btn-info" id="simulatedFrequencyLink" href="${g.createLink(controller: 'admin', action: 'triggerQueriesByFrequency', params: [frequency: 'daily'])}" target="_blank">Run</a>
+                <label>  <g:checkBox name="testMode" checked="${grailsApplication.config.testMode ?: false}" />  Email me a copy </label>
+                <br/><i> - Will NOT update the database, and emails will ONLY be sent in the Development environment. </i>
+            </li>
         </ul>
         <h4>Fix empty/invalid notification_token</h4>
         <ul>
@@ -84,9 +97,26 @@
             </plugin:isAvailable>
         </ul>
     </div>
-
-
-
 </div>
+
+<script>
+    $(document).ready(function() {
+        // Update the link simulating the Quartz job
+        function updateSimulationQueryLink() {
+            let selectedValue = $('#frequencySimulated').val();
+            let testModeChecked = $('[name=testMode]').is(':checked'); // Check if the checkbox is checked
+            let queryLink = $('#simulatedFrequencyLink');
+
+            let url = "${g.createLink(controller: 'admin', action: 'triggerQueriesByFrequency')}";
+            url += "?frequency=" + selectedValue;
+            if (testModeChecked) {
+                url += "&testMode=true"; // Append testMode only if checked
+            }
+            queryLink.attr('href', url);
+        }
+
+        $('#frequencySimulated, [name=testMode]').change(updateSimulationQueryLink);
+    });
+</script>
 </body>
 </html>

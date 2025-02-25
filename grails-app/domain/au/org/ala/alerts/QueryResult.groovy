@@ -12,15 +12,29 @@ class QueryResult {
     Date previousCheck        // timestamp of previous check
     String queryUrlUsed       //query URL used
     String queryUrlUIUsed       //query URL used
-    Boolean hasChanged = false
     Date lastChanged
     byte[] lastResult
     byte[] previousResult
     String logs
-    transient boolean succeed = true
+    Boolean hasChanged = false  // flag to indicate if the records have changed
     /**
-     * Store the total number of records from Biocache queries, e.g. occurrences, images, etc.
-     * However, some queries, e.g. myAnnotation, lists, their own diffService need to update this value.
+     * Temporary store the new records calculated by diffService
+     * if the new records are not empty, then the hasChanged flag should be true
+     * and the lastChanged should be updated
+     */
+    transient def newRecords = [] // list of new records
+    /**
+     * This flag to indicate if the PROCESSING query was successful
+     * This flag MUST be set ONLY when requesting a new query to the server.
+     * If you load the query result from database, you should not check this flag
+     * Or you should set it manually
+     */
+    transient boolean succeeded = false
+    /**
+     * Store the total number of records from Biocache queries, e.g. occurrences, images, etc,
+     * since those queries have pageSize, the count of returned records is not the total records.
+     *
+     * For other queries, e.g. myAnnotation, lists, their own diffService need to update this value.
      */
     transient int totalRecords = 0
 
@@ -101,12 +115,7 @@ class QueryResult {
             propertyPaths.add(propertyPath.toString())
         }
 
-        def propertyValue = []
-        propertyValues.each { pv ->
-            propertyValue.add(pv.toString())
-        }
-
-        ["Properties in Query", propertyPaths, "Property Values in Query Result", propertyValue]
+        ["Properties in Query", propertyPaths]
     }
 
     String decompress(byte[] zipped) {

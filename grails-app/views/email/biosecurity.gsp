@@ -35,7 +35,7 @@
                         </div>
                         <div>
                             <g:set var="listURL" value="${grailsApplication.config.getProperty("lists.baseURL") + '/speciesListItem/list/' + query.listId}" />
-                            <g:set var="listName" value="${query.name.replaceAll('BioSecurity alert for', '').replaceAll('\"', '').trim()}" />
+                            <g:set var="listName" value="${query.name.replaceAll('(?i)BioSecurity alert for', '').replaceAll('\"', '').trim()}" />
                             <strong>${StringUtils.abbreviate(listName, 40)}, ${query.listId}</strong>
                         </div>
                         <div><i>since ${new SimpleDateFormat("dd MMM yyyy").format(query.lastChecked)}</i></div>
@@ -104,7 +104,7 @@
                 </g:each>
                 <tr>
                     <td style="padding: 35px 70px 35px 70px;background-color: #C44D34;color: #fff;font-family: 'Roboto', sans-serif;font-size: 14px;line-height: 1.43;text-align: center;">
-                        <p>If you notice a record has been misidentified, we encourage you to use your expertise to improve the quality of Australia's biosecurity data.</p>
+                        <p>If you notice a record has been misidentified, we encourage you to use your expertise to improve the quality of Australia's Biosecurity data.</p>
                         <p>Please either annotate the record in the provider platform itself or notify us at <a href="mailto:biosecurity@ala.org.au" style="color: #f2f2f2; font-weight: 700;">biosecurity@ala.org.au</a> for assistance.</p>
                     </td>
                 </tr>

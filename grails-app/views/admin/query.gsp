@@ -48,14 +48,6 @@
 </head>
 <body>
     <div>
-        <div class="panel panel-default">
-            <div class="panel-heading">Dry run tests. No DB updates, No emails sent </div>
-            <div class="panel-body">
-                <a class="btn btn-info" href = "/admin/dryRunAllQueriesForFrequency?frequency=daily" target="_blank">Dry run daily tasks</a>
-            </div>
-        </div>
-     </div>
-    <div>
         <ul class="nav nav-tabs" id="myTab" role="tablist">
             <g:each var="queryType" in="${queries.keySet()}" status="i">
                 <li class="nav-item">
@@ -85,9 +77,8 @@
                             </li>
                             <div class="collapse" id="more-${query.id}">
                                 <div class="card card-body">
-
-                                    <div><p class="bg-info"><b>Query URL:</b> ${query.baseUrl+query.queryPath}</p>
-                                        <p><i class="fa fa-info-circle" aria-hidden="true" title="The URL MAY be used to build a UI link for this query."></i> <i>ref. ${query.baseUrlForUI}</i></p>
+                                    <div><p class="bg-info"><b>Query URL:</b> ${query.baseUrl+query.queryPath} </p>
+                                        <p><i class="fa fa-info-circle" aria-hidden="true" title="The URL MAY be used to build a UI link for this query."></i> <i>UI ref. ${query.baseUrlForUI}</i></p>
                                     </div>
                                     <i class="fa fa-cog" aria-hidden="true"></i> <i><b>JSON record path:</b>${query.recordJsonPath} <b>JSON ID path:</b>${query.idJsonPath}</i>
                                     %{-- <div>--}%
@@ -148,15 +139,19 @@
                                                          </div>
                                                         <g:if test="${queryType != 'biosecurity'}">
                                                             <div style="padding: 5px;">
-                                                            <label>Query the latest records from the data services, compare them with the current records in Alerts, and email me the findings.</label><g:link class="btn btn-info"  controller="admin" action="emailMeLastCheck" params="[queryId: query.id, frequency: queryResult.frequency?.name]" target="_blank">
-                                                                Query & Email me
+                                                            <label>Query the latest records from the data services
+                                                                <i class="fa fa-info-circle" aria-hidden="true" style="color: #c44d34;"
+                                                                   title="The query may use the last checked date. The query may end on that date, span a period around that date, or not used at all. e.g, if the last checked date of a Monthly Image alerts is 1 Jan 2025, this function will query the images which were uploaded from 1 Dec 2024 to current time"></i>
+                                                                , compare them with the current records in Alerts, and email me the findings.</label>
+                                                                <g:link class="btn btn-info"  controller="admin" action="emailMeLastCheck" params="[queryId: query.id, frequency: queryResult.frequency?.name]" target="_blank">
+                                                                Query & Email me.
                                                             </g:link>
                                                             </div>
-                                                            <div style="padding: 5px;">
-                                                                <label>Query the latest records, compare them with the current records in Alerts, and display the changes.</label> <g:link class="btn btn-info"  controller="admin" action="dryRunQuery" params="[queryId: query.id, frequency: queryResult.frequency?.name]" target="_blank">
-                                                                    Dry run (no DB update, no emails)
-                                                                </g:link>
-                                                            </div>
+%{--                                                            <div style="padding: 5px;">--}%
+%{--                                                                <label>Query the latest records, compare them with the current records in Alerts, and display the changes.</label> <g:link class="btn btn-info"  controller="admin" action="dryRunQuery" params="[queryId: query.id, frequency: queryResult.frequency?.name]" target="_blank">--}%
+%{--                                                                    Dry run (no DB update, no emails)--}%
+%{--                                                                </g:link>--}%
+%{--                                                            </div>--}%
                                                             <div style="margin-top: 20px; margin-bottom: 20px;">
                                                                 <g:form class="form-inline" controller="admin" action="emailAlertsOnCheckDate" method="POST" target="_blank">
                                                                     <%@ page import="java.time.LocalDate" %>
@@ -178,7 +173,7 @@
 
                                                                      </label>
                                                                      <input type="date" id="checkDate" name="checkDate" value="${today}" class="form-control" />
-                                                                    <button type="submit" class="btn btn-info mb-2">Email me, No DB update</button>
+                                                                    <button type="submit" class="btn btn-info mb-2">Email me</button>
                                                                 </g:form>
                                                             </div>
                                                             <div>
