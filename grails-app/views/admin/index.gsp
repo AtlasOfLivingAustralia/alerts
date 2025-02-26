@@ -25,7 +25,6 @@
             <li class="controller"><a href="${request.contextPath}/admin/user">Manage alerts for users (find user)</a> - Find user(s) and manage their subscriptions.</li>
         </ul>
     </div>
-
     <div class="panel-heading">
         <h3>Alert and Query Management</h3>
         <ul>
@@ -33,10 +32,7 @@
             <li><g:link controller="query" action="list">View list of alert types</g:link>  - View the list of all available custom and default alerts.</li>
             <li class="controller"><g:link controller="admin" action="notificationReport">
                 View each alert type with counts for users</g:link> - View the list of all available custom and default alerts with user subscription count.</li>
-
-            <li><g:link controller="admin" action="deleteOrphanAlerts">Delete orphaned queries</g:link> - Remove queries no longer associated with Alert Notification/Subscription.</li>
-%{--            <li><g:link controller="admin" action="dryRunAllQueriesForFrequency" params="[frequency: 'daily']" target="_blank">Debug daily alerts</g:link> - Dry-run of daily alerts to determine if emails will be triggered on the next schedule. </li>--}%
-            <li class="admin"><a class="btn btn-info" href="${request.contextPath}/admin/query">Debug and Test</a> - For testers and developers</li>
+           <li class="admin"><a class="btn btn-info" href="${request.contextPath}/admin/query">Debug and Test</a> - For testers and developers</li>
             <li class="admin">
                 Simulating a
                 <select id="frequencySimulated" class="form-select">
@@ -51,10 +47,14 @@
                 <br/><i> - Will NOT update the database, and emails will ONLY be sent in the Development environment. </i>
             </li>
         </ul>
+        <p>
         <h4>Fix empty/invalid notification_token</h4>
         <ul>
             <li><g:link controller="admin" action="repairNotificationsWithoutUnsubscribeToken"> Fix empty notification_token values in Notification table (unsubscribe links with '?token=NULL')</g:link></li>
             <li><g:link controller="admin" action="repairUsersWithoutUnsubscribeToken"> Fix empty notification_token values in user table (unsubscribe all links with '?token=NULL')</g:link></li>
+            <li><g:link controller="admin" action="deleteOrphanAlerts">Delete orphaned queries</g:link> - Remove queries no longer associated with Alert Notification/Subscription.</li>
+            %{--<li><g:link controller="admin" action="dryRunAllQueriesForFrequency" params="[frequency: 'daily']" target="_blank">Debug daily alerts</g:link> - Dry-run of daily alerts to determine if emails will be triggered on the next schedule. </li>--}%
+
         </ul>
     </div>
     <div class="panel-heading">
