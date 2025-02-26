@@ -138,10 +138,10 @@
                                                     <div style="text-align: right;">
                                                         <hr>
                                                          <div style="padding: 5px;">
-                                                            <label>Evaluate the new record discovery algorithm using <i class="fa fa-info-circle" aria-hidden="true" style="color: #c44d34;"
-                                                                                                                        title="It won't query our data services"></i>
-                                                                <span style="color:#c44d34;">the last check results</span> in Alerts.</label><g:link class="btn btn-info"  controller="notification" action="evaluateChangeDetectionAlgorithm" params="[queryId: query.id, queryResultId: queryResult.id, emailMe:true]" target="_blank">
-                                                                Evaluate & email me
+                                                            <label>Evaluate the new record discovery algorithm using
+                                                                <span title="It won't query our data services">
+                                                                <i class="fa fa-info-circle" aria-hidden="true" style="color: #c44d34;"></i> the last check results</span> in Alerts.</label><g:link class="btn btn-info"  controller="notification" action="evaluateChangeDetectionAlgorithm" params="[queryId: query.id, queryResultId: queryResult.id, emailMe:true]" target="_blank">
+                                                                Evaluate & Email me
                                                             </g:link>
                                                          </div>
                                                         <g:if test="${queryType != 'biosecurity'}">
