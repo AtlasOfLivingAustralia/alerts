@@ -69,21 +69,23 @@ class MyAnnotationService{
 
         }.values()
 
-        // make a copy of the records list to make it mutable
         def mutableRecords = new ArrayList(records)
-        //if an occurrence record exists in previous result but not in current, it means the annotation is deleted.
-        //We need to add these records as a 'modified' record
-        //mutableRecords.addAll(oldRecordsMap.findAll { !curRecordsMap.containsKey(it.value.uuid) }.values())
 
-        def missingEntries = oldRecordsMap.findAll { entry ->
-            def record = entry.value  // Get the value from the map entry
-            !curRecordsMap.containsKey(record.uuid) // Check if the uuid is missing in curRecordsMap
-        }
-        Collection missingRecords = missingEntries.values()
-        if (missingRecords.size() > 0) {
-            log.info("Found ${missingRecords.size()} missing records: ${missingRecords.collect { it.uuid }}")
-            mutableRecords.addAll(missingRecords)
-        }
+//         // Decision: #381 Do not included those records which their annotation was deleted
+//        // make a copy of the records list to make it mutable
+//        //if an occurrence record exists in previous result but not in current, it means the annotation is deleted.
+//        //We need to add these records as a 'modified' record
+//        //mutableRecords.addAll(oldRecordsMap.findAll { !curRecordsMap.containsKey(it.value.uuid) }.values())
+//
+//        def missingEntries = oldRecordsMap.findAll { entry ->
+//            def record = entry.value  // Get the value from the map entry
+//            !curRecordsMap.containsKey(record.uuid) // Check if the uuid is missing in curRecordsMap
+//        }
+//        Collection missingRecords = missingEntries.values()
+//        if (missingRecords.size() > 0) {
+//            log.info("Found ${missingRecords.size()} missing records: ${missingRecords.collect { it.uuid }}")
+//            mutableRecords.addAll(missingRecords)
+//        }
 
         return mutableRecords
     }

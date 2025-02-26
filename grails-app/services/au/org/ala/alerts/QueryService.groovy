@@ -332,7 +332,7 @@ class QueryService {
     }
 
     String constructMyAnnotationQueryPath(String userId) {
-        '/occurrences/search?fq=assertion_user_id:' + userId + '&dir=desc&pageSize=300'
+        '/occurrences/search?fq=assertion_user_id:' + userId + '&dir=desc&pageSize=500'
     }
 
     /**
