@@ -102,8 +102,16 @@
                                                         </g:else>
                                                     </div>
                                                     <div>
-                                                        <b>${queryResult.frequency?.name?.toUpperCase()}</b>
-                                                        query result ID: <g:link controller="queryResult" action="getDetails" params="[id: queryResult.id]" target="_blank"> <span class="badge badge-primary">${queryResult.id}</span></g:link>
+                                                        <%
+                                                            def maxEmails = 15
+                                                            def emailList = query.notifications?.collect { it.user?.email }?.findAll { it } ?: []
+                                                            def subscribers = emailList.take(maxEmails).join('; ') // Take first 10
+                                                            if (emailList.size() > maxEmails) {
+                                                                subscribers += ' ......'
+                                                            }
+                                                        %>
+                                                        <g:link controller="queryResult" action="getDetails" params="[id: queryResult.id]" target="_blank"> <span class="badge badge-primary"><i class="fa fa-info-circle" aria-hidden="true"></i> ${queryResult.id}</span></g:link> &nbsp;<b><i class="fa fa-calendar-check-o" aria-hidden="true"></i> ${queryResult.frequency?.name?.toUpperCase()}</b>
+                                                        &nbsp; <label title="${subscribers}"><span class="badge badge-info"> <i class="fa fa-user"></i> ${query.countSubscribers(queryResult.frequency?.name)}</span></label>
 
                                                         <g:if test="${queryResult?.lastChecked}">
                                                              Last checked: ${queryResult?.lastChecked}&nbsp;&nbsp;
@@ -119,13 +127,12 @@
                                                         <br/>
                                                         <b><i class="fa fa-warning" style="color:#c44d34"></i> Resetting the previous and current results of this record to help testers identify new records.</b><button class="btn btn-primary" onclick="resetResultsInDB(${queryResult.id})">Reset</button>
                                                         </g:if>
-                                                        <br/>
-                                                        Subscribers:${query.countSubscribers(queryResult.frequency?.name)}
+
                                                     </div>
                                                     <div>
                                                         <g:each var="pv" in="${queryResult.propertyValues}">
                                                             <span class="badge badge-light">${pv.propertyPath.id}</span> ${pv.propertyPath}<br>
-                                                            <span class="badge badge-light">${pv.id}</span> Current Value: ${pv.currentValue}; Previous Value: ${pv.previousValue} <br>
+                                                            %{-- <span class="badge badge-light">${pv.id}</span> Current Value: ${pv.currentValue}; Previous Value: ${pv.previousValue} <br>--}%
                                                         </g:each>
                                                     </div>
                                                     <div style="text-align: right;">
@@ -140,7 +147,7 @@
                                                         <g:if test="${queryType != 'biosecurity'}">
                                                             <div style="padding: 5px;">
                                                             <label>Query the latest records from the data services
-                                                                <i class="fa fa-info-circle" aria-hidden="true" style="color: #c44d34;"
+                                                                <i class="fa fa-question-circle-o" aria-hidden="true" style="color: #c44d34;"
                                                                    title="The query may use the last checked date. The query may end on that date, span a period around that date, or not used at all. e.g, if the last checked date of a Monthly Image alerts is 1 Jan 2025, this function will query the images which were uploaded from 1 Dec 2024 to current time"></i>
                                                                 , compare them with the current records in Alerts, and email me the findings.</label>
                                                                 <g:link class="btn btn-info"  controller="admin" action="emailMeLastCheck" params="[queryId: query.id, frequency: queryResult.frequency?.name]" target="_blank">
@@ -167,7 +174,7 @@
                                                                         <g:else>
                                                                             query
                                                                         </g:else>
-                                                                         against the given date <i class="fa fa-info-circle" aria-hidden="true" style="color: #c44d34;"
+                                                                         against the given date <i class="fa fa-question-circle-o" aria-hidden="true" style="color: #c44d34;"
                                                                                                   title="It may be set as starting from that date, ending on that date, spanning a period around that date, or not used at all."></i>
                                                                         , and email new records. The date range associated with the given date is determined by the query.
 

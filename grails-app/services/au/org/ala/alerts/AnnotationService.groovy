@@ -105,10 +105,10 @@ class AnnotationService {
             }
         }.values()
 
-
+        //Decision: #381 Do not included those records
         //if an occurrence record exists in previous result but not in current, it means the annotation is deleted.
         //We need to add these records as a 'modified' record
-        records.addAll(oldRecordsMap.findAll { !curRecordsMap.containsKey(it.value.uuid) }.values())
+        //records.addAll(oldRecordsMap.findAll { !curRecordsMap.containsKey(it.value.uuid) }.values())
 
         return records
     }
