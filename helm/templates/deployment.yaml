@@ -46,6 +46,19 @@ spec:
             - name: system-message-volume
               mountPath: /data/alerts/config/system-message.json
               subPath: system-message.json
+
+        # 🚀 DEBUGGING SIDE CAR 🚀
+        - name: debug-sidecar
+          image: nicolaka/netshoot  # Has curl, dig, mtr, tcpdump
+          command: [ "/bin/sh", "-c", "while true; do sleep 30; done" ]
+          resources:
+            limits:
+              memory: "128Mi"
+              cpu: "50m"
+            requests:
+              memory: "64Mi"
+              cpu: "10m"
+
       volumes:
         - name: config-volume
           secret:
