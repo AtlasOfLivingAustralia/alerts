@@ -636,11 +636,15 @@ class NotificationService {
                         emailService.sendGroupNotification(qr, frequency, recipients)
                     }
 
-                    User currentUser = userService.getUser()
-                    if (currentUser && grailsApplication.config.testMode) {
-                        def me =
-                                [email: currentUser.email, userUnsubToken: currentUser.unsubscribeToken, notificationUnsubToken: '']
-                        emailService.sendGroupNotification(qr, frequency, [me])
+                    if (grailsApplication.config.testMode) {
+                        try {
+                            User currentUser = userService.getUser()
+                            def me =
+                                    [email: currentUser.email, userUnsubToken: currentUser.unsubscribeToken, notificationUnsubToken: '']
+                            emailService.sendGroupNotification(qr, frequency, [me])
+                        } catch (Exception e) {
+                            log.error("TestMode is on, but failed to sending alerts to the current user: " + e.getMessage())
+                        }
                     }
                 }
                 logs << info
