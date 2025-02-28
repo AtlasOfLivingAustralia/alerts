@@ -25,6 +25,12 @@ Parameters:
     AllowedValues:
       - true
       - false
+  pDatabaseInsightsMode:
+    Description: enable or disable database insights
+    Type: String
+    AllowedValues:
+      - standard
+      - advanced
   pDbInstanceName:
     Description: The db instance name. This gets used as part of the hostname to connect to the db
     Type: String
@@ -96,6 +102,9 @@ Conditions:
   IsProvisioned: !Equals 
                    - !Ref pEngineMode
                    - provisioned
+  DatabaseInsights: !Equals 
+                   - !Ref pDatabaseInsightsMode
+                   - advanced
   IsServerlessV2: !Equals
                     - !Ref pEngineMode
                     - serverlessv2
@@ -198,6 +207,7 @@ Resources:
       BacktrackWindow: !Ref pBacktrackWindow
       BackupRetentionPeriod: !Ref pBackupRetention
       CopyTagsToSnapshot: true
+      DatabaseInsightsMode: !Ref pDatabaseInsightsMode
       DatabaseName: !Sub ${pProductName}${pEnvironment}
       DBClusterIdentifier: !Sub ${pDbInstanceName}-cluster
       DBClusterParameterGroupName: !Ref ClusterParamGrp
@@ -217,6 +227,10 @@ Resources:
                            - !GetAtt EnhancedMonitoringRole.Arn
                            - !Ref AWS::NoValue
       PerformanceInsightsEnabled: !Ref pPerformanceInsights
+      PerformanceInsightsRetentionPeriod: !If
+                                            - DatabaseInsights
+                                            - 465
+                                            - 7
       Port: 3306
       PreferredBackupWindow: 16:00-17:00
       PreferredMaintenanceWindow: tue:17:00-tue:19:00
