@@ -307,10 +307,10 @@ dataSource:
     properties:
         # http://www.grails.org/doc/latest/guide/single.html#dataSource
         # see http://tomcat.apache.org/tomcat-7.0-doc/jdbc-pool.html#Common_Attributes for more
-        timeBetweenEvictionRunsMillis: 60000 # milliseconds (default: 5000)
-        testOnBorrow: true # default: false
+        timeBetweenEvictionRunsMillis: 5000 # milliseconds (default: 5000)
+        testOnBorrow: false # default: false
         testOnReturn: false # default: false
-        testWhileIdle: true # default: false
+        testWhileIdle: false # default: false
         validationQuery: "SELECT 1" # default: null
         validationQueryTimeout: 10 # seconds (default: -1 i.e. disabled)
         validationInterval: 30000 # milliseconds, default is 30000 (30 seconds)
@@ -318,6 +318,11 @@ dataSource:
         removeAbandonedTimeout: 3600 # seconds (default: 60), must be > quartz job duration
         logAbandoned: true # adds some overhead to every borrow from the pool, disable if it becomes a performance issue
         logValidationErrors: true # default: false, logs validation errors at SEVERE
+        minEvictableIdleTimeMillis: 180000 # 3 minutes in milliseconds
+        minIdle: 0 # Allow the pool to scale down to zero idle connections
+        maxIdle: 10 # Maximum number of idle connections
+        initialSize: 5 # Initial number of connections created when the pool is started
+        maxActive: 50 # Maximum number of active connections that can be allocated from this pool at the same time
         # NOTE: removeAbandoned: true OR testWhileIdle: true enables the Pool Cleaner. There is a bug with the
         # pool cleaner which causes deadlocks when using older mysql jdbc drivers. This configuration has been
         # tested successfully with mysql:mysql-connector-java:5.1.34.
