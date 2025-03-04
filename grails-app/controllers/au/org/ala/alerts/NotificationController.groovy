@@ -128,7 +128,7 @@ class NotificationController {
         def queryResult = queryResultService.get(params.queryResultId)
         // Since the previous and current results are loaded from database,
         // the diffService.getRecordChanges() should be called to get the new records
-        queryResult.newRecords = diffService.getRecordChanges(queryResult)
+        queryResult.newRecords = diffService.diff(queryResult)
         queryResult.succeeded = true
         boolean hasChanged =  queryResult.newRecords.size() > 0
         if (hasChanged != queryResult.hasChanged) {

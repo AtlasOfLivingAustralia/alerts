@@ -22,8 +22,28 @@ import org.grails.web.json.JSONObject
 /**
  *  A diff service for annotations
  */
-class MyAnnotationService{
+class MyAnnotationService {
     def httpService
+
+    def diff(QueryResult queryResult) {
+        def records = []
+        String last = "{}"
+        String previous = "{}"
+        if (queryResult.lastResult != null ) {
+            last = queryResult.decompress(queryResult.lastResult)
+        }
+
+        // If previous result is null, assign an empty Json object String
+        if ( queryResult.previousResult != null) {
+            previous = queryResult.decompress(queryResult.previousResult)
+        }
+
+        def recordJsonPath = queryResult.query?.recordJsonPath
+
+        records = diff(previous, last, recordJsonPath)
+
+        return records
+    }
 
     /**
      * Diff the new records by comparing the previous and current records in query result
@@ -38,12 +58,12 @@ class MyAnnotationService{
         def curRecordsMap = [:]
         try {
             oldRecordsMap = JsonPath.read(previous, recordJsonPath).collectEntries { [(it.uuid): it] }
-        }catch (PathNotFoundException e){
+        }catch (Exception e){
             log.debug("Previous result is empty or doesn't have any records containing a field ${recordJsonPath} defined in recordJsonPath")
         }
         try {
             curRecordsMap = JsonPath.read(last, recordJsonPath).collectEntries { [(it.uuid): it] }
-        }catch (PathNotFoundException e){
+        }catch (Exception e){
             log.debug("Current result is empty or doesn't have any records containing a field ${recordJsonPath} defined in recordJsonPath")
         }
         // if an occurrence record doesn't exist in previous result (added) or has different verified_assertions than previous (changed).
@@ -76,16 +96,6 @@ class MyAnnotationService{
 //        //if an occurrence record exists in previous result but not in current, it means the annotation is deleted.
 //        //We need to add these records as a 'modified' record
 //        //mutableRecords.addAll(oldRecordsMap.findAll { !curRecordsMap.containsKey(it.value.uuid) }.values())
-//
-//        def missingEntries = oldRecordsMap.findAll { entry ->
-//            def record = entry.value  // Get the value from the map entry
-//            !curRecordsMap.containsKey(record.uuid) // Check if the uuid is missing in curRecordsMap
-//        }
-//        Collection missingRecords = missingEntries.values()
-//        if (missingRecords.size() > 0) {
-//            log.info("Found ${missingRecords.size()} missing records: ${missingRecords.collect { it.uuid }}")
-//            mutableRecords.addAll(missingRecords)
-//        }
 
         return mutableRecords
     }
@@ -96,7 +106,7 @@ class MyAnnotationService{
      * @param occurrences
      * @return
      */
-    String appendAssertions(Query query, JSONObject occurrences) {
+    String preProcess(Query query, JSONObject occurrences) {
         String baseUrl = query.baseUrl
 
         // get the user id from the query path

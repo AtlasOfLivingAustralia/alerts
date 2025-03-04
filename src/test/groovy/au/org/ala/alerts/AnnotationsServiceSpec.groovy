@@ -3,12 +3,12 @@ package au.org.ala.alerts
 import grails.testing.services.ServiceUnitTest
 import spock.lang.Specification
 
-class AnnotationServiceSpec extends Specification implements ServiceUnitTest<MyAnnotationService> {
+class AnnotationsServiceSpec extends Specification implements ServiceUnitTest<MyAnnotationService> {
 
     def assertionService
 
     def setup() {
-        assertionService = new AnnotationService()
+        assertionService = new AnnotationsService()
     }
 
     def cleanup() {
