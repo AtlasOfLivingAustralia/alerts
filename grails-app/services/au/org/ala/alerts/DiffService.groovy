@@ -26,10 +26,36 @@ import java.util.zip.GZIPInputStream
 class DiffService {
     def queryService
     def myAnnotationService
-    def annotationService
+    def annotationsService
     def datasetService
     def imageService
     def dataResourceService
+
+    /**
+     * Todo:
+     * Add preProcess and postProcess methods which can be overwritten by the specific services for data resources, e.g. Annotations, Images, etc.
+     *
+     * Create a new instance of the diff service based on email template.
+     *
+     * This is a workaround to allow the service to be created dynamically based on emailTemplate.
+     * @param emailTemplate
+     * @return
+     */
+     def createService(String emailTemplate) {
+        if (!emailTemplate) {
+            def parts = emailTemplate.split("/")
+            if (parts.size() == 2) {
+                def serviceName = parts[-1].capitalize() + "Service" // Convert 'annotations' -> 'AnnotationsService'
+                def beanName = serviceName[0].toLowerCase() + serviceName.substring(1) // Convert to Grails bean naming
+
+                if (grailsApplication.mainContext.containsBean(beanName)) {
+                    return grailsApplication.mainContext.getBean(beanName)
+                }
+            }
+        }
+        return this
+    }
+
 
     /**
      * Detects the changes in the records of a query result.
@@ -40,8 +66,9 @@ class DiffService {
      * @param queryResult
      * @return
      */
-    def getRecordChanges(queryResult) {
+    def diff(queryResult) {
         if  (queryResult.query?.recordJsonPath) {
+
             // return all of the new records if query is configured to fire on a non-zero value OR if previous value does not exist.
             if (queryService.firesWhenNotZero(queryResult.query)) {
                 def records = getNewRecords(queryResult)
@@ -56,6 +83,8 @@ class DiffService {
             return []
         }
     }
+
+
     /**
      * The entry method for retrieving new records when the query URL contains Date parameters (also known as fireWhenNotZero: true).
      * @param queryResult
@@ -67,11 +96,10 @@ class DiffService {
         if (queryResult.query.recordJsonPath) {
             String last = decompressZipped(queryResult.lastResult)
             if (last) {
-                records =  JsonPath.read(last, queryResult.query.recordJsonPath)
+                records = JsonPath.read(last, queryResult.query.recordJsonPath)
             }
-
             if (queryService.isBiocacheImages(queryResult.query)) {
-                records = imageService.diff(records)
+                records = imageService.postProcess(records)
             }
         }
         return records
@@ -104,18 +132,13 @@ class DiffService {
             if (!last.startsWith("<") && !previous.startsWith("<")) {
                 // Don't try and process 401, 301, 500, etc., responses that contain HTML
                 if (queryService.isMyAnnotation(queryResult.query)) {
-                    // for normal alerts, comparing occurrence uuid is enough to show the difference.
-                    // for my annotation alerts, same occurrence record could exist in both result but have different assertions.
-                    // so comparing occurrence uuid is not enough, we need to compare 50001/50002/50003 sections inside each occurrence record
-                    records = myAnnotationService.diff(previous, last, queryResult.query.recordJsonPath)
-                } else if (queryService.isAnnotation(queryResult.query)) {
-                    records = annotationService.diff(previous, last, queryResult.query.recordJsonPath)
+                    records = myAnnotationService.diff(queryResult)
                 } else if (queryService.isDatasetQuery(queryResult.query)) {
                     records = datasetService.diff(queryResult)
                 } else if (queryService.isDatasetResource(queryResult.query)) {
                     records = dataResourceService.diff(queryResult)
                 } else if ( queryService.isBiocacheImages(queryResult.query)) {
-                    records = imageService.diff(queryResult)
+                    records = imageService.postProcess(queryResult)
                 } else {
                     records = findNewRecordsById(previous, last, queryResult.query.recordJsonPath, queryResult.query.idJsonPath)
                 }

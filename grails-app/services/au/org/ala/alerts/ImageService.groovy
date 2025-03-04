@@ -24,7 +24,7 @@ class ImageService {
     /*
     * Collect the new updated images
     */
-    def diff(def records) {
+    def postProcess(def records) {
         def groupedByDataResource = records.groupBy { it.dataResourceUid }
 
         String[] drIds = records.collect { it.dataResourceUid }

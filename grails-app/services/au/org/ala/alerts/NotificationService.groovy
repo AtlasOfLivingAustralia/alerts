@@ -1,7 +1,6 @@
 package au.org.ala.alerts
 
 import com.jayway.jsonpath.JsonPath
-import grails.gorm.transactions.NotTransactional
 import grails.converters.JSON
 import org.apache.commons.lang.time.DateUtils
 import org.grails.web.json.JSONArray
@@ -22,7 +21,7 @@ class NotificationService {
     def diffService
     def queryService
     def myAnnotationService
-    def annotationService
+    def annotationsService
     def grailsApplication
     def dateFormatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
 
@@ -84,7 +83,7 @@ class NotificationService {
             qr.queryUrlUIUsed = urlStringForUI
 
             // Find the new and updated records
-            qr.newRecords = diffService.getRecordChanges(qr)
+            qr.newRecords = diffService.diff(qr)
             if (qr.newRecords.size() > 0) {
                 qr.hasChanged = true
                 qr.lastChanged = checkDate
@@ -126,6 +125,7 @@ class NotificationService {
 
         return qr
     }
+
 
     /**
      * It has similar code with checkStatus, but not identical
@@ -439,9 +439,9 @@ class NotificationService {
         if (resp.status == 200 || resp.status == 201) {
             def occurrences = resp.json
             if (queryService.isMyAnnotation(query)) {
-                queryResult = myAnnotationService.appendAssertions(query, occurrences)
+                queryResult = myAnnotationService.preProcess(query, occurrences)
             } else if (queryService.isAnnotation(query)) {
-                queryResult = annotationService.appendAssertions(query, occurrences)
+                queryResult = annotationsService.preProcess(query, occurrences)
             } else {
                 queryResult = occurrences.toString()
             }
@@ -530,7 +530,7 @@ class NotificationService {
                         // these query and queryResult read/write methods are called by the scheduled jobs
                         Integer totalRecords = null
                         QueryResult queryResult = QueryResult.findByQueryAndFrequency(query, frequency)
-                        def records = diffService.getRecordChanges(queryResult)
+                        def records = diffService.diff(queryResult)
                         Integer fireWhenNotZero = queryService.totalNumberWhenNotZeroPropertyEnabled(queryResult)
                         totalRecords = records.size()
 

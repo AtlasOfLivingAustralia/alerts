@@ -11,7 +11,7 @@
  * rights and limitations under the License.
  */
 buildscript {
-    version "5.0.1-SNAPSHOT"
+    version "5.0.2-SNAPSHOT"
     group "au.org.ala"
 }
 
