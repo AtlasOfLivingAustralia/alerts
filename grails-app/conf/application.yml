@@ -311,7 +311,7 @@ dataSource:
         testOnBorrow: false # default: false
         testOnReturn: false # default: false
         testWhileIdle: false # default: false
-        validationQuery: "SELECT 1" # default: null
+        validationQuery: null # default: null
         validationQueryTimeout: 10 # seconds (default: -1 i.e. disabled)
         validationInterval: 30000 # milliseconds, default is 30000 (30 seconds)
         removeAbandoned: true # # default: false
