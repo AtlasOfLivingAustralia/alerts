@@ -78,7 +78,6 @@ phases:
       - echo S3_BUCKET_NAME=$S3_BUCKET_NAME
       - echo SECRET_NAME=$SECRET_NAME
       - echo BASE_STACK_NAME=$BASE_STACK_NAME
-      - echo DB_PASSWORD=$DB_PASSWORD
       - export EKS_CLUSTER_NAME=$(aws cloudformation list-exports --query "Exports[?Name=='$REGOLITH_STACK_NAME-ClusterName'].Value" --output text)
       - echo EKS_CLUSTER_NAME=$EKS_CLUSTER_NAME
     finally:
