@@ -9,8 +9,8 @@ env:
   variables:
     DEBIAN_FRONTEND: "noninteractive"
   secrets-manager:
-    DB_PASSWORD: $ALERTS_SECRET_NAME:db-password
-    GOOGLE_APIKEY: $ALERTS_SECRET_NAME:google-api-key
+    DB_PASSWORD: $SECRET_NAME:db-password
+    GOOGLE_APIKEY: $SECRET_NAME:google-api-key
   exported-variables:
     - BASE_STACK_FILE_PFIX
     - BASE_STACK_NAME
@@ -76,7 +76,7 @@ phases:
       - echo DB_READ_ENDPOINT=$DB_READ_ENDPOINT
       - echo DB_WRITE_ENDPOINT=$DB_WRITE_ENDPOINT
       - echo S3_BUCKET_NAME=$S3_BUCKET_NAME
-      - echo ALERTS_SECRET_NAME=$ALERTS_SECRET_NAME
+      - echo SECRET_NAME=$SECRET_NAME
       - echo BASE_STACK_NAME=$BASE_STACK_NAME
       - echo DB_PASSWORD=$DB_PASSWORD
       - export EKS_CLUSTER_NAME=$(aws cloudformation list-exports --query "Exports[?Name=='$REGOLITH_STACK_NAME-ClusterName'].Value" --output text)

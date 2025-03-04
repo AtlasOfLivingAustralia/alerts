@@ -254,7 +254,7 @@ Resources:
                    { "name":"PIPELINE_FINGERPRINT", "value":"#{variables.PIPELINE_FINGERPRINT}" },
                    { "name":"PRODUCT_COMPONENT", "value":"${pProductComponent}" },
                    { "name":"SRC_BRANCH", "value":"${pGitHubBranch}" },
-                   { "name":"ALERTS_SECRET_NAME", "value":"${pSecretName}" }
+                   { "name":"SECRET_NAME", "value":"${pSecretName}" }
                  ]
             Namespace: ExportConfigNS
             InputArtifacts:
