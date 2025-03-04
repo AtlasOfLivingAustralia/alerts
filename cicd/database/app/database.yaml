@@ -243,7 +243,9 @@ Resources:
       StorageEncrypted: true
       Tags:
         - Key: Name
-          Value: Alerts DB Cluster
+          Value: !Sub
+                   - Alerts-db-${ResourceName}
+                   - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
       VpcSecurityGroupIds:
         - !Ref DbSecurityGrp
 
