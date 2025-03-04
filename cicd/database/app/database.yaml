@@ -211,7 +211,9 @@ Resources:
       BackupRetentionPeriod: !Ref pBackupRetention
       CopyTagsToSnapshot: true
       DatabaseInsightsMode: !Ref pDatabaseInsightsMode
-      DatabaseName: !Sub ${pProductName}${pEnvironment}
+      DatabaseName: !Sub 
+                   - ${pProductName}${ResourceName}
+                   - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
       DBClusterIdentifier: !Sub ${pDbInstanceName}-cluster
       DBClusterParameterGroupName: !Ref ClusterParamGrp
       DBSubnetGroupName: !Ref DbSubnetGrp
