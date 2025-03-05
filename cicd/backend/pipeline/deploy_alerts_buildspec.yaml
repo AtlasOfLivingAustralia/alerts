@@ -39,8 +39,6 @@ phases:
         export CERTIFICATE_ARN=$(aws acm list-certificates --region ap-southeast-2 \
           --query "CertificateSummaryList[?DomainName=='*.$HOSTED_ZONE' && Status=='ISSUED'].CertificateArn" --output text)
       - BUILD_TAG=$CLEAN_BRANCH-$CODEBUILD_BUILD_NUMBER
-      # Delete the existing secret if it exists
-      -  kubectl delete secret alerts-config-secret-$CLEAN_BRANCH --ignore-not-found
       - |
         helm upgrade --install $HELM_RELEASE_NAME . -n alerts \
           --set image.repository=$ECR_REPO \
