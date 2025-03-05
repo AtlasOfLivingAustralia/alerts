@@ -81,16 +81,6 @@
                                 <tr>
                                     <td colspan="4">
                                         <h3>Dataset: <a href="${dataResourcePublicUrl}" style="color: #003A70;text-decoration: none;">${dataResourceName}</a></h3>
-                                        <g:if test="${occurrences[0]?.dataResourceInfo?.lastUpdated}">
-                                            <%
-                                                try {
-                                                    def parsedDate = Date.parse("yyyy-MM-dd'T'HH:mm:ss'Z'", occurrences[0]?.dataResourceInfo?.lastUpdated)
-                                                    out << "<p>Last updated: " + new SimpleDateFormat("dd MMM yyyy").format(parsedDate) +"</p>"
-                                                } catch (Exception e) {
-                                                    out <<"<p>Last updated: " + occurrences[0]?.dataResourceInfo?.lastUpdated +"</p>"
-                                                }
-                                            %>
-                                        </g:if>
                                         <hr/>
                                     </td>
                                 </tr>
@@ -103,10 +93,6 @@
                                             <img src="${oc.smallImageUrl}" alt="${message(code:"biocache.images.alt.image", args:[oc.scientificName])}" style="vertical-align: top; width:150px; height:150px;border-radius: 6px;line-height: 100%;"/></a>
                                         <br/>
                                         <i>${oc.scientificName}</i><br>
-                                            <g:if test="${oc.eventDate}">
-                                             ${new SimpleDateFormat("dd MMM yyyy").format(oc.eventDate)}
-                                            </g:if>
-
                                     </td>
                                     <g:if test="${(j + 1) % 4 == 0 || j + 1 == occurrences.size()}">
                                         </tr>
