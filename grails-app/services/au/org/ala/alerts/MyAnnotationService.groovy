@@ -108,7 +108,6 @@ class MyAnnotationService {
      */
     String preProcess(Query query, JSONObject occurrences) {
         String baseUrl = query.baseUrl
-
         // get the user id from the query path
         // NOTE: oder of the query path is important
         String userId = query.queryPath.substring(query.queryPath.indexOf('assertion_user_id:') + 'assertion_user_id:'.length(), query.queryPath.indexOf('&dir=desc'))
@@ -152,6 +151,9 @@ class MyAnnotationService {
      * @return
      */
     private static def findVerifiedAssertions(JSONArray assertions, String userId) {
+        Map verificationStatus = [50001: 'Unresolved issue, recognised by data custodian',
+                                  50002: 'Record has been verified by data custodian as being correct',
+                                  50003: 'Corrected via data refresh']
         def sortedAssertions = []
         if (assertions) {
             // all the original user assertions (issues users flagged)
@@ -160,6 +162,9 @@ class MyAnnotationService {
             def myOriginalUuids = origUserAssertions*.uuid
             def verifiedAssertions = myOriginalUuids.collectMany { uuid ->
                 assertions.findAll { it.relatedUuid == uuid && ( it.qaStatus == 50001 || it.qaStatus == 50002 || it.qaStatus == 50003) }
+            }.collect { assertion ->
+                assertion.status = verificationStatus[assertion.qaStatus]
+                return assertion
             }
 
             try {
