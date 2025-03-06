@@ -186,3 +186,4 @@ config:
     openapi_oauth_url: ""
     terms_url: ""
     support_email: ""
+  podEnvironment: "production"

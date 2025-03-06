@@ -201,6 +201,13 @@ Resources:
                 FilePaths:
                   Includes:
                     - !Sub cicd/${pProductComponent}/**
+                    - grails-app/**
+                    - src/**
+                    - helm/**
+                    - build.gradle
+                    - Dockerfile
+                    - gradle.properties
+                    - settings.gradle
             SourceActionName: CheckoutSrc
       Variables:
         - Name: SRC_BRANCH
@@ -325,6 +332,7 @@ Resources:
                   { "name":"AUTHOR", "value":"#{CheckoutSrcNS.AuthorDisplayName}" },
                   { "name":"CLEAN_BRANCH", "value":"${pCleanBranch}" },
                   { "name":"COMMIT_ID", "value":"#{CheckoutSrcNS.CommitId}" },
+                  { "name":"DOMAIN_NAME", "value":"#{ExportConfigNS.DOMAIN_NAME}" },
                   { "name":"ENVIRONMENT", "value":"${pEnvironment}" },
                   { "name":"PRODUCT_COMPONENT", "value":"#{ExportConfigNS.PRODUCT_COMPONENT}" },
                   { "name":"PRODUCT_NAME", "value":"#{ExportConfigNS.PRODUCT_NAME}" },
