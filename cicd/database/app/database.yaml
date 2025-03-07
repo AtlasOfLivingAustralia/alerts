@@ -265,8 +265,10 @@ Resources:
       PromotionTier: 1
       EnablePerformanceInsights: !Ref pPerformanceInsights
       Tags:
-      - Key: Name
-        Value: Alerts DB primary
+          - Key: Name
+            Value: !Sub
+               - ${pProductName}-primary-${ResourceName}
+               - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
 
   RdsReplica:
     Type: AWS::RDS::DBInstance
@@ -286,8 +288,10 @@ Resources:
       PromotionTier: 2
       EnablePerformanceInsights: !Ref pPerformanceInsights
       Tags:
-      - Key: Name
-        Value: Alerts DB replica
+          - Key: Name
+            Value: !Sub
+               - ${pProductName}-replica-${ResourceName}
+               - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
 
   RdsScalableTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
