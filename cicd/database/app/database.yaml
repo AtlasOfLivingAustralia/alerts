@@ -84,6 +84,9 @@ Parameters:
     Description: The snapshot to restore from
     Type: String
     Default: false
+  pSecretName:
+    Description: The name of the secret
+    Type: String
   pVpcStackName:
     Description: The name of the Bedrock VPC stack
     Type: String
@@ -218,9 +221,7 @@ Resources:
       EngineMode: !If [IsServerlessV2, !Ref AWS::NoValue, provisioned]
       EngineVersion: !Ref pDbVersion
       MasterUsername: !Ref pAdminUser
-      MasterUserPassword: !Sub
-                            - '{{resolve:secretsmanager:alerts-${ResourceName}:SecretString:db-password}}'
-                            - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
+      MasterUserPassword: !Sub '{{resolve:secretsmanager:${pSecretName}:SecretString:db-password}}'
       MonitoringInterval: !Ref pEnhancedMonitoring
       MonitoringRoleArn: !If
                            - EnhancedMonitoring
@@ -243,7 +244,9 @@ Resources:
       StorageEncrypted: true
       Tags:
         - Key: Name
-          Value: Alerts DB Cluster
+          Value: !Sub
+                   - Alerts-db-${ResourceName}
+                   - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
       VpcSecurityGroupIds:
         - !Ref DbSecurityGrp
 
@@ -262,8 +265,10 @@ Resources:
       PromotionTier: 1
       EnablePerformanceInsights: !Ref pPerformanceInsights
       Tags:
-      - Key: Name
-        Value: Alerts DB primary
+          - Key: Name
+            Value: !Sub
+               - ${pProductName}-primary-${ResourceName}
+               - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
 
   RdsReplica:
     Type: AWS::RDS::DBInstance
@@ -283,8 +288,10 @@ Resources:
       PromotionTier: 2
       EnablePerformanceInsights: !Ref pPerformanceInsights
       Tags:
-      - Key: Name
-        Value: Alerts DB replica
+          - Key: Name
+            Value: !Sub
+               - ${pProductName}-replica-${ResourceName}
+               - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
 
   RdsScalableTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
