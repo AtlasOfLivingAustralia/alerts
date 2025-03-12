@@ -244,7 +244,7 @@ environments:
                     enabled: false
         userdetails:
             web:
-                url: https://aws-auth-test-2023.test.ala.org.au/userdetails/
+                url: https://userdetails.test.ala.org.au/
             api:
                 url: https://api.test.ala.org.au/userdetails/cognito/
         mail:
@@ -264,7 +264,7 @@ environments:
                 appServerName: "https://auth.ala.org.au"
         userdetails:
             web:
-                url: https://aws-auth-test-2023.test.ala.org.au/userdetails/
+                url: https://userdetails.test.ala.org.au/
             api:
                 url: https://api.test.ala.org.au/userdetails/cognito/
         mail:
@@ -346,7 +346,7 @@ environments:
             password:
             url: jdbc:h2:mem:testDb;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE
         userDetails:
-            url: https://aws-auth-test-2023.test.ala.org.au/userdetails/
+            url: https://userdetails.test.ala.org.au/
     production:
         dataSource:
             dbCreate: update
