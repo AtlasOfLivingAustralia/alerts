@@ -65,6 +65,25 @@ class Query {
         }
     }
 
+    String getSubscribers(String frequency = null) {
+        def maxEmails = 10
+        def emailList
+
+        if (frequency) {
+            def users = notifications.collect { it.user }.findAll(it -> it.frequency?.name == frequency)
+            emailList = users.collect(it -> it.email)
+        } else {
+            def users = notifications.collect { it.user }
+            emailList = users.collect(it -> it.email)
+        }
+
+        def subscribers = emailList.take(maxEmails).join('; ') // Take first 10
+        if (emailList.size() > maxEmails) {
+            subscribers += ' ......'
+        }
+        return subscribers
+    }
+
     String getListId() {
         Pattern pattern = Pattern.compile(".*(?:species_list_uid|species_list):(drt?[0-9]+).*")
         def matcher = pattern.matcher(queryPath)
