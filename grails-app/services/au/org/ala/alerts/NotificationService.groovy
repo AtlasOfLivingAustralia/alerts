@@ -703,12 +703,10 @@ class NotificationService {
 
 
     def unsubscribeMyAnnotation(User user) {
-        String myAnnotationQueryPath = queryService.constructMyAnnotationQueryPath(user?.userId)
-        Query retrievedQuery = Query.findByQueryPath(myAnnotationQueryPath)
+        Query retrievedQuery = queryService.findMyAnnotationQuery(user?.userId)
+        if (retrievedQuery != null) {
+             Query.withTransaction {
 
-
-        Query.withTransaction {
-            if (retrievedQuery != null) {
                 // delete the notification
                 def notification = Notification.findByQueryAndUser(retrievedQuery, user)
                 if (notification) {
@@ -724,19 +722,21 @@ class NotificationService {
                 // delete query
                 retrievedQuery.delete(flush: true)
             }
+            return true
+        } else {
+            log.error("Query not found for queryPath: " + user.userId)
+            return false
         }
     }
 
     // update user to new frequency
     // there are some special work if user is subscribed to 'My Annotation' alert
-    @Transactional
+    // todo if we do this for MyAnnotation, we should also do this for others
     def updateFrequency(User user, String newFrequency) {
         def oldFrequency = user.frequency
         user.frequency = Frequency.findByName(newFrequency)
 
-        String myAnnotationQueryPath = queryService.constructMyAnnotationQueryPath(user?.userId)
-        Query query = Query.findByQueryPath(myAnnotationQueryPath)
-
+        Query query =  queryService.findMyAnnotationQuery(user?.userId)
         // my annotation generates alert(diff) by comparing QueryResult at 2 time points.
         // first QueryResult will be inserted when user subscribes to my annotation
         // every time user changes the frequency, we also need to create a new QueryResult
