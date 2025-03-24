@@ -324,15 +324,24 @@ class QueryService {
                 name          : messageSource.getMessage("query.myannotations.title", null, siteLocale),
                 updateMessage : messageSource.getMessage("myannotations.update.message", null, siteLocale),
                 description   : messageSource.getMessage("query.myannotations.descr", null, siteLocale),
-                queryPath     : constructMyAnnotationQueryPath(userId),
-                queryPathForUI: '/occurrences/search?fq=assertion_user_id:' + userId + '&dir=desc',
+                queryPath     : '/occurrences/search?fq=assertion_user_id:' + userId + '&dir=desc&pageSize=300&fq=lastAssertionDate:[___DATEPARAM___%20TO%20*]&sort=lastAssertionDate',
+                queryPathForUI: '/occurrences/search?fq=assertion_user_id:' + userId + '&dir=desc&pageSize=300&fq=lastAssertionDate:[___DATEPARAM___%20TO%20*]&sort=lastAssertionDate',
+                dateFormat    : """yyyy-MM-dd'T'HH:mm:ss'Z'""",
                 emailTemplate : '/email/myAnnotations',
                 recordJsonPath: '\$.occurrences[*]',
         ])
     }
 
-    String constructMyAnnotationQueryPath(String userId) {
-        '/occurrences/search?fq=assertion_user_id:' + userId + '&dir=desc&pageSize=500'
+    Query findMyAnnotationQuery(String userId) {
+        def myAnnotations = Query.findAllByQueryPathLikeAndEmailTemplate('/occurrences/search?fq=assertion_user_id:' + userId+'%', '/email/myAnnotations')
+        if (myAnnotations.size() > 1) {
+            log.warn("More than 1 MyAnnotation in query table found for user: ${userId}")
+        }
+        if (myAnnotations.size() >= 1) {
+            return myAnnotations[0]
+        } else {
+            return null
+        }
     }
 
     /**

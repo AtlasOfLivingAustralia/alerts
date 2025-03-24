@@ -59,8 +59,8 @@ class NotificationController {
     def unsubscribeMyAnnotation = {
         def user = getUser()
         try {
-            notificationService.unsubscribeMyAnnotation(user)
-            render ([success: true] as JSON)
+            def done = notificationService.unsubscribeMyAnnotation(user)
+            render ([success: done] as JSON)
         } catch (ignored) {
             response.sendError(HttpStatus.INTERNAL_SERVER_ERROR.code, "failed to unsubscribe 'my annotation' alert for user " + user?.getUserId())
         }

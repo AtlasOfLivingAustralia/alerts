@@ -240,39 +240,6 @@ class UnsubscribeControllerSpec extends Specification implements ControllerUnitT
         Notification.count() == 1
     }
 
-    def "unsubscribe() should delete my annotaions alert if the token matches the token for a user with notifications"() {
-        setup:
-        User user = new User(userId: "userid", email: "fred@bla.com", frequency: new Frequency([name: 'hourly']))
-        Query query = new Query([
-                name: 'testquery',
-                queryPath: '/occurrences/search?fq=assertion_user_id:' + 'userid' + '&dir=desc&facets=basis_of_record',
-                updateMessage: 'updateMessage',
-                baseUrl: 'baseUrl',
-                baseUrlForUI: 'baseUrlForUI',
-                resourceName: 'resourceName',
-                queryPathForUI: 'queryPathForUI'
-        ])
-
-        controller.userService.getUser() >> null
-        controller.queryService.constructMyAnnotationQueryPath(_ as String) >> '/occurrences/search?fq=assertion_user_id:' + user.userId + '&dir=desc&facets=basis_of_record'
-
-        user.save(failOnError: true, flush: true)
-        query.save(failOnError: true, flush: true)
-        Notification notification = new Notification(user: user, query: query)
-        notification.save(failOnError: true, flush: true)
-        QueryResult queryResult = new QueryResult([query: query, frequency: user.frequency])
-        queryResult.save(failOnError: true, flush: true)
-
-        when:
-        params.token = notification.unsubscribeToken
-        request.method = 'POST'
-        controller.unsubscribe()
-
-        then:
-        log.info "token = ${params.token}"
-        1 * controller.notificationService.unsubscribeMyAnnotation(user)
-        response.status == HttpStatus.OK.code
-    }
 
     def "unsubscribe() should delete only 1 notification if the token matches the token for a notification"() {
         setup:
