@@ -40,10 +40,8 @@ class UnsubscribeController {
                 userAndNotifications.user.save(flush: true)
 
                 // for my annotation, we also need to delete the query and query result
-                String myAnnotationQueryPath = queryService.constructMyAnnotationQueryPath(userAndNotifications.user.userId)
-                if (userAndNotifications.notifications.any { it.query.queryPath == myAnnotationQueryPath }) {
-                    notificationService.unsubscribeMyAnnotation(userAndNotifications.user)
-                }
+                notificationService.unsubscribeMyAnnotation(userAndNotifications.user)
+
                 render view: "unsubscribed"
             }
         }
