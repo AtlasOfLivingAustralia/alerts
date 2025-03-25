@@ -17,6 +17,7 @@ package au.org.ala.alerts
 
 import com.jayway.jsonpath.JsonPath
 import com.jayway.jsonpath.PathNotFoundException
+import org.apache.commons.lang3.builder.Diff
 import org.grails.web.json.JSONArray
 import org.grails.web.json.JSONObject
 import groovy.json.JsonOutput
@@ -25,7 +26,7 @@ import java.text.SimpleDateFormat
 /**
  *   A diff service for annotations
  */
-class AnnotationService {
+class AnnotationsService {
     def httpService
     def sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss")  // Adjust the pattern as needed
 
@@ -35,7 +36,7 @@ class AnnotationService {
      * @param occurrences
      * @return
      */
-    String appendAssertions(Query query, JSONObject occurrences) {
+    String preProcess(Query query, JSONObject occurrences) {
         String baseUrl = query.baseUrl
 
         if (occurrences.occurrences) {
@@ -63,53 +64,5 @@ class AnnotationService {
         }
 
         return occurrences.toString()
-    }
-
-    /**
-     * If fireNotZero property is true, this method will not be called
-     *
-     * This method compare the difference of Annotations between previous and last result.
-     * for annotation query, it returns the records that have new annotations after the given DATE. So it does not require to call this method.
-
-     * return a list of records that their annotations have been changed or deleted
-     * @param String previous
-     * @param String last
-     * @param String  recordJsonPath
-     * @return a list of records
-     */
-    Collection diff(String previous,String last,String recordJsonPath) {
-        // uuid -> occurrence record map
-        def oldRecordsMap = [:]
-        def curRecordsMap = [:]
-        try {
-            oldRecordsMap = JsonPath.read(previous, recordJsonPath).collectEntries { [(it.uuid): it] }
-        } catch (PathNotFoundException e) {
-            log.warn("Previous result is empty or doesn't have any records containing a field ${recordJsonPath} defined in recordJsonPath")
-        }
-
-        try {
-             curRecordsMap = JsonPath.read(last, recordJsonPath).collectEntries { [(it.uuid): it] }
-        } catch (PathNotFoundException e){
-            log.warn("Current result is empty or doesn't have any records containing a field ${recordJsonPath} defined in recordJsonPath")
-        }
-        // if an occurrence record doesn't exist in previous result (added) or has different open_assertions or verified_assertions or corrected_assertions than previous (changed).
-        def records = curRecordsMap.findAll {
-            def record = it.value
-            def previousRecord = oldRecordsMap.get(record.uuid)
-            if (previousRecord) {
-                String currentAssertions = JsonOutput.toJson(record.user_assertions)
-                String previousAssertions = JsonOutput.toJson(previousRecord.user_assertions)
-                currentAssertions != previousAssertions
-            } else {
-                true
-            }
-        }.values()
-
-        //Decision: #381 Do not included those records
-        //if an occurrence record exists in previous result but not in current, it means the annotation is deleted.
-        //We need to add these records as a 'modified' record
-        //records.addAll(oldRecordsMap.findAll { !curRecordsMap.containsKey(it.value.uuid) }.values())
-
-        return records
     }
 }

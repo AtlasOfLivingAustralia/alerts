@@ -373,7 +373,7 @@ class AdminController {
             qr.previousCheck = qr.lastChecked
             qr.lastChecked = since
             query.lastChecked = since
-            def records = diffService.getRecordChanges(qr)
+            def records = diffService.diff(qr)
 
             String urlPrefix = "${grailsApplication.config.getProperty("grails.serverURL")}${grailsApplication.config.getProperty('security.cas.contextPath', '')}"
             def localeSubject = messageSource.getMessage("emailservice.update.subject", [query.name] as Object[], siteLocale)
@@ -771,7 +771,7 @@ class AdminController {
 
         queries.eachWithIndex { query, index ->
             QueryResult queryResult = notificationService.executeQuery(query, Frequency.findByName(frequency), false, true)
-            def records = diffService.getRecordChanges(queryResult)
+            def records = diffService.diff(queryResult)
             def results = ["POS": "${index+1}/${total}", "status": queryResult.succeeded, "hasChanged": queryResult.hasChanged, "logs": queryResult.getLog(), "brief": queryResult.brief()]
 
             writer.write("${results["POS"]}. ${query.id} - ${query.name} - ${frequency}\n")

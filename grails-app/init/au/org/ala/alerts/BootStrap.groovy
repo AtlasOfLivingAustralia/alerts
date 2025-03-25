@@ -105,7 +105,7 @@ class BootStrap {
                     updateMessage: 'more.images.update.message',
                     description: descr,
                     queryPath: '/occurrences/search?q=first_loaded_date:\' + \'[___DATEPARAM___ TO *]\'.encodeAsURL() + \'&sort=first_loaded_date&dir=desc&fq=multimedia:Image&pageSize=20&facets=basis_of_record',
-                    queryPathForUI: '/occurrences/search?q=first_loaded_date:\' + \'[___DATEPARAM___ TO *]\'.encodeAsURL() + \'&sort=first_loaded_date&dir=desc&fq=multimedia:Image',
+                    queryPathForUI: '/occurrences/search?q=first_loaded_date:\' + \'[___DATEPARAM___ TO *]\'.encodeAsURL() + \'&sort=first_loaded_date&dir=desc&fq=multimedia:Image#tab_recordImages',
                     dateFormat: """yyyy-MM-dd'T'HH:mm:ss'Z'""",
                     emailTemplate: '/email/biocache',
                     fireWhenNotZero: true,

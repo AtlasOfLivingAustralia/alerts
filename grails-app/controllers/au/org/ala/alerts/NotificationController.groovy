@@ -59,8 +59,8 @@ class NotificationController {
     def unsubscribeMyAnnotation = {
         def user = getUser()
         try {
-            notificationService.unsubscribeMyAnnotation(user)
-            render ([success: true] as JSON)
+            def done = notificationService.unsubscribeMyAnnotation(user)
+            render ([success: done] as JSON)
         } catch (ignored) {
             response.sendError(HttpStatus.INTERNAL_SERVER_ERROR.code, "failed to unsubscribe 'my annotation' alert for user " + user?.getUserId())
         }
@@ -128,7 +128,7 @@ class NotificationController {
         def queryResult = queryResultService.get(params.queryResultId)
         // Since the previous and current results are loaded from database,
         // the diffService.getRecordChanges() should be called to get the new records
-        queryResult.newRecords = diffService.getRecordChanges(queryResult)
+        queryResult.newRecords = diffService.diff(queryResult)
         queryResult.succeeded = true
         boolean hasChanged =  queryResult.newRecords.size() > 0
         if (hasChanged != queryResult.hasChanged) {

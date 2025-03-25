@@ -1,7 +1,6 @@
 package au.org.ala.alerts
 
 import com.jayway.jsonpath.JsonPath
-import grails.gorm.transactions.NotTransactional
 import grails.converters.JSON
 import org.apache.commons.lang.time.DateUtils
 import org.grails.web.json.JSONArray
@@ -22,7 +21,7 @@ class NotificationService {
     def diffService
     def queryService
     def myAnnotationService
-    def annotationService
+    def annotationsService
     def grailsApplication
     def dateFormatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
 
@@ -84,7 +83,7 @@ class NotificationService {
             qr.queryUrlUIUsed = urlStringForUI
 
             // Find the new and updated records
-            qr.newRecords = diffService.getRecordChanges(qr)
+            qr.newRecords = diffService.diff(qr)
             if (qr.newRecords.size() > 0) {
                 qr.hasChanged = true
                 qr.lastChanged = checkDate
@@ -126,6 +125,7 @@ class NotificationService {
 
         return qr
     }
+
 
     /**
      * It has similar code with checkStatus, but not identical
@@ -439,9 +439,9 @@ class NotificationService {
         if (resp.status == 200 || resp.status == 201) {
             def occurrences = resp.json
             if (queryService.isMyAnnotation(query)) {
-                queryResult = myAnnotationService.appendAssertions(query, occurrences)
+                queryResult = myAnnotationService.preProcess(query, occurrences)
             } else if (queryService.isAnnotation(query)) {
-                queryResult = annotationService.appendAssertions(query, occurrences)
+                queryResult = annotationsService.preProcess(query, occurrences)
             } else {
                 queryResult = occurrences.toString()
             }
@@ -530,7 +530,7 @@ class NotificationService {
                         // these query and queryResult read/write methods are called by the scheduled jobs
                         Integer totalRecords = null
                         QueryResult queryResult = QueryResult.findByQueryAndFrequency(query, frequency)
-                        def records = diffService.getRecordChanges(queryResult)
+                        def records = diffService.diff(queryResult)
                         Integer fireWhenNotZero = queryService.totalNumberWhenNotZeroPropertyEnabled(queryResult)
                         totalRecords = records.size()
 
@@ -703,12 +703,10 @@ class NotificationService {
 
 
     def unsubscribeMyAnnotation(User user) {
-        String myAnnotationQueryPath = queryService.constructMyAnnotationQueryPath(user?.userId)
-        Query retrievedQuery = Query.findByQueryPath(myAnnotationQueryPath)
+        Query retrievedQuery = queryService.findMyAnnotationQuery(user?.userId)
+        if (retrievedQuery != null) {
+             Query.withTransaction {
 
-
-        Query.withTransaction {
-            if (retrievedQuery != null) {
                 // delete the notification
                 def notification = Notification.findByQueryAndUser(retrievedQuery, user)
                 if (notification) {
@@ -724,19 +722,21 @@ class NotificationService {
                 // delete query
                 retrievedQuery.delete(flush: true)
             }
+            return true
+        } else {
+            log.error("Query not found for queryPath: " + user.userId)
+            return false
         }
     }
 
     // update user to new frequency
     // there are some special work if user is subscribed to 'My Annotation' alert
-    @Transactional
+    // todo if we do this for MyAnnotation, we should also do this for others
     def updateFrequency(User user, String newFrequency) {
         def oldFrequency = user.frequency
         user.frequency = Frequency.findByName(newFrequency)
 
-        String myAnnotationQueryPath = queryService.constructMyAnnotationQueryPath(user?.userId)
-        Query query = Query.findByQueryPath(myAnnotationQueryPath)
-
+        Query query =  queryService.findMyAnnotationQuery(user?.userId)
         // my annotation generates alert(diff) by comparing QueryResult at 2 time points.
         // first QueryResult will be inserted when user subscribes to my annotation
         // every time user changes the frequency, we also need to create a new QueryResult

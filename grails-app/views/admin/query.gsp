@@ -80,7 +80,14 @@
                                     <div><p class="bg-info"><b>Query URL:</b> ${query.baseUrl+query.queryPath} </p>
                                         <p><i class="fa fa-info-circle" aria-hidden="true" title="The URL MAY be used to build a UI link for this query."></i> <i>UI ref. ${query.baseUrlForUI}</i></p>
                                     </div>
+                                    <g:each var="propertyPath" in="${query.propertyPaths}">
+                                        <g:if test="${propertyPath.fireWhenNotZero}">
+                                            <span class="badge badge-info">New records</span> JSON path for the number of records: ${propertyPath?.jsonPath}<br>
+                                        </g:if>
+                                    </g:each>
                                     <i class="fa fa-cog" aria-hidden="true"></i> <i><b>JSON record path:</b>${query.recordJsonPath} <b>JSON ID path:</b>${query.idJsonPath}</i>
+                                    <br/>
+
                                     %{-- <div>--}%
     %{--                                    <g:if test="${query.notifications}">--}%
     %{--                                            <g:each var="notification" in="${query.notifications}">--}%
@@ -102,16 +109,8 @@
                                                         </g:else>
                                                     </div>
                                                     <div>
-                                                        <%
-                                                            def maxEmails = 15
-                                                            def emailList = query.notifications?.collect { it.user?.email }?.findAll { it } ?: []
-                                                            def subscribers = emailList.take(maxEmails).join('; ') // Take first 10
-                                                            if (emailList.size() > maxEmails) {
-                                                                subscribers += ' ......'
-                                                            }
-                                                        %>
                                                         <g:link controller="queryResult" action="getDetails" params="[id: queryResult.id]" target="_blank"> <span class="badge badge-primary"><i class="fa fa-info-circle" aria-hidden="true"></i> ${queryResult.id}</span></g:link> &nbsp;<b><i class="fa fa-calendar-check-o" aria-hidden="true"></i> ${queryResult.frequency?.name?.toUpperCase()}</b>
-                                                        &nbsp; <label title="${subscribers}"><span class="badge badge-info"> <i class="fa fa-user"></i> ${query.countSubscribers(queryResult.frequency?.name)}</span></label>
+                                                        &nbsp; <label title="${query.getSubscribers(queryResult.frequency?.name)}"><span class="badge badge-info"> <i class="fa fa-user"></i> ${query.countSubscribers(queryResult.frequency?.name)}</span></label>
 
                                                         <g:if test="${queryResult?.lastChecked}">
                                                              Last checked: ${queryResult?.lastChecked}&nbsp;&nbsp;
@@ -130,10 +129,9 @@
 
                                                     </div>
                                                     <div>
-                                                        <g:each var="pv" in="${queryResult.propertyValues}">
-                                                            <span class="badge badge-light">${pv.propertyPath.id}</span> ${pv.propertyPath}<br>
-                                                            %{-- <span class="badge badge-light">${pv.id}</span> Current Value: ${pv.currentValue}; Previous Value: ${pv.previousValue} <br>--}%
-                                                        </g:each>
+%{--                                                    <g:each var="pv" in="${queryResult.propertyValues}">--}%
+%{--                                                        <span class="badge badge-light">${pv.id}</span> Current Value: ${pv.currentValue}; Previous Value: ${pv.previousValue} <br>--}%
+%{--                                                    </g:each>--}%
                                                     </div>
                                                     <div style="text-align: right;">
                                                         <hr>
