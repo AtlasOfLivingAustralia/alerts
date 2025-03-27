@@ -278,10 +278,46 @@ class NotificationService {
     def cleanUpUrl(url) {
         def queryStart = url.indexOf("?")
         if (queryStart > 0) {
-            def queryString = url.substring(queryStart + 1)
-            url.substring(0, queryStart + 1) + queryString.replaceAll(" ", "%20").replaceAll(":", "%3A").replaceAll("\"", "%22")
+            def result = url.substring(0, queryStart + 1)
+
+            def hasKey = false
+            int i = queryStart + 1
+            for (; i < url.length(); i++) {
+                switch (url.charAt(i)) {
+                    case '=':
+                        // Encode the key and add, but only if we have not already added a key for this param before
+                        if (!hasKey) {
+                            result += URLEncoder.encode(url.substring(queryStart + 1, i), "UTF-8") + '='
+
+                            hasKey = true
+                            queryStart = i
+                        }
+                        break
+                    // Encode the remaining parts of the query parameter
+                    case '&':
+                        result += URLEncoder.encode(url.substring(queryStart + 1, i), "UTF-8") + '&'
+
+                        hasKey = false
+                        queryStart = i
+                        break
+                    // Sad hack, because java URL encoding does encodes spaces using '+' as specified in RFC 3986 form encoding (despite the name of the class...)
+                    case ' ':
+                        result += URLEncoder.encode(url.substring(queryStart + 1, i), "UTF-8") + '%20'
+                        queryStart = i
+                        break
+                    default:
+                        break
+                }
+            }
+
+            // Add remaining part of the URL
+            if (i > queryStart + 1) {
+                result += URLEncoder.encode(url.substring(queryStart + 1, i), "UTF-8")
+            }
+
+            return result
         } else {
-            url
+            return url
         }
     }
 

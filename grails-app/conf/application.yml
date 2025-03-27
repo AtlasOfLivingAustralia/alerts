@@ -182,8 +182,8 @@ biosecurity:
     cronExpression: '0 0 11 ? * THU'
     query:
         template:
-            authoritativeList: /occurrences/search?q=species_list_uid:___LISTIDPARAM___&fq=decade:2020&fq=country:Australia&fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&fq=occurrence_date:[___LASTYEARPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc&disableAllQualityFilters=true
-            nonAuthoritativeList: /occurrences/search?q=species_list:___LISTIDPARAM___&fq=decade:2020&fq=country:Australia&fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&fq=occurrence_date:[___LASTYEARPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc&disableAllQualityFilters=true
+            authoritativeList: /occurrences/search?q=species_list_uid:___LISTIDPARAM___&fq=decade:2020&fq=country:Australia&fq=first_loaded_date:[___DATEPARAM___ TO *]&fq=occurrence_date:[___LASTYEARPARAM___ TO *]&sort=first_loaded_date&dir=desc&disableAllQualityFilters=true
+            nonAuthoritativeList: /occurrences/search?q=species_list:___LISTIDPARAM___&fq=decade:2020&fq=country:Australia&fq=first_loaded_date:[___DATEPARAM___ TO *]&fq=occurrence_date:[___LASTYEARPARAM___ TO *]&sort=first_loaded_date&dir=desc&disableAllQualityFilters=true
         maxRecords: 500
     moreinfo:
         link: https://www.ala.org.au/blogs-news/ala-helps-to-stop-pests-in-their-tracks/

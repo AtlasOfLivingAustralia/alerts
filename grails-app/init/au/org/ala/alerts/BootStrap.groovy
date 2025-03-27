@@ -192,7 +192,7 @@ class BootStrap {
                     updateMessage: 'more.datasets.update.message',
                     description: descr,
                     queryPath: '/occurrences/search?q=*:*&facet=true&flimit=-1&facets=dataResourceUid&pageSize=0',
-                    queryPathForUI: '/datasets#filters=status%3AdataAvailable%3BresourceType%3Arecords',
+                    queryPathForUI: '/datasets#filters=status :dataAvailable%3BresourceType :records',
                     emailTemplate: '/email/dataresource',
                     recordJsonPath: '\$.facetResults[0].fieldResult[*]',
                     idJsonPath: 'i18nCode'

@@ -223,8 +223,8 @@ class BiosecurityService {
         String utcTo = sdf.format(to)
 
         def todayNDaysAgo = DateUtils.addDays(since, -1 * grailsApplication.config.getProperty("biosecurity.legacy.eventDateAge", Integer, 150))
-        def firstLoadedDate = '&fq=' + URLEncoder.encode('firstLoadedDate:[' + utcFrom + ' TO ' + utcTo + ' ]', 'UTF-8')
-        def dateRange = '&fq=' + URLEncoder.encode('eventDate:[' + sdf.format(todayNDaysAgo) + ' TO ' + utcTo + ' ]', 'UTF-8')
+        def firstLoadedDate = '&fq=firstLoadedDate:[' + utcFrom + ' TO ' + utcTo + ' ]'
+        def dateRange = '&fq=eventDate:[' + sdf.format(todayNDaysAgo) + ' TO ' + utcTo + ' ]'
 
         //Build fq for anything in fq of KVP
         def fq = buildFq(listItem)
@@ -241,7 +241,7 @@ class BiosecurityService {
             searchTerms.add('scientificName:"' + name + '"')
             searchTerms.add('raw_scientificName:"' + name + '"')
 
-            def searchTerm = 'q=' + URLEncoder.encode("(" + searchTerms.join(") OR (") + ")")
+            def searchTerm = 'q=(' + searchTerms.join(") OR (") + ")"
 
             def url = grailsApplication.config.getProperty('biocacheService.baseURL') + '/occurrences/search?' + searchTerm + fq + legacyFq + dateRange + firstLoadedDate + "&pageSize=10000"
             log.debug("URL: " + url)
@@ -292,7 +292,7 @@ class BiosecurityService {
         def fqValue = it.kvpValues?.find { it.key == 'fq' }?.value
         def fq = ''
         if (fqValue) {
-            fq = '&fq=' + URLEncoder.encode(fqValue, "UTF-8")
+            fq = '&fq=' + fqValue
         }
         fq
     }
@@ -339,7 +339,7 @@ class BiosecurityService {
         }
 
         if (fq) {
-            fq = '&fq=' + URLEncoder.encode(fq, "UTF-8")
+            fq = '&fq=' + fq
         }
 
         fq
