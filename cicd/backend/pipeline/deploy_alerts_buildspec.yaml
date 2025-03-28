@@ -41,7 +41,7 @@ phases:
       - BUILD_TAG=$CLEAN_BRANCH-$CODEBUILD_BUILD_NUMBER
       - env
       - |
-        helm upgrade --install $HELM_RELEASE_NAME . -n alerts \
+        helm upgrade --install $HELM_RELEASE_NAME . -n $EKS_NAMESPACE \
           --set image.repository=$ECR_REPO \
           --set image.tag=$BUILD_TAG \
           --set ingress.hostname=$DOMAIN_NAME \
