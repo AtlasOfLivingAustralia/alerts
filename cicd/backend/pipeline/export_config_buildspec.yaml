@@ -9,8 +9,8 @@ env:
   variables:
     DEBIAN_FRONTEND: "noninteractive"
   secrets-manager:
-    DB_PASSWORD: $ALERTS_SECRET_NAME:db-password
-    GOOGLE_APIKEY: $ALERTS_SECRET_NAME:google-api-key
+    DB_PASSWORD: $SECRET_NAME:db-password
+    GOOGLE_APIKEY: $SECRET_NAME:google-api-key
   exported-variables:
     - BASE_STACK_FILE_PFIX
     - BASE_STACK_NAME
@@ -72,8 +72,12 @@ phases:
       - echo importing stack output...
       - DB_READ_ENDPOINT=$(aws cloudformation describe-stacks --stack-name $DATABASE_STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='ReadEndpoint'].OutputValue" --output text)
       - DB_WRITE_ENDPOINT=$(aws cloudformation describe-stacks --stack-name $DATABASE_STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='WriteEndpoint'].OutputValue" --output text)
+      - S3_BUCKET_NAME=$(aws cloudformation describe-stacks --stack-name $BASE_STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='BiosecurityAlertsBucket'].OutputValue" --output text)
       - echo DB_READ_ENDPOINT=$DB_READ_ENDPOINT
       - echo DB_WRITE_ENDPOINT=$DB_WRITE_ENDPOINT
+      - echo S3_BUCKET_NAME=$S3_BUCKET_NAME
+      - echo SECRET_NAME=$SECRET_NAME
+      - echo BASE_STACK_NAME=$BASE_STACK_NAME
       - export EKS_CLUSTER_NAME=$(aws cloudformation list-exports --query "Exports[?Name=='$REGOLITH_STACK_NAME-ClusterName'].Value" --output text)
       - echo EKS_CLUSTER_NAME=$EKS_CLUSTER_NAME
     finally:
@@ -82,15 +86,8 @@ phases:
   build:
     commands:
       - echo Entered the build phase...
-      - DB_NAME=$PRODUCT_NAME$([[ "$ENVIRONMENT" == "development" ]] && echo "$CLEAN_BRANCH" || echo "$ENVIRONMENT")
+      - DB_NAME=$PRODUCT_NAME$ENVIRONMENT
       - DB_HOSTNAME=$([[ "$ENVIRONMENT" == "development" ]] && echo "$CLEAN_BRANCH" || echo "$ENVIRONMENT")
-      - S3_BUCKET_NAME=ala-$PRODUCT_NAME-$([[ "$ENVIRONMENT" == "development" ]] && echo "$CLEAN_BRANCH" || echo "$ENVIRONMENT")
-      # comment out the following block if you are deploying database stack for your development environment
-      - |
-        if [[ "$ENVIRONMENT" == "development" ]]; then
-          DB_PASSWORD=$(aws secretsmanager get-secret-value --output text --query SecretString --secret-id alerts-testing | python3 -c 'import json, sys; print(json.load(sys.stdin)["db-password"])')
-          DB_NAME="alertstesting"
-        fi
       - |
         USER_POOL_ID=$(aws cloudformation describe-stacks --stack-name $COGNITO_STACK_NAME \
           --query "Stacks[0].Outputs[?OutputKey=='UserPoolId'].OutputValue" --output text)
