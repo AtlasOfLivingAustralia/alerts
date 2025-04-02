@@ -21,7 +21,7 @@ phases:
     commands:
       - echo Build started on $(date)
       - aws eks --region ap-southeast-2 update-kubeconfig --name $EKS_CLUSTER_NAME
-      - kubectl config set-context --current --namespace=alerts
+      - kubectl config set-context --current --namespace=$EKS_NAMESPACE
       - echo "Creating service account for alerts..."
       - |
         ALERTS_ROLE_ARN=$(aws cloudformation describe-stacks --stack-name $BASE_STACK_NAME \
