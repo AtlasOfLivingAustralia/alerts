@@ -29,7 +29,7 @@ phases:
       - printf "$(kubectl config current-context)\n"
       - |
         eksctl create iamserviceaccount --name alerts-service-account-$CLEAN_BRANCH \
-          --namespace alerts --cluster $EKS_CLUSTER_NAME --attach-role-arn $ALERTS_ROLE_ARN \
+          --namespace $EKS_NAMESPACE --cluster $EKS_CLUSTER_NAME --attach-role-arn $ALERTS_ROLE_ARN \
           --approve --override-existing-serviceaccounts \
           --tags "product=alerts,environment=development,branch=${CLEAN_BRANCH}"
       - echo "Service account created."
