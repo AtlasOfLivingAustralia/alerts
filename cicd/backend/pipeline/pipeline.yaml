@@ -370,6 +370,7 @@ Resources:
                 [
                   { "name":"CLEAN_BRANCH", "value":"${pCleanBranch}" },
                   { "name":"EKS_CLUSTER_NAME", "value":"#{ExportConfigNS.EKS_CLUSTER_NAME}" },
+                  { "name":"EKS_NAMESPACE", "value":"#{ExportConfigNS.EKS_NAMESPACE}" },
                   { "name":"HELM_RELEASE_NAME", "value":"#{ExportConfigNS.HELM_RELEASE_NAME}" }
                 ]
             InputArtifacts:
