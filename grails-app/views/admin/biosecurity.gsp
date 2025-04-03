@@ -156,7 +156,7 @@
                 url: url,
                 type: 'GET',
                 success: function (data) {
-                    $("div[name='subscription_" + queryId + "']").remove();
+                    $("div#subscription_" + queryId).remove();
                     updateTotalNumberOfSubscriptions();
                 },
                 error: function (xhr, status, error) {
