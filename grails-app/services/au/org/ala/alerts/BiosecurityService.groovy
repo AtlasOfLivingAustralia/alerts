@@ -74,7 +74,7 @@ class BiosecurityService {
         QueryResult qr = notificationService.getQueryResult(query, Frequency.findByName(frequency))
 
         try {
-            qr.newLog("Query from ${sdf.format(since)} to ${sdf.format(now)}")
+            qr.newLog("Searching records from ${sdf.format(since)} to ${sdf.format(now)}")
             def processedJson = processQueryBiosecurity(query, since, now)
             // set check time
             qr.previousCheck = since
