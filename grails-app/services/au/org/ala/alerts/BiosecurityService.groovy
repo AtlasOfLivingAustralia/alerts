@@ -74,7 +74,6 @@ class BiosecurityService {
         QueryResult qr = notificationService.getQueryResult(query, Frequency.findByName(frequency))
 
         try {
-            qr.newLog("Searching records from ${sdf.format(since)} to ${sdf.format(now)}")
             def processedJson = processQueryBiosecurity(query, since, now)
             // set check time
             qr.previousCheck = since
@@ -95,7 +94,6 @@ class BiosecurityService {
             qr.succeeded = true
             log.debug("[QUERY " + query.id + "] Has changed?: " + qr.hasChanged)
             result.logs << "${qr.totalRecords} record(s) found since ${sdf.format(since)}."
-            qr.addLog("${qr.totalRecords} record(s) found since ${sdf.format(since)}.")
 
             def todayNDaysAgo = DateUtils.addDays(since, -1 * grailsApplication.config.getProperty("biosecurity.legacy.eventDateAge", Integer, 150))
             def firstLoadedDate = sdf.format(since)
@@ -116,54 +114,36 @@ class BiosecurityService {
 
                 def emails = recipients.collect { it.email }
                 result.logs << "Sending emails to ${emails.size() <= 2 ? emails.join('; ') : emails.take(2).join('; ') + ' and ' + (emails.size() - 2) + ' other users.'}"
-                qr.addLog("Sending emails to ${emails.size() <= 2 ? emails.join('; ') : emails.take(2).join('; ') + ' and ' + (emails.size() - 2) + ' other users.'}")
 
                 if (!users.isEmpty()) {
                     def emailStatus = emailService.sendGroupNotification(qr, Frequency.findByName('weekly'), recipients)
 
                     result.status = emailStatus.status
                     result.logs << emailStatus.message
-                    qr.addLog(emailStatus.message)
                 }
             } else {
                 result.logs << "No emails will be sent because no changes were detected."
-                qr.addLog("No emails will be sent because no changes were detected.")
             }
 
             result.logs << "Completed!"
-            qr.addLog("Completed!")
             result.message = "Completion of Subscription: [${query?.id}]. ${query?.name}."
             result.status = 0
         } catch (Exception e) {
             qr.succeeded = false
-            String error = "Failed to trigger subscription [ ${query?.id}  ${query?.name} ]"
+            String error = "Error: Failed to trigger subscription [ ${query?.id}  ${query?.name} ]"
             log.error(e.message)
             result.status = 1
             result.message = error
             result.logs << e.message
-            qr.addLog(error)
+            result.logs << error
         } finally {
             log.info(result.message)
-            if (qr.succeeded) {
-                /**
-                 * todo - it only writes queryResult into the database at this moment
-                 *
-                 * However, the queryResult cannot be persisted in the database when an exception is thrown and caught above
-                 * It does not affect the normal operation of the system
-                 */
-                QueryResult.withTransaction {
-                    if (!qr.save(validate: true)) {
-                        qr.errors.allErrors.each {
-                            log.error(it)
-                        }
-                    }
-                }
-            } else {
-                log.error("Aborted! Subscribers will not receive emails.")
+            qr.newLogs(result.logs)
+            QueryResult.withTransaction {
+                qr.save(flush: true, failOnError: true)
             }
-
-            return result
         }
+        return result
     }
 
     def processQueryBiosecurity(Query query, Date since, Date to) {

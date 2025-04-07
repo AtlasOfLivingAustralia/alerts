@@ -24,7 +24,8 @@
                 <p></p>
                 <g:if test="${query.lastChecked}">
                   Last checked on
-                    <span name="showLastCheckDetails_${query.id}" style="cursor: pointer; text-decoration: underline;"  data-toggle="popover" data-placement="bottom" data-content="${logs.collect {'<li>' + it + '</li>'  }.join()}" >
+                    <span name="showLastCheckDetails_${query.id}" style="cursor: pointer; text-decoration: underline;"  data-toggle="popover" data-placement="bottom" data-trigger="click"
+                          data-html="true" data-content="${logs.collect {'<li class="autowrap-popover">' + it + '</li>'  }.join()}" >
                         ${new java.text.SimpleDateFormat('dd MMM yyyy HH:mm').format(query.lastChecked)}
                     </span>
                     <g:if test="${query.queryResults.find{it.frequency.name=='weekly'}?.id}">
