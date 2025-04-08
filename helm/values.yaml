@@ -51,7 +51,7 @@ resources:
 livenessProbe:
   enabled: true
   httpGet:
-    path: /
+    path: /actuator/health
     port: 8000
     scheme: HTTP
   initialDelaySeconds: 30
@@ -63,10 +63,10 @@ livenessProbe:
 startupProbe:
   enabled: true
   httpGet:
-    path: /
+    path: /actuator/health
     port: 8000
     scheme: HTTP
-  initialDelaySeconds: 90
+  initialDelaySeconds: 30
   periodSeconds: 5
   timeoutSeconds: 5
   successThreshold: 1
@@ -75,7 +75,7 @@ startupProbe:
 readinessProbe:
   enabled: true
   httpGet:
-    path: /
+    path: /actuator/health
     port: 8000
     scheme: HTTP
   initialDelaySeconds: 10
