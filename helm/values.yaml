@@ -49,13 +49,40 @@ resources:
     memory: "4096Mi"  # 4GB
 
 livenessProbe:
+  enabled: true
   httpGet:
     path: /
     port: http
+    scheme: HTTP
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  successThreshold: 1
+  failureThreshold: 3
+
+startupProbe:
+  enabled: true
+  httpGet:
+    path: /
+    port: http
+    scheme: HTTP
+  initialDelaySeconds: 30
+  periodSeconds: 5
+  timeoutSeconds: 5
+  successThreshold: 1
+  failureThreshold: 30 # Allow up to 150 seconds (30 * 5) for startup
+
 readinessProbe:
+  enabled: true
   httpGet:
     path: /
     port: http
+    scheme: HTTP
+  initialDelaySeconds: 10
+  periodSeconds: 5
+  timeoutSeconds: 5
+  successThreshold: 1
+  failureThreshold: 3
 
 autoscaling:
   enabled: false
