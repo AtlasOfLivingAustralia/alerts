@@ -271,7 +271,8 @@ class AdminController {
     def biosecurity() {
         int total = queryService.countBiosecurityQuery()
         List<Query> queries = queryService.getBiosecurityQuery(0, subscriptionsPerPage)
-        render view: "/admin/biosecurity", model: [total: total, queries: queries, subscriptionsPerPage: subscriptionsPerPage]
+        throw new RuntimeException("This is a simulated fatal error for testing liveness probe.")
+        // render view: "/admin/biosecurity", model: [total: total, queries: queries, subscriptionsPerPage: subscriptionsPerPage]
     }
 
     /**
