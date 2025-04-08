@@ -267,22 +267,10 @@ class AdminController {
         redirect(action: 'index')
     }
 
-    def recursiveMethod() {
-        // Adding local variables to consume more stack space per call
-        def localVar1 = new Object()
-        def localVar2 = "some string"
-        def localVar3 = [1, 2, 3]
-        def localVar4 = 123456789L
-
-        recursiveMethod()
-        render "Recursive call"
-    }
-
     @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
     def biosecurity() {
         int total = queryService.countBiosecurityQuery()
         List<Query> queries = queryService.getBiosecurityQuery(0, subscriptionsPerPage)
-        recursiveMethod()
         render view: "/admin/biosecurity", model: [total: total, queries: queries, subscriptionsPerPage: subscriptionsPerPage]
     }
 
