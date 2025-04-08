@@ -52,7 +52,7 @@ livenessProbe:
   enabled: true
   httpGet:
     path: /
-    port: http
+    port: 8000
     scheme: HTTP
   initialDelaySeconds: 30
   periodSeconds: 10
@@ -64,7 +64,7 @@ startupProbe:
   enabled: true
   httpGet:
     path: /
-    port: http
+    port: 8000
     scheme: HTTP
   initialDelaySeconds: 30
   periodSeconds: 5
@@ -76,7 +76,7 @@ readinessProbe:
   enabled: true
   httpGet:
     path: /
-    port: http
+    port: 8000
     scheme: HTTP
   initialDelaySeconds: 10
   periodSeconds: 5
