@@ -214,3 +214,5 @@ config:
     terms_url: ""
     support_email: ""
   podEnvironment: "production"
+  xmx: ""
+  xms: ""

@@ -26,8 +26,8 @@ spec:
           command: [ "java" ]
           args:
             - "-Dgrails.env={{ .Values.config.podEnvironment }}"
-            - "-Xms3072m"
-            - "-Xmx3072m"
+            - "-Xms{{ .Values.config.xms }}"
+            - "-Xmx{{ .Values.config.xmx }}"
             - "-jar"
             - "app.war"
           env:
