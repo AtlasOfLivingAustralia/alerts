@@ -44,6 +44,17 @@ class QueryResult {
 
     void newLog(String log) {
         logs = log
+        this.markDirty()
+    }
+
+    /**
+     * Create new logs with overwriting the existing logs
+     */
+    void newLogs(List<String> newLogs) {
+        this.logs = newLogs.join('\n')
+        //Force the logs to be dirty.
+        //Otherwise GORM cannot detect the changes for some unknown reasons
+        this.markDirty()
     }
 
     void addLog(String log) {

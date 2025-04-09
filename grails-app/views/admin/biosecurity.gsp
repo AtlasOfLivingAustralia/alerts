@@ -68,7 +68,7 @@
                             if (popup) {
                                 let logs = data.logs
                                 popup.removeAttr('hidden');
-                                popup.attr('data-content', "<li>" + logs.map(item => item).join('</li><li>') + '</li>');
+                                popup.attr('data-content', "<li class='autowrap-popover'>" + logs.map(item => item).join("</li><li class='autowrap-popover'>") + "</li>");
                                 popup.html( formatToLocaleDate(localDateTo) + "<i class='fa fa-check' aria-hidden='true' style='color: red;padding-left: 15px;'></i>")
                                 initializePopoverAgain();
                                 //Hide possible info
@@ -76,6 +76,15 @@
                             }
                             alert("The subscription has been successfully completed. Click on the last checked date for details.")
                         } else {
+                            if (popup) {
+                                let logs = data.logs
+                                popup.removeAttr('hidden');
+                                popup.attr('data-content', "<li class='autowrap-popover'>" + logs.map(item => item).join("</li><li class='autowrap-popover'>") + "</li>");
+                                popup.html( formatToLocaleDate(localDateTo) + "<i class='fa fa-check' aria-hidden='true' style='color: red;padding-left: 15px;'></i>")
+                                initializePopoverAgain();
+                                //Hide possible info
+                                popup.siblings('[name=neverCheckedInfo]').hide();
+                            }
                             popup.text(localDate +" - Failed")
                             alert("The subscription failed. Click on the last checked date for details.")
                         }
