@@ -363,6 +363,7 @@ class QueryService {
         String queryPathForUI = queryPathForUITemplate.replaceAll("___LISTIDPARAM___", listid)
 
         new Query([
+                //Not used
                 baseUrl       : grailsApplication.config.biocacheService.baseURL,
                 baseUrlForUI  : grailsApplication.config.biocache.baseURL,
                 name          : messageSource.getMessage("query.biosecurity.title", null, siteLocale) + ' ' + speciesListName,
