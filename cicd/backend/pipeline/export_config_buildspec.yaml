@@ -11,6 +11,8 @@ env:
   secrets-manager:
     DB_PASSWORD: $SECRET_NAME:db-password
     GOOGLE_APIKEY: $SECRET_NAME:google-api-key
+    CAS_CLIENT_SECRET: $SECRET_NAME:cas-client-secret
+    CAS_S2S_SECRET: $SECRET_NAME:cas-s2s-client-secret
   exported-variables:
     - BASE_STACK_FILE_PFIX
     - BASE_STACK_NAME
@@ -104,6 +106,12 @@ phases:
       - |
         SERVER_TO_SERVER_CLIENT_SECRET=$(aws cognito-idp describe-user-pool-client --user-pool-id $USER_POOL_ID \
           --client-id $SERVER_TO_SERVER_CLIENT_ID --query "UserPoolClient.ClientSecret" --output text)
+      - if [[ "$ENVIRONMENT" == "production" ]]; then
+          CLIENT_ID=${CAS_CLIENT_ID}
+          CLIENT_SECRET=${CAS_CLIENT_SECRET}
+          SERVER_TO_SERVER_CLIENT_ID=${CAS_S2S_CLIENT_ID}
+          SERVER_TO_SERVER_CLIENT_SECRET=${CAS_S2S_SECRET}
+        fi
       - |
         echo "config:
           base:

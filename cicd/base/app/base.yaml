@@ -61,7 +61,9 @@ Resources:
         SecretStringTemplate: |
           {
             "db-password": "",
-            "google-api-key": ""
+            "google-api-key": "",
+            "cas-client-secret": "",
+            "cas-s2s-client-secret": ""
           }
         GenerateStringKey: db-password
         PasswordLength: 12
