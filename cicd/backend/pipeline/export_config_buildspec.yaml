@@ -210,6 +210,8 @@ phases:
             terms_url: "${TERMS_URL}"
             support_email: "${SUPPORT_EMAIL}"
           podEnvironment: "${POD_ENVIRONMENT}"
+          xmx: "${HEAP_SIZE_INITIAL}"
+          xms: "${HEAP_SIZE_MAX}"
         resources:
           requests:
             cpu: "${CPU_REQUEST}"      
