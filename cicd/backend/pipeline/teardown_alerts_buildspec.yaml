@@ -23,7 +23,7 @@ phases:
       - eksctl delete iamserviceaccount --name=alerts-service-account-$CLEAN_BRANCH --namespace=$EKS_NAMESPACE --cluster=$EKS_CLUSTER_NAME
       - |
         if helm list -n $EKS_NAMESPACE | grep -q $HELM_RELEASE_NAME; then
-          helm uninstall $HELM_RELEASE_NAME -n EKS_NAMESPACE
+          helm uninstall $HELM_RELEASE_NAME -n $EKS_NAMESPACE
         else
           echo "Release $HELM_RELEASE_NAME does not exist."
         fi
