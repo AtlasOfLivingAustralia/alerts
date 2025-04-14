@@ -25,6 +25,12 @@ Parameters:
     AllowedValues:
       - true
       - false
+  pDatabaseInsightsMode:
+    Description: enable or disable database insights
+    Type: String
+    AllowedValues:
+      - standard
+      - advanced
   pDbInstanceName:
     Description: The db instance name. This gets used as part of the hostname to connect to the db
     Type: String
@@ -78,6 +84,9 @@ Parameters:
     Description: The snapshot to restore from
     Type: String
     Default: false
+  pSecretName:
+    Description: The name of the secret
+    Type: String
   pVpcStackName:
     Description: The name of the Bedrock VPC stack
     Type: String
@@ -96,6 +105,9 @@ Conditions:
   IsProvisioned: !Equals 
                    - !Ref pEngineMode
                    - provisioned
+  DatabaseInsights: !Equals 
+                   - !Ref pDatabaseInsightsMode
+                   - advanced
   IsServerlessV2: !Equals
                     - !Ref pEngineMode
                     - serverlessv2
@@ -198,6 +210,7 @@ Resources:
       BacktrackWindow: !Ref pBacktrackWindow
       BackupRetentionPeriod: !Ref pBackupRetention
       CopyTagsToSnapshot: true
+      DatabaseInsightsMode: !Ref pDatabaseInsightsMode
       DatabaseName: !Sub ${pProductName}${pEnvironment}
       DBClusterIdentifier: !Sub ${pDbInstanceName}-cluster
       DBClusterParameterGroupName: !Ref ClusterParamGrp
@@ -208,15 +221,17 @@ Resources:
       EngineMode: !If [IsServerlessV2, !Ref AWS::NoValue, provisioned]
       EngineVersion: !Ref pDbVersion
       MasterUsername: !Ref pAdminUser
-      MasterUserPassword: !Sub
-                            - '{{resolve:secretsmanager:alerts-${ResourceName}:SecretString:db-password}}'
-                            - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
+      MasterUserPassword: !Sub '{{resolve:secretsmanager:${pSecretName}:SecretString:db-password}}'
       MonitoringInterval: !Ref pEnhancedMonitoring
       MonitoringRoleArn: !If
                            - EnhancedMonitoring
                            - !GetAtt EnhancedMonitoringRole.Arn
                            - !Ref AWS::NoValue
       PerformanceInsightsEnabled: !Ref pPerformanceInsights
+      PerformanceInsightsRetentionPeriod: !If
+                                            - DatabaseInsights
+                                            - 465
+                                            - 7
       Port: 3306
       PreferredBackupWindow: 16:00-17:00
       PreferredMaintenanceWindow: tue:17:00-tue:19:00
@@ -229,7 +244,9 @@ Resources:
       StorageEncrypted: true
       Tags:
         - Key: Name
-          Value: Alerts DB Cluster
+          Value: !Sub
+                   - Alerts-db-${ResourceName}
+                   - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
       VpcSecurityGroupIds:
         - !Ref DbSecurityGrp
 
@@ -248,8 +265,10 @@ Resources:
       PromotionTier: 1
       EnablePerformanceInsights: !Ref pPerformanceInsights
       Tags:
-      - Key: Name
-        Value: Alerts DB primary
+          - Key: Name
+            Value: !Sub
+               - ${pProductName}-primary-${ResourceName}
+               - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
 
   RdsReplica:
     Type: AWS::RDS::DBInstance
@@ -269,8 +288,10 @@ Resources:
       PromotionTier: 2
       EnablePerformanceInsights: !Ref pPerformanceInsights
       Tags:
-      - Key: Name
-        Value: Alerts DB replica
+          - Key: Name
+            Value: !Sub
+               - ${pProductName}-replica-${ResourceName}
+               - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
 
   RdsScalableTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget

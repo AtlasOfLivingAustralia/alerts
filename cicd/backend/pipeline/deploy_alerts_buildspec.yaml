@@ -21,7 +21,7 @@ phases:
     commands:
       - echo Build started on $(date)
       - aws eks --region ap-southeast-2 update-kubeconfig --name $EKS_CLUSTER_NAME
-      - kubectl config set-context --current --namespace=alerts
+      - kubectl config set-context --current --namespace=$EKS_NAMESPACE
       - echo "Creating service account for alerts..."
       - |
         ALERTS_ROLE_ARN=$(aws cloudformation describe-stacks --stack-name $BASE_STACK_NAME \
@@ -29,7 +29,7 @@ phases:
       - printf "$(kubectl config current-context)\n"
       - |
         eksctl create iamserviceaccount --name alerts-service-account-$CLEAN_BRANCH \
-          --namespace alerts --cluster $EKS_CLUSTER_NAME --attach-role-arn $ALERTS_ROLE_ARN \
+          --namespace $EKS_NAMESPACE --cluster $EKS_CLUSTER_NAME --attach-role-arn $ALERTS_ROLE_ARN \
           --approve --override-existing-serviceaccounts \
           --tags "product=alerts,environment=development,branch=${CLEAN_BRANCH}"
       - echo "Service account created."
@@ -39,9 +39,8 @@ phases:
         export CERTIFICATE_ARN=$(aws acm list-certificates --region ap-southeast-2 \
           --query "CertificateSummaryList[?DomainName=='*.$HOSTED_ZONE' && Status=='ISSUED'].CertificateArn" --output text)
       - BUILD_TAG=$CLEAN_BRANCH-$CODEBUILD_BUILD_NUMBER
-      - env
       - |
-        helm upgrade --install $HELM_RELEASE_NAME . -n alerts \
+        helm upgrade --install $HELM_RELEASE_NAME . -n $EKS_NAMESPACE \
           --set image.repository=$ECR_REPO \
           --set image.tag=$BUILD_TAG \
           --set ingress.hostname=$DOMAIN_NAME \

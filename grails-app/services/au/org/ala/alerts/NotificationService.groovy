@@ -5,8 +5,6 @@ import grails.converters.JSON
 import org.apache.commons.lang.time.DateUtils
 import org.grails.web.json.JSONArray
 import org.grails.web.json.JSONObject
-
-import javax.transaction.Transactional
 import java.text.SimpleDateFormat
 import groovy.time.TimeCategory
 import org.hibernate.FlushMode
@@ -107,12 +105,10 @@ class NotificationService {
             log.info(msg)
 
             if(!dryRun ){
-                if (qr.succeeded) {
-                    QueryResult.withTransaction {
-                        if (!qr.save(validate: true)) {
-                            qr.errors.allErrors.each {
-                                log.error(it)
-                            }
+                QueryResult.withTransaction {
+                    if (!qr.save(validate: true)) {
+                        qr.errors.allErrors.each {
+                            log.error(it)
                         }
                     }
                 }

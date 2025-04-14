@@ -345,8 +345,7 @@ class QueryService {
     }
 
     /**
-     * Deprecated
-     * ___DATEPARAM___
+     * NOTE: Biosecurity query code does not use the queryPath stored in the database
      * @param listid
      * @return
      */
@@ -355,21 +354,25 @@ class QueryService {
         def sList = getSpeciesListName(listid)
         String speciesListName = sList.name
         //differentiate non-authoritative / authoritative list
-        String queryPathForUITemplate = grailsApplication.config.getProperty("biosecurity.query.template.nonAuthoritativeList", String, "/occurrences/search?q=species_list:___LISTIDPARAM___&fq=decade:2020&fq=country:Australia&fq=first_loaded_date:"+"[___DATEPARAM___%20TO%20*]".encodeAsURL()+"&fq=occurrence_date:[___LASTYEARPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc&disableAllQualityFilters=true")
+        //demo purpose only, the queryPath is not used in Biosecurity query process
+        String queryPathForUITemplate = grailsApplication.config.getProperty("biosecurity.query.template.nonAuthoritativeList", String, "/occurrences/search?q=species_list:___LISTIDPARAM___&fq=decade:2020&fq=country:Australia&fq=first_loaded_date:"+"[___DATEPARAM___ TO *]".encodeAsURL()+"&fq=occurrence_date:"+"[___LASTYEARPARAM___ TO *]".encodeAsURL() +"&sort=first_loaded_date&dir=desc&disableAllQualityFilters=true")
         if (sList.isAuthoritative) {
-            queryPathForUITemplate = grailsApplication.config.getProperty("biosecurity.query.template.authoritativeList", String, "/occurrences/search?q=species_list_uid:___LISTIDPARAM___&fq=decade:2020&fq=country:Australia&fq=first_loaded_date:"+"[___DATEPARAM___%20TO%20*]".encodeAsURL()+"&fq=occurrence_date:[___LASTYEARPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc&disableAllQualityFilters=true")
+            queryPathForUITemplate = grailsApplication.config.getProperty("biosecurity.query.template.authoritativeList", String, "/occurrences/search?q=species_list_uid:___LISTIDPARAM___&fq=decade:2020&fq=country:Australia&fq=first_loaded_date:"+"[___DATEPARAM___ TO *]".encodeAsURL()+"&fq=occurrence_date:"+"[___LASTYEARPARAM___ TO *]".encodeAsURL()+"&sort=first_loaded_date&dir=desc&disableAllQualityFilters=true")
         }
 
         String queryPathForUI = queryPathForUITemplate.replaceAll("___LISTIDPARAM___", listid)
 
         new Query([
+                //Not used
                 baseUrl       : grailsApplication.config.biocacheService.baseURL,
                 baseUrlForUI  : grailsApplication.config.biocache.baseURL,
                 name          : messageSource.getMessage("query.biosecurity.title", null, siteLocale) + ' ' + speciesListName,
                 resourceName  : grailsApplication.config.mail.details.defaultResourceName,
                 updateMessage : 'more.biosecurity.update.message',
                 description   : messageSource.getMessage("query.biosecurity.descr", null, siteLocale) + ' ' + speciesListName,
+                //Not used
                 queryPath     : queryPathForUI + '&pageSize=20&facets=basis_of_record',
+                //Not used
                 queryPathForUI: queryPathForUI,
                 dateFormat    : """yyyy-MM-dd'T'HH:mm:ss'Z'""",
                 emailTemplate : '/email/biosecurity',

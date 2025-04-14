@@ -201,6 +201,13 @@ Resources:
                 FilePaths:
                   Includes:
                     - !Sub cicd/${pProductComponent}/**
+                    - grails-app/**
+                    - src/**
+                    - helm/**
+                    - build.gradle
+                    - Dockerfile
+                    - gradle.properties
+                    - settings.gradle
             SourceActionName: CheckoutSrc
       Variables:
         - Name: SRC_BRANCH
@@ -247,7 +254,7 @@ Resources:
                    { "name":"PIPELINE_FINGERPRINT", "value":"#{variables.PIPELINE_FINGERPRINT}" },
                    { "name":"PRODUCT_COMPONENT", "value":"${pProductComponent}" },
                    { "name":"SRC_BRANCH", "value":"${pGitHubBranch}" },
-                   { "name":"ALERTS_SECRET_NAME", "value":"${pSecretName}" }
+                   { "name":"SECRET_NAME", "value":"${pSecretName}" }
                  ]
             Namespace: ExportConfigNS
             InputArtifacts:
@@ -301,6 +308,7 @@ Resources:
                     { "name":"ECR_REPO", "value":"${EcrRepo}" },
                     { "name":"EKS_CLUSTER_NAME", "value":"#{ExportConfigNS.EKS_CLUSTER_NAME}" },
                     { "name":"HELM_RELEASE_NAME", "value":"#{ExportConfigNS.HELM_RELEASE_NAME}" },
+                    { "name":"EKS_NAMESPACE", "value":"#{ExportConfigNS.EKS_NAMESPACE}" },
                     { "name":"HOSTED_ZONE", "value":"#{ExportConfigNS.HOSTED_ZONE}" },
                     { "name":"PRODUCT_NAME", "value":"#{ExportConfigNS.PRODUCT_NAME}" }
                   ]
@@ -325,6 +333,7 @@ Resources:
                   { "name":"AUTHOR", "value":"#{CheckoutSrcNS.AuthorDisplayName}" },
                   { "name":"CLEAN_BRANCH", "value":"${pCleanBranch}" },
                   { "name":"COMMIT_ID", "value":"#{CheckoutSrcNS.CommitId}" },
+                  { "name":"DOMAIN_NAME", "value":"#{ExportConfigNS.DOMAIN_NAME}" },
                   { "name":"ENVIRONMENT", "value":"${pEnvironment}" },
                   { "name":"PRODUCT_COMPONENT", "value":"#{ExportConfigNS.PRODUCT_COMPONENT}" },
                   { "name":"PRODUCT_NAME", "value":"#{ExportConfigNS.PRODUCT_NAME}" },
@@ -361,6 +370,7 @@ Resources:
                 [
                   { "name":"CLEAN_BRANCH", "value":"${pCleanBranch}" },
                   { "name":"EKS_CLUSTER_NAME", "value":"#{ExportConfigNS.EKS_CLUSTER_NAME}" },
+                  { "name":"EKS_NAMESPACE", "value":"#{ExportConfigNS.EKS_NAMESPACE}" },
                   { "name":"HELM_RELEASE_NAME", "value":"#{ExportConfigNS.HELM_RELEASE_NAME}" }
                 ]
             InputArtifacts:
