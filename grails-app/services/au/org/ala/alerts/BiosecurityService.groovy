@@ -14,9 +14,7 @@
 
 package au.org.ala.alerts;
 
-import com.jayway.jsonpath.JsonPath
 import grails.converters.JSON
-import grails.gorm.transactions.Transactional
 import org.apache.commons.lang.time.DateUtils
 import org.apache.http.entity.ContentType
 import java.text.SimpleDateFormat
@@ -76,7 +74,6 @@ class BiosecurityService {
         QueryResult qr = notificationService.getQueryResult(query, Frequency.findByName(frequency))
 
         try {
-            qr.newLog("")
             def processedJson = processQueryBiosecurity(query, since, now)
             // set check time
             qr.previousCheck = since
@@ -131,34 +128,22 @@ class BiosecurityService {
             result.logs << "Completed!"
             result.message = "Completion of Subscription: [${query?.id}]. ${query?.name}."
             result.status = 0
-
         } catch (Exception e) {
             qr.succeeded = false
-            String error = "Failed to trigger subscription [ ${query?.id}  ${query?.name} ]"
+            String error = "Error: Failed to trigger subscription [ ${query?.id}  ${query?.name} ]"
             log.error(e.message)
             result.status = 1
             result.message = error
             result.logs << e.message
+            result.logs << error
         } finally {
             log.info(result.message)
-            if (qr.succeeded) {
-                /**
-                 * todo - it only writes queryResult into the database at this moment
-                 *
-                 * However, the queryResult cannot be persisted in the database when an exception is thrown and caught above
-                 * It does not affect the normal operation of the system
-                 */
-                if (!qr.save(validate: true)) {
-                    qr.errors.allErrors.each {
-                        log.error(it)
-                    }
-                }
-            } else {
-                log.error("Aborted! Subscribers will not receive emails.")
+            qr.newLogs(result.logs)
+            QueryResult.withTransaction {
+                qr.save(flush: true, failOnError: true)
             }
-
-            return result
         }
+        return result
     }
 
     def processQueryBiosecurity(Query query, Date since, Date to) {

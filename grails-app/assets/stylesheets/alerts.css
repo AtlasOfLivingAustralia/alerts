@@ -118,4 +118,8 @@ a.btn-ala {
     cursor: pointer;
 }
 
+.autowrap-popover{
+    word-break: break-word !important; /* Break long words inside list items */
+}
+
 

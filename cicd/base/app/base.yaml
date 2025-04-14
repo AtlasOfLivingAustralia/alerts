@@ -36,6 +36,9 @@ Parameters:
   pSecretName:
     Type: String
     Description: The name of the secret
+  pEksNamespace:
+    Type: String
+    Description: The EKS namespace
 
 Conditions:
 
@@ -58,7 +61,9 @@ Resources:
         SecretStringTemplate: |
           {
             "db-password": "",
-            "google-api-key": ""
+            "google-api-key": "",
+            "cas-client-secret": "",
+            "cas-s2s-client-secret": ""
           }
         GenerateStringKey: db-password
         PasswordLength: 12
@@ -139,7 +144,7 @@ Resources:
                   "Action": "sts:AssumeRoleWithWebIdentity",
                   "Condition": {
                       "StringEquals": {
-                                        "${pClusterOidcIssuerUrl}:sub": "system:serviceaccount:${pProductName}:alerts-service-account-${pCleanBranch}",
+                                        "${pClusterOidcIssuerUrl}:sub": "system:serviceaccount:${pEksNamespace}:alerts-service-account-${pCleanBranch}",
                                         "${pClusterOidcIssuerUrl}:aud": "sts.amazonaws.com"
                       }
                   }
