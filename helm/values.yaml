@@ -137,6 +137,7 @@ config:
     alerts_userdetails_url: ""
     lists_url: ""
   mail:
+    enabled: ""
     enable_email: ""
     mail_ses_enabled: ""
   header_and_footer_baseurl: ""
