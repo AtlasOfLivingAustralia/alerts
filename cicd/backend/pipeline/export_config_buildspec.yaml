@@ -144,6 +144,7 @@ phases:
             alerts_userdetails_url: "${ALERTS_USERDETAILS_URL}"
             lists_url: "${LISTS_URL}"
           mail:
+            enabled: "${MAIL_ENABLED}"
             enable_email: "${ENABLE_EMAIL}"
             mail_ses_enabled: "${MAIL_SES_ENABLED}"
           header_and_footer_baseurl: "${HEADER_AND_FOOTER_BASEURL}"
