@@ -177,11 +177,14 @@ class UserService {
         if (user == null) {
             log.debug "User is not in user table - creating new record for " + userDetails
             user = new User([email: userDetails.email, userId: userDetails.userId, locked: userDetails.locked, frequency: Frequency.findByName("weekly")])
-            if (!user.save(flush: true, failOnError: true)) {
-                user.errors.allErrors.each {
-                    log.error(it)
+            User.withTransaction {
+                if (!user.save(flush: true, failOnError: true)) {
+                    user.errors.allErrors.each {
+                        log.error(it)
+                    }
                 }
             }
+
             if (grailsApplication.config.getProperty('useBlogsAlerts', Boolean, true)) {
                 // new user gets "Blogs and News" weekly by default (opt out)
                 def notificationInstance = new Notification()
