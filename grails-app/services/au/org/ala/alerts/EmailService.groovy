@@ -121,7 +121,6 @@ class EmailService {
                     log.debug("frequency:" + frequency)
                     log.debug("totalRecords:" + (totalRecords >= 0 ? totalRecords : records.size()))
                 }
-                log.info("Email with ${totalRecords} record(s) sent for [${query.id}]. ${query.name}.")
                 def status = ["status": 0, "message": "Emails were dispatched to the Mail service."]
             } else {
                 log.info("No email sent for [${queryResult.frequency.name}] - [${query.id}]. ${query.name}, as there were no changes.")
