@@ -14,7 +14,7 @@ metadata:
     alb.ingress.kubernetes.io/ssl-redirect: '443'
     alb.ingress.kubernetes.io/success-codes: '200'
     alb.ingress.kubernetes.io/healthcheck-path: /actuator/health
-    alb.ingress.kubernetes.io/idle-timeout: '90'
+    alb.ingress.kubernetes.io/load-balancer-attributes: 'idle_timeout.timeout_seconds=90'
     external-dns.alpha.kubernetes.io/hostname: {{ .Values.ingress.hostname }}
     {{- include "ala-alerts.labels" . | nindent 4 }}
 spec:
