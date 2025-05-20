@@ -38,12 +38,6 @@ Parameters:
   pProductName:
     Type: String
     Description: The name of the product
-  pDomainName:
-    Type: String
-    Description: The domain name
-  pSecretName:
-    Type: String
-    Description: The name of the secret
   pRestartExecutionOnUpdate:
     Type: String
     Description: Restart that pipeline if it's been updated
@@ -254,7 +248,7 @@ Resources:
                    { "name":"PIPELINE_FINGERPRINT", "value":"#{variables.PIPELINE_FINGERPRINT}" },
                    { "name":"PRODUCT_COMPONENT", "value":"${pProductComponent}" },
                    { "name":"SRC_BRANCH", "value":"${pGitHubBranch}" },
-                   { "name":"SECRET_NAME", "value":"${pSecretName}" }
+                   { "name":"SECRET_NAME", "value":"#{ExportConfigNS.SECRET_NAME}" }
                  ]
             Namespace: ExportConfigNS
             InputArtifacts:
