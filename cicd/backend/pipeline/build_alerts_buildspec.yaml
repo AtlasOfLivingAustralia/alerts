@@ -4,6 +4,9 @@ env:
   shell: bash
   variables:
     JAVA_TOOL_OPTIONS: -Dhttps.protocols=TLSv1.2
+  secrets-manager:
+    DOCKER_USERNAME: ala-secrets-production:dockerhub-username
+    DOCKER_PASSWORD: ala-secrets-production:dockerhub-password
   exported-variables:
     - BUILD_TAG
 
@@ -24,6 +27,10 @@ phases:
         && apt-get update
         && apt-get install -y docker-ce
       - java -version
+      - echo Logging in to Docker Hub...
+      - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+      - echo Logging in to Amazon ECR...
+      - aws ecr get-login-password | docker login -u AWS --password-stdin "https://$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
       - ./gradlew clean
       - ./gradlew assemble
 
@@ -38,8 +45,6 @@ phases:
     commands:
       - echo Post-build phase...
       - echo Build completed on $(date)
-      - echo Logging in to Amazon ECR...
-      - aws ecr get-login-password | docker login -u AWS --password-stdin "https://$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
       - rm -rf build/libs/*-plain.war
       - echo Building the Docker image...
       - docker build -t ala-alerts .
