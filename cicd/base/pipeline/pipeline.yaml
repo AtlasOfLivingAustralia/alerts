@@ -272,7 +272,8 @@ Resources:
               ProjectName: !Ref EmptyBucket
               EnvironmentVariables: |
                  [
-                   { "name":"BIOSECURITY_ALERTS_BUCKET", "value":"#{BaseCloudFormationOutNS.BiosecurityAlertsBucket}" }
+                   { "name":"BIOSECURITY_ALERTS_BUCKET", "value":"#{BaseCloudFormationOutNS.BiosecurityAlertsBucket}" },
+                   { "name":"LOAD_BALANCER_ACCESS_LOGS_BUCKET", "value":"#{BaseCloudFormationOutNS.LoadBalancerAccessLogsBucket}" }
                  ]
             Namespace: EmptyBucketNS
             InputArtifacts:

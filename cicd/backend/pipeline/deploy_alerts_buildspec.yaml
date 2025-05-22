@@ -33,6 +33,8 @@ phases:
           --approve --override-existing-serviceaccounts \
           --tags "product=alerts,environment=development,branch=${CLEAN_BRANCH}"
       - echo "Service account created."
+      - echo Updating S3 bucket object ownership settings...
+      - aws s3api put-bucket-ownership-controls --bucket $ACCESS_LOGS_S3_BUCKET_NAME --ownership-controls 'Rules=[{ObjectOwnership=ObjectWriter}]'
       - echo "Deploying alerts via helm..."
       - cd helm
       - BUILD_TAG=$CLEAN_BRANCH-$CODEBUILD_BUILD_NUMBER
