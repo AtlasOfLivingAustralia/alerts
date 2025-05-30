@@ -146,6 +146,9 @@ Resources:
             Status: Enabled
             ExpirationInDays: 90
             Prefix: "logs/"
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: ObjectWriter
       Tags:
         - Key: Name
           Value: LoadBalancerAccessLogs
