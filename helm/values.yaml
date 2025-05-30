@@ -39,6 +39,8 @@ ingress:
   certificateArn: ""
   hostname: ""
   tls: []
+  accessLogsBucket: ""
+  accessLogsPrefix: ""
 
 resources:
   requests:

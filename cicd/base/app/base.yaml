@@ -129,6 +129,44 @@ Resources:
               - ${pProductName}-${ResourceName}
               - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
 
+  LoadBalancerAccessLogsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub
+        - ala-${pProductName}-${ResourceName}-alb-access-logs
+        - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LifecycleConfiguration:
+        Rules:
+          - Id: "ExpireOldLogs"
+            Status: Enabled
+            ExpirationInDays: 90
+            Prefix: "logs/"
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: ObjectWriter
+      Tags:
+        - Key: Name
+          Value: LoadBalancerAccessLogs
+
+  LoadBalancerAccessLogsBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref LoadBalancerAccessLogsBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowELBAccess
+            Effect: Allow
+            Principal:
+              Service: "logdelivery.elasticloadbalancing.amazonaws.com"
+            Action: "s3:PutObject"
+            Resource: !Sub "arn:aws:s3:::${LoadBalancerAccessLogsBucket}/logs/AWSLogs/${AWS::AccountId}/*"
+
   AlertsRole:
     Type: AWS::IAM::Role
     Properties:
@@ -356,6 +394,10 @@ Outputs:
   BiosecurityAlertsBucket:
     Description: The S3 bucket for the Biosecurity Alerts service
     Value: !Ref BiosecurityAlertsBucket
+
+  LoadBalancerAccessLogsBucket:
+    Description: The S3 bucket for the Load Balancer access logs
+    Value: !Ref LoadBalancerAccessLogsBucket
 
   AlertsRoleArn:
     Description: The role ARN for the Alerts service
