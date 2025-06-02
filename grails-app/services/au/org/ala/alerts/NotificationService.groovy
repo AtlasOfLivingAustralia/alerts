@@ -706,6 +706,7 @@ class NotificationService {
                 // delete the notification
                 def notification = Notification.findByQueryAndUser(retrievedQuery, user)
                 if (notification) {
+                    retrievedQuery.removeFromNotifications(notification)
                     notification.delete(flush: true)
                 }
 
