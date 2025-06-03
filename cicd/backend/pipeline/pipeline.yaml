@@ -277,8 +277,9 @@ Resources:
             InputArtifacts:
               - Name: 'SourceArtifact'
             OutputVariables:
-              BuildTagOutput: BUILD_TAG_FROM_BUILD_ALERTS # Key in pipeline, value is key in the JSON file from buildspec
-            Namespace: BuildAlertsNS # Namespace for these output variables
+              - Name: BuildTagOutput
+                Value: BUILD_TAG_FROM_BUILD_ALERTS
+            Namespace: BuildAlertsNS
             RunOrder: 2
 
           - Name: DeployAlerts
