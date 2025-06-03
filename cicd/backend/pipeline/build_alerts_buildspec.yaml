@@ -59,7 +59,7 @@ phases:
       - docker push $ECR_REPO:$BUILD_TAG
       - docker push $ECR_REPO:latest
 
-  artifacts:
-    files:
-      - /tmp/build_tag.txt
-    discard-paths: yes
+artifacts:
+  files:
+    - /tmp/build_tag.txt
+  discard-paths: yes
