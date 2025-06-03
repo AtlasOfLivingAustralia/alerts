@@ -276,6 +276,9 @@ Resources:
                         Fn::Sub: "${pBaseStackName}-AlertsRepositoryUri"
             InputArtifacts:
               - Name: 'SourceArtifact'
+            OutputVariables:
+              BuildTagOutput: BUILD_TAG_FROM_BUILD_ALERTS # Key in pipeline, value is key in the JSON file from buildspec
+            Namespace: BuildAlertsNS # Namespace for these output variables
             RunOrder: 2
 
           - Name: DeployAlerts
@@ -305,7 +308,8 @@ Resources:
                     { "name":"EKS_NAMESPACE", "value":"#{ExportConfigNS.EKS_NAMESPACE}" },
                     { "name":"HOSTED_ZONE", "value":"#{ExportConfigNS.HOSTED_ZONE}" },
                     { "name":"ACCESS_LOGS_S3_BUCKET_NAME", "value":"#{ExportConfigNS.ACCESS_LOGS_S3_BUCKET_NAME}" },
-                    { "name":"PRODUCT_NAME", "value":"#{ExportConfigNS.PRODUCT_NAME}" }
+                    { "name":"PRODUCT_NAME", "value":"#{ExportConfigNS.PRODUCT_NAME}" },
+                    { "name":"PASSED_BUILD_TAG", "value":"#{BuildAlertsNS.BuildTagOutput}" }
                   ]
                 - EcrRepo: !ImportValue
                     Fn::Sub: '${pBaseStackName}-AlertsRepositoryUri'
