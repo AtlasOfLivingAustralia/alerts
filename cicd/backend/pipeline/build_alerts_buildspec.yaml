@@ -51,7 +51,7 @@ phases:
       - echo Tagging the Docker image...
       - BUILD_TAG=$CLEAN_BRANCH-$CODEBUILD_BUILD_NUMBER
       - echo build tag is $BUILD_TAG
-      - echo "BUILD_TAG=$BUILD_TAG" > /tmp/build_tag.txt
+      - echo "$BUILD_TAG" > /tmp/build_tag.txt
       - echo tagging
       - docker tag ala-alerts:latest $ECR_REPO:$BUILD_TAG
       - docker tag ala-alerts:latest $ECR_REPO:latest
