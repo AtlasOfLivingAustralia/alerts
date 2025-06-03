@@ -276,9 +276,8 @@ Resources:
                         Fn::Sub: "${pBaseStackName}-AlertsRepositoryUri"
             InputArtifacts:
               - Name: 'SourceArtifact'
-            OutputVariables:
-              - Name: BuildTagOutput
-                Value: BUILD_TAG_FROM_BUILD_ALERTS
+            OutputArtifacts:
+              - Name: 'BuildTagArtifact'
             Namespace: BuildAlertsNS
             RunOrder: 2
 
@@ -309,8 +308,7 @@ Resources:
                     { "name":"EKS_NAMESPACE", "value":"#{ExportConfigNS.EKS_NAMESPACE}" },
                     { "name":"HOSTED_ZONE", "value":"#{ExportConfigNS.HOSTED_ZONE}" },
                     { "name":"ACCESS_LOGS_S3_BUCKET_NAME", "value":"#{ExportConfigNS.ACCESS_LOGS_S3_BUCKET_NAME}" },
-                    { "name":"PRODUCT_NAME", "value":"#{ExportConfigNS.PRODUCT_NAME}" },
-                    { "name":"PASSED_BUILD_TAG", "value":"#{BuildAlertsNS.BuildTagOutput}" }
+                    { "name":"PRODUCT_NAME", "value":"#{ExportConfigNS.PRODUCT_NAME}" }
                   ]
                 - EcrRepo: !ImportValue
                     Fn::Sub: '${pBaseStackName}-AlertsRepositoryUri'
@@ -318,6 +316,7 @@ Resources:
             InputArtifacts:
               - Name: 'SourceArtifact'
               - Name: 'ExportConfigArtifact'
+              - Name: 'BuildTagArtifact'
             RunOrder: 3
 
           - Name: DeployNotification

@@ -51,11 +51,15 @@ phases:
       - echo Tagging the Docker image...
       - BUILD_TAG=$CLEAN_BRANCH-$CODEBUILD_BUILD_NUMBER
       - echo build tag is $BUILD_TAG
-      - echo "Exporting BUILD_TAG for CodePipeline: ${BUILD_TAG}"
-      - echo "{\"BUILD_TAG_FROM_BUILD_ALERTS\":\"${BUILD_TAG}\"}" > "${CODEBUILD_EXPORTED_VARIABLES_FILE}"
+      - echo "BUILD_TAG=$BUILD_TAG" > /tmp/build_tag.txt
       - echo tagging
       - docker tag ala-alerts:latest $ECR_REPO:$BUILD_TAG
       - docker tag ala-alerts:latest $ECR_REPO:latest
       - echo Pushing the Docker image to Amazon ECR...
       - docker push $ECR_REPO:$BUILD_TAG
       - docker push $ECR_REPO:latest
+
+  artifacts:
+    files:
+      - /tmp/build_tag.txt
+    discard-paths: yes
