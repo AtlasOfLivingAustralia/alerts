@@ -246,7 +246,7 @@ Resources:
                    { "name":"COMMIT_ID", "value":"#{CheckoutSrcNS.CommitId}" },
                    { "name":"ENVIRONMENT", "value":"${pEnvironment}" },
                    { "name":"PIPELINE_FINGERPRINT", "value":"#{variables.PIPELINE_FINGERPRINT}" },
-                   { "name":"PRODUCT_COMPONENT", "value":"${pProductComponent}" }
+                   { "name":"PRODUCT_COMPONENT", "value":"${pProductComponent}" },
                    { "name":"SRC_BRANCH", "value":"${pGitHubBranch}" }
                  ]
             Namespace: ExportConfigNS
@@ -276,6 +276,9 @@ Resources:
                         Fn::Sub: "${pBaseStackName}-AlertsRepositoryUri"
             InputArtifacts:
               - Name: 'SourceArtifact'
+            OutputArtifacts:
+              - Name: 'BuildTagArtifact'
+            Namespace: BuildAlertsNS
             RunOrder: 2
 
           - Name: DeployAlerts
@@ -313,6 +316,7 @@ Resources:
             InputArtifacts:
               - Name: 'SourceArtifact'
               - Name: 'ExportConfigArtifact'
+              - Name: 'BuildTagArtifact'
             RunOrder: 3
 
           - Name: DeployNotification

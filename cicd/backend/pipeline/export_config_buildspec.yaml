@@ -83,7 +83,6 @@ phases:
       - echo BASE_STACK_NAME=$BASE_STACK_NAME
       - export EKS_CLUSTER_NAME=$(aws cloudformation list-exports --query "Exports[?Name=='$REGOLITH_STACK_NAME-ClusterName'].Value" --output text)
       - echo EKS_CLUSTER_NAME=$EKS_CLUSTER_NAME
-      - SECRET_NAME=
       - DB_PASSWORD=$(aws secretsmanager get-secret-value --secret-id "$SECRET_NAME" --query 'SecretString' --output text | jq -r '.["db-password"]')
       - GOOGLE_APIKEY=$(aws secretsmanager get-secret-value --secret-id "$SECRET_NAME" --query 'SecretString' --output text | jq -r '.["google-api-key"]')
       - CAS_CLIENT_SECRET=$(aws secretsmanager get-secret-value --secret-id "$SECRET_NAME" --query 'SecretString' --output text | jq -r '.["cas-client-secret"]')
