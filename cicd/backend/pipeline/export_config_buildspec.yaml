@@ -8,11 +8,6 @@ env:
   git-credential-helper: yes
   variables:
     DEBIAN_FRONTEND: "noninteractive"
-  secrets-manager:
-    DB_PASSWORD: $SECRET_NAME:db-password
-    GOOGLE_APIKEY: $SECRET_NAME:google-api-key
-    CAS_CLIENT_SECRET: $SECRET_NAME:cas-client-secret
-    CAS_S2S_SECRET: $SECRET_NAME:cas-s2s-client-secret
   exported-variables:
     - BASE_STACK_FILE_PFIX
     - BASE_STACK_NAME
@@ -30,6 +25,7 @@ env:
     - PRODUCT_NAME
     - SECRET_NAME
     - EKS_NAMESPACE
+    - ACCESS_LOGS_S3_BUCKET_NAME
     - SLACK_ALERT_CHANNEL
     - SLACK_DEPLOY_NOTIFICATION
 
@@ -77,13 +73,20 @@ phases:
       - DB_READ_ENDPOINT=$(aws cloudformation describe-stacks --stack-name $DATABASE_STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='ReadEndpoint'].OutputValue" --output text)
       - DB_WRITE_ENDPOINT=$(aws cloudformation describe-stacks --stack-name $DATABASE_STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='WriteEndpoint'].OutputValue" --output text)
       - S3_BUCKET_NAME=$(aws cloudformation describe-stacks --stack-name $BASE_STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='BiosecurityAlertsBucket'].OutputValue" --output text)
+      - ACCESS_LOGS_S3_BUCKET_NAME=$(aws cloudformation describe-stacks --stack-name $BASE_STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='LoadBalancerAccessLogsBucket'].OutputValue" --output text)
+      - SECRET_NAME=$(aws cloudformation describe-stacks --stack-name $BASE_STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='AlertsSecret'].OutputValue" --output text)
       - echo DB_READ_ENDPOINT=$DB_READ_ENDPOINT
       - echo DB_WRITE_ENDPOINT=$DB_WRITE_ENDPOINT
       - echo S3_BUCKET_NAME=$S3_BUCKET_NAME
+      - echo ACCESS_LOGS_S3_BUCKET_NAME=$ACCESS_LOGS_S3_BUCKET_NAME
       - echo SECRET_NAME=$SECRET_NAME
       - echo BASE_STACK_NAME=$BASE_STACK_NAME
       - export EKS_CLUSTER_NAME=$(aws cloudformation list-exports --query "Exports[?Name=='$REGOLITH_STACK_NAME-ClusterName'].Value" --output text)
       - echo EKS_CLUSTER_NAME=$EKS_CLUSTER_NAME
+      - DB_PASSWORD=$(aws secretsmanager get-secret-value --secret-id "$SECRET_NAME" --query 'SecretString' --output text | jq -r '.["db-password"]')
+      - GOOGLE_APIKEY=$(aws secretsmanager get-secret-value --secret-id "$SECRET_NAME" --query 'SecretString' --output text | jq -r '.["google-api-key"]')
+      - CAS_CLIENT_SECRET=$(aws secretsmanager get-secret-value --secret-id "$SECRET_NAME" --query 'SecretString' --output text | jq -r '.["cas-client-secret"]')
+      - CAS_S2S_SECRET=$(aws secretsmanager get-secret-value --secret-id "$SECRET_NAME" --query 'SecretString' --output text | jq -r '.["cas-s2s-client-secret"]')
     finally:
       - #echo This always runs
 
@@ -223,6 +226,9 @@ phases:
           podEnvironment: "${POD_ENVIRONMENT}"
           xmx: "${HEAP_SIZE_INITIAL}"
           xms: "${HEAP_SIZE_MAX}"
+        ingress:
+          accessLogsPrefix: "logs"
+          accessLogsBucket: "${ACCESS_LOGS_S3_BUCKET_NAME}"
         resources:
           requests:
             cpu: "${CPU_REQUEST}"      

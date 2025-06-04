@@ -35,11 +35,11 @@ phases:
       - echo "Service account created."
       - echo "Deploying alerts via helm..."
       - cd helm
-      - BUILD_TAG=$CLEAN_BRANCH-$CODEBUILD_BUILD_NUMBER
+      - export BUILD_TAG_FROM_ARTIFACT=$(cat "$CODEBUILD_SRC_DIR_BuildTagArtifact/build_tag.txt")
       - |
         helm upgrade --install $HELM_RELEASE_NAME . -n $EKS_NAMESPACE \
           --set image.repository=$ECR_REPO \
-          --set image.tag=$BUILD_TAG \
+          --set image.tag=$BUILD_TAG_FROM_ARTIFACT \
           --set ingress.hostname=$DOMAIN_NAME \
           --set rds.externalName=$DB_WRITE_ENDPOINT \
           --set ingress.certificateArn=$CERTIFICATE_ARN \
