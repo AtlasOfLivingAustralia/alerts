@@ -38,12 +38,6 @@ Parameters:
   pProductName:
     Type: String
     Description: The name of the product
-  pDomainName:
-    Type: String
-    Description: The domain name
-  pSecretName:
-    Type: String
-    Description: The name of the secret
   pRestartExecutionOnUpdate:
     Type: String
     Description: Restart that pipeline if it's been updated
@@ -253,8 +247,7 @@ Resources:
                    { "name":"ENVIRONMENT", "value":"${pEnvironment}" },
                    { "name":"PIPELINE_FINGERPRINT", "value":"#{variables.PIPELINE_FINGERPRINT}" },
                    { "name":"PRODUCT_COMPONENT", "value":"${pProductComponent}" },
-                   { "name":"SRC_BRANCH", "value":"${pGitHubBranch}" },
-                   { "name":"SECRET_NAME", "value":"${pSecretName}" }
+                   { "name":"SRC_BRANCH", "value":"${pGitHubBranch}" }
                  ]
             Namespace: ExportConfigNS
             InputArtifacts:
@@ -283,6 +276,9 @@ Resources:
                         Fn::Sub: "${pBaseStackName}-AlertsRepositoryUri"
             InputArtifacts:
               - Name: 'SourceArtifact'
+            OutputArtifacts:
+              - Name: 'BuildTagArtifact'
+            Namespace: BuildAlertsNS
             RunOrder: 2
 
           - Name: DeployAlerts
@@ -311,6 +307,7 @@ Resources:
                     { "name":"CERTIFICATE_ARN", "value":"#{ExportConfigNS.CERTIFICATE_ARN}" },
                     { "name":"EKS_NAMESPACE", "value":"#{ExportConfigNS.EKS_NAMESPACE}" },
                     { "name":"HOSTED_ZONE", "value":"#{ExportConfigNS.HOSTED_ZONE}" },
+                    { "name":"ACCESS_LOGS_S3_BUCKET_NAME", "value":"#{ExportConfigNS.ACCESS_LOGS_S3_BUCKET_NAME}" },
                     { "name":"PRODUCT_NAME", "value":"#{ExportConfigNS.PRODUCT_NAME}" }
                   ]
                 - EcrRepo: !ImportValue
@@ -319,6 +316,7 @@ Resources:
             InputArtifacts:
               - Name: 'SourceArtifact'
               - Name: 'ExportConfigArtifact'
+              - Name: 'BuildTagArtifact'
             RunOrder: 3
 
           - Name: DeployNotification

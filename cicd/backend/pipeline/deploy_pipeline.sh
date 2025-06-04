@@ -149,7 +149,5 @@ aws cloudformation deploy \
         pPipelineFingerprint=$PIPELINE_MD5 \
         pProductComponent=$PRODUCT_COMPONENT \
         pProductName=$PRODUCT_NAME \
-        pDomainName=$DOMAIN_NAME \
-        pSecretName=$SECRET_NAME \
         pRestartExecutionOnUpdate=$RESTART_PIPELINE_ON_UPDATE \
 
