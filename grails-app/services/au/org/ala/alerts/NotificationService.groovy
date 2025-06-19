@@ -266,8 +266,6 @@ class NotificationService {
             def dateLastYearFormatted = sdf.format(dateLastYear)
             queryPath = queryPath.replaceAll("___LASTYEARPARAM___", dateLastYearFormatted)
             queryPathForUI = queryPathForUI.replaceAll("___LASTYEARPARAM___", dateLastYearFormatted)
-
-
         }
 
         [cleanUpUrl(query.baseUrl + queryPath), cleanUpUrl(query.baseUrlForUI + queryPathForUI)]
@@ -293,7 +291,7 @@ class NotificationService {
         }
        // last_assertion_date
         def updatedParams = queryParams.collect { k, v ->
-            if (shouldEncode && k == "fq" && sensitivePrefixes.any { v.startsWith("${it}:") } && (v.contains("[") || v.contains("]"))) {
+            if (shouldEncode && (k == "fq" || k == "q") && sensitivePrefixes.any { v.startsWith("${it}:") } && (v.contains("[") || v.contains("]"))) {
                 def encodedValue = v.replace("[", "%5B").replace("]", "%5D")
                 return "${URLEncoder.encode(k, "UTF-8")}=${encodedValue}"
             } else {
@@ -310,9 +308,10 @@ class NotificationService {
         if (queryStart > 0) {
             // If there is a query string, replace spaces, colons, and quotes with their URL-encoded equivalents
             def queryString = url.substring(queryStart + 1)
-            url = url.substring(0, queryStart + 1) + queryString.replaceAll(" ", "%20").replaceAll(":", "%3A").replaceAll("\"", "%22")
-            return encodeBrackets(url)
+            url = url.substring(0, queryStart + 1) + queryString.replaceAll(" ", "%20").replaceAll("\"", "%22")
+            url = encodeBrackets(url)
         }
+        return url
     }
 
 
