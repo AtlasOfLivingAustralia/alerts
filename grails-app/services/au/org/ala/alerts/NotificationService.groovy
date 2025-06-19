@@ -266,18 +266,52 @@ class NotificationService {
             def dateLastYearFormatted = sdf.format(dateLastYear)
             queryPath = queryPath.replaceAll("___LASTYEARPARAM___", dateLastYearFormatted)
             queryPathForUI = queryPathForUI.replaceAll("___LASTYEARPARAM___", dateLastYearFormatted)
+
+
         }
 
         [cleanUpUrl(query.baseUrl + queryPath), cleanUpUrl(query.baseUrlForUI + queryPathForUI)]
     }
 
-    def cleanUpUrl(url) {
+    /**
+     * Encodes brackets in the URL if the configuration is set to do so,
+     * e.g. for the period of lastAssertionDate, firstLoadedDate, etc.
+     * @param url
+     * @return
+     */
+    String encodeBrackets(String url) {
+        def encodeConfig = grailsApplication.config.encodeBracketInUrlParam
+        def shouldEncode = encodeConfig?.enabled == true
+        def sensitivePrefixes = encodeConfig?.bracketSensitiveFqPrefixes ?: []
+
+        def uri = new URI(url)
+        def baseUrl = "${uri.scheme}://${uri.host}${uri.path}"
+
+        def queryParams = uri.rawQuery.split("&").collect { param ->
+            def (k, v) = param.split("=", 2)
+            [URLDecoder.decode(k, "UTF-8"), v]
+        }
+       // last_assertion_date
+        def updatedParams = queryParams.collect { k, v ->
+            if (shouldEncode && k == "fq" && sensitivePrefixes.any { v.startsWith("${it}:") } && (v.contains("[") || v.contains("]"))) {
+                def encodedValue = v.replace("[", "%5B").replace("]", "%5D")
+                return "${URLEncoder.encode(k, "UTF-8")}=${encodedValue}"
+            } else {
+                return "${URLEncoder.encode(k, "UTF-8")}=${v}"
+            }
+        }
+
+        def finalUrl = "${baseUrl}?${updatedParams.join('&')}"
+        return finalUrl
+    }
+
+    String cleanUpUrl(url) {
         def queryStart = url.indexOf("?")
         if (queryStart > 0) {
+            // If there is a query string, replace spaces, colons, and quotes with their URL-encoded equivalents
             def queryString = url.substring(queryStart + 1)
-            url.substring(0, queryStart + 1) + queryString.replaceAll(" ", "%20").replaceAll(":", "%3A").replaceAll("\"", "%22")
-        } else {
-            url
+            url = url.substring(0, queryStart + 1) + queryString.replaceAll(" ", "%20").replaceAll(":", "%3A").replaceAll("\"", "%22")
+            return encodeBrackets(url)
         }
     }
 
