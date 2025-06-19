@@ -310,7 +310,7 @@ class NotificationService {
         if (queryStart > 0) {
             // If there is a query string, replace spaces, colons, and quotes with their URL-encoded equivalents
             def queryString = url.substring(queryStart + 1)
-            url = url.substring(0, queryStart + 1) + queryString.replaceAll(" ", "%20").replaceAll(":", "%3A").replaceAll("\"", "%22")
+            url = url.substring(0, queryStart + 1) + queryString.replaceAll(" ", "%20").replaceAll("\"", "%22")
             return encodeBrackets(url)
         }
     }
