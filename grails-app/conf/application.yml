@@ -216,11 +216,6 @@ biosecurity:
 
 encodeBracketInUrlParam:
     enabled: true
-    bracketSensitiveFqPrefixes:
-        - lastAssertionDate
-        - last_assertion_date
-        - first_loaded_date
-        - firstLoadedDate
 
 environments:
     development:
