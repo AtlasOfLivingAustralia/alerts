@@ -245,7 +245,7 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub
-                   - ${pProdustName}-db-${ResourceName}
+                   - ${pProductName}-db-${ResourceName}
                    - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
       VpcSecurityGroupIds:
         - !Ref DbSecurityGrp
