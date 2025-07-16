@@ -174,13 +174,14 @@ class AdminController {
 
 
     def debugAlert() {
+        render(
         [alerts: [
                 hourly : notificationService.checkQueryById(params.id, params.frequency ?: 'hourly'),
                 daily  : notificationService.checkQueryById(params.id, params.frequency ?: 'daily'),
                 weekly : notificationService.checkQueryById(params.id, params.frequency ?: 'weekly'),
                 monthly: notificationService.checkQueryById(params.id, params.frequency ?: 'monthly')
         ]
-        ]
+        ] as JSON)
     }
 
     def deleteOrphanAlerts() {
