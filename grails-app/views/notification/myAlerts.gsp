@@ -11,7 +11,7 @@
         <meta name="breadcrumbParent" content="${grailsApplication.config.userdetails.web.url}/myprofile, ${message(code:"my.alerts.breadcrumb.parent")}" />
         <g:set var="userPrefix" value="${adminUser ? user.email : message(code:"my.alerts.my") }"/>
         <title><g:message code="my.alerts.title" args="[userPrefix]" /> | ${grailsApplication.config.skin.orgNameLong}</title>
-        <asset:stylesheet href="alerts.css"/>
+        <link rel="stylesheet" href="${assetPath(src:'alerts.css')}" type="text/css"/>
         <script>
             $(function () {
                 $('[data-toggle="tooltip"]').tooltip()
@@ -87,8 +87,9 @@
                       <div class="tab-content" id="alertTabsContent">
                           <!-- Standard Alerts Tab -->
                           <div class="tab-pane fade active in" id="standard-alerts" role="tabpanel" aria-labelledby="standard-alerts-tab">
+                           <div class="row">
                             <div class="col-md-7">
-                                <div style="padding-top: 20px;">
+                                <div style="padding-top: 10px;">
                                 Enable alerts to have notifications sent to your email address.
                                 </div>
                               <table>
@@ -140,12 +141,14 @@
                                       </tr>
                                   </g:if>
                                   </tbody>
-                              </table>
-                            </div>
+                               </table>
+                             </div>
+                           </div>
                           </div>
 
                           <!-- Custom Alerts Tab -->
                           <div class="tab-pane fade" id="custom-alerts" role="tabpanel" aria-labelledby="custom-alerts-tab">
+                            <div class="row">
                               <g:if test="${customQueries}">
                                   <div class="col-md-7">
                                      <table>
@@ -157,7 +160,9 @@
                                                       ${query.description}
                                                   </td>
                                                   <td class="queryActions">
-                                                      <a href="javascript:void(0);" class='btn btn-ala deleteButton' id='${query.id}'><g:message code="my.alerts.delete.label" /></a>
+                                                      <button type="button" class="btn btn-ala deleteButton" id="${query.id}">
+                                                          Delete
+                                                      </button>
                                                   </td>
                                               </tr>
                                           </g:each>
@@ -190,16 +195,15 @@
                                           </p>
                                       </div>
                                   </div>
-
+                            </div>
                           </div>
                       </div>
-                  </div>
+                </div>
  <!-- end main content -->
           </div>
       </div>
       <asset:javascript src="alerts.js"/>
-      <asset:script type="text/javascript">
-
+      <script type="text/javascript">
           var addMyAlertUrl = 'addMyAlert/';
           var deleteMyAlertUrl = 'deleteMyAlert/';
           var deleteMyAlertWRUrl ='deleteMyAlertWR/';
@@ -249,6 +253,17 @@
                   }
               );
           });
-        </asset:script>
+
+          // Show the correct tab based on the URL hash
+          $(window).on('load', function () {
+              var hash = window.location.hash;
+              if (hash) {
+                var alertsTab = $('a.nav-link[href="' + hash + '"]');
+                if (alertsTab.length) {
+                  alertsTab.tab('show');
+                }
+              }
+            });
+      </script>
     </body>
 </html>

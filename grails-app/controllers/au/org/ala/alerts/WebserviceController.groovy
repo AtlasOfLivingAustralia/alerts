@@ -45,6 +45,7 @@ class WebserviceController {
     def biosecurityService
     def messageSource
     def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
+    def CUSTOM_ALERTS_URL = grailsApplication.config.grails.serverURL+"/notification/myAlerts#custom-alerts"
 
     def index = {}
     def test = {}
@@ -105,6 +106,7 @@ class WebserviceController {
 
             Query newQuery = queryService.createTaxonQuery(taxonGuid, params.taxonName)
             queryService.createQueryForUserIfNotExists(newQuery, userService.getUser())
+            params.redirect = CUSTOM_ALERTS_URL
             redirectIfSupplied(params)
         } else {
             response.sendError(400)
@@ -200,6 +202,7 @@ class WebserviceController {
             //region + species group
             Query newQuery = queryService.createBioCacheChangeQuery(params.webserviceQuery, params.uiQuery, params.queryDisplayName, params.baseUrlForWS, params.baseUrlForUI, params.resourceName)
             queryService.createQueryForUserIfNotExists(newQuery, userService.getUser())
+            params.redirect = CUSTOM_ALERTS_URL
             redirectIfSupplied(params)
         } else {
             response.sendError(400)
@@ -241,6 +244,7 @@ class WebserviceController {
             //region + species group
             Query newQuery = queryService.createBioCacheAnnotationQuery(params.webserviceQuery, params.uiQuery, params.queryDisplayName, params.baseUrlForWS, params.baseUrlForUI, params.resourceName)
             queryService.createQueryForUserIfNotExists(newQuery, userService.getUser())
+            params.redirect = CUSTOM_ALERTS_URL
             redirectIfSupplied(params)
         } else {
             response.sendError(400)
@@ -281,6 +285,7 @@ class WebserviceController {
             //region + species group
             Query newQuery = queryService.createBioCacheQuery(params.webserviceQuery, params.uiQuery, params.queryDisplayName, params.baseUrlForWS, params.baseUrlForUI, params.resourceName)
             queryService.createQueryForUserIfNotExists(newQuery, userService.getUser())
+            params.redirect = CUSTOM_ALERTS_URL
             redirectIfSupplied(params)
         } else {
             response.sendError(400)
@@ -320,6 +325,7 @@ class WebserviceController {
             //region + species group
             Query newQuery = queryService.createRegionQuery(params.layerId, params.regionName)
             queryService.createQueryForUserIfNotExists(newQuery, userService.getUser())
+            params.redirect = CUSTOM_ALERTS_URL
             redirectIfSupplied(params)
         } else {
             response.sendError(400)
@@ -333,6 +339,7 @@ class WebserviceController {
             //region + taxon
             Query newQuery = queryService.createTaxonRegionQuery(params.taxonGuid, params.taxonName, params.layerId, params.regionName)
             queryService.createQueryForUserIfNotExists(newQuery, userService.getUser())
+            params.redirect = CUSTOM_ALERTS_URL
             redirectIfSupplied(params)
         } else {
             response.sendError(400)
@@ -344,6 +351,7 @@ class WebserviceController {
             //region + species group
             Query newQuery = queryService.createSpeciesGroupRegionQuery(params.speciesGroup, params.layerId, params.regionName)
             queryService.createQueryForUserIfNotExists(newQuery, userService.getUser())
+            params.redirect = CUSTOM_ALERTS_URL
             redirectIfSupplied(params)
         } else {
             response.sendError(400)
