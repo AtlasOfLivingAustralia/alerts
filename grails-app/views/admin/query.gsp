@@ -50,8 +50,8 @@
     <div>
         <ul class="nav nav-tabs" id="myTab" role="tablist">
             <g:each var="queryType" in="${queries.keySet()}" status="i">
-                <li class="nav-item">
-                    <a class="nav-link ${i == 0 ? 'active' : ''}" id="tab-${queryType}-tab" data-toggle="tab" href="#tab-${queryType}-content" role="tab" aria-controls="tab-${queryType}" >${queryType}</a>
+                <li class="nav-item ${i == 0 ? 'active' : ''}">
+                    <a class="nav-link"  id="tab-${queryType}-tab" data-toggle="tab" href="#tab-${queryType}-content" role="tab" aria-controls="tab-${queryType}" >${queryType}</a>
                 </li>
             </g:each>
         </ul>
