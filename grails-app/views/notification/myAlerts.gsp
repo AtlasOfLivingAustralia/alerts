@@ -202,8 +202,7 @@
           </div>
       </div>
       <asset:javascript src="alerts.js"/>
-      <asset:script type="text/javascript">
-
+      <script type="text/javascript">
           var addMyAlertUrl = 'addMyAlert/';
           var deleteMyAlertUrl = 'deleteMyAlert/';
           var deleteMyAlertWRUrl ='deleteMyAlertWR/';
@@ -254,15 +253,16 @@
               );
           });
 
+          // Show the correct tab based on the URL hash
           $(window).on('load', function () {
               var hash = window.location.hash;
               if (hash) {
-                var triggerEl = $('a[href="' + hash + '"]');
-                if (triggerEl.length) {
-                  triggerEl.tab('show'); // jQuery + Bootstrap 4 tab API
+                var alertsTab = $('a.nav-link[href="' + hash + '"]');
+                if (alertsTab.length) {
+                  alertsTab.tab('show');
                 }
               }
             });
-        </asset:script>
+      </script>
     </body>
 </html>
