@@ -11,52 +11,6 @@
  * rights and limitations under the License.
  */
 
-/* NAVIGATION MENU */
-
-#main .nav {
-    /*background-color: #efefef;*/
-    padding: 0.5em 0.75em;
-    /*-moz-box-shadow: 0 0 3px 1px #aaaaaa;*/
-    /*-webkit-box-shadow: 0 0 3px 1px #aaaaaa;*/
-    /*box-shadow: 0 0 3px 1px #aaaaaa;*/
-    zoom: 1;
-}
-
-#main .nav ul {
-    overflow: hidden;
-    padding-left: 0;
-    zoom: 1;
-}
-
-#main .nav li {
-    display: block;
-    float: left;
-    list-style-type: none;
-    margin-right: 0.5em;
-    padding: 0;
-}
-
-#main .nav a {
-    color: #666666;
-    display: block;
-    padding: 0.25em 0.7em;
-    text-decoration: none;
-    -moz-border-radius: 0.3em;
-    -webkit-border-radius: 0.3em;
-    border-radius: 0.3em;
-}
-
-#main .nav a:active, #main .nav a:visited {
-    color: #666666;
-}
-
-#main .nav a:focus, #main .nav a:hover {
-    background-color: #999999;
-    color: #ffffff;
-    outline: none;
-    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.8);
-}
-
 .no-borderradius #main .nav a:focus, .no-borderradius #main .nav a:hover {
     background-color: transparent;
     color: #444444;
