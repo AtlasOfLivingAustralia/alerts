@@ -15,14 +15,18 @@
 package au.org.ala.alerts
 
 import com.amazonaws.services.s3.model.CannedAccessControlList
-import com.amazonaws.services.s3.model.ListObjectsV2Request
 import grails.plugin.awssdk.s3.AmazonS3Service
 import org.apache.commons.csv.CSVPrinter
 import org.apache.commons.csv.CSVFormat
+import org.springframework.beans.factory.annotation.Autowired
 
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import java.text.SimpleDateFormat
+
+import com.amazonaws.services.s3.AmazonS3
+import com.amazonaws.services.s3.model.ListObjectsV2Request
+import com.amazonaws.services.s3.model.ListObjectsV2Result
 
 /**
  * Generate CSV reports for Biosecurity alerts
@@ -35,6 +39,9 @@ import java.text.SimpleDateFormat
 class BiosecurityCSVService {
     def diffService
     def grailsApplication
+
+    @Autowired
+    AmazonS3 amazonS3  // native SDK client
     AmazonS3Service amazonS3Service
 
     def list() throws Exception {
@@ -43,14 +50,15 @@ class BiosecurityCSVService {
             def continuationToken = null
             def allObjects = []
 
-            def result
+            ListObjectsV2Result result
             do {
                 def request = new ListObjectsV2Request()
-                        .withBucketName(s3Directory)
+                        .withBucketName(bucketName)
+                        .withPrefix(prefix)
                         .withContinuationToken(continuationToken)
                         .withMaxKeys(1000)
 
-                result = amazonS3Service.listObjectsV2(request)
+                result = amazonS3.listObjectsV2(request)
                 allObjects.addAll(result.getObjectSummaries())
                 continuationToken = result.getNextContinuationToken()
             } while (result.isTruncated())
@@ -62,7 +70,6 @@ class BiosecurityCSVService {
             if (s3Files.objectSummaries.size() <= 1) {
                 return [status: 1, message: "No files found (S3)"]
             }
-
 
             Map folderMap = [:]
             s3Files.objectSummaries.each { objectSummary ->
@@ -98,7 +105,6 @@ class BiosecurityCSVService {
      */
     void generateAuditCSV(QueryResult qs) {
         def task = {
-            log.info("Generating CSV for query result: ${qs.id} - ${qs.query.name}")
             File outputFile = createTempCSV(qs)
             String folderName = new SimpleDateFormat("yyyy-MM-dd").format(new Date())
             String fileName = sanitizeFileName("${qs.query.name}")+ ".csv"
@@ -246,7 +252,7 @@ class BiosecurityCSVService {
             collectLocalCsvFiles(folder, csvFiles)
         }
 
-        log.info("Aggregating ${csvFiles.size()} CSV files....")
+        log.info("Aggregate ${csvFiles.size()} CSV files under ${folder} into one file")
         def tempFilePath = Files.createTempFile("merged_", ".csv")
         def tempFile = tempFilePath.toFile()
         tempFile.withWriter { writer ->
