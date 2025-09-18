@@ -45,14 +45,15 @@ class BiosecurityCSVService {
 
     def list() throws Exception {
         if (grailsApplication.config.getProperty('biosecurity.csv.s3.enabled', Boolean, false)) {
+            String bucketName = grailsApplication.config.getProperty("grails.plugin.awssdk.s3.bucket")
             String s3Directory = grailsApplication.config.getProperty('biosecurity.csv.s3.directory', 'biosecurity')
             def continuationToken = null
             def allObjects = []
-
             ListObjectsV2Result result
             do {
                 def request = new ListObjectsV2Request()
-                        .withBucketName(s3Directory)
+                        .withBucketName(bucketName)
+                        .withPrefix( s3Directory)
                         .withContinuationToken(continuationToken)
                         .withMaxKeys(1000)
 
