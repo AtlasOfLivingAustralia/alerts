@@ -79,10 +79,11 @@ class BiosecurityCSVService {
      */
     void generateAuditCSV(QueryResult qs) {
         def task = {
+            log.info("Generating CSV for query result: ${qs.id} - ${qs.query.name}")
             File outputFile = createTempCSV(qs)
             String folderName = new SimpleDateFormat("yyyy-MM-dd").format(new Date())
             String fileName = sanitizeFileName("${qs.query.name}")+ ".csv"
-
+            log.info("Uploading CSV: ${biosecurity.csv.s3.enabled ? 'S3' : 'local'}")
             if (grailsApplication.config.getProperty('biosecurity.csv.s3.enabled', Boolean, false)) {
                 def s3Directory = grailsApplication.config.getProperty('biosecurity.csv.s3.directory', 'biosecurity')
                 String s3Key = "${s3Directory}/${folderName}/${fileName}"
@@ -93,6 +94,7 @@ class BiosecurityCSVService {
               File destinationFile = new File(destinationFolder, fileName)
               moveToDestination(outputFile, destinationFile)
             }
+            log.info("Uploading CSV completed: ${fileName}")
         }
 
         Thread.start(task)
