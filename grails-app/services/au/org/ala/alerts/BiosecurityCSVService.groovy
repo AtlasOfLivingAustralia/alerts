@@ -39,9 +39,8 @@ import com.amazonaws.services.s3.model.ListObjectsV2Result
 class BiosecurityCSVService {
     def diffService
     def grailsApplication
-
-    @Autowired
-    AmazonS3 amazonS3  // native SDK client
+    
+    AmazonS3 amazonS3
     AmazonS3Service amazonS3Service
 
     def list() throws Exception {
