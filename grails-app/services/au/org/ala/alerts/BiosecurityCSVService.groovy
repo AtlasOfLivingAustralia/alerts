@@ -15,6 +15,7 @@
 package au.org.ala.alerts
 
 import com.amazonaws.services.s3.model.CannedAccessControlList
+import com.amazonaws.services.s3.model.ListObjectsV2Request
 import grails.plugin.awssdk.s3.AmazonS3Service
 import org.apache.commons.csv.CSVPrinter
 import org.apache.commons.csv.CSVFormat
@@ -39,11 +40,29 @@ class BiosecurityCSVService {
     def list() throws Exception {
         if (grailsApplication.config.getProperty('biosecurity.csv.s3.enabled', Boolean, false)) {
             def s3Directory = grailsApplication.config.getProperty('biosecurity.csv.s3.directory', 'biosecurity')
-            def s3Files = amazonS3Service.listObjects(s3Directory)
+            def continuationToken = null
+            def allObjects = []
+
+            def result
+            do {
+                def request = new ListObjectsV2Request()
+                        .withBucketName(s3Directory)
+                        .withContinuationToken(continuationToken)
+                        .withMaxKeys(1000)
+
+                result = amazonS3Service.listObjectsV2(request)
+                allObjects.addAll(result.getObjectSummaries())
+                continuationToken = result.getNextContinuationToken()
+            } while (result.isTruncated())
+
+            def sortedObjects = allObjects.sort { -it.lastModified.time }
+            log.info("Found ${sortedObjects.size()} files in S3 directory: ${s3Directory}")
+            def s3Files = sortedObjects.take(100)
 
             if (s3Files.objectSummaries.size() <= 1) {
                 return [status: 1, message: "No files found (S3)"]
             }
+
 
             Map folderMap = [:]
             s3Files.objectSummaries.each { objectSummary ->
@@ -79,10 +98,10 @@ class BiosecurityCSVService {
      */
     void generateAuditCSV(QueryResult qs) {
         def task = {
+            log.info("Generating CSV for query result: ${qs.id} - ${qs.query.name}")
             File outputFile = createTempCSV(qs)
             String folderName = new SimpleDateFormat("yyyy-MM-dd").format(new Date())
             String fileName = sanitizeFileName("${qs.query.name}")+ ".csv"
-
             if (grailsApplication.config.getProperty('biosecurity.csv.s3.enabled', Boolean, false)) {
                 def s3Directory = grailsApplication.config.getProperty('biosecurity.csv.s3.directory', 'biosecurity')
                 String s3Key = "${s3Directory}/${folderName}/${fileName}"
@@ -227,7 +246,7 @@ class BiosecurityCSVService {
             collectLocalCsvFiles(folder, csvFiles)
         }
 
-        log.info("Aggregate ${csvFiles.size()} CSV files under ${folder} into one file")
+        log.info("Aggregating ${csvFiles.size()} CSV files....")
         def tempFilePath = Files.createTempFile("merged_", ".csv")
         def tempFile = tempFilePath.toFile()
         tempFile.withWriter { writer ->

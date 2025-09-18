@@ -161,7 +161,9 @@
                                                       ${query.description}
                                                   </td>
                                                   <td class="queryActions">
-                                                      <a href="javascript:void(0);" class='btn btn-ala deleteButton' id='${query.id}'><g:message code="my.alerts.delete.label" /></a>
+                                                      <button type="button" class="btn btn-ala deleteButton" id="${query.id}">
+                                                          Delete
+                                                      </button>
                                                   </td>
                                               </tr>
                                           </g:each>
