@@ -39,21 +39,20 @@ import com.amazonaws.services.s3.model.ListObjectsV2Result
 class BiosecurityCSVService {
     def diffService
     def grailsApplication
-    
+
     AmazonS3 amazonS3
     AmazonS3Service amazonS3Service
 
     def list() throws Exception {
         if (grailsApplication.config.getProperty('biosecurity.csv.s3.enabled', Boolean, false)) {
-            def s3Directory = grailsApplication.config.getProperty('biosecurity.csv.s3.directory', 'biosecurity')
+            String s3Directory = grailsApplication.config.getProperty('biosecurity.csv.s3.directory', 'biosecurity')
             def continuationToken = null
             def allObjects = []
 
             ListObjectsV2Result result
             do {
                 def request = new ListObjectsV2Request()
-                        .withBucketName(bucketName)
-                        .withPrefix(prefix)
+                        .withBucketName(s3Directory)
                         .withContinuationToken(continuationToken)
                         .withMaxKeys(1000)
 
