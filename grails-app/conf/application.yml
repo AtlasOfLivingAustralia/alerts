@@ -120,7 +120,7 @@ grails:
     plugin:
         awssdk:
             region: ap-southeast-2
-            s3:
+#            s3:
 #                # accessKey:  # Not required on EC2 deployments
 #                # secretKey:  # Not required on EC2 deployments
 #                bucket: ala-alerts-test
@@ -228,12 +228,13 @@ environments:
             plugin:
                 awssdk:
                     region: ap-southeast-2
+                    profile: assume-ala-developer
                     s3:
                         #          accessKey:
                         #          secretKey:
-                        bucket: ala-alerts-test
-                        profile: comp-ala-developer
-                        region: ap-southeast-2
+                        bucket: ala-alerts-testing
+
+
         security:
             cas:
                 appServerName: "http://localhost:8080"
