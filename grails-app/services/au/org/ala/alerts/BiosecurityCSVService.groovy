@@ -15,6 +15,7 @@
 package au.org.ala.alerts
 
 import com.amazonaws.services.s3.model.CannedAccessControlList
+import com.amazonaws.services.s3.model.ObjectListing
 import grails.plugin.awssdk.s3.AmazonS3Service
 import org.apache.commons.csv.CSVPrinter
 import org.apache.commons.csv.CSVFormat
@@ -24,9 +25,6 @@ import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import java.text.SimpleDateFormat
 
-import com.amazonaws.services.s3.AmazonS3
-import com.amazonaws.services.s3.model.ListObjectsV2Request
-import com.amazonaws.services.s3.model.ListObjectsV2Result
 
 /**
  * Generate CSV reports for Biosecurity alerts
@@ -40,39 +38,33 @@ class BiosecurityCSVService {
     def diffService
     def grailsApplication
 
-    AmazonS3 amazonS3
     AmazonS3Service amazonS3Service
 
     def list() throws Exception {
         if (grailsApplication.config.getProperty('biosecurity.csv.s3.enabled', Boolean, false)) {
-            String bucketName = grailsApplication.config.getProperty("grails.plugin.awssdk.s3.bucket")
             String s3Directory = grailsApplication.config.getProperty('biosecurity.csv.s3.directory', 'biosecurity')
             def continuationToken = null
             def allObjects = []
-            ListObjectsV2Result result
-            do {
-                def request = new ListObjectsV2Request()
-                        .withBucketName(bucketName)
-                        .withPrefix( s3Directory)
-                        .withContinuationToken(continuationToken)
-                        .withMaxKeys(1000)
+            String bucketName = grailsApplication.config.getProperty("grails.plugin.awssdk.s3.bucket")
+            log.info("Listing files in S3 bucket: ${bucketName}, directory: ${s3Directory}")
+            ObjectListing listing = amazonS3Service.listObjects(bucketName,s3Directory)
 
-                result = amazonS3.listObjectsV2(request)
-                allObjects.addAll(result.getObjectSummaries())
-                continuationToken = result.getNextContinuationToken()
-            } while (result.isTruncated())
+            while (true) {
+                allObjects.addAll(listing.getObjectSummaries())
+                if (!listing.isTruncated()) break
+                listing = amazonS3Service.listNextBatchOfObjects(listing)
+            }
 
-            def sortedObjects = allObjects.sort { -it.lastModified.time }
-            log.info("Found ${sortedObjects.size()} files in S3 directory: ${s3Directory}")
-            def s3Files = sortedObjects.take(100)
+            def sortedFiles = allObjects.sort { -it.lastModified.time }
+            log.info("Found ${sortedFiles.size()} files in S3 directory: ${s3Directory}")
 
-            if (s3Files.objectSummaries.size() <= 1) {
+            if (sortedFiles.size() <= 1) {
                 return [status: 1, message: "No files found (S3)"]
             }
 
             Map folderMap = [:]
-            s3Files.objectSummaries.each { objectSummary ->
-                def key = objectSummary.key
+            sortedFiles.each { it ->
+                def key = it.key
                 def parts = key.split('/')
                 if (parts.size() > 2) {
                     def folder = parts[1]
