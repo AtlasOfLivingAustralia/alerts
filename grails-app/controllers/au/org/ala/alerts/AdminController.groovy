@@ -460,6 +460,10 @@ class AdminController {
                 ])
     }
 
+    /**
+     * todo: check if it is still used
+     * @return
+     */
     @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
     def csvAllBiosecurity() {
         def date = params.date

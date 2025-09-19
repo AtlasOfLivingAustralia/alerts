@@ -16,11 +16,10 @@ package au.org.ala.alerts
 
 import com.amazonaws.services.s3.model.CannedAccessControlList
 import com.amazonaws.services.s3.model.ObjectListing
+import com.amazonaws.services.s3.model.S3ObjectSummary
 import grails.plugin.awssdk.s3.AmazonS3Service
 import org.apache.commons.csv.CSVPrinter
 import org.apache.commons.csv.CSVFormat
-import org.springframework.beans.factory.annotation.Autowired
-
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import java.text.SimpleDateFormat
@@ -42,26 +41,7 @@ class BiosecurityCSVService {
 
     def list() throws Exception {
         if (grailsApplication.config.getProperty('biosecurity.csv.s3.enabled', Boolean, false)) {
-            String s3Directory = grailsApplication.config.getProperty('biosecurity.csv.s3.directory', 'biosecurity')
-            def continuationToken = null
-            def allObjects = []
-            String bucketName = grailsApplication.config.getProperty("grails.plugin.awssdk.s3.bucket")
-            log.info("Listing files in S3 bucket: ${bucketName}, directory: ${s3Directory}")
-            ObjectListing listing = amazonS3Service.listObjects(bucketName,s3Directory)
-
-            while (true) {
-                allObjects.addAll(listing.getObjectSummaries())
-                if (!listing.isTruncated()) break
-                listing = amazonS3Service.listNextBatchOfObjects(listing)
-            }
-
-            def sortedFiles = allObjects.sort { -it.lastModified.time }
-            log.info("Found ${sortedFiles.size()} files in S3 directory: ${s3Directory}")
-
-            if (sortedFiles.size() <= 1) {
-                return [status: 1, message: "No files found (S3)"]
-            }
-
+            def sortedFiles = collectFilesInS3('/')
             Map folderMap = [:]
             sortedFiles.each { it ->
                 def key = it.key
@@ -87,6 +67,36 @@ class BiosecurityCSVService {
             def foldersAndFiles = listFilesRecursively(dir)
             return [status:0, foldersAndFiles: foldersAndFiles]
         }
+    }
+
+    /**
+     * todo: limits the maximum number of files returned - to avoid overwhelming the browser
+     *
+     * Find all files in the specified folder in S3
+     *
+     * @param folderName - "/" for root folder, or "2024-10-01" for specific date folder
+     * @return list of S3ObjectSummary
+     */
+    List<S3ObjectSummary> collectFilesInS3(String folderName) {
+        if (!folderName) {
+            folderName="/"
+        }
+
+        String s3Directory = grailsApplication.config.getProperty('biosecurity.csv.s3.directory', 'biosecurity')
+        def allObjects = []
+        String bucketName = grailsApplication.config.getProperty("grails.plugin.awssdk.s3.bucket")
+        String prefix = "${s3Directory}/${folderName == '/' ? '' : folderName}"
+        ObjectListing listing = amazonS3Service.listObjects(bucketName,prefix)
+
+        while (true) {
+            allObjects.addAll(listing.getObjectSummaries())
+            if (!listing.isTruncated()) break
+            listing = amazonS3Service.listNextBatchOfObjects(listing)
+        }
+
+        List<S3ObjectSummary> sortedFiles = allObjects.sort { -it.lastModified.time }
+        log.info("Found ${sortedFiles.size()} files in S3 bucket: ${bucketName}, directory: ${prefix}")
+        sortedFiles
     }
 
     /**
@@ -224,10 +234,8 @@ class BiosecurityCSVService {
 
         if (grailsApplication.config.getProperty('biosecurity.csv.s3.enabled', Boolean, false)) {
             // Folders in S3 are not real folders, but prefixes in the key - doesn't need to be recursive
-            folderName = (folderName == '/') ? '' : folderName
-            def folderPrefix = grailsApplication.config.getProperty('biosecurity.csv.s3.directory', 'biosecurity')
-            def s3Files = amazonS3Service.listObjects("${folderPrefix}/${folderName}") // gets ObjectListing of objects with the provided prefix
-            s3Files.objectSummaries.each { objectSummary ->
+            def s3Files = collectFilesInS3(folderName)
+            s3Files.each { objectSummary ->
                 def key = objectSummary.key
                 def parts = key.split('/')
                 if (parts.size() > 2) {
@@ -243,7 +251,7 @@ class BiosecurityCSVService {
             collectLocalCsvFiles(folder, csvFiles)
         }
 
-        log.info("Aggregate ${csvFiles.size()} CSV files under ${folder} into one file")
+        log.info("Aggregate ${csvFiles.size()} CSV files.....")
         def tempFilePath = Files.createTempFile("merged_", ".csv")
         def tempFile = tempFilePath.toFile()
         tempFile.withWriter { writer ->
