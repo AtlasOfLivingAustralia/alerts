@@ -14,6 +14,7 @@
 
 package au.org.ala.alerts
 
+import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.CannedAccessControlList
 import com.amazonaws.services.s3.model.ObjectListing
 import com.amazonaws.services.s3.model.S3ObjectSummary
@@ -82,16 +83,18 @@ class BiosecurityCSVService {
             folderName="/"
         }
 
+        AmazonS3 s3Client = amazonS3Service.client
+
         String s3Directory = grailsApplication.config.getProperty('biosecurity.csv.s3.directory', 'biosecurity')
         def allObjects = []
         String bucketName = grailsApplication.config.getProperty("grails.plugin.awssdk.s3.bucket")
         String prefix = "${s3Directory}/${folderName == '/' ? '' : folderName}"
-        ObjectListing listing = amazonS3Service.listObjects(bucketName,prefix)
+        ObjectListing listing = s3Client.listObjects(bucketName,prefix)
 
         while (true) {
             allObjects.addAll(listing.getObjectSummaries())
             if (!listing.isTruncated()) break
-            listing = amazonS3Service.listNextBatchOfObjects(listing)
+            listing = s3Client.listNextBatchOfObjects(listing)
         }
 
         List<S3ObjectSummary> sortedFiles = allObjects.sort { -it.lastModified.time }
