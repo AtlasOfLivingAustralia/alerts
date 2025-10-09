@@ -240,13 +240,9 @@ class BiosecurityCSVService {
             def s3Files = collectFilesInS3(folderName)
             s3Files.each { objectSummary ->
                 def key = objectSummary.key
-                def parts = key.split('/')
-                if (parts.size() > 2) {
-                    def file = parts[2]
-                    if (file.endsWith('.csv')) { // Filter out deleted files (end with '_deleted')
-                        def tempFile = amazonS3Service.getFile(key, "/tmp/${file.tokenize(File.separator).last()}")
-                        csvFiles.add(tempFile)
-                    }
+                if (key.endsWith('.csv')) { // Filter out deleted files (end with '_deleted')
+                    def tempFile = amazonS3Service.getFile(key, "/tmp/${UUID.randomUUID()}.csv")
+                    csvFiles.add(tempFile)
                 }
             }
         } else if (grailsApplication.config.getProperty('biosecurity.csv.local.enabled', Boolean, true)) {
@@ -254,7 +250,6 @@ class BiosecurityCSVService {
             collectLocalCsvFiles(folder, csvFiles)
         }
 
-        log.info("Aggregate ${csvFiles.size()} CSV files.....")
         def tempFilePath = Files.createTempFile("merged_", ".csv")
         def tempFile = tempFilePath.toFile()
         tempFile.withWriter { writer ->
