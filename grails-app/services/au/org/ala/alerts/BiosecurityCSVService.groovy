@@ -18,6 +18,7 @@ import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.CannedAccessControlList
 import com.amazonaws.services.s3.model.ObjectListing
 import com.amazonaws.services.s3.model.S3ObjectSummary
+import grails.converters.JSON
 import grails.plugin.awssdk.s3.AmazonS3Service
 import org.apache.commons.csv.CSVPrinter
 import org.apache.commons.csv.CSVFormat
@@ -102,6 +103,26 @@ class BiosecurityCSVService {
         sortedFiles
     }
 
+    //Query Biocache to collect extra info
+    //Those extra info are only stored in CSV file, not included in the Emails
+    //e.g. first loaded date, cl etc
+    //
+    def fetchExtraOccurrenceInfo(def occurrence) {
+        try {
+            def url = grailsApplication.config.getProperty('biocacheService.baseURL') + '/occurrences/' + occurrence["uuid"]
+            def record = JSON.parse(new URL(url).openConnection().with { conn ->
+                conn.setRequestProperty("User-Agent", grailsApplication.config.getProperty("customUserAgent", "alerts"))
+                conn.inputStream.text
+            })
+            occurrence['firstLoaded'] = record.raw?.firstLoaded
+            //Do not join, let CSV generate handle it
+            occurrence['cl'] = record.processed?.cl?.collect { "${it.key}:${it.value}" }
+        } catch (Exception e) {
+            log.error("failed to get extra info for uuid: " + occurrence.uuid)
+            log.error(e.message)
+        }
+    }
+
     /**
      * Called by cron job to generate CSV files when Notification service finds  new records
      *
@@ -109,7 +130,7 @@ class BiosecurityCSVService {
      */
     void generateAuditCSV(QueryResult qs) {
         def task = {
-            File outputFile = createTempCSV(qs)
+            File outputFile = createTempCSVFromQueryResult(qs)
             String folderName = new SimpleDateFormat("yyyy-MM-dd").format(new Date())
             String fileName = sanitizeFileName("${qs.query.name}")+ ".csv"
             if (grailsApplication.config.getProperty('biosecurity.csv.s3.enabled', Boolean, false)) {
@@ -132,8 +153,12 @@ class BiosecurityCSVService {
      * @param QueryResult
      * @return File object
      */
-    File createTempCSV(QueryResult qs) {
+    File createTempCSVFromQueryResult(QueryResult qs) {
         def records = diffService.getNewRecords(qs)
+        log.info("Generating CSV for ${qs.query?.name} : [ ${records.size()}] occurrences")
+        for (var record in records) {
+            fetchExtraOccurrenceInfo(record)
+        }
 
         String outputFile = sanitizeFileName("${new SimpleDateFormat("yyyy-MM-dd").format(qs.lastChecked)}")
 
@@ -221,7 +246,7 @@ class BiosecurityCSVService {
                 writer.write(stringWriter.toString())
             }
         }
-
+        log.info("The CSV for ${qs.query?.name} was generated")
         tempFile
     }
 

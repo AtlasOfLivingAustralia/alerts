@@ -247,7 +247,6 @@ class BiosecurityService {
                         occurrence['kvs'] = listItem.kvpValues.collect { kv -> "${kv.key}:${kv.value}" }
                         occurrence['fq'] = listItem.kvpValues?.find { it.key == 'fq' }?.value
                     }
-                    fetchExtraInfo(occurrence.uuid, occurrence)
                 }
             } catch (Exception e) {
                 log.error("Biosecurity: ${e.message}")
@@ -256,22 +255,6 @@ class BiosecurityService {
         }
     }
 
-    def fetchExtraInfo(def uuid, def occurrence) {
-        try {
-            def url = grailsApplication.config.getProperty('biocacheService.baseURL') + '/occurrences/' + uuid
-            def record = JSON.parse(new URL(url).openConnection().with { conn ->
-                conn.setRequestProperty("User-Agent", grailsApplication.config.getProperty("customUserAgent", "alerts"))
-                conn.inputStream.text
-            })
-            occurrence['firstLoaded'] = record.raw?.firstLoaded
-            //Do not join, let CSV generate handle it
-            occurrence['cl'] = record.processed?.cl?.collect { "${it.key}:${it.value}" }
-
-        } catch (Exception e) {
-            log.error("failed to get extra info for uuid: " + uuid)
-            log.error(e.message)
-        }
-    }
 
     def buildFq(def it) {
         def fqValue = it.kvpValues?.find { it.key == 'fq' }?.value

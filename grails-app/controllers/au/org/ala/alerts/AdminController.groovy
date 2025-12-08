@@ -481,7 +481,7 @@ class AdminController {
             def frequency = 'weekly'
             QueryResult qr = notificationService.getQueryResult(query, Frequency.findByName(frequency))
             qr.lastResult = qr.compress(processedJson)
-            File tempCSV = biosecurityCSVService.createTempCSV(qr)
+            File tempCSV = biosecurityCSVService.createTempCSVFromQueryResult(qr)
             csvFiles.add(tempCSV.path)
         }
 
@@ -863,7 +863,7 @@ class AdminController {
         // Gorm object QueryResult does not fetch Query object, so we need to fetch it manually
         QueryResult qs = queryResultService.get(params.id)
         if (qs) {
-            File tempFile = biosecurityCSVService.createTempCSV(qs)
+            File tempFile = biosecurityCSVService.createTempCSVFromQueryResult(qs)
             if (!tempFile.exists() || tempFile.isDirectory()) {
                 render(status: 404, text: "File not found")
                 return
