@@ -187,6 +187,8 @@ biosecurity:
         maxRecords: 500
     moreinfo:
         link: https://www.ala.org.au/blogs-news/ala-helps-to-stop-pests-in-their-tracks/
+    # read lga from the given layer
+    lga: cl11170
     csv:
         local:
             enabled: false # See environments.development section below where set to true
@@ -195,8 +197,7 @@ biosecurity:
             enabled: true
             directory: biosecurity # key prefix
             # bucket: alerts # configured via plugin config `grails.plugin.awssdk.s3.bucket`
-        # read lga from the layer
-        lga: LGA2023
+
     subscriptionsPerPage: 100
     legacy:
         aus: cl927:*

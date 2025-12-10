@@ -175,6 +175,7 @@ phases:
           biosecurity:
             biosecurity_more_info: "${BIOSECURITY_MORE_INFO}"
             biosecurity_query_url: "${BIOSECURITY_QUERY_URL}"
+            biosecurity_lga: "${BIOSECURITY_LGA}"
           species_list_server: "${SPECIES_LIST_SERVER}"
           csv:
             biosecurity_csv_local_enabled: "${BIOSECURITY_CSV_LOCAL_ENABLED}"

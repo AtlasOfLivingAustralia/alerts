@@ -14,14 +14,16 @@
 
 package au.org.ala.alerts
 
+import au.org.ala.ws.service.WebService
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.CannedAccessControlList
 import com.amazonaws.services.s3.model.ObjectListing
 import com.amazonaws.services.s3.model.S3ObjectSummary
-import grails.converters.JSON
 import grails.plugin.awssdk.s3.AmazonS3Service
 import org.apache.commons.csv.CSVPrinter
 import org.apache.commons.csv.CSVFormat
+import org.apache.http.entity.ContentType
+
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import java.text.SimpleDateFormat
@@ -38,6 +40,7 @@ import java.text.SimpleDateFormat
 class BiosecurityCSVService {
     def diffService
     def grailsApplication
+    WebService webService
 
     AmazonS3Service amazonS3Service
 
@@ -103,23 +106,56 @@ class BiosecurityCSVService {
         sortedFiles
     }
 
-    //Query Biocache to collect extra info
+    //Batch Query Biocache (Using qid) to collect extra info
     //Those extra info are only stored in CSV file, not included in the Emails
-    //e.g. first loaded date, cl etc
+    //e.g. first loaded date, lga layerID, lga name etc
     //
-    def fetchExtraOccurrenceInfo(def occurrence) {
-        try {
-            def url = grailsApplication.config.getProperty('biocacheService.baseURL') + '/occurrences/' + occurrence["uuid"]
-            def record = JSON.parse(new URL(url).openConnection().with { conn ->
-                conn.setRequestProperty("User-Agent", grailsApplication.config.getProperty("customUserAgent", "alerts"))
-                conn.inputStream.text
-            })
-            occurrence['firstLoaded'] = record.raw?.firstLoaded
-            //Do not join, let CSV generate handle it
-            occurrence['cl'] = record.processed?.cl?.collect { "${it.key}:${it.value}" }
-        } catch (Exception e) {
-            log.error("failed to get extra info for uuid: " + occurrence.uuid)
-            log.error(e.message)
+    def fetchExtraOccurrenceInfo(def records) {
+        String layerId = grailsApplication.config.getProperty('biosecurity.lga', 'cl11170')
+        String qidUrl = grailsApplication.config.getProperty('biocacheService.baseURL') + '/qid'
+
+        int limits = 1000
+        records.collate(limits).each {batch ->
+            def ids = batch.collect {it.uuid}
+            def query = ids.collect { "id:${it}" }.join(" OR ")
+            def qidResp = webService.post(
+                    qidUrl,
+                    ["q": query],
+                    [:],
+                    ContentType.APPLICATION_FORM_URLENCODED
+            )
+
+            if (qidResp.statusCode == 200) {
+                def qid = qidResp.resp?.keySet()?.iterator()?.next()
+                if (qid) {
+                    def occurrenceUrl = grailsApplication.config.getProperty('biocacheService.baseURL') + "/occurrences/search?q=qid:${qid}&pageSize=${limits}&fl=id,firstLoadedDate,${layerId}"
+                    def occurrencesResp = webService.get(occurrenceUrl)
+                    //e.g.
+                    //{
+                    //    uuid: "d8b1bd1a-98b6-494d-91c0-f0a4aa636d30",
+                    //    otherProperties: {
+                    //        firstLoadedDate: "2025-11-13T03:29:22.089+00:00",
+                    //        cl11170: "Western Downs"
+                    //    }
+                    //}
+                    if (occurrencesResp.statusCode == 200) {
+                        def occurrences = occurrencesResp.resp?["occurrences"]
+                        def occMap = occurrences.collectEntries { occ ->
+                            [(occ.uuid): occ]
+                        }
+
+                        //Update each record only if a matching occurrence exists
+                        batch.each { record ->
+                            def occ = occMap[record.uuid]
+                            if (occ) {
+                                record['lgaLayer'] = layerId
+                                record['lga'] = occ.otherProperties?[layerId] ?: ""
+                                record['firstLoaded'] = occ.otherProperties?.firstLoadedDate
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -156,9 +192,8 @@ class BiosecurityCSVService {
     File createTempCSVFromQueryResult(QueryResult qs) {
         def records = diffService.getNewRecords(qs)
         log.info("Generating CSV for ${qs.query?.name} : [ ${records.size()}] occurrences")
-        for (var record in records) {
-            fetchExtraOccurrenceInfo(record)
-        }
+        //Batch query extra info for each occurrences
+        fetchExtraOccurrenceInfo(records)
 
         String outputFile = sanitizeFileName("${new SimpleDateFormat("yyyy-MM-dd").format(qs.lastChecked)}")
 
@@ -169,7 +204,8 @@ class BiosecurityCSVService {
         String rawHeader = "recordID:uuid, recordLink:occurrenceLink, scientificName,taxonConceptID,decimalLatitude,decimalLongitude,eventDate,occurrenceStatus,dataResourceName,multimedia,mediaId:image," +
                 "vernacularName,taxonConceptID_new,kingdom,phylum,class:classs,order,family,genus,species,subspecies," +
                 "firstLoadedDate:firstLoaded,basisOfRecord,match," +
-                "searchTerm:search_term,correct name:scientificName,provided name:providedName,common name:vernacularName,state:stateProvince,lga layer,lga,fq,list id:listId,list name:listName, listLink:listLink, cw_state,shape feature:shape_feature,creator:collector," +
+                "searchTerm:search_term,correct name:scientificName,provided name:providedName,common name:vernacularName,state:stateProvince,lga layer:lgaLayer,lga,fq," +
+                "list id:listId,list name:listName, listLink:listLink, cw_state,shape feature:shape_feature,creator:collector," +
                 "license,mimetype," +
                 "image url:smallImageUrl," + // TBC , multiple image urls
                 "date sent:dateSent"
@@ -199,26 +235,13 @@ class BiosecurityCSVService {
                     def value = record[field]
 
                     switch (field) {
-                        case "lga":
-                            //read from cl (context layer)
-                            def cls = record["cl"]
-                            //LGA2023 is the default layer id
-                            def layerId = grailsApplication.config.getProperty('biosecurity.csv.lga', 'LGA2023')
-                            if(cls) {
-                                String matched = cls.find {
-                                    def (k, v) = it.split(':') // Split the string into key and value
-                                    k.toLowerCase() == layerId.toLowerCase()
-                                }
-                                //assure return "" if matched is null
-                                value = matched?.split(':')?.with { it.size() > 1 ? it[1] : "" } ?: ""
-                            }
-                            break
-                        case "lga layer":
-                            value = grailsApplication.config.getProperty('biosecurity.csv.lga', 'LGA2023')
-                            break
-                        case "eventDate":
+                        case ["eventDate", "firstLoaded"]:
                             if (value) {
-                                value = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss").format(value.toLong())
+                                try {
+                                    value = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss").format(value.toLong())
+                                } catch(Exception ignored) {
+                                    value = ""
+                                }
                             } else {
                                 value = ""
                             }

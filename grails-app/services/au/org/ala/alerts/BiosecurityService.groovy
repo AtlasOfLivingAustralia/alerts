@@ -12,8 +12,9 @@
  *
  */
 
-package au.org.ala.alerts;
+package au.org.ala.alerts
 
+import au.org.ala.ws.service.WebService;
 import grails.converters.JSON
 import org.apache.commons.lang.time.DateUtils
 import org.apache.http.entity.ContentType
@@ -27,7 +28,7 @@ class BiosecurityService {
     def queryService
     def grailsApplication
     def emailService
-    def webService
+    WebService webService
     def biosecurityCSVService
     def diffService
 

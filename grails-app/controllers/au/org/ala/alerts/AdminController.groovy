@@ -14,10 +14,12 @@
 package au.org.ala.alerts
 
 import au.org.ala.web.AlaSecured
+import au.org.ala.ws.service.WebService
 import grails.converters.JSON
 import grails.gorm.transactions.Transactional
 import grails.util.Environment
 import grails.util.Holders
+import org.apache.http.entity.ContentType
 
 import java.text.SimpleDateFormat
 import groovyx.net.http.HTTPBuilder
@@ -38,6 +40,7 @@ class AdminController {
     def queryService
     def userService
     def messageSource
+    WebService webService
     def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
 
     def subscriptionsPerPage = grailsApplication.config.getProperty('biosecurity.subscriptionsPerPage', Integer, 100)
