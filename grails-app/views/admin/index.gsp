@@ -97,6 +97,13 @@
             </plugin:isAvailable>
         </ul>
     </div>
+
+    <div class="panel-heading">
+        <h3>Email testing </h3>
+        <ul>
+            <li class="controller"><g:link controller="admin" action="sendTestEmail">Send test email to yourself (tests server can send emails)</g:link></li>
+        </ul>
+    </div>
 </div>
 
 <script>
