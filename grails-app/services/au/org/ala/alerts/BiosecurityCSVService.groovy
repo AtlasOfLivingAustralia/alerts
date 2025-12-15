@@ -23,7 +23,8 @@ import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3Client
 import software.amazon.awssdk.services.s3.S3ClientBuilder;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
-import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Response
+import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.S3Object;
 import org.apache.commons.csv.CSVPrinter
 import org.apache.commons.csv.CSVFormat
@@ -335,10 +336,11 @@ class BiosecurityCSVService {
 
     Boolean s3Exists(String s3Key) {
         S3Client s3Client = getS3Client()
+        String bucketName = grailsApplication.config.getProperty("grails.plugin.awssdk.s3.bucket")
         try {
             s3Client.headObject(builder -> builder.bucket(bucketName).key(s3Key).build())
             return true
-        } catch (software.amazon.awssdk.services.s3.model.NoSuchKeyException e) {
+        } catch (NoSuchKeyException e) {
             log.error("S3 object does not exist: " + s3Key)
         }
         return false
