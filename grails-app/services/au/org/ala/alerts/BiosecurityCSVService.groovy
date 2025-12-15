@@ -126,7 +126,7 @@ class BiosecurityCSVService {
         } while (continuationToken != null)
 
         allObjects.sort((a, b) -> Long.compare(b.lastModified().toEpochMilli(), a.lastModified().toEpochMilli()));
-        log.info("Found ${sortedFiles.size()} files in S3 bucket: ${bucketName}, directory: ${prefix}")
+        log.info("Found ${allObjects.size()} files in S3 bucket: ${bucketName}, directory: ${prefix}")
         return allObjects;
     }
 
