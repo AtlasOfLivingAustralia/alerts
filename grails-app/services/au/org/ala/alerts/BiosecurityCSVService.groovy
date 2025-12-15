@@ -18,6 +18,7 @@ import au.org.ala.ws.service.WebService
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
 import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
+import software.amazon.awssdk.core.sync.RequestBody
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3Client
 import software.amazon.awssdk.services.s3.S3ClientBuilder;
@@ -74,19 +75,7 @@ class BiosecurityCSVService {
         }
     }
 
-    /**
-     * todo: limits the maximum number of files returned - to avoid overwhelming the browser
-     *
-     * Find all files in the specified folder in S3
-     *
-     * @param folderName - "/" for root folder, or "2024-10-01" for specific date folder
-     * @return list of S3ObjectSummary
-     */
-    List<S3Object> collectFilesInS3(String folderName) {
-        if (!folderName) {
-            folderName="/"
-        }
-
+    S3Client getS3Client() {
         // no longer using the grails plugin - build S3 client directly
         S3ClientBuilder builder = S3Client.builder()
 
@@ -107,6 +96,24 @@ class BiosecurityCSVService {
         }
 
         S3Client s3Client = builder.build();
+
+        return s3Client;
+    }
+
+    /**
+     * todo: limits the maximum number of files returned - to avoid overwhelming the browser
+     *
+     * Find all files in the specified folder in S3
+     *
+     * @param folderName - "/" for root folder, or "2024-10-01" for specific date folder
+     * @return list of S3ObjectSummary
+     */
+    List<S3Object> collectFilesInS3(String folderName) {
+        if (!folderName) {
+            folderName="/"
+        }
+
+        S3Client s3Client = getS3Client()
 
         String s3Directory = grailsApplication.config.getProperty('biosecurity.csv.s3.directory', 'biosecurity')
         String bucketName = grailsApplication.config.getProperty("grails.plugin.awssdk.s3.bucket")
@@ -183,6 +190,18 @@ class BiosecurityCSVService {
         }
     }
 
+    void s3StoreFile(String s3Key, File outputFile) {
+        S3Client s3Client = getS3Client()
+
+        String bucketName = grailsApplication.config.getProperty("grails.plugin.awssdk.s3.bucket")
+        try (def inputStream = new FileInputStream(outputFile)) {
+            s3Client.putObject(builder -> builder.bucket(bucketName).key(s3Key).build(), RequestBody.fromInputStream(inputStream, outputFile.length()))
+            log.info("Uploaded file to S3: " + s3Key)
+        } catch (Exception e) {
+            log.error("Error uploading file to S3: " + e.getMessage(), e)
+        }
+    }
+
     /**
      * Called by cron job to generate CSV files when Notification service finds  new records
      *
@@ -197,7 +216,7 @@ class BiosecurityCSVService {
                 def s3Directory = grailsApplication.config.getProperty('biosecurity.csv.s3.directory', 'biosecurity')
                 String s3Key = "${s3Directory}/${folderName}/${fileName}"
                 log.debug("Uploading file to S3: " + s3Key)
-                amazonS3Service.storeFile(s3Key, outputFile, CannedAccessControlList.Private)
+                s3StoreFile(s3Key, outputFile)
             } else if (grailsApplication.config.getProperty('biosecurity.csv.local.enabled', Boolean, true)) {
               String destinationFolder = new File(grailsApplication.config.getProperty('biosecurity.csv.local.directory', '/tmp'), folderName).absolutePath
               File destinationFile = new File(destinationFolder, fileName)
@@ -297,6 +316,34 @@ class BiosecurityCSVService {
         tempFile
     }
 
+    // returns a File at the localPath, or null
+    File s3GetFile(String s3Key, String localPath) {
+        S3Client s3Client = getS3Client()
+
+        String bucketName = grailsApplication.config.getProperty("grails.plugin.awssdk.s3.bucket")
+        File localFile = new File(localPath)
+
+        try (def outputStream = new FileOutputStream(localFile)) {
+            s3Client.getObject(builder -> builder.bucket(bucketName).key(s3Key).build(), outputStream)
+            log.info("Downloaded file from S3: " + s3Key)
+        } catch (Exception e) {
+            log.error("Error downloading file from S3: " + e.getMessage(), e)
+        }
+
+        return localFile
+    }
+
+    Boolean s3Exists(String s3Key) {
+        S3Client s3Client = getS3Client()
+        try {
+            s3Client.headObject(builder -> builder.bucket(bucketName).key(s3Key).build())
+            return true
+        } catch (software.amazon.awssdk.services.s3.model.NoSuchKeyException e) {
+            log.error("S3 object does not exist: " + s3Key)
+        }
+        return false
+    }
+
     /**
      *
      * @param folderName Assure folder exists
@@ -313,7 +360,7 @@ class BiosecurityCSVService {
             s3Files.each { objectSummary ->
                 def key = objectSummary.key
                 if (key.endsWith('.csv')) { // Filter out deleted files (end with '_deleted')
-                    def tempFile = amazonS3Service.getFile(key, "/tmp/${UUID.randomUUID()}.csv")
+                    def tempFile = s3GetFile(key, "/tmp/${UUID.randomUUID()}.csv")
                     csvFiles.add(tempFile)
                 }
             }
@@ -358,6 +405,19 @@ class BiosecurityCSVService {
         }
     }
 
+    List listObjects(String s3Prefix) {
+        S3Client s3Client = getS3Client()
+        String bucketName = grailsApplication.config.getProperty("grails.plugin.awssdk.s3.bucket")
+
+        ListObjectsV2Request request = ListObjectsV2Request.builder()
+                .bucket(bucketName)
+                .prefix(s3Prefix)
+                .build()
+
+        ListObjectsV2Response response = s3Client.listObjectsV2(request)
+        return response
+    }
+
     /**
      * Check if folder exists
      *
@@ -371,9 +431,9 @@ class BiosecurityCSVService {
         if (config.getProperty('biosecurity.csv.s3.enabled', Boolean, false)) {
             def folderPrefix = config.getProperty('biosecurity.csv.s3.directory', 'biosecurity')
             def s3Prefix = "${folderPrefix}/${folderName == '/' ? '' : folderName}"
-            def s3Files = amazonS3Service.listObjects(s3Prefix)
-            log.debug("Listing S3: $s3Prefix -> ${s3Files.objectSummaries.size()} files")
-            return !s3Files.objectSummaries.isEmpty()
+            def s3Files = listObjects(s3Prefix)
+            log.debug("Listing S3: $s3Prefix -> ${s3Files.size()} files")
+            return !s3Files.isEmpty()
         } else if (config.getProperty('biosecurity.csv.local.enabled', Boolean, true)) {
             String baseDirectory = config.getProperty('biosecurity.csv.local.directory', String, '/tmp')
             File folder = new File(baseDirectory, folderName)
@@ -397,8 +457,8 @@ class BiosecurityCSVService {
         if (config.getProperty('biosecurity.csv.s3.enabled', Boolean, false)) {
             // Folders in S3 are not real folders, but prefixes in the key
             def folderPrefix = config.getProperty('biosecurity.csv.s3.directory', 'biosecurity')
-            if (amazonS3Service.exists("${folderPrefix}/${filename}")) {
-                def file = amazonS3Service.getFile("${folderPrefix}/${filename}", "/tmp/${filename.tokenize(File.separator).last()}")
+            if (s3Exists("${folderPrefix}/${filename}")) {
+                def file = s3GetFile("${folderPrefix}/${filename}", "/tmp/${filename.tokenize(File.separator).last()}")
                 return file.text
             }
         } else if (config.getProperty('biosecurity.csv.local.enabled', Boolean, true)) {
@@ -412,6 +472,30 @@ class BiosecurityCSVService {
         ''
     }
 
+    Boolean s3MoveObject(String sourceBucket, String sourceKey, String destinationBucket, String destinationKey) {
+        S3Client s3Client = getS3Client()
+        try {
+            // Copy the object to the new location
+            s3Client.copyObject(builder -> builder
+                    .copySource("${sourceBucket}/${sourceKey}")
+                    .bucket(destinationBucket)
+                    .key(destinationKey)
+                    .build())
+
+            // Delete the original object
+            s3Client.deleteObject(builder -> builder
+                    .bucket(sourceBucket)
+                    .key(sourceKey)
+                    .build())
+
+            log.info("Moved S3 object from ${sourceKey} to ${destinationKey}")
+            return true
+        } catch (Exception e) {
+            log.error("Error moving S3 object: " + e.getMessage(), e)
+            return false
+        }
+    }
+
     Map deleteFile(String filename) {
         if (!filename) return [:]
 
@@ -423,8 +507,8 @@ class BiosecurityCSVService {
             String bucket = config.getProperty('grails.plugin.awssdk.s3.bucket', null)
             Map message
 
-            if (amazonS3Service.exists("${folderPrefix}/${filename}")) {
-                Boolean success = amazonS3Service.moveObject(bucket, "${folderPrefix}/${filename}", bucket, "${folderPrefix}/${filename}_deleted")
+            if (s3Exists("${folderPrefix}/${filename}")) {
+                Boolean success = s3MoveObject(bucket, "${folderPrefix}/${filename}", bucket, "${folderPrefix}/${filename}_deleted")
                 message = success ? [status: 0, message: "File deleted"] : [status: 1, message: "File deletion failed"]
             } else {
                 message = [status: 1, message: "File not found"]
@@ -480,7 +564,7 @@ class BiosecurityCSVService {
                 String s3Key = s3BasePath + relativePath.replace(File.separator, '/')
 
                 // Check if the file already exists in S3
-                if (amazonS3Service.exists(s3Key) || !s3Key.endsWith('.csv')) {
+                if (s3Exists(s3Key) || !s3Key.endsWith('.csv')) {
                     log.info "File ${file.name} already exists in S3 bucket ${bucketName} with key ${s3Key}. Skipping."
                     msg.filesSkipped = (msg.filesSkipped ?: []) + [file.name]
                     return  // Skip this file and continue with the next
@@ -488,7 +572,7 @@ class BiosecurityCSVService {
 
                 def inputStream = new FileInputStream(file)
                 try {
-                    Boolean success = !dryRun && amazonS3Service.storeFile(s3Key, file, CannedAccessControlList.Private)
+                    Boolean success = !dryRun && s3StoreFile(s3Key, file)
                     if (success) {
                         msg.filesUploaded = (msg.filesUploaded ?: []) + [s3Key]
                         log.info "Uploaded ${file.name} to S3 bucket ${bucketName} with key ${s3Key} (dryrun: ${dryRun})"
