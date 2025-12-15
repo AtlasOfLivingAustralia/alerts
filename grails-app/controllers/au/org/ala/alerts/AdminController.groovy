@@ -811,6 +811,29 @@ class AdminController {
         }
     }
 
+    def sendTestEmail() {
+        try {
+            User currentUser = userService.getUser()
+            if (currentUser) {
+                String title = "Test email"
+                String emailBody = "<p>This is a test email sent to ${currentUser.email} from the ALA Notification System.</p>"
+                sendMail {
+                    from grailsApplication.config.mail.details.alertAddressTitle + "<" + grailsApplication.config.mail.details.sender + ">"
+                    subject title
+                    bcc currentUser.email
+                    html(emailBody)
+                }
+            } else {
+                log.warn("No user found to send email to.")
+            }
+
+            render([status: 0, message: "Test email has been sent to ${currentUser.email}"] as JSON)
+        } catch (Exception e) {
+            log.error("Error in sending test email: ${e.message}", e)
+            render([status: 1, message: "Error in sending test email: ${e.message}"] as JSON)
+        }
+    }
+
 
     @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true, redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to view that page.")
     def listBiosecurityAuditCSV() {
