@@ -128,7 +128,11 @@ dependencies {
     implementation "au.org.ala:userdetails-service-client:$alaSecurityLibsVersion"
     implementation "org.grails.plugins:ala-admin-plugin:2.3.0"
     implementation "au.org.ala.plugins:openapi:1.3.0"
-    implementation "org.grails.plugins:aws-sdk-s3:2.4.8"
+
+    implementation platform("software.amazon.awssdk:bom:2.40.8") // same as ala-mail
+    implementation "software.amazon.awssdk:s3"
+    implementation "software.amazon.awssdk:sts"
+    implementation "software.amazon.awssdk:auth"
 
     // for ContentType
     implementation "org.apache.httpcomponents:httpcore:4.4.16"
@@ -137,8 +141,7 @@ dependencies {
 
     //Using AWS SES as email provider
     implementation 'org.grails.plugins:mail:4.0.0'
-    implementation 'au.org.ala:ala-mail:1.0.0-SNAPSHOT'
-    implementation 'com.amazonaws:aws-java-sdk-sts:1.12.759'
+    implementation 'au.org.ala:ala-mail:2.0.0-SNAPSHOT'
 
     implementation 'org.grails.plugins:schwartz-monitor:2.0.1.ALA-SNAPSHOT'
     implementation 'org.grails.plugins:quartz:2.0.13'
