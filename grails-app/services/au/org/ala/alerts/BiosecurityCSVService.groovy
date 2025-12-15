@@ -30,7 +30,7 @@ import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.S3Object;
 import org.apache.commons.csv.CSVPrinter
 import org.apache.commons.csv.CSVFormat
-import software.amazon.awssdk.services.s3.model.S3Request
+import org.apache.http.entity.ContentType
 
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
