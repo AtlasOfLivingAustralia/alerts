@@ -19,15 +19,19 @@ import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
 import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
 import software.amazon.awssdk.core.sync.RequestBody
+import software.amazon.awssdk.core.sync.ResponseTransformer
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3Client
-import software.amazon.awssdk.services.s3.S3ClientBuilder;
+import software.amazon.awssdk.services.s3.S3ClientBuilder
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Response
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.S3Object;
 import org.apache.commons.csv.CSVPrinter
 import org.apache.commons.csv.CSVFormat
+import software.amazon.awssdk.services.s3.model.S3Request
+
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import java.text.SimpleDateFormat
@@ -325,7 +329,8 @@ class BiosecurityCSVService {
         File localFile = new File(localPath)
 
         try (def outputStream = new FileOutputStream(localFile)) {
-            s3Client.getObject(builder -> builder.bucket(bucketName).key(s3Key).build(), outputStream)
+            GetObjectRequest getObjectRequest = GetObjectRequest.builder().bucket(bucketName).key(s3Key).build()
+            s3Client.getObject(getObjectRequest, ResponseTransformer.toOutputStream(outputStream))
             log.info("Downloaded file from S3: " + s3Key)
         } catch (Exception e) {
             log.error("Error downloading file from S3: " + e.getMessage(), e)
