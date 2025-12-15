@@ -15,15 +15,17 @@
 package au.org.ala.alerts
 
 import au.org.ala.ws.service.WebService
-import com.amazonaws.services.s3.AmazonS3
-import com.amazonaws.services.s3.model.CannedAccessControlList
-import com.amazonaws.services.s3.model.ObjectListing
-import com.amazonaws.services.s3.model.S3ObjectSummary
-import grails.plugin.awssdk.s3.AmazonS3Service
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
+import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
+import software.amazon.awssdk.regions.Region
+import software.amazon.awssdk.services.s3.S3Client
+import software.amazon.awssdk.services.s3.S3ClientBuilder;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
+import software.amazon.awssdk.services.s3.model.S3Object;
 import org.apache.commons.csv.CSVPrinter
 import org.apache.commons.csv.CSVFormat
-import org.apache.http.entity.ContentType
-
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import java.text.SimpleDateFormat
@@ -41,8 +43,6 @@ class BiosecurityCSVService {
     def diffService
     def grailsApplication
     WebService webService
-
-    AmazonS3Service amazonS3Service
 
     def list() throws Exception {
         if (grailsApplication.config.getProperty('biosecurity.csv.s3.enabled', Boolean, false)) {
@@ -82,28 +82,52 @@ class BiosecurityCSVService {
      * @param folderName - "/" for root folder, or "2024-10-01" for specific date folder
      * @return list of S3ObjectSummary
      */
-    List<S3ObjectSummary> collectFilesInS3(String folderName) {
+    List<S3Object> collectFilesInS3(String folderName) {
         if (!folderName) {
             folderName="/"
         }
 
-        AmazonS3 s3Client = amazonS3Service.client
+        // no longer using the grails plugin - build S3 client directly
+        S3ClientBuilder builder = S3Client.builder()
 
-        String s3Directory = grailsApplication.config.getProperty('biosecurity.csv.s3.directory', 'biosecurity')
-        def allObjects = []
-        String bucketName = grailsApplication.config.getProperty("grails.plugin.awssdk.s3.bucket")
-        String prefix = "${s3Directory}/${folderName == '/' ? '' : folderName}"
-        ObjectListing listing = s3Client.listObjects(bucketName,prefix)
-
-        while (true) {
-            allObjects.addAll(listing.getObjectSummaries())
-            if (!listing.isTruncated()) break
-            listing = s3Client.listNextBatchOfObjects(listing)
+        String region = grailsApplication.config.getProperty("grails.plugin.awssdk.region", "")
+        if (region) {
+            builder = builder.region(Region.of(region))
         }
 
-        List<S3ObjectSummary> sortedFiles = allObjects.sort { -it.lastModified.time }
+        String profile = grailsApplication.config.getProperty("grails.plugin.awssdk.profile", "")
+        if (profile) {
+            builder = builder.credentialsProvider(ProfileCredentialsProvider.create(profile))
+        }
+
+        String accessKey = grailsApplication.config.getProperty("grails.plugin.awssdk.s3.accessKey", "")
+        String secretKey = grailsApplication.config.getProperty("grails.plugin.awssdk.s3.secretKey", "")
+        if (accessKey && secretKey) {
+            builder = builder.credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create(accessKey, secretKey)))
+        }
+
+        S3Client s3Client = builder.build();
+
+        String s3Directory = grailsApplication.config.getProperty('biosecurity.csv.s3.directory', 'biosecurity')
+        String bucketName = grailsApplication.config.getProperty("grails.plugin.awssdk.s3.bucket")
+        String prefix = "${s3Directory}/${folderName == '/' ? '' : folderName}"
+
+        List<S3Object> allObjects = new ArrayList<>()
+        String continuationToken = null;
+
+        do {
+            ListObjectsV2Request.Builder requestBuilder = ListObjectsV2Request.builder().bucket(bucketName).prefix(prefix)
+            if (continuationToken != null) {
+                requestBuilder.continuationToken(continuationToken);
+            }
+            ListObjectsV2Response response = s3Client.listObjectsV2(requestBuilder.build())
+            allObjects.addAll(response.contents())
+            continuationToken = response.nextContinuationToken()
+        } while (continuationToken != null)
+
+        allObjects.sort((a, b) -> Long.compare(b.lastModified().toEpochMilli(), a.lastModified().toEpochMilli()));
         log.info("Found ${sortedFiles.size()} files in S3 bucket: ${bucketName}, directory: ${prefix}")
-        sortedFiles
+        return allObjects;
     }
 
     //Batch Query Biocache (Using qid) to collect extra info
