@@ -412,7 +412,7 @@ class BiosecurityCSVService {
         }
     }
 
-    List listObjects(String s3Prefix) {
+    ListObjectsV2Response listObjects(String s3Prefix) {
         S3Client s3Client = getS3Client()
         String bucketName = grailsApplication.config.getProperty("grails.plugin.awssdk.s3.bucket")
 
@@ -438,9 +438,9 @@ class BiosecurityCSVService {
         if (config.getProperty('biosecurity.csv.s3.enabled', Boolean, false)) {
             def folderPrefix = config.getProperty('biosecurity.csv.s3.directory', 'biosecurity')
             def s3Prefix = "${folderPrefix}/${folderName == '/' ? '' : folderName}"
-            def s3Files = listObjects(s3Prefix)
-            log.debug("Listing S3: $s3Prefix -> ${s3Files.size()} files")
-            return !s3Files.isEmpty()
+            ListObjectsV2Response s3Files = listObjects(s3Prefix)
+            log.debug("Listing S3: $s3Prefix -> ${s3Files.contents().size()} files")
+            return !s3Files.contents().isEmpty()
         } else if (config.getProperty('biosecurity.csv.local.enabled', Boolean, true)) {
             String baseDirectory = config.getProperty('biosecurity.csv.local.directory', String, '/tmp')
             File folder = new File(baseDirectory, folderName)
