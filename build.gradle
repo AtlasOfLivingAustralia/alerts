@@ -11,7 +11,7 @@
  * rights and limitations under the License.
  */
 buildscript {
-    version "5.1.3-SNAPSHOT"
+    version "5.1.4-SNAPSHOT"
     group "au.org.ala"
 }
 
@@ -145,8 +145,9 @@ dependencies {
     implementation 'au.org.ala:ala-mail:2.0.0-SNAPSHOT'
 
     implementation 'org.grails.plugins:schwartz-monitor:2.0.1.ALA-SNAPSHOT'
+    //Todo not compatible with Grails 6
     implementation 'org.grails.plugins:quartz:2.0.13'
-    implementation 'org.quartz-scheduler:quartz:2.3.2' // Is not pulled in by default https://stackoverflow.com/questions/61144025/quartz-not-working-in-grails4-issue-in-dependency-not-able-to-compile
+    implementation 'org.quartz-scheduler:quartz:2.3.2'
     implementation 'org.grails.plugins:cache'
     implementation 'org.grails.plugins:cache-ehcache:3.0.0'
 

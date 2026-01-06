@@ -353,6 +353,70 @@
                 container: 'body'
             })
 
+            $("#scheduleBtn").click(function () {
+                const pauseDate  = $("form[name='pauseResumeForm']").find("input[name='pauseDate']").val();
+                const resumeDate = $("form[name='pauseResumeForm']").find("input[name='resumeDate']").val();
+                $.ajax({
+                    url: "${createLink(controller: 'biosecurityAdmin', action: 'pauseResumeAlerts')}",
+                    type: "POST",
+                    dataType: "json",
+                    data: {
+                        pauseDate: pauseDate,
+                        resumeDate: resumeDate
+                    },
+                    success: function (response) {
+                        if (!response.error) {
+                            if (response.pause && response.resume) {
+                                // Both exist → cleaner phrasing
+                                msg =
+                                    "<b>Alerts will be paused on " + response.pause +
+                                    " and resume on " + response.resume + "</b>";
+                            }
+                            else if (response.pause) {
+                                msg = "<b>Alerts will be paused on " + response.pause + "</b>";
+                            }
+                            else if (response.resume) {
+                                msg = "<b>Alerts will resume on " + response.resume + "</b>";
+                            }
+                            $("[name='pauseWindowInfo']").html(msg)
+                        } else {
+                            $("[name='pauseWindowInfo']").html("")
+                        }
+                    },
+                    error: function (xhr) {
+                        $("[name='pauseWindowInfo']").html("")
+                    }
+                });
+            });
+
+            function loadPauseWindowInfo() {
+                $.ajax({
+                    url: "${createLink(controller: 'biosecurityAdmin', action: 'getAlertsPauseWindow')}",
+                    type: "GET",
+                    dataType: "json",
+                    success: function (response) {
+
+                        let msg = "";
+
+                        if (response.pause && response.resume) {
+                            msg =
+                                "<b>Alerts will be paused on " + response.pause +
+                                " and resume on " + response.resume + "</b>";
+                        } else if (response.pause) {
+                            msg = "<b>Alerts will be paused on " + response.pause + "</b>";
+                        } else if (response.resume) {
+                            msg = "<b>Alerts will resume on " + response.resume + "</b>";
+                        }
+
+                        $("[name='pauseWindowInfo']").html(msg);
+                    },
+                    error: function () {
+                        $("[name='pauseWindowInfo']").html("");
+                    }
+                })
+            }
+
+            loadPauseWindowInfo();
         })
 
     </script>
@@ -363,9 +427,7 @@
 <div id="content">
     <header id="page-header">
         <div class="inner row text-center">
-
-                <h1><g:message code="biosecurity.view.header" default="Manage Biosecurity Alerts"/></h1>
-
+            <h1><g:message code="biosecurity.view.header" default="Manage Biosecurity Alerts"/></h1>
         </div>
         <g:if test="${flash.message}">
             <div id="errorAlert" class="alert alert-danger alert-dismissible alert-dismissable" role="alert">
@@ -378,6 +440,28 @@
 
     <div id="page-body" class="col-sm-12">
         <g:set var="today" value="${new java.text.SimpleDateFormat('yyyy-MM-dd').format(new Date())}"/>
+        <div  class="row"  style="text-align: center">
+            <div name="scheduleStatusInfo"  class="col-sm-12">
+                <g:if test="${!jobStatus}">
+                    <span style="color: red; font-weight: bold;">
+                        No job is scheduled
+                    </span>
+                </g:if>
+
+                <g:elseif test="${jobStatus.state == 'NORMAL'}">
+                    <span style="color: green; font-weight: bold;">
+                        Next run will be on ${jobStatus.nextFireTime}
+                    </span>
+                </g:elseif>
+
+                <g:else>
+                    <span style="color: red; font-weight: bold;">
+                        Warning: Alerts is ${jobStatus.state}
+                    </span>
+                </g:else>
+            </div>
+        </div>
+        <p></p>
 
         <div class="jumbotron jumbotron-fluid">
             <div class="container">
@@ -419,6 +503,7 @@
                     </div>
                 </div>
                 <p></p>
+
 %{--                <div>
                 <g:if test="${queries}">
                     <form target="_blank" action="${request.contextPath}/admin/csvAllBiosecurity" method="post">
@@ -436,6 +521,37 @@
 
             </div>
         </div>
+
+        <div class="well" name="rescheduleBiosecurity">
+            <g:form name="pauseResumeForm" controller="admin" action="pauseResumeBioSecurityAlerts" method="post">
+                <div class="row" style="text-align: right">
+                    <div class="col-sm-8 form-group" >Specify the dates for pausing and resuming alerts. Pause alerts on  <input type="date" name="pauseDate" value="${today}" />
+                        <br/>, and resume on  <input type="date" name="resumeDate" value="${today}" />
+                    </div>
+                    <div class="col-sm-4"  >
+                        <button type="button" id="scheduleBtn" class="btn btn-info">Schedule</button>
+                        <g:link controller="biosecurityAdmin" action="cancelScheduledPauseResumeJob" class="btn btn-info" >
+                            Cancel
+                        </g:link>
+                    </div>
+
+                    <div class="col-sm-12" name="pauseWindowInfo" ></div>
+                </div>
+            </g:form>
+            <div class="row"  style="text-align: right">
+                <div class="col-sm-10"></div>
+                <div class="col-sm-2">
+                    <g:link controller="biosecurityAdmin" action="pauseAlerts" class="btn btn-warning" >
+                        Pause now
+                    </g:link> <p></p>
+                    <g:link controller="biosecurityAdmin" action="resumeAlerts" class="btn btn-success" >
+                        Resume now
+                    </g:link>
+                </div>
+            </div>
+        </div>
+
+
 
         <g:if test="${queries}">
             <div>
