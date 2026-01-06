@@ -7,26 +7,27 @@
 
 package au.org.ala.alerts
 
+import au.org.ala.alerts.jobs.JobKeys
+import au.org.ala.alerts.jobs.PauseJob
+import au.org.ala.alerts.jobs.ResumeJob
 import org.quartz.JobBuilder
 import org.quartz.JobKey
 import org.quartz.Scheduler
-import org.quartz.Trigger
 import org.quartz.TriggerBuilder
 import org.quartz.TriggerKey
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
-import org.quartz.impl.matchers.GroupMatcher
 
 /**
  * Schedule Biosecurity jobs
  */
 class BiosecurityJobService {
+    QuartzService quartzService
     Scheduler quartzScheduler
 
     String pauseJobId= "pauseBiosecurity"
     String resumeJobId = "resumeBiosecurity"
-    String biosecurityJobName = "ala.postie.BiosecurityQueriesJob"
 
     void pauseTrigger() {
         def currentJobInfo = getJobInfo()
@@ -142,33 +143,8 @@ class BiosecurityJobService {
      * @return The scheduled job info for Biosecurity
      */
     def getJobInfo() {
-        List results = listAllScheduledJobs()
-        return results.find{ it->it.jobName === biosecurityJobName}
-    }
-
-    /**
-     * NOTE: Biosecurity Job uses the old Quartz plugin, so its trigger name keeps changing
-     * @return
-     */
-    List<Map> listAllScheduledJobs() {
-        def results = []
-        quartzScheduler.getJobGroupNames().each { group ->
-            quartzScheduler.getJobKeys(GroupMatcher.jobGroupEquals(group)).each { JobKey jobKey ->
-                def triggers = quartzScheduler.getTriggersOfJob(jobKey)
-                triggers.each { Trigger trigger ->
-                    results << [
-                            jobName      : jobKey.name,
-                            jobGroup     : jobKey.group,
-                            triggerName  : trigger.key.name,
-                            triggerGroup : trigger.key.group,
-                            nextFireTime : trigger.nextFireTime,
-                            previousFire : trigger.previousFireTime,
-                            state        : quartzScheduler.getTriggerState(trigger.key).toString()
-                    ]
-                }
-            }
-        }
-        return results
+        List results = quartzService.getJobs()
+        return results.find{ it->it.jobName == JobKeys.BIOSECURITY_JOB_NAME}
     }
 
 }

@@ -1,6 +1,7 @@
 package au.org.ala.alerts
 
-import ala.postie.BiosecurityQueriesJob
+import javax.sql.DataSource
+
 
 class BootStrap {
 
@@ -8,10 +9,15 @@ class BootStrap {
     def messageSource
     def siteLocale
     def grailsUrlMappingsHolder
+    DataSource dataSource
+
 
     def init = { servletContext ->
-        log.info("Running bootstrap queries.")
+        log.info "=== DATASOURCE ==="
+        log.info("Database ${dataSource?.connection?.metaData?.driverName}")
+        log.info("User: ${dataSource?.connection?.metaData.connection.user} is used to connect ${dataSource?.connection?.metaData?.URL}")
 
+        log.info("Running bootstrap queries.")
         // if my annotation feature turned on, add url mapping to handle add/remove alert requests
         if (grailsApplication.config.getProperty('myannotation.enabled', Boolean, false)) {
             grailsUrlMappingsHolder.addMappings({
@@ -35,22 +41,11 @@ class BootStrap {
 
         preloadQueries()
         log.info("Done bootstrap queries.")
-
-        // dynamic job
-        def cron = grailsApplication.config.getProperty("biosecurity.cronExpression")
-        if (cron) {
-            BiosecurityQueriesJob.schedule(cron)
-        }
     }
 
     private void preloadQueries() {
         log.info("start of preloadQueries")
-        if(Frequency.findAll().isEmpty()){
-            (new Frequency([name: 'hourly', periodInSeconds:3600])).save()
-            (new Frequency([name: 'daily'])).save()
-            (new Frequency([name: 'weekly', periodInSeconds:604800])).save()
-            (new Frequency([name: 'monthly', periodInSeconds:2419200])).save()
-        }
+
 
         def title = messageSource.getMessage("query.annotations.title", null, siteLocale)
         def descr = messageSource.getMessage("query.annotations.descr", null, siteLocale)

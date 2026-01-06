@@ -138,10 +138,6 @@ skin:
 privacyPolicy: "https://www.ala.org.au/terms-of-use/privacy-policy/"
 siteDefaultLanguage: "en"
 customUserAgent: 'alerts/@info.app.version@'
-security:
-    cas:
-        adminRole: ROLE_ADMIN
-        uriFilterPattern: ["/","/alaAdmin/*","/testAuth/*","/query/*","/admin/*","/admin/user/*","/admin/user/debug/*","/admin/debug/all","/notification/myAlerts","/notification/changeFrequency","/notification/addMyAlert","/notification/addMyAlert/*","/notification/deleteMyAlert/*","/notification/deleteMyAlert/*","/notification/deleteMyAlertWR/*","/webservice/*","/webservice/createTaxonAlert","/webservice/taxonAlerts","/webservice/createRegionAlert","/webservice/regionAlerts","/webservice/deleteTaxonAlert/*","/webservice/create*","/webservice/createSpeciesGroupRegionAlert","/ws/*","/ws/createTaxonAlert","/ws/taxonAlerts","/ws/createRegionAlert","/ws/regionAlerts","/ws/deleteTaxonAlert/*","/ws/createTaxonRegionAlert","/ws/createSpeciesGroupRegionAlert","/admin/runChecksNow"]
 
 ala:
     baseURL: "https://www.ala.org.au"
@@ -218,97 +214,14 @@ biosecurity:
 encodeBracketInUrlParam:
     enabled: true
 
-environments:
-    development:
-        grails:
-            serverURL: "http://localhost:8080"
-            mail:
-                host: "localhost"
-                port: 1025
-                #username: postie.emailSender
-            plugin:
-                awssdk:
-                    region: ap-southeast-2
-                    profile: test-ala-developer
-                    s3:
-                        #          accessKey:
-                        #          secretKey:
-                        bucket: ala-alerts-testing
-
-
-        security:
-            cas:
-                appServerName: "http://localhost:8080"
-        quartz:
-            autoStartup : false
-        biosecurity:
-            csv:
-                local:
-                    enabled: true
-                s3:
-                    enabled: false
-        userdetails:
-            web:
-                url: https://userdetails.test.ala.org.au/
-            api:
-                url: https://api.test.ala.org.au/userdetails/cognito/
-        mail:
-            details:
-                sender: "alerts-test@ala.org.au"
-                alertAddressTitle: "Atlas alerts [Dev]"
-                infoAddressTitle: "Atlas of Living Australia [Dev]"
-                infoSender: "alerts-test@ala.org.au"
-    test:
-        grails:
-            serverURL: "http://dev.ala.org.au:8080"
-            mail:
-                host: "localhost"
-                port: 25
-        security:
-            cas:
-                appServerName: "https://auth.ala.org.au"
-        userdetails:
-            web:
-                url: https://userdetails.test.ala.org.au/
-            api:
-                url: https://api.test.ala.org.au/userdetails/cognito/
-        mail:
-            details:
-                sender: "alerts-test@ala.org.au"
-                alertAddressTitle: "Atlas alerts [Test]"
-                infoAddressTitle: "Atlas of Living Australia [Test]"
-                infoSender: "alerts-test@ala.org.au"
-    production:
-        grails:
-            serverURL: "https://auth.ala.org.au/alerts"
-            mail:
-                host: "localhost"
-                port: 25
-        security:
-            cas:
-                appServerName: "https://auth.ala.org.au"
-        userdetails:
-            web:
-                url: https://auth.ala.org.au/userdetails/
-            api:
-                url: https://api.ala.org.au/userdetails/cognito/
-
----
-hibernate:
-    show_sql: false
-    cache:
-        queries: false
-        use_second_level_cache: true
-        use_query_cache: true
-        region:
-            factory_class: org.hibernate.cache.jcache.internal.JCacheRegionFactory
-
+#For GORM
 dataSource:
     pooled: true
     jmxExport: true
-    driverClassName: com.mysql.jdbc.Driver
-    username:
-    password:
+    driverClassName: com.mysql.cj.jdbc.Driver
+    url: #REPLACEIT
+    username: #REPLACEIT
+    password: #REPLACEIT
     properties:
         # http://www.grails.org/doc/latest/guide/single.html#dataSource
         # see http://tomcat.apache.org/tomcat-7.0-doc/jdbc-pool.html#Common_Attributes for more
@@ -338,28 +251,35 @@ dataSource:
             useUnicode: true
             characterEncoding: "UTF-8"
 
-environments:
-    development:
-        dataSource:
-            dbCreate: update
-            driverClassName: com.mysql.jdbc.Driver
-            url: jdbc:mysql://localhost/alerts
-            username: alerts_user
-            password: password
-    test:
-        dataSource:
-            dbCreate: update
-            pooled: true
-            jmxExport: true
-            driverClassName: org.h2.Driver
-            username: sa
-            password:
-            url: jdbc:h2:mem:testDb;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE
-        userDetails:
-            url: https://userdetails.test.ala.org.au/
-    production:
-        dataSource:
-            dbCreate: update
+#For those beans managed by Spring, like Liquibase, Quartz
+#Those properties should be defined in an external properties yml file
+# DB_URL: jdbc:mysql://localhost:3309/alerts
+# DB_USER: alerts_user
+# DB_PASSWORD: password
+# DB_DRIVER: com.mysql.cj.jdbc.Driver
+# and
+#  SPRING_CONFIG_ADDITIONAL_LOCATION=file:/data/alerts/config/application.yml
+#  should be set into ENV
+spring:
+    datasource:
+        url: ${DB_URL}
+        username: ${DB_USER}
+        password: ${DB_PASSWORD}
+        driver-class-name: ${DB_DRIVER}
+
+    liquibase:
+        enabled: true
+        change-log: classpath:db/changelog/db.changelog-master.xml
+        url: ${DB_URL}
+        user: ${DB_USER}
+        password: ${DB_PASSWORD}
+        driver-class-name: ${DB_DRIVER}
+
+cron:
+    daily: '0 30 8 * * ?'
+    hourly: '0 48 * * * ?'
+    weekly: '0 30 10 ? * MON'
+    monthly: '0 15 17 27 * ?'
 
 myannotation:
     enabled: false
@@ -368,18 +288,16 @@ webservice:
     jwt: true
     jwt-scopes: "openid users/read"
 
-
-
 security:
     cas:
         enabled: false
     oidc:
         enabled: true
-        discoveryUri: https://cognito-idp.ap-southeast-2.amazonaws.com/ap-southeast-2_8pKx9BtGz/.well-known/openid-configuration
+        discoveryUri:  https://cognito-idp.ap-southeast-2.amazonaws.com/ap-southeast-2_OOXU9GW39/.well-known/openid-configuration
         scope: openid,profile,email,ala,roles
     # this config is used to check incoming requests to protected APIs (methods protected with @RequireApiKey()) for JWT token in the expected header i.e. "Authorization". `fallbackToLegacyBehaviour` determines whether to check for the legacy API key when JWT is not detected/valid.
     jwt:
-        discoveryUri: https://cognito-idp.ap-southeast-2.amazonaws.com/ap-southeast-2_8pKx9BtGz/.well-known/openid-configuration
+        discoveryUri:  https://cognito-idp.ap-southeast-2.amazonaws.com/ap-southeast-2_OOXU9GW39/.well-known/openid-configuration
         enabled: true
         fallbackToLegacyBehaviour: true
     apikey:
@@ -403,3 +321,73 @@ openapi:
         url: https://www.mozilla.org/en-US/MPL/1.1/
     version: '@info.app.version@'
     cachetimeoutms: 0
+
+
+environments:
+    development:
+        grails:
+            serverURL: "http://localhost:8080"
+            mail:
+                host: "localhost"
+                port: 1025
+                #username: postie.emailSender
+            plugin:
+                awssdk:
+                    region: ap-southeast-2
+                    profile: test-ala-developer
+                    s3:
+                        #          accessKey:
+                        #          secretKey:
+                        bucket: ala-alerts-testing
+
+        security:
+            cas:
+                appServerName: "http://localhost:8080"
+        biosecurity:
+            csv:
+                local:
+                    enabled: true
+                s3:
+                    enabled: false
+        userdetails:
+            web:
+                url: https://userdetails.test.ala.org.au/
+            api:
+                url: https://api.test.ala.org.au/userdetails/cognito/
+        mail:
+            details:
+                sender: "alerts-test@ala.org.au"
+                alertAddressTitle: "Atlas alerts [Dev]"
+                infoAddressTitle: "Atlas of Living Australia [Dev]"
+                infoSender: "alerts-test@ala.org.au"
+    test:
+        grails:
+            serverURL: "http://alerts.test.ala.org.au"
+        security:
+            cas:
+                appServerName: "https://auth.test.ala.org.au"
+        userdetails:
+            web:
+                url: https://userdetails.test.ala.org.au/
+            api:
+                url: https://api.test.ala.org.au/userdetails/cognito/
+        mail:
+            details:
+                sender: "alerts-test@ala.org.au"
+                alertAddressTitle: "Atlas alerts [Test]"
+                infoAddressTitle: "Atlas of Living Australia [Test]"
+                infoSender: "alerts-test@ala.org.au"
+    production:
+        grails:
+            serverURL: "https://auth.ala.org.au/alerts"
+            mail:
+                host: "localhost"
+                port: 25
+        security:
+            cas:
+                appServerName: "https://auth.ala.org.au"
+        userdetails:
+            web:
+                url: https://auth.ala.org.au/userdetails/
+            api:
+                url: https://api.ala.org.au/userdetails/cognito/
