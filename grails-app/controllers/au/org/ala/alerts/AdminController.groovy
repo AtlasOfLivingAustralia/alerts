@@ -19,13 +19,11 @@ import grails.converters.JSON
 import grails.gorm.transactions.Transactional
 import grails.util.Environment
 import grails.util.Holders
-import org.apache.http.entity.ContentType
 
 import java.text.SimpleDateFormat
 import groovyx.net.http.HTTPBuilder
 import groovy.json.JsonSlurper
 import java.nio.file.Files
-
 
 @AlaSecured(value = 'ROLE_ADMIN', redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to view that page.")
 class AdminController {
@@ -33,7 +31,8 @@ class AdminController {
     def authService
     def notificationService
     def biosecurityService
-    def biosecurityCSVService
+    BiosecurityCSVService biosecurityCSVService
+    BiosecurityJobService biosecurityJobService
     def queryResultService
     def diffService
     def emailService
@@ -275,7 +274,8 @@ class AdminController {
     def biosecurity() {
         int total = queryService.countBiosecurityQuery()
         List<Query> queries = queryService.getBiosecurityQuery(0, subscriptionsPerPage)
-        render view: "/admin/biosecurity", model: [total: total, queries: queries, subscriptionsPerPage: subscriptionsPerPage]
+        Map jobStatus = biosecurityJobService.getJobInfo()
+        render view: "/admin/biosecurity", model: [total: total, queries: queries, subscriptionsPerPage: subscriptionsPerPage, jobStatus: jobStatus]
     }
 
     /**
