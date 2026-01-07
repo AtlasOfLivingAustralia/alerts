@@ -2,6 +2,10 @@ package ala.postie
 
 
 class BiosecurityQueriesJob {
+    // triggers set in BootStrap.groovy
+    //  static triggers = {
+    //  }
+
     def biosecurityService
 
     def execute() {
