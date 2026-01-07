@@ -417,6 +417,14 @@
             }
 
             loadPauseWindowInfo();
+
+            document.getElementById("showScheduleBtn").addEventListener("click", function(e) {
+                e.preventDefault();
+                let div = document.querySelector('div[name="rescheduleBiosecurity"]')
+                div.style.display = "block";
+                const btn = this;
+                btn.style.display = "none";
+            });
         })
 
     </script>
@@ -440,8 +448,8 @@
 
     <div id="page-body" class="col-sm-12">
         <g:set var="today" value="${new java.text.SimpleDateFormat('yyyy-MM-dd').format(new Date())}"/>
-        <div  class="row"  style="text-align: center">
-            <div name="scheduleStatusInfo"  class="col-sm-12">
+        <div  class="row"  style="text-align: right">
+            <div name="scheduleStatusInfo"  class="col-sm-10">
                 <g:if test="${!jobStatus}">
                     <span style="color: red; font-weight: bold;">
                         No job is scheduled
@@ -460,8 +468,40 @@
                     </span>
                 </g:else>
             </div>
+            <div  class="col-sm-2">
+                <button type="button" id="showScheduleBtn" class="btn btn-info">Reschedule</button>
+            </div>
         </div>
         <p></p>
+
+        <div class="well" name="rescheduleBiosecurity" style="display:none;">
+            <g:form name="pauseResumeForm" controller="admin" action="pauseResumeBioSecurityAlerts" method="post">
+                <div class="row" style="text-align: right">
+                    <div class="col-sm-8 form-group" >Specify the dates for pausing and resuming alerts. Pause alerts on  <input type="date" name="pauseDate" value="${today}" />
+                        <br/>, and resume on  <input type="date" name="resumeDate" value="${today}" />
+                    </div>
+                    <div class="col-sm-4"  >
+                        <button type="button" id="scheduleBtn" class="btn btn-info">Schedule</button>
+                        <g:link controller="biosecurityAdmin" action="cancelScheduledPauseResumeJob" class="btn btn-info" >
+                            Cancel
+                        </g:link>
+                    </div>
+
+                    <div class="col-sm-12" name="pauseWindowInfo" ></div>
+                </div>
+            </g:form>
+            <div class="row"  style="text-align: right">
+                <div class="col-sm-10"></div>
+                <div class="col-sm-2">
+                    <g:link controller="biosecurityAdmin" action="pauseAlerts" class="btn btn-warning" >
+                        Pause now
+                    </g:link> <p></p>
+                    <g:link controller="biosecurityAdmin" action="resumeAlerts" class="btn btn-success" >
+                        Resume now
+                    </g:link>
+                </div>
+            </div>
+        </div>
 
         <div class="jumbotron jumbotron-fluid">
             <div class="container">
@@ -521,37 +561,6 @@
 
             </div>
         </div>
-
-        <div class="well" name="rescheduleBiosecurity">
-            <g:form name="pauseResumeForm" controller="admin" action="pauseResumeBioSecurityAlerts" method="post">
-                <div class="row" style="text-align: right">
-                    <div class="col-sm-8 form-group" >Specify the dates for pausing and resuming alerts. Pause alerts on  <input type="date" name="pauseDate" value="${today}" />
-                        <br/>, and resume on  <input type="date" name="resumeDate" value="${today}" />
-                    </div>
-                    <div class="col-sm-4"  >
-                        <button type="button" id="scheduleBtn" class="btn btn-info">Schedule</button>
-                        <g:link controller="biosecurityAdmin" action="cancelScheduledPauseResumeJob" class="btn btn-info" >
-                            Cancel
-                        </g:link>
-                    </div>
-
-                    <div class="col-sm-12" name="pauseWindowInfo" ></div>
-                </div>
-            </g:form>
-            <div class="row"  style="text-align: right">
-                <div class="col-sm-10"></div>
-                <div class="col-sm-2">
-                    <g:link controller="biosecurityAdmin" action="pauseAlerts" class="btn btn-warning" >
-                        Pause now
-                    </g:link> <p></p>
-                    <g:link controller="biosecurityAdmin" action="resumeAlerts" class="btn btn-success" >
-                        Resume now
-                    </g:link>
-                </div>
-            </div>
-        </div>
-
-
 
         <g:if test="${queries}">
             <div>

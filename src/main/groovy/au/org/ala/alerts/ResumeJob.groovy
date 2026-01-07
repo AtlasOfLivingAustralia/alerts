@@ -24,14 +24,11 @@ import org.quartz.TriggerKey
  */
 class ResumeJob implements Job {
 
-    Scheduler quartzScheduler
-
-    static triggers = { } // no static triggers
-
+    @Override
     void execute(JobExecutionContext context) {
         def triggerName = context.mergedJobDataMap.getString("triggerName")
         def triggerGroup = context.mergedJobDataMap.getString("triggerGroup")
-
+        Scheduler quartzScheduler = context.getScheduler()
         quartzScheduler.resumeTrigger(new TriggerKey(triggerName, triggerGroup))
     }
 }
