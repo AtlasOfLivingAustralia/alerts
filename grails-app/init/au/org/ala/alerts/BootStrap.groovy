@@ -1,7 +1,5 @@
 package au.org.ala.alerts
 
-import ala.postie.BiosecurityQueriesJob
-
 class BootStrap {
 
     def grailsApplication
@@ -11,7 +9,6 @@ class BootStrap {
 
     def init = { servletContext ->
         log.info("Running bootstrap queries.")
-
         // if my annotation feature turned on, add url mapping to handle add/remove alert requests
         if (grailsApplication.config.getProperty('myannotation.enabled', Boolean, false)) {
             grailsUrlMappingsHolder.addMappings({
@@ -35,12 +32,6 @@ class BootStrap {
 
         preloadQueries()
         log.info("Done bootstrap queries.")
-
-        // dynamic job
-        def cron = grailsApplication.config.getProperty("biosecurity.cronExpression")
-        if (cron) {
-            BiosecurityQueriesJob.schedule(cron)
-        }
     }
 
     private void preloadQueries() {

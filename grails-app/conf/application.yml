@@ -218,6 +218,13 @@ biosecurity:
 encodeBracketInUrlParam:
     enabled: true
 
+
+cron:
+    daily: '0 30 8 * * ?'
+    hourly: '0 48 * * * ?'
+    weekly: '0 30 10 ? * MON'
+    monthly: '0 15 17 27 * ?'
+
 environments:
     development:
         grails:

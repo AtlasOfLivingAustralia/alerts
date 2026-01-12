@@ -83,8 +83,12 @@ class UserService {
     int updateUserEmails() {
         final int pageSize = grailsApplication.config.getProperty('alerts.user-sync.batch-size', Integer, 1000)
         def toUpdate = []
-        def total = User.count()
-        log.warn "Checking all ${total} users in Alerts user table."
+        int total = 0
+        User.withTransaction {
+            total = User.count()
+            log.warn "Checking all ${total} users in Alerts user table."
+        }
+
         def count = 0
 
         def page = 0
