@@ -12,7 +12,10 @@
  *
  */
 
-package au.org.ala.alerts
+package au.org.ala.alerts.jobs
+
+
+
 
 import org.quartz.Job
 import org.quartz.JobExecutionContext
@@ -20,7 +23,10 @@ import org.quartz.Scheduler
 import org.quartz.TriggerKey
 
 /**
- * Mainly used in Biosecurity to schedule pause and resume dates.
+ * A Quartz cron job that resume a specific scheduled trigger in FUTURE.
+ *
+ * In Quartz, a "trigger" defines **when** and **how often** a job should run.
+ * This au.org.ala.alerts.jobs.ResumeJob will resume a trigger, which effectively resume the associated job
  */
 class ResumeJob implements Job {
 

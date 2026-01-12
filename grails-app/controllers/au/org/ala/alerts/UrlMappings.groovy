@@ -55,6 +55,8 @@ class UrlMappings {
 
         "/api/alerts/user/$userId"(controller: 'webservice', action: [GET: 'getUserAlertsWS'])
 
+        "/quartz/list"(controller: "quartz", action: "index")
+
         "/robots.txt"(view:'/notFound')
         "400"(view:'/error')
         "403"(view:'/error')
