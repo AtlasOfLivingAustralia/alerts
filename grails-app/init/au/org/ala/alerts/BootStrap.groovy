@@ -45,14 +45,7 @@ class BootStrap {
 
     private void preloadQueries() {
         log.info("start of preloadQueries")
-        Frequency.withTransaction {
-            if (Frequency.findAll().isEmpty()) {
-                (new Frequency([name: 'hourly', periodInSeconds: 3600])).save()
-                (new Frequency([name: 'daily'])).save()
-                (new Frequency([name: 'weekly', periodInSeconds: 604800])).save()
-                (new Frequency([name: 'monthly', periodInSeconds: 2419200])).save()
-            }
-        }
+
 
         def title = messageSource.getMessage("query.annotations.title", null, siteLocale)
         def descr = messageSource.getMessage("query.annotations.descr", null, siteLocale)

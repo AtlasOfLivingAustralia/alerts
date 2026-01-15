@@ -19,6 +19,8 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.scheduling.quartz.SchedulerFactoryBean
 
+import javax.sql.DataSource
+
 /**
  * Quartz configuration for Grails 6 using Spring Boot Quartz.
  *
@@ -36,9 +38,12 @@ import org.springframework.scheduling.quartz.SchedulerFactoryBean
 class QuartzConfig {
 
     @Bean(name = "quartzScheduler")
-    SchedulerFactoryBean quartzScheduler(SpringJobFactory jobFactory) {
+    SchedulerFactoryBean quartzScheduler(SpringJobFactory jobFactory, DataSource dataSource) {
         def factory = new SchedulerFactoryBean()
         factory.setJobFactory(jobFactory)
+        factory.setDataSource(dataSource)   // <- inject Spring Boot datasource
+        factory.setOverwriteExistingJobs(false)
+        factory.setWaitForJobsToCompleteOnShutdown(true)
         return factory
     }
 }

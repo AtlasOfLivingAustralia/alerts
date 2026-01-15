@@ -50,7 +50,9 @@ class QuartzService {
             job.error = getLastError(job.jobName)
         }
 
-        return results
+        return results.sort { a, b ->
+            a.jobGroup <=> b.jobGroup ?: a.jobName <=> b.jobName
+        }
     }
 
     void pause(String jobName, String jobGroup) {
