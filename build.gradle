@@ -52,13 +52,10 @@ bootWar {
 }
 
 repositories {
-    repositories {
-        mavenLocal()
-        mavenCentral()
-        maven { url "https://nexus.ala.org.au/content/groups/public/" }
-        maven { url "https://repo.grails.org/grails/core/" }
-    }
+    mavenLocal()
     mavenCentral()
+    maven { url "https://nexus.ala.org.au/content/groups/public/" }
+    maven { url "https://repo.grails.org/grails/core/" }
 }
 
 configurations {
@@ -91,6 +88,8 @@ dependencies {
     //implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation "org.springframework.boot:spring-boot-starter-quartz"
 
+    implementation 'org.liquibase:liquibase-core:4.27.0'
+
     implementation "org.grails:grails-web-boot"
     implementation "org.grails:grails-logging"
     implementation "org.grails:grails-plugin-rest"
@@ -113,7 +112,8 @@ dependencies {
     console "org.grails:grails-console"
     profile "org.grails.profiles:web"
     runtimeOnly "org.glassfish.web:el-impl:2.1.2-b03"
-    runtimeOnly "com.h2database:h2"
+    runtimeOnly 'mysql:mysql-connector-java:8.0.33'
+    //runtimeOnly "com.h2database:h2"
     runtimeOnly "org.apache.tomcat:tomcat-jdbc"
     runtimeOnly "com.bertramlabs.plugins:asset-pipeline-grails:4.3.0"
 
@@ -140,7 +140,6 @@ dependencies {
 
     // for ContentType
     implementation "org.apache.httpcomponents:httpcore:4.4.16"
-
     implementation 'dk.glasius:external-config:3.1.1'
 
     //Using AWS SES as email provider

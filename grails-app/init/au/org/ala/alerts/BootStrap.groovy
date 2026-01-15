@@ -1,13 +1,22 @@
 package au.org.ala.alerts
 
+import javax.sql.DataSource
+
+
 class BootStrap {
 
     def grailsApplication
     def messageSource
     def siteLocale
     def grailsUrlMappingsHolder
+    DataSource dataSource
+
 
     def init = { servletContext ->
+        log.info "=== DATASOURCE ==="
+        log.info("Database ${dataSource?.connection?.metaData?.driverName}")
+        log.info("User: ${dataSource?.connection?.metaData.connection.user} is used to connect ${dataSource?.connection?.metaData?.URL}")
+
         log.info("Running bootstrap queries.")
         // if my annotation feature turned on, add url mapping to handle add/remove alert requests
         if (grailsApplication.config.getProperty('myannotation.enabled', Boolean, false)) {
@@ -36,11 +45,13 @@ class BootStrap {
 
     private void preloadQueries() {
         log.info("start of preloadQueries")
-        if(Frequency.findAll().isEmpty()){
-            (new Frequency([name: 'hourly', periodInSeconds:3600])).save()
-            (new Frequency([name: 'daily'])).save()
-            (new Frequency([name: 'weekly', periodInSeconds:604800])).save()
-            (new Frequency([name: 'monthly', periodInSeconds:2419200])).save()
+        Frequency.withTransaction {
+            if (Frequency.findAll().isEmpty()) {
+                (new Frequency([name: 'hourly', periodInSeconds: 3600])).save()
+                (new Frequency([name: 'daily'])).save()
+                (new Frequency([name: 'weekly', periodInSeconds: 604800])).save()
+                (new Frequency([name: 'monthly', periodInSeconds: 2419200])).save()
+            }
         }
 
         def title = messageSource.getMessage("query.annotations.title", null, siteLocale)
