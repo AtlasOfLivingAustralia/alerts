@@ -84,21 +84,19 @@ class RoutineScheduler {
         JobKey jobKey = new JobKey(jobName, JobKeys.ROUTINE_JOB_GROUP)
         TriggerKey triggerKey = new TriggerKey(triggerName, JobKeys.ROUTINE_TRIGGER_GROUP)
 
-        if (quartzScheduler.checkExists(jobKey)) {
-            quartzScheduler.deleteJob(jobKey)
+        if (!quartzScheduler.checkExists(jobKey)) {
+            JobDetail jobDetail = JobBuilder.newJob(RoutineQueriesJob)
+                    .withIdentity(jobKey)
+                    .usingJobData("frequency", frequency)   // <-- pass frequency here
+                    .storeDurably()
+                    .build()
+
+            Trigger trigger = TriggerBuilder.newTrigger()
+                    .withIdentity(triggerKey)
+                    .withSchedule(CronScheduleBuilder.cronSchedule(cron))
+                    .build()
+
+            quartzScheduler.scheduleJob(jobDetail, trigger)
         }
-
-        JobDetail jobDetail = JobBuilder.newJob(RoutineQueriesJob)
-                .withIdentity(jobKey)
-                .usingJobData("frequency", frequency)   // <-- pass frequency here
-                .storeDurably()
-                .build()
-
-        Trigger trigger = TriggerBuilder.newTrigger()
-                .withIdentity(triggerKey)
-                .withSchedule(CronScheduleBuilder.cronSchedule(cron))
-                .build()
-
-        quartzScheduler.scheduleJob(jobDetail, trigger)
     }
 }

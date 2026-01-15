@@ -13,16 +13,12 @@
 
     <logger name="org.hibernate.orm" level="ERROR" />
     <logger name="org.grails.config.NavigableMap" level="ERROR" />
-    <logger name="org.quartz" level="DEBUG" />
     <logger name="au.org.ala.bootstrap3" level="INFO" />
 
     <logger name="au.org.ala" level="INFO" />
     <logger name="au.org.ala.cas.client" level="WARN">
         <appender-ref ref="STDOUT" />
     </logger>
-
-    <logger name="org.quartz.impl.jdbcjobstore" level="DEBUG"/>
-    <logger name="org.quartz.core" level="DEBUG"/>
 
     <root level="info">
         <appender-ref ref="STDOUT" />

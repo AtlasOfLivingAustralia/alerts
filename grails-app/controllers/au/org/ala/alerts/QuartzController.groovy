@@ -73,7 +73,7 @@ class QuartzController {
     }
 
 
-    void runNow() {
+    def runNow() {
         String jobName = params.jobName
         String jobGroup = params.jobGroup ?: "default"
         quartzService.runNow(jobName,jobGroup)

@@ -6,5 +6,5 @@
         https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
 
         <include file="classpath:db/changelog/quartz.init.xml"/>
-
+        <include file="classpath:db/changelog/frequency.init.xml"/>
 </databaseChangeLog>

@@ -37,21 +37,18 @@ class EmailUpdateScheduler {
         JobKey jobKey = new JobKey(JobKeys.EMAIL_UPDATE_JOB_NAME, JobKeys.EMAIL_UPDATE_JOB_GROUP)
         TriggerKey triggerKey = new TriggerKey(JobKeys.EMAIL_UPDATE_TRIGGER_NAME, JobKeys.EMAIL_UPDATE_JOB_TRIGGER_GROUP)
 
-        // Remove old job if exists (clean startup)
-        if (quartzScheduler.checkExists(jobKey)) {
-            quartzScheduler.deleteJob(jobKey)
+        if (!quartzScheduler.checkExists(jobKey)) {
+            JobDetail jobDetail = JobBuilder.newJob(EmailUpdateJob)
+                    .withIdentity(jobKey)
+                    .storeDurably()
+                    .build()
+
+            Trigger trigger = TriggerBuilder.newTrigger()
+                    .withIdentity(triggerKey)
+                    .withSchedule(CronScheduleBuilder.cronSchedule(cronExpression))
+                    .build()
+
+            quartzScheduler.scheduleJob(jobDetail, trigger)
         }
-
-        JobDetail jobDetail = JobBuilder.newJob(EmailUpdateJob)
-                .withIdentity(jobKey)
-                .storeDurably()
-                .build()
-
-        Trigger trigger = TriggerBuilder.newTrigger()
-                .withIdentity(triggerKey)
-                .withSchedule(CronScheduleBuilder.cronSchedule(cronExpression))
-                .build()
-
-        quartzScheduler.scheduleJob(jobDetail, trigger)
     }
 }

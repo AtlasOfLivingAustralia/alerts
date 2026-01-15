@@ -4,6 +4,32 @@ This is a small app responsible for sending email alerts when there are changes 
 
 Scheduling is handled by Quartz plugin in the app. It works like RSS - it checks the JSON service and reads the results and then compares that with the previously stored check and if there are new records, it triggers an email. Relies on records being sorted by date loaded. Works with any endpoint that can return date-sorted JSON output.
 
+## Grails 6 updates IMPORTANT
+
+In Grails 6, Liquibase and Quartz are bootstrapped directly by Spring Boot during application startup.  
+This happens **before** the Grails `external-config` plugin is invoked.
+
+As a result, any beans managed by Spring (such as **Liquibase** and **Quartz**) must have their required
+configuration available **at Spring initialization time**.
+
+To support this, database-related properties must be defined in an external Spring configuration file,
+for example:
+
+```yaml
+DB_URL: jdbc:mysql://localhost:3309/alerts
+DB_USER: alerts_user
+DB_PASSWORD: password
+DB_DRIVER: com.mysql.cj.jdbc.Driver
+```
+
+The external configuration file must then be explicitly loaded by Spring using an environment variable:
+```
+SPRING_CONFIG_ADDITIONAL_LOCATION=file:/data/alerts/config/application.yml
+```
+
+Without this, Spring-managed components will not see the required configuration and may fall back to
+defaults (for example, H2 or Quartz RAMJobStore).
+
 # Build status
 
 [![Build Status](https://api.travis-ci.com/AtlasOfLivingAustralia/alerts.svg?branch=develop)](https://app.travis-ci.com/github/AtlasOfLivingAustralia/alerts)

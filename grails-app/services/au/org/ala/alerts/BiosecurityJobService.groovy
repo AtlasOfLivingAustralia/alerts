@@ -144,7 +144,7 @@ class BiosecurityJobService {
      */
     def getJobInfo() {
         List results = quartzService.getJobs()
-        return results.find{ it->it.jobName === JobKeys.BIOSECURITY_JOB_NAME}
+        return results.find{ it->it.jobName == JobKeys.BIOSECURITY_JOB_NAME}
     }
 
 }

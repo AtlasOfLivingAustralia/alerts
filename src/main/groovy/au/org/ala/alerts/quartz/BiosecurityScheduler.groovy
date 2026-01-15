@@ -48,21 +48,19 @@ class BiosecurityScheduler{
         JobKey jobKey = new JobKey(JobKeys.BIOSECURITY_JOB_NAME, JobKeys.BIOSECURITY_JOB_GROUP)
         TriggerKey triggerKey = new TriggerKey(JobKeys.BIOSECURITY_TRIGGER_NAME, JobKeys.BIOSECURITY_TRIGGER_GROUP)
 
-        // Remove old job if exists (clean startup)
-        if (quartzScheduler.checkExists(jobKey)) {
-            quartzScheduler.deleteJob(jobKey)
+        //If exists, keep it -> since we persist the job/trigger states into database
+        if (!quartzScheduler.checkExists(jobKey)) {
+            JobDetail jobDetail = JobBuilder.newJob(BiosecurityQueriesJob)
+                    .withIdentity(jobKey)
+                    .storeDurably()
+                    .build()
+
+            Trigger trigger = TriggerBuilder.newTrigger()
+                    .withIdentity(triggerKey)
+                    .withSchedule(CronScheduleBuilder.cronSchedule(cronExpression))
+                    .build()
+
+            quartzScheduler.scheduleJob(jobDetail, trigger)
         }
-
-        JobDetail jobDetail = JobBuilder.newJob(BiosecurityQueriesJob)
-                .withIdentity(jobKey)
-                .storeDurably()
-                .build()
-
-        Trigger trigger = TriggerBuilder.newTrigger()
-                .withIdentity(triggerKey)
-                .withSchedule(CronScheduleBuilder.cronSchedule(cronExpression))
-                .build()
-
-        quartzScheduler.scheduleJob(jobDetail, trigger)
     }
 }

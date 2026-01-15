@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+        http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="freq-insert-defaults" author="ala">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM frequency
+            </sqlCheck>
+        </preConditions>
+
+        <insert tableName="frequency">
+            <column name="name" value="hourly"/>
+            <column name="period_in_seconds" valueNumeric="3600"/>
+        </insert>
+
+        <insert tableName="frequency">
+            <column name="name" value="daily"/>
+            <column name="period_in_seconds" valueNumeric="86400"/>
+        </insert>
+
+        <insert tableName="frequency">
+            <column name="name" value="weekly"/>
+            <column name="period_in_seconds" valueNumeric="604800"/>
+        </insert>
+
+        <insert tableName="frequency">
+            <column name="name" value="monthly"/>
+            <column name="period_in_seconds" valueNumeric="2419200"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>
