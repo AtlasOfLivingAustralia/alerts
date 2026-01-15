@@ -218,12 +218,93 @@ biosecurity:
 encodeBracketInUrlParam:
     enabled: true
 
+#For GORM
+dataSource:
+    pooled: true
+    jmxExport: true
+    driverClassName: com.mysql.cj.jdbc.Driver
+    url: #REPLACEIT
+    username: #REPLACEIT
+    password: #REPLACEIT
+    properties:
+        # http://www.grails.org/doc/latest/guide/single.html#dataSource
+        # see http://tomcat.apache.org/tomcat-7.0-doc/jdbc-pool.html#Common_Attributes for more
+        timeBetweenEvictionRunsMillis: 5000 # milliseconds (default: 5000)
+        testOnBorrow: false # default: false
+        testOnReturn: false # default: false
+        testWhileIdle: false # default: false
+        validationQuery: null # default: null
+        validationQueryTimeout: 10 # seconds (default: -1 i.e. disabled)
+        validationInterval: 30000 # milliseconds, default is 30000 (30 seconds)
+        removeAbandoned: true # # default: false
+        removeAbandonedTimeout: 3600 # seconds (default: 60), must be > quartz job duration
+        logAbandoned: true # adds some overhead to every borrow from the pool, disable if it becomes a performance issue
+        logValidationErrors: true # default: false, logs validation errors at SEVERE
+        minEvictableIdleTimeMillis: 180000 # 3 minutes in milliseconds
+        minIdle: 0 # Allow the pool to scale down to zero idle connections
+        maxIdle: 10 # Maximum number of idle connections
+        initialSize: 5 # Initial number of connections created when the pool is started
+        maxActive: 50 # Maximum number of active connections that can be allocated from this pool at the same time
+        # NOTE: removeAbandoned: true OR testWhileIdle: true enables the Pool Cleaner. There is a bug with the
+        # pool cleaner which causes deadlocks when using older mysql jdbc drivers. This configuration has been
+        # tested successfully with mysql:mysql-connector-java:5.1.34.
+        # mysql jdbc connection properties - see http://dev.mysql.com/doc/connector-j/en/connector-j-reference-configuration-properties.html
+        dbProperties:
+            autoReconnect: true
+            connectTimeout: 0
+            useUnicode: true
+            characterEncoding: "UTF-8"
+
+#For those beans managed by Spring, like Liquibase, Quartz
+spring:
+    datasource:
+        url: jdbc:mysql://localhost:3309/alerts
+        username: alerts_user
+        password: password
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        # optional
+        hikari:
+            maximum-pool-size: 10
+
+
+    liquibase:
+        enabled: true
+        change-log: classpath:db/changelog/db.changelog-master.xml
+        default-schema: alerts
+#        url: ${DB_URL}
+#        user: ${DB_USER}
+#        password: ${DB_PASSWORD}
+#        driver-class-name: ${DB_DRIVER}
+        # optionally override datasource if you have multiple
+        # data-source: myDS
+
+    quartz:
+        job-store-type: jdbc
+        jdbc:
+            initialize-schema: never
+        scheduler:
+            instanceName: AlertsScheduler
+            instanceId: AUTO
+        properties:
+            org.quartz.jobStore.class: org.quartz.impl.jdbcjobstore.JobStoreTX
+            org.quartz.jobStore.driverDelegateClass: org.quartz.impl.jdbcjobstore.StdJDBCDelegate
+            org.quartz.jobStore.tablePrefix: QRTZ_
+            org.quartz.jobStore.isClustered: true
+            org.quartz.jobStore.useProperties: false
 
 cron:
     daily: '0 30 8 * * ?'
     hourly: '0 48 * * * ?'
     weekly: '0 30 10 ? * MON'
     monthly: '0 15 17 27 * ?'
+
+
+logging:
+    level:
+        org.springframework.scheduling.quartz: DEBUG
+        org.quartz: DEBUG
+        org.quartz.impl.jdbcjobstore: DEBUG
+        org.quartz.core: DEBUG
 
 environments:
     development:
@@ -242,12 +323,11 @@ environments:
                         #          secretKey:
                         bucket: ala-alerts-testing
 
-
         security:
             cas:
                 appServerName: "http://localhost:8080"
-        quartz:
-            autoStartup : false
+#        quartz:
+#            autoStartup : false
         biosecurity:
             csv:
                 local:
@@ -301,72 +381,16 @@ environments:
                 url: https://api.ala.org.au/userdetails/cognito/
 
 ---
-hibernate:
-    show_sql: false
-    cache:
-        queries: false
-        use_second_level_cache: true
-        use_query_cache: true
-        region:
-            factory_class: org.hibernate.cache.jcache.internal.JCacheRegionFactory
+#hibernate:
+#    show_sql: false
+#    cache:
+#        queries: false
+#        use_second_level_cache: true
+#        use_query_cache: true
+#        region:
+#            factory_class: org.hibernate.cache.jcache.internal.JCacheRegionFactory
 
-dataSource:
-    pooled: true
-    jmxExport: true
-    driverClassName: com.mysql.jdbc.Driver
-    username:
-    password:
-    properties:
-        # http://www.grails.org/doc/latest/guide/single.html#dataSource
-        # see http://tomcat.apache.org/tomcat-7.0-doc/jdbc-pool.html#Common_Attributes for more
-        timeBetweenEvictionRunsMillis: 5000 # milliseconds (default: 5000)
-        testOnBorrow: false # default: false
-        testOnReturn: false # default: false
-        testWhileIdle: false # default: false
-        validationQuery: null # default: null
-        validationQueryTimeout: 10 # seconds (default: -1 i.e. disabled)
-        validationInterval: 30000 # milliseconds, default is 30000 (30 seconds)
-        removeAbandoned: true # # default: false
-        removeAbandonedTimeout: 3600 # seconds (default: 60), must be > quartz job duration
-        logAbandoned: true # adds some overhead to every borrow from the pool, disable if it becomes a performance issue
-        logValidationErrors: true # default: false, logs validation errors at SEVERE
-        minEvictableIdleTimeMillis: 180000 # 3 minutes in milliseconds
-        minIdle: 0 # Allow the pool to scale down to zero idle connections
-        maxIdle: 10 # Maximum number of idle connections
-        initialSize: 5 # Initial number of connections created when the pool is started
-        maxActive: 50 # Maximum number of active connections that can be allocated from this pool at the same time
-        # NOTE: removeAbandoned: true OR testWhileIdle: true enables the Pool Cleaner. There is a bug with the
-        # pool cleaner which causes deadlocks when using older mysql jdbc drivers. This configuration has been
-        # tested successfully with mysql:mysql-connector-java:5.1.34.
-        # mysql jdbc connection properties - see http://dev.mysql.com/doc/connector-j/en/connector-j-reference-configuration-properties.html
-        dbProperties:
-            autoReconnect: true
-            connectTimeout: 0
-            useUnicode: true
-            characterEncoding: "UTF-8"
 
-environments:
-    development:
-        dataSource:
-            dbCreate: update
-            driverClassName: com.mysql.jdbc.Driver
-            url: jdbc:mysql://localhost/alerts
-            username: alerts_user
-            password: password
-    test:
-        dataSource:
-            dbCreate: update
-            pooled: true
-            jmxExport: true
-            driverClassName: org.h2.Driver
-            username: sa
-            password:
-            url: jdbc:h2:mem:testDb;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE
-        userDetails:
-            url: https://userdetails.test.ala.org.au/
-    production:
-        dataSource:
-            dbCreate: update
 
 myannotation:
     enabled: false
@@ -382,11 +406,11 @@ security:
         enabled: false
     oidc:
         enabled: true
-        discoveryUri: https://cognito-idp.ap-southeast-2.amazonaws.com/ap-southeast-2_8pKx9BtGz/.well-known/openid-configuration
+        discoveryUri:  https://cognito-idp.ap-southeast-2.amazonaws.com/ap-southeast-2_OOXU9GW39/.well-known/openid-configuration
         scope: openid,profile,email,ala,roles
     # this config is used to check incoming requests to protected APIs (methods protected with @RequireApiKey()) for JWT token in the expected header i.e. "Authorization". `fallbackToLegacyBehaviour` determines whether to check for the legacy API key when JWT is not detected/valid.
     jwt:
-        discoveryUri: https://cognito-idp.ap-southeast-2.amazonaws.com/ap-southeast-2_8pKx9BtGz/.well-known/openid-configuration
+        discoveryUri:  https://cognito-idp.ap-southeast-2.amazonaws.com/ap-southeast-2_OOXU9GW39/.well-known/openid-configuration
         enabled: true
         fallbackToLegacyBehaviour: true
     apikey:
