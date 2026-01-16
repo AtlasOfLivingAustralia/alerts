@@ -35,6 +35,16 @@ class BiosecurityAdminController {
         redirect(controller: "admin", action: "biosecurity")
     }
 
+    def updateWeeklySchedule() {
+        def (hour, minute) = params.time.split(':')
+        def weekday = params.weekday
+
+        def cron = "0 ${minute} ${hour} ? * ${weekday}"
+        biosecurityJobService.updateTrigger(cron)
+
+        redirect(controller: "admin", action: "biosecurity")
+    }
+
     /**
      * Schedules a pause and resume window for the Biosecurity job.
      *

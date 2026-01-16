@@ -13,8 +13,10 @@ import au.org.ala.alerts.jobs.ResumeJob
 import org.quartz.JobBuilder
 import org.quartz.JobKey
 import org.quartz.Scheduler
+import org.quartz.Trigger
 import org.quartz.TriggerBuilder
 import org.quartz.TriggerKey
+import org.quartz.CronScheduleBuilder
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -48,6 +50,25 @@ class BiosecurityJobService {
 
             TriggerKey key = new TriggerKey(triggerName, triggerGroup)
             quartzScheduler.resumeTrigger(key)
+        }
+    }
+
+    void updateTrigger(String cron) {
+        def currentJobInfo = getJobInfo()
+        if (currentJobInfo) {
+            String triggerName = currentJobInfo.triggerName
+            String triggerGroup = currentJobInfo.triggerGroup
+            TriggerKey triggerKey = new TriggerKey(triggerName, triggerGroup)
+            JobKey jobKey= new JobKey(currentJobInfo.jobName, currentJobInfo.jobGroup)
+           
+            Trigger newTrigger = TriggerBuilder.newTrigger()
+                    .withIdentity(triggerName, triggerGroup)
+                    .withSchedule(CronScheduleBuilder.cronSchedule(cron))
+                    .forJob(jobKey)
+                    .build()
+
+            // Replace the old trigger with the new one
+            quartzScheduler.rescheduleJob(triggerKey, newTrigger)
         }
     }
 

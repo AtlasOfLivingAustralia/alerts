@@ -505,6 +505,44 @@
                 </div>
             </g:form>
 
+            <div class="row mt-30">
+
+                <div class="col-sm-12">
+                    <h4>Schedule Weekly Biosecurity Job</h4>
+                    <p>You can change the weekday and time this job runs. This updates the weekly schedule only.</p>
+                </div>
+
+                <g:form controller="biosecurityAdmin" action="updateWeeklySchedule" method="POST">
+                <div class="col-sm-2 mt-20">
+                    <label for="weekday">Run on</label>
+                    <select id="weekday" name="weekday" class="form-control">
+                        <option value="MON">Monday</option>
+                        <option value="TUE">Tuesday</option>
+                        <option value="WED">Wednesday</option>
+                        <option value="THU">Thursday</option>
+                        <option value="FRI">Friday</option>
+                        <option value="SAT">Saturday</option>
+                        <option value="SUN">Sunday</option>
+                    </select>
+                </div>
+
+                <!-- Time selector -->
+                <div class="col-sm-2 mt-20">
+                    <label for="time">At time</label>
+                    <input type="time" id="time" name="time" class="form-control" value="11:00">
+                </div>
+
+                <!-- Save button -->
+                <div class="col-sm-3 mt-20">
+                    <label>&nbsp;</label>
+                    <button type="submit" id="saveWeeklyScheduleBtn" class="btn btn-primary form-control">
+                        Save Weekly Schedule
+                    </button>
+                </div>
+            </g:form>
+            </div>
+
+
         </div>
 
         <div class="jumbotron jumbotron-fluid">
