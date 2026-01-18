@@ -138,7 +138,6 @@ skin:
 privacyPolicy: "https://www.ala.org.au/terms-of-use/privacy-policy/"
 siteDefaultLanguage: "en"
 customUserAgent: 'alerts/@info.app.version@'
-
 ala:
     baseURL: "https://www.ala.org.au"
     userDetailsURL: "https://auth.ala.org.au/userdetails/userDetails/getUserListFull"
@@ -150,16 +149,17 @@ spatial:
     baseURL: "https://spatial.ala.org.au"
 collectory:
     baseURL: "https://collections.ala.org.au"
+    searchURL: https://biocache.ala.org.au/occurrences/search?q=passer
 collectoryService:
     baseURL: "https://collections.ala.org.au/ws"
+collection:
+    searchURL: "https://collections.ala.org.au/public/show/co13"
+    searchTitle: ANIC
 lists:
     baseURL: "https://lists.ala.org.au"
 speciesPages:
     searchURL: "https://bie.ala.org.au/species/Tiliqua+rugosa"
     searchTitle: Shingle-back
-collection:
-    searchURL: "https://collections.ala.org.au/public/show/co13"
-    searchTitle: ANIC
 regions:
     searchURL: "https://regions.ala.org.au/states/Australian+Capital+Territory"
     searchTitle: ACT
@@ -216,12 +216,13 @@ encodeBracketInUrlParam:
 
 #For GORM
 dataSource:
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    driverClassName: ${DB_DRIVER}
+
     pooled: true
     jmxExport: true
-    driverClassName: com.mysql.cj.jdbc.Driver
-    url: #REPLACEIT
-    username: #REPLACEIT
-    password: #REPLACEIT
     properties:
         # http://www.grails.org/doc/latest/guide/single.html#dataSource
         # see http://tomcat.apache.org/tomcat-7.0-doc/jdbc-pool.html#Common_Attributes for more
@@ -289,8 +290,11 @@ webservice:
     jwt-scopes: "openid users/read"
 
 security:
-    cas:
-        enabled: false
+    security:
+        cas:
+            enabled: false
+            adminRole: ROLE_ADMIN
+            uriFilterPattern: [ "/","/alaAdmin/*","/testAuth/*","/query/*","/admin/*","/admin/user/*","/admin/user/debug/*","/admin/debug/all","/notification/myAlerts","/notification/changeFrequency","/notification/addMyAlert","/notification/addMyAlert/*","/notification/deleteMyAlert/*","/notification/deleteMyAlert/*","/notification/deleteMyAlertWR/*","/webservice/*","/webservice/createTaxonAlert","/webservice/taxonAlerts","/webservice/createRegionAlert","/webservice/regionAlerts","/webservice/deleteTaxonAlert/*","/webservice/create*","/webservice/createSpeciesGroupRegionAlert","/ws/*","/ws/createTaxonAlert","/ws/taxonAlerts","/ws/createRegionAlert","/ws/regionAlerts","/ws/deleteTaxonAlert/*","/ws/createTaxonRegionAlert","/ws/createSpeciesGroupRegionAlert","/admin/runChecksNow" ]
     oidc:
         enabled: true
         discoveryUri:  https://cognito-idp.ap-southeast-2.amazonaws.com/ap-southeast-2_OOXU9GW39/.well-known/openid-configuration

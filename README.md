@@ -4,7 +4,7 @@ This is a small app responsible for sending email alerts when there are changes 
 
 Scheduling is handled by Quartz plugin in the app. It works like RSS - it checks the JSON service and reads the results and then compares that with the previously stored check and if there are new records, it triggers an email. Relies on records being sorted by date loaded. Works with any endpoint that can return date-sorted JSON output.
 
-## Grails 6 updates IMPORTANT
+## Grails 6 updates IMPORTANT >= version 5.2.0 
 
 In Grails 6, Liquibase and Quartz are bootstrapped directly by Spring Boot during application startup.  
 This happens **before** the Grails `external-config` plugin is invoked.
@@ -12,7 +12,7 @@ This happens **before** the Grails `external-config` plugin is invoked.
 As a result, any beans managed by Spring (such as **Liquibase** and **Quartz**) must have their required
 configuration available **at Spring initialization time**.
 
-To support this, database-related properties must be defined in an external Spring configuration file,
+To support this, the safest way is that database-related properties are defined in an external Spring configuration file,
 for example:
 
 ```yaml
@@ -22,13 +22,18 @@ DB_PASSWORD: password
 DB_DRIVER: com.mysql.cj.jdbc.Driver
 ```
 
-The external configuration file must then be explicitly loaded by Spring using an environment variable:
+and then the external configuration file is loaded by Spring using an environment variable:
 ```
-SPRING_CONFIG_ADDITIONAL_LOCATION=file:/data/alerts/config/application.yml
+SPRING_CONFIG_ADDITIONAL_LOCATION=file:/data/alerts/config/alerts-config.yml
 ```
 
 Without this, Spring-managed components will not see the required configuration and may fall back to
 defaults (for example, H2 or Quartz RAMJobStore).
+
+## IMPORTANT
+
+To align with the Grails 6 initialization process, the Grails externalConfig plugin has been removed.
+All properties previously defined in alerts-config.properties have been migrated to alerts-config.yml and are now loaded exclusively through Spring using SPRING_CONFIG_ADDITIONAL_LOCATION.
 
 # Build status
 
@@ -50,7 +55,7 @@ What the docker-compose does:
 1. ```create user 'alerts_user'@'localhost' identified as 'alerts_user';```
 1. ```grant all privileges on *.* to 'alerts_user'@'localhost';```
 1. ```create database alerts```
-1. Create /data/alerts/config/alerts-config.properties
+1. Create /data/alerts/config/alerts-config.yml
 1. Use the template in ala-install to get the necessary values
 
 
@@ -62,6 +67,12 @@ Run [smtp4dev](https://github.com/rnwood/smtp4dev) via Docker:
 Emails will be sent on SMTP port 2525 (configure sending emails via `mail.enabled=true`, `grails.mail.port=2525` and `grails.mail.server=localhost`. Note: emails will not be delivered externally so you don't have to worry about spamming users.
 
 You can view all sent emails via the smtp4dev UI on http://localhost:3000/, inlcuding HTML emails which are nicely displayed.
+
+### 5.2.0 Release
+
+Change logs:
+Liquibase were introduced to manage DB changes
+Using SPRING_CONFIG_ADDITIONAL_LOCATION env to load external configs
 
 
 ### 4.2.0 Release
