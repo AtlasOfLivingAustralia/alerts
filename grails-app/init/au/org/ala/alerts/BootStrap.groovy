@@ -9,14 +9,8 @@ class BootStrap {
     def messageSource
     def siteLocale
     def grailsUrlMappingsHolder
-    DataSource dataSource
-
 
     def init = { servletContext ->
-        log.info "=== DATASOURCE ==="
-        log.info("Database ${dataSource?.connection?.metaData?.driverName}")
-        log.info("User: ${dataSource?.connection?.metaData.connection.user} is used to connect ${dataSource?.connection?.metaData?.URL}")
-
         log.info("Running bootstrap queries.")
         // if my annotation feature turned on, add url mapping to handle add/remove alert requests
         if (grailsApplication.config.getProperty('myannotation.enabled', Boolean, false)) {
