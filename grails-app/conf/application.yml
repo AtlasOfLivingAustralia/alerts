@@ -290,11 +290,10 @@ webservice:
     jwt-scopes: "openid users/read"
 
 security:
-    security:
-        cas:
-            enabled: false
-            adminRole: ROLE_ADMIN
-            uriFilterPattern: [ "/","/alaAdmin/*","/testAuth/*","/query/*","/admin/*","/admin/user/*","/admin/user/debug/*","/admin/debug/all","/notification/myAlerts","/notification/changeFrequency","/notification/addMyAlert","/notification/addMyAlert/*","/notification/deleteMyAlert/*","/notification/deleteMyAlert/*","/notification/deleteMyAlertWR/*","/webservice/*","/webservice/createTaxonAlert","/webservice/taxonAlerts","/webservice/createRegionAlert","/webservice/regionAlerts","/webservice/deleteTaxonAlert/*","/webservice/create*","/webservice/createSpeciesGroupRegionAlert","/ws/*","/ws/createTaxonAlert","/ws/taxonAlerts","/ws/createRegionAlert","/ws/regionAlerts","/ws/deleteTaxonAlert/*","/ws/createTaxonRegionAlert","/ws/createSpeciesGroupRegionAlert","/admin/runChecksNow" ]
+    cas:
+        enabled: false
+        adminRole: ROLE_ADMIN
+        uriFilterPattern: [ "/","/alaAdmin/*","/testAuth/*","/query/*","/admin/*","/admin/user/*","/admin/user/debug/*","/admin/debug/all","/notification/myAlerts","/notification/changeFrequency","/notification/addMyAlert","/notification/addMyAlert/*","/notification/deleteMyAlert/*","/notification/deleteMyAlert/*","/notification/deleteMyAlertWR/*","/webservice/*","/webservice/createTaxonAlert","/webservice/taxonAlerts","/webservice/createRegionAlert","/webservice/regionAlerts","/webservice/deleteTaxonAlert/*","/webservice/create*","/webservice/createSpeciesGroupRegionAlert","/ws/*","/ws/createTaxonAlert","/ws/taxonAlerts","/ws/createRegionAlert","/ws/regionAlerts","/ws/deleteTaxonAlert/*","/ws/createTaxonRegionAlert","/ws/createSpeciesGroupRegionAlert","/admin/runChecksNow" ]
     oidc:
         enabled: true
         discoveryUri:  https://cognito-idp.ap-southeast-2.amazonaws.com/ap-southeast-2_OOXU9GW39/.well-known/openid-configuration
