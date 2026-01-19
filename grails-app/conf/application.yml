@@ -53,6 +53,8 @@ info:
         version: '@info.app.version@'
         grailsVersion: '@info.app.grailsVersion@'
 spring:
+    config:
+        import: "optional:file:/data/alerts/config/alerts-config.yml"
     main:
         banner-mode: "off"
     groovy:
@@ -216,10 +218,10 @@ encodeBracketInUrlParam:
 
 #For GORM
 dataSource:
-    url: ${DB_URL}
-    username: ${DB_USER}
-    password: ${DB_PASSWORD}
-    driverClassName: ${DB_DRIVER}
+#    url: ${DB_URL}
+#    username: ${DB_USER}
+#    password: ${DB_PASSWORD}
+#    driverClassName: ${DB_DRIVER}
 
     pooled: true
     jmxExport: true
@@ -261,20 +263,20 @@ dataSource:
 # and
 #  SPRING_CONFIG_ADDITIONAL_LOCATION=file:/data/alerts/config/application.yml
 #  should be set into ENV
-spring:
-    datasource:
-        url: ${DB_URL}
-        username: ${DB_USER}
-        password: ${DB_PASSWORD}
-        driver-class-name: ${DB_DRIVER}
+#spring:
+#    datasource:
+#        url: ${DB_URL}
+#        username: ${DB_USER}
+#        password: ${DB_PASSWORD}
+#        driver-class-name: ${DB_DRIVER}
 
-    liquibase:
-        enabled: true
-        change-log: classpath:db/changelog/db.changelog-master.xml
-        url: ${DB_URL}
-        user: ${DB_USER}
-        password: ${DB_PASSWORD}
-        driver-class-name: ${DB_DRIVER}
+#    liquibase:
+#        enabled: true
+#        change-log: classpath:db/changelog/db.changelog-master.xml
+#        url: ${DB_URL}
+#        user: ${DB_USER}
+#        password: ${DB_PASSWORD}
+#        driver-class-name: ${DB_DRIVER}
 
 cron:
     daily: '0 30 8 * * ?'
