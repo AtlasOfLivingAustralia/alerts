@@ -28,11 +28,6 @@ grails:
             lockTimeout: 200
     codegen:
         defaultPackage: au.org.au.alerts
-    config:
-        locations:
-            - file:/data/alerts/config/alerts-config.properties
-            - file:/data/alerts/config/alerts-config.yml
-            - file:/data/alerts/config/alerts-config.groovy
     spring:
         transactionManagement:
             proxies: false
@@ -216,43 +211,32 @@ biosecurity:
 encodeBracketInUrlParam:
     enabled: true
 
-#For GORM
+#For Grails
 dataSource:
-#    url: ${DB_URL}
-#    username: ${DB_USER}
-#    password: ${DB_PASSWORD}
-#    driverClassName: ${DB_DRIVER}
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    driverClassName: ${DB_DRIVER}
 
     pooled: true
     jmxExport: true
+    # HikariCP-specific properties
     properties:
-        # http://www.grails.org/doc/latest/guide/single.html#dataSource
-        # see http://tomcat.apache.org/tomcat-7.0-doc/jdbc-pool.html#Common_Attributes for more
-        timeBetweenEvictionRunsMillis: 5000 # milliseconds (default: 5000)
-        testOnBorrow: false # default: false
-        testOnReturn: false # default: false
-        testWhileIdle: false # default: false
-        validationQuery: null # default: null
-        validationQueryTimeout: 10 # seconds (default: -1 i.e. disabled)
-        validationInterval: 30000 # milliseconds, default is 30000 (30 seconds)
-        removeAbandoned: true # # default: false
-        removeAbandonedTimeout: 3600 # seconds (default: 60), must be > quartz job duration
-        logAbandoned: true # adds some overhead to every borrow from the pool, disable if it becomes a performance issue
-        logValidationErrors: true # default: false, logs validation errors at SEVERE
-        minEvictableIdleTimeMillis: 180000 # 3 minutes in milliseconds
-        minIdle: 0 # Allow the pool to scale down to zero idle connections
-        maxIdle: 10 # Maximum number of idle connections
-        initialSize: 5 # Initial number of connections created when the pool is started
-        maxActive: 50 # Maximum number of active connections that can be allocated from this pool at the same time
-        # NOTE: removeAbandoned: true OR testWhileIdle: true enables the Pool Cleaner. There is a bug with the
-        # pool cleaner which causes deadlocks when using older mysql jdbc drivers. This configuration has been
-        # tested successfully with mysql:mysql-connector-java:5.1.34.
-        # mysql jdbc connection properties - see http://dev.mysql.com/doc/connector-j/en/connector-j-reference-configuration-properties.html
-        dbProperties:
-            autoReconnect: true
-            connectTimeout: 0
-            useUnicode: true
-            characterEncoding: "UTF-8"
+        # Pool sizing
+        minimumIdle: 5            # minimum idle connections
+        maximumPoolSize: 50       # max total connections
+        maxLifetime: 1800000      # 30 minutes
+        idleTimeout: 600000       # 10 minutes
+        connectionTimeout: 30000  # 30 seconds to get a connection
+        leakDetectionThreshold: 60000  # 60 sec to detect leaks
+
+        # Connection validation
+        connectionTestQuery: "SELECT 1"  # ensures connection is valid
+        validationTimeout: 5000          # 5 sec timeout for validation
+
+        # Character encoding
+        useUnicode: true
+        characterEncoding: "UTF-8"
 
 #For those beans managed by Spring, like Liquibase, Quartz
 #Those properties should be defined in an external properties yml file
@@ -260,23 +244,14 @@ dataSource:
 # DB_USER: alerts_user
 # DB_PASSWORD: password
 # DB_DRIVER: com.mysql.cj.jdbc.Driver
-# and
-#  SPRING_CONFIG_ADDITIONAL_LOCATION=file:/data/alerts/config/application.yml
-#  should be set into ENV
-#spring:
-#    datasource:
-#        url: ${DB_URL}
-#        username: ${DB_USER}
-#        password: ${DB_PASSWORD}
-#        driver-class-name: ${DB_DRIVER}
-
-#    liquibase:
-#        enabled: true
-#        change-log: classpath:db/changelog/db.changelog-master.xml
-#        url: ${DB_URL}
-#        user: ${DB_USER}
-#        password: ${DB_PASSWORD}
-#        driver-class-name: ${DB_DRIVER}
+spring:
+    liquibase:
+        enabled: true
+        change-log: classpath:db/changelog/db.changelog-master.xml
+        url: ${DB_URL}
+        user: ${DB_USER}
+        password: ${DB_PASSWORD}
+        driver-class-name: ${DB_DRIVER}
 
 cron:
     daily: '0 30 8 * * ?'

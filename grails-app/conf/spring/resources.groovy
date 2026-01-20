@@ -1,5 +1,4 @@
 import grails.util.Holders
-import liquibase.integration.spring.SpringLiquibase
 import org.springframework.scheduling.quartz.SchedulerFactoryBean
 import org.springframework.web.servlet.i18n.SessionLocaleResolver
 import au.org.ala.alerts.quartz.AutowiringSpringBeanJobFactory
@@ -10,16 +9,10 @@ beans = {
     }
 
     // This tells Spring to find all @Component, @Service, etc. in your package
+    // Assure the Quartz schedulers are loaded
     xmlns context: "http://www.springframework.org/schema/context"
     context.'component-scan'('base-package': "au.org.ala.alerts.quartz")
 
-    // 1. Manually define the Liquibase bean
-    liquibase(SpringLiquibase) {
-        dataSource = ref('dataSource')
-        changeLog = "classpath:db/changelog/db.changelog-master.xml"
-        // This ensures the properties from your YAML are still applied
-        shouldRun = true
-    }
 
     // 1. Define the custom Quartz JobFactory
     quartzJobFactory(AutowiringSpringBeanJobFactory)

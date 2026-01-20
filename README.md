@@ -6,7 +6,7 @@ Scheduling is handled by Quartz plugin in the app. It works like RSS - it checks
 
 ## Grails 6 updates IMPORTANT >= version 5.2.0 
 
-In Grails 6, Liquibase and Quartz are bootstrapped directly by Spring Boot during application startup.  
+In Grails 6, Liquibase is bootstrapped directly by Spring Boot during application startup.  
 This happens **before** the Grails `external-config` plugin is invoked.
 
 As a result, any beans managed by Spring (such as **Liquibase** and **Quartz**) must have their required
@@ -21,13 +21,17 @@ DB_USER: alerts_user
 DB_PASSWORD: password
 DB_DRIVER: com.mysql.cj.jdbc.Driver
 ```
+The external configuration file is referenced in application.yml using:, 
+```spring:
+    config:
+        import: "optional:file:/data/alerts/config/alerts-config.yml"
+```
+Spring can also load this external configuration via an environment variable, allowing you to specify your own file, for example:
 
-and then the external configuration file is loaded by Spring using an environment variable:
 ```
 SPRING_CONFIG_ADDITIONAL_LOCATION=file:/data/alerts/config/alerts-config.yml
 ```
-
-Without this, Spring-managed components will not see the required configuration and may fall back to
+If neither the import nor the environment variable is provided, Spring-managed components will not see the required configuration and may fall back to
 defaults (for example, H2 or Quartz RAMJobStore).
 
 ## IMPORTANT

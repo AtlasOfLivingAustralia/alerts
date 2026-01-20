@@ -448,8 +448,8 @@
 
     <div id="page-body" class="col-sm-12">
         <g:set var="today" value="${new java.text.SimpleDateFormat('yyyy-MM-dd').format(new Date())}"/>
-        <div  class="row"  style="text-align: center">
-            <div name="scheduleStatusInfo"  class="col-sm-12">
+        <div  class="row"  style="text-align: right">
+            <div name="scheduleStatusInfo"  class="col-sm-10">
                 <g:if test="${!jobStatus}">
                     <span style="color: red; font-weight: bold;">
                         No job is scheduled
@@ -536,7 +536,7 @@
                 <div class="col-sm-3 mt-20">
                     <label>&nbsp;</label>
                     <button type="submit" id="saveWeeklyScheduleBtn" class="btn btn-primary form-control">
-                        Save Weekly Schedule
+                        Update Weekly Schedule
                     </button>
                 </div>
             </g:form>

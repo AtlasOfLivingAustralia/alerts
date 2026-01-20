@@ -5,7 +5,7 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
 
-        <include file="classpath:db/changelog/quartz.init.xml"/>
-        <include file="classpath:db/changelog/alerts.init.xml"/>
-        <include file="classpath:db/changelog/frequency.preset.xml"/>
+        <include file="classpath:db/changelog/quartz-schema.xml"/>
+        <include file="classpath:db/changelog/alerts-schema.xml"/>
+        <include file="classpath:db/changelog/frequency-preset.xml"/>
 </databaseChangeLog>
