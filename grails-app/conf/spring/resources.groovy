@@ -9,6 +9,10 @@ beans = {
         defaultLocale= new java.util.Locale(Holders.config.siteDefaultLanguage as String)
     }
 
+    // This tells Spring to find all @Component, @Service, etc. in your package
+    xmlns context: "http://www.springframework.org/schema/context"
+    context.'component-scan'('base-package': "au.org.ala.alerts.quartz")
+
     // 1. Manually define the Liquibase bean
     liquibase(SpringLiquibase) {
         dataSource = ref('dataSource')
