@@ -166,7 +166,7 @@ siteDefaultLanguage: "{{ .Values.config.alerts_site_default_language }}"
 privacyPolicy: "{{ .Values.config.privacy_policy_url }}"
 
 google:
-  apikey: "{{ .Values.config.google.apikey }}"
+  apikey: "{{ .Values.config.google_apikey }}"
 
 webservice:
   jwt: "{{ .Values.config.webservice.webservice_jwt }}"
