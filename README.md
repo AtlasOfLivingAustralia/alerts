@@ -76,7 +76,7 @@ You can view all sent emails via the smtp4dev UI on http://localhost:3000/, inlc
 
 Change logs:
 Liquibase were introduced to manage DB changes
-Using SPRING_CONFIG_ADDITIONAL_LOCATION env to load external configs
+Spring uses /data/alerts/config/alerts-config.yaml as default external config file
 
 
 ### 4.2.0 Release

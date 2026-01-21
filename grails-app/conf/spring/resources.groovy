@@ -19,7 +19,6 @@ beans = {
 
     // 2. Link it to the Scheduler
     quartzScheduler(SchedulerFactoryBean) {
-        dependsOn('liquibase')
         dataSource = ref('dataSource')
         transactionManager = ref('transactionManager')
         jobFactory = ref('quartzJobFactory') // CRITICAL: This enables @Autowired in jobs

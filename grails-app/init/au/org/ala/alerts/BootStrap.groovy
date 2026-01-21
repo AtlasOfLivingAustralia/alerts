@@ -1,5 +1,8 @@
 package au.org.ala.alerts
 
+import javax.sql.DataSource
+
+
 class BootStrap {
 
     def grailsApplication
@@ -36,7 +39,6 @@ class BootStrap {
 
     private void preloadQueries() {
         log.info("start of preloadQueries")
-
 
         def title = messageSource.getMessage("query.annotations.title", null, siteLocale)
         def descr = messageSource.getMessage("query.annotations.descr", null, siteLocale)

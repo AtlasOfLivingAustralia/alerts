@@ -135,6 +135,7 @@ skin:
 privacyPolicy: "https://www.ala.org.au/terms-of-use/privacy-policy/"
 siteDefaultLanguage: "en"
 customUserAgent: 'alerts/@info.app.version@'
+
 ala:
     baseURL: "https://www.ala.org.au"
     userDetailsURL: "https://auth.ala.org.au/userdetails/userDetails/getUserListFull"
