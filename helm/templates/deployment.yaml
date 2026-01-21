@@ -30,16 +30,8 @@ spec:
             - "-Xmx{{ .Values.config.xmx }}"
             - "-jar"
             - "app.war"
-          env:
-            - name: TZ
-              value: "Australia/Sydney"
-            - name: SPRING_CONFIG_ADDITIONAL_LOCATION
-              value: "file:/data/alerts/config/alerts-config.yml"
           volumeMounts:
             - name: config-volume
-              mountPath: /data/alerts/config/alerts-config.properties
-              subPath: alerts-config.properties
-            - name: spring-config-volume
               mountPath: /data/alerts/config/alerts-config.yml
               subPath: alerts-config.yml
             - name: logback-volume

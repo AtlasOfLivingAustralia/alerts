@@ -169,6 +169,9 @@ dependencies {
     implementation 'com.jayway.jsonpath:json-path-assert:2.7.0'
 }
 
+bootRun {
+    mainClass = 'au.org.ala.alerts.Application'
+}
 //
 //bootRun {
 //    ignoreExitValue true
