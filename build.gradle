@@ -19,7 +19,6 @@ plugins {
     id "groovy"
     id "org.grails.grails-gsp"
     id "org.grails.grails-web"
-    id "com.github.erdi.webdriver-binaries" version "3.0"
     id "war"
     id "idea"
     id "com.bertramlabs.asset-pipeline"
@@ -147,17 +146,9 @@ dependencies {
     //implementation 'org.grails.plugins:schwartz-monitor:2.0.1.ALA-SNAPSHOT'
     implementation 'org.grails.plugins:cache'
     implementation 'org.grails.plugins:cache-ehcache:3.0.0'
-
-
     // regular JAR dependencies
     runtimeOnly 'mysql:mysql-connector-java:8.0.33'
-    testRuntimeOnly "com.h2database:h2"
-    testImplementation "org.seleniumhq.selenium:selenium-remote-driver:4.10.0"
-    testImplementation "org.seleniumhq.selenium:selenium-api:4.10.0"
-    testImplementation "org.seleniumhq.selenium:selenium-support:4.10.0"
-    testRuntimeOnly("org.seleniumhq.selenium:selenium-chrome-driver:4.10.0")
-    testRuntimeOnly("org.seleniumhq.selenium:selenium-firefox-driver:4.10.0")
-    testRuntimeOnly("org.seleniumhq.selenium:selenium-safari-driver:4.10.0")
+
     runtimeOnly 'commons-lang:commons-lang:2.6'
     implementation 'commons-codec:commons-codec:1.17.1'
     implementation 'commons-io:commons-io:2.17.0'
@@ -201,19 +192,17 @@ tasks.withType(Test) {
 tasks.withType(War).configureEach { War war ->
     war.dependsOn compileGroovyPages
 }
-webdriverBinaries {
-    chromedriver '110.0.5481.77'
-    geckodriver '0.32.2'
-    edgedriver '110.0.1587.57'
-}
+
 assets {
     minifyJs = true
     minifyCss = true
 }
 
 
-
 bootWar {
+    manifest {
+        attributes 'Start-Class': 'au.org.ala.alerts.Application'
+    }
     dependsOn(compileGroovyPages)
 }
 
