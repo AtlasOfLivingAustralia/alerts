@@ -1,0 +1,193 @@
+DB_URL: "jdbc:mysql://{{ .Values.rds.name }}/{{ .Values.config.db.database_name }}?autoReconnect=true&connectTimeout=0&useUnicode=true&characterEncoding=UTF-8&useSSL={{ .Values.config.db.mysql_connection_ssl }}"
+DB_USER: "{{ .Values.config.db.alerts_db_username }}"
+DB_PASSWORD: "{{ .Values.config.db.alerts_db_password }}"
+DB_DRIVER: "{{ .Values.config.db.driver_class_name }}"
+
+mail:
+  enabled: {{ .Values.config.mail.enabled }}
+  ses:
+    enabled: {{ .Values.config.mail.mail_ses_enabled }}
+
+serverName: "{{ .Values.config.base.alerts_base_url }}"
+serverURL: "{{ .Values.config.base.alerts_base_url }}"
+#todo check if port is still used
+server:
+  port: 8000
+
+grails:
+  #todo check if mail section is still used
+  mail:
+    port: 2525
+    server: "localhost"
+  serverURL: "{{ .Values.config.base.alerts_base_url }}{{ .Values.config.base.alerts_context_path }}"
+  plugin:
+    awssdk:
+      region: "{{ .Values.config.s3.grails_plugin_awssdk_region }}"
+      s3:
+        bucket: "{{ .Values.config.s3.grails_plugin_awssdk_s3_bucket }}"
+        profile: "{{ .Values.config.s3.grails_plugin_awssdk_s3_profile }}"
+
+biosecurity:
+  csv:
+    s3:
+      enabled: {{ .Values.config.csv.biosecurity_csv_s3_enabled }}
+    local:
+      enabled: {{ .Values.config.csv.biosecurity_csv_local_enabled }}
+  moreinfo:
+    link: "{{ .Values.config.biosecurity.biosecurity_more_info }}"
+  queryurl:
+    template: "{{ .Values.config.biosecurity.biosecurity_query_url }}"
+  lga: "{{ .Values.config.biosecurity.biosecurity_lga }}"
+
+security:
+  cas:
+    appServerName: "{{ .Values.config.base.alerts_base_url }}{{ .Values.config.base.alerts_context_path }}"
+    uriFilterPattern: >-
+      /,/alaAdmin/*,/testAuth/*,/query/*,/admin/*,/admin/user/*,
+      /admin/user/debug/*,/admin/debug/all,/notification/myAlerts,
+      /notification/changeFrequency,/notification/addMyAlert,
+      /notification/addMyAlert/*,/notification/deleteMyAlert/*,
+      /notification/deleteMyAlertWR/*,/webservice/*,
+      /webservice/createTaxonAlert,/webservice/taxonAlerts,
+      /webservice/createRegionAlert,/webservice/regionAlerts,
+      /webservice/deleteTaxonAlert/*,/webservice/create/*,
+      /webservice/createSpeciesGroupRegionAlert,/ws/*,
+      /ws/createTaxonAlert,/ws/taxonAlerts,/ws/createRegionAlert,
+      /ws/regionAlerts,/ws/deleteTaxonAlert/*,/ws/createTaxonRegionAlert,
+      /ws/createSpeciesGroupRegionAlert,/admin/runChecksNow,/quartz/*
+    uriExclusionFilterPattern: "/images.*,/css.*,/js.*,/less.*"
+    authenticateOnlyIfLoggedInPattern: "/unsubscribe/*"
+    adminRole: "ROLE_ADMIN"
+    casServerName: "{{ .Values.config.cas.auth_base_url }}"
+    casServerUrlPrefix: "{{ .Values.config.cas.auth_base_url }}/cas"
+    casServerLoginUrl: "{{ .Values.config.cas.auth_base_url }}/cas/login"
+    casServerLogoutUrl: "{{ .Values.config.cas.auth_base_url }}/cas/logout"
+    loginUrl: "{{ .Values.config.cas.auth_base_url }}/cas/login"
+    logoutUrl: "{{ .Values.config.cas.auth_base_url }}/cas/logout"
+
+  apikey:
+    enabled: {{ .Values.config.apikey.apikey_check_enabled }}
+    ip:
+      whitelist: "{{ .Values.config.cas.alerts_apikey_whitelist }}"
+    auth:
+      serviceUrl: "{{ .Values.config.apikey.apikey_auth_url }}"
+    check:
+      serviceUrl: "{{ .Values.config.apikey.apikey_check_url }}"
+    userdetails:
+      serviceUrl: "{{ .Values.config.apikey.apikey_userdetails_url }}"
+
+  oidc:
+    logoutUrl: "{{ .Values.config.cognito.oidc.logoutUrl }}"
+    logoutAction: "{{ .Values.config.cognito.oidc.logoutAction }}"
+    clientId: "{{ .Values.config.cognito.oidc.alerts_client_id }}"
+    secret: "{{ .Values.config.cognito.oidc.alerts_client_secret }}"
+    discoveryUri: "{{ .Values.config.cognito.oidc.discoveryUri }}"
+    scope: "{{ .Values.config.cognito.oidc.scope }}"
+    alaUseridClaim: "{{ .Values.config.cognito.oidc.alaUseridClaim }}"
+
+  jwt:
+    discoveryUri: "{{ .Values.config.cognito.jwt.discoveryUri }}"
+    rolesFromAccessToken: "{{ .Values.config.cognito.jwt.rolesFromAccessToken }}"
+    userIdClaim: "{{ .Values.config.cognito.jwt.userIdClaim }}"
+    roleClaims: "{{ .Values.config.cognito.jwt.roleClaims }}"
+
+  core:
+    roleAttribute: "{{ .Values.config.cognito.core.roleAttribute }}"
+    affiliation-survey:
+      enabled: {{ .Values.config.cognito.cookie.auth_cookie_enabled }}
+    authCookieName: "{{ .Values.config.cognito.core.auth_cookie_name}}"
+
+  cookie:
+    enabled: {{ .Values.config.cognito.cookie.auth_cookie_enabled }}
+    domain: "{{ .Values.config.cognito.cookie.auth_cookie_domain }}"
+
+myannotation:
+  enabled: {{ .Values.config.enable_myannotation }}
+
+useSpeciesLists: {{ .Values.config.enable_specieslists_alerts }}
+useSpatial: {{ .Values.config.enable_spatial_alerts }}
+useBlogsAlerts: {{ .Values.config.enable_blogs_alerts }}
+useCitizenScienceAlerts: {{ .Values.config.enable_citizen_science_alerts }}
+
+biocache:
+  baseURL: "{{ .Values.config.external.biocache_url }}"
+
+biocacheService:
+  baseURL: "{{ .Values.config.external.biocache_service_url }}"
+
+spatial:
+  baseURL: "{{ .Values.config.external.spatial_url }}"
+
+collectory:
+  baseURL: "{{ .Values.config.external.collectory_url }}"
+
+collectoryService:
+  baseURL: "{{ .Values.config.external.alerts_collectory_service_url }}"
+
+collection:
+  searchTitle: "={{ .Values.config.collection_searchTitle }}"
+  searchURL: "{{ .Values.config.collection_searchUrl }}"
+
+lists:
+  baseURL: "{{ .Values.config.external.lists_url }}"
+
+ala:
+  baseURL: "{{ .Values.config.ala_base_url }}"
+
+bie:
+  baseURL: "{{ .Values.config.bie_base_url }}"
+  searchPath: "{{ .Values.config.bie_search_path }}"
+
+occurrence:
+  searchTitle: "{{ .Values.config.occurrence_searchTitle }}"
+  searchURL: "{{ .Values.config.occurrence_searchUrl }}"
+
+regions:
+  searchTitle: "{{ .Values.config.regions_searchTitle }}"
+  searchURL:  "{{ .Values.config.regions_searchUrl }}"
+
+speciesPages:
+  searchTitle: "{{ .Values.config.speciesPages_searchTitle }}"
+  searchURL: "{{ .Values.config.speciesPages_searchUrl }}"
+
+headerAndFooter:
+  baseURL: "{{ .Values.config.header_and_footer_baseurl }}"
+  version: "{{ .Values.config.header_and_footer_version }}"
+
+skin:
+  layout: "{{ .Values.config.alerts_skin_layout }}"
+  homeUrl: "{{ .Values.config.skin_home_url }}"
+  orgNameLong: "{{ .Values.config.skin_orgNameLong }}"
+  orgNameShort: "{{ .Values.config.orgNameShort }}"
+  orgSupportEmail: "{{ .Values.config.orgSupportEmail }}"
+  favicon: "{{ .Values.config.skin_favicon }}"
+
+siteDefaultLanguage: "{{ .Values.config.alerts_site_default_language }}"
+privacyPolicy: "{{ .Values.config.privacy_policy_url }}"
+
+google:
+  apikey: "{{ .Values.config.google_apikey }}"
+
+webservice:
+  jwt: "{{ .Values.config.webservice.webservice_jwt }}"
+  jwt-scopes: "{{ .Values.config.webservice.alerts_webservice_jwt_scopes }}"
+  client-id: "{{ .Values.config.webservice.alerts_client_id }}"
+  client-secret: "{{ .Values.config.webservice.alerts_client_secret }}"
+
+userDetails:
+  url: "{{ .Values.config.userdetails.userdetails_url }}"
+  web:
+    url: "{{ .Values.config.userdetails.userdetails_web_url }}"
+
+alerts:
+  user-sync:
+    batch-size: 1000
+
+openapi:
+  components:
+    security:
+      oauth2:
+        baseUrl: "{{ .Values.config.openapi.openapi_oauth_url }}"
+  terms: "{{ .Values.config.openapi.terms_url }}"
+  contact:
+    email: "{{ .Values.config.openapi.support_email }}"

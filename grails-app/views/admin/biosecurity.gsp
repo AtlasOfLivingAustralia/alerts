@@ -469,38 +469,80 @@
                 </g:else>
             </div>
             <div  class="col-sm-2">
-                <button type="button" id="showScheduleBtn" class="btn btn-info">Reschedule</button>
+                <button type="button" id="showScheduleBtn" class="btn btn-primary-outline">Schedule Manager</button>
             </div>
         </div>
         <p></p>
 
         <div class="well" name="rescheduleBiosecurity" style="display:none;">
-            <g:form name="pauseResumeForm" controller="admin" action="pauseResumeBioSecurityAlerts" method="post">
-                <div class="row" style="text-align: right">
-                    <div class="col-sm-8 form-group" >Specify the dates for pausing and resuming alerts. Pause alerts on  <input type="date" name="pauseDate" value="${today}" />
-                        <br/>, and resume on  <input type="date" name="resumeDate" value="${today}" />
-                    </div>
-                    <div class="col-sm-4"  >
-                        <button type="button" id="scheduleBtn" class="btn btn-info">Schedule</button>
-                        <g:link controller="biosecurityAdmin" action="cancelScheduledPauseResumeJob" class="btn btn-info" >
-                            Cancel
-                        </g:link>
-                    </div>
-
-                    <div class="col-sm-12" name="pauseWindowInfo" ></div>
-                </div>
-            </g:form>
-            <div class="row"  style="text-align: right">
-                <div class="col-sm-10"></div>
-                <div class="col-sm-2">
-                    <g:link controller="biosecurityAdmin" action="pauseAlerts" class="btn btn-warning" >
+            <div class="text-center"><h3>Alerts schedule manager</h3></div>
+            <div class="row mt-20" >
+                <div class="col-sm-12"><h4>Pause or resume now</h4></div>
+                <div class="col-sm-12">Pause or resume alerts immediately. &nbsp;
+                    <g:link controller="biosecurityAdmin" action="pauseAlerts" class="btn btn-primary" >
                         Pause now
-                    </g:link> <p></p>
-                    <g:link controller="biosecurityAdmin" action="resumeAlerts" class="btn btn-success" >
+                    </g:link> &nbsp;
+                    <g:link controller="biosecurityAdmin" action="resumeAlerts" class="btn btn-primary-outline" >
                         Resume now
                     </g:link>
                 </div>
             </div>
+            <div class="mt-20"></div>
+            <g:form name="pauseResumeForm" controller="admin" action="pauseResumeBioSecurityAlerts" method="post">
+                <div><h4>Schedule a pause</h4></div>
+                <div class="row" >
+                    <div class="col-sm-12" >Set a date range to pause alerts. Dates start at midnight AEDT/AEST. You can save on schedued pause at a time.</div>
+                    <div class="col-sm-12 mt-20">Pause from <input type="date" name="pauseDate" value="${today}" />
+                        , and resume on  <input type="date" name="resumeDate" value="${today}" />
+                        &nbsp;&nbsp;
+                        <button type="button" id="scheduleBtn" class="btn btn-primary">Save schedule</button>
+                        &nbsp;
+                        <g:link controller="biosecurityAdmin" action="cancelScheduledPauseResumeJob" class="btn btn-primary-outline" >
+                            Cancel scheduled pause
+                        </g:link>
+                    </div>
+                    <div class="col-sm-12 mt-20" name="pauseWindowInfo" ></div>
+                </div>
+            </g:form>
+
+            <div class="row mt-30">
+
+                <div class="col-sm-12">
+                    <h4>Schedule Weekly Biosecurity Job</h4>
+                    <p>You can change the weekday and time this job runs. This updates the weekly schedule only.</p>
+                </div>
+
+                <g:form controller="biosecurityAdmin" action="updateWeeklySchedule" method="POST">
+                <div class="col-sm-2 mt-20">
+                    <label for="weekday">Run on</label>
+                    <select id="weekday" name="weekday" class="form-control">
+                        <option value="MON">Monday</option>
+                        <option value="TUE">Tuesday</option>
+                        <option value="WED">Wednesday</option>
+                        <option value="THU">Thursday</option>
+                        <option value="FRI">Friday</option>
+                        <option value="SAT">Saturday</option>
+                        <option value="SUN">Sunday</option>
+                    </select>
+                </div>
+
+                <!-- Time selector -->
+                <div class="col-sm-2 mt-20">
+                    <label for="time">At time</label>
+                    <input type="time" id="time" name="time" class="form-control" value="11:00">
+                </div>
+
+                <!-- Save button -->
+                <div class="col-sm-3 mt-20">
+                    <label>&nbsp;</label>
+                    <button type="submit" id="saveWeeklyScheduleBtn" class="btn btn-primary form-control">
+                        Update Weekly Schedule
+                    </button>
+                </div>
+            </g:form>
+            </div>
+
+
         </div>
 
         <div class="jumbotron jumbotron-fluid">
@@ -532,14 +574,14 @@
                         Search for new records of all subscriptions and notify to subscribers
                     </div>
                     <div class="col-sm-2" >
-                        <button class="btn btn-info" onclick="triggerSubscriptions()">Check & Notify </button>
+                        <button class="btn btn-primary-outline" onclick="triggerSubscriptions()">Check & Notify </button>
                     </div>
                 </div>
                 <p></p>
                 <div class="row" style="text-align: right">
                     <div class="col-sm-10" >Download CSV list of all occurrences from all biosecurity alerts sent (scheduled and manual)</div>
                     <div class="col-sm-2" >
-                        <a class="btn btn-info" href="${createLink(controller: 'admin', action: 'listBiosecurityAuditCSV')}" target="_blank">CSV Reporting</a>
+                        <a class="btn btn-primary-outline" href="${createLink(controller: 'admin', action: 'listBiosecurityAuditCSV')}" target="_blank">CSV Reporting</a>
                     </div>
                 </div>
                 <p></p>
@@ -571,7 +613,7 @@
                                 <input type="text" class="form-control" placeholder="Search by query name" id="searchSubscriptions" />
                             </div>
                             <div class="col-auto">
-                                <button type="button" id="resetSubscriptionSearch" class="btn btn-info">Reset</button>
+                                <button type="button" id="resetSubscriptionSearch" class="btn btn-primary-outline">Reset</button>
                             </div>
                     </div>
                 </div>
