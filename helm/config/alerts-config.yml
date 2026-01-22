@@ -12,7 +12,7 @@ serverName: "{{ .Values.config.base.alerts_base_url }}"
 serverURL: "{{ .Values.config.base.alerts_base_url }}"
 #todo check if port is still used
 server:
-  port: 8080
+  port: 8000
 
 grails:
   #todo check if mail section is still used
