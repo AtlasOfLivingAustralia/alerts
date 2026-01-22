@@ -18,9 +18,14 @@ package au.org.ala.alerts
 import au.org.ala.web.AlaSecured
 import grails.converters.JSON
 
+import java.time.DayOfWeek
+import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
-import java.time.format.DateTimeFormatter
+import java.time.ZonedDateTime
+import java.time.LocalTime
+import java.time.ZoneOffset
+
 
 class BiosecurityAdminController {
     def biosecurityJobService
@@ -36,10 +41,45 @@ class BiosecurityAdminController {
     }
 
     def updateWeeklySchedule() {
-        def (hour, minute) = params.time.split(':')
+        def (hourStr, minuteStr) = params.time.split(':')
+        int hour = hourStr.toInteger()
+        int minute = minuteStr.toInteger()
         def weekday = params.weekday
 
-        def cron = "0 ${minute} ${hour} ? * ${weekday}"
+        ZoneId clientZone = params.localTimeZone ?
+                ZoneId.of(params.localTimeZone) :
+                ZoneId.of("UTC")
+
+        // Local weekday from UI (MON, TUE, ...)
+        DayOfWeek localWeekday = DayOfWeek.valueOf(weekday)
+
+        // Pick a date that matches the requested weekday
+        LocalDate baseDate = LocalDate.now(clientZone)
+        while (baseDate.dayOfWeek != localWeekday) {
+            baseDate = baseDate.plusDays(1)
+        }
+
+        // Local datetime
+        ZonedDateTime localDateTime = ZonedDateTime.of(
+                baseDate,
+                LocalTime.of(hour, minute),
+                clientZone
+        )
+
+        // Convert to UTC
+        ZonedDateTime utcDateTime =
+                localDateTime.withZoneSameInstant(ZoneOffset.UTC)
+
+        int utcHour = utcDateTime.hour
+        int utcMinute = utcDateTime.minute
+
+        // ⚠️ Recalculate weekday in UTC
+        String utcWeekday = utcDateTime.dayOfWeek.name()
+
+        // Quartz cron (UTC)
+        def cron = "0 ${utcMinute} ${utcHour} ? * ${utcWeekday}"
+
+        //def cron = "0 ${minute} ${hour} ? * ${weekday}"
         biosecurityJobService.updateTrigger(cron)
 
         redirect(controller: "admin", action: "biosecurity")
@@ -48,16 +88,19 @@ class BiosecurityAdminController {
     /**
      * Schedules a pause and resume window for the Biosecurity job.
      *
+     * @param pauseDate compulsory, ISO UTC Format
+     * @param resumeDate compulsory, ISO UTC Format
      * @return JSON containing pause and resume dates
      */
     @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
     def pauseResumeAlerts() {
-        def formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-        LocalDate pauseLocal = params.pauseDate ? LocalDate.parse(params.pauseDate, formatter) : null
-        LocalDate resumeLocal = params.resumeDate ? LocalDate.parse(params.resumeDate, formatter) : null
+        Date pauseDate  = params.pauseDate
+                ? Date.from(Instant.parse(params.pauseDate))
+                : null
 
-        Date pauseDate = pauseLocal ? Date.from(pauseLocal.atStartOfDay(ZoneId.systemDefault()).toInstant()) : null
-        Date resumeDate = resumeLocal ? Date.from(resumeLocal.atStartOfDay(ZoneId.systemDefault()).toInstant()) : null
+        Date resumeDate = params.resumeDate
+                ? Date.from(Instant.parse(params.resumeDate))
+                : null
         if (pauseDate && resumeDate) {
             biosecurityJobService.pauseResumeAlerts(pauseDate, resumeDate)
             def window = biosecurityJobService.getPauseWindow()

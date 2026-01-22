@@ -7,6 +7,24 @@
     <meta name="breadcrumb" content="Quartz management" />
     <meta name="breadcrumbParent" content="${request.contextPath}/admin, Admin"/>
     <asset:stylesheet href="alerts.css"/>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            document.querySelectorAll('.ISODateTime').forEach(el => {
+                const dt = new Date(el.dataset.time); // JS Date interprets ISO as UTC
+                el.textContent = dt.toLocaleString(undefined, {
+                    timeZone: tz,
+                    weekday: 'short',
+                    year: 'numeric',
+                    month: 'short',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            });
+        });
+    </script>
 </head>
 <body>
 
@@ -45,8 +63,8 @@
                 <td>${job.jobGroup}</td>
                 <td>${job.triggerName}</td>
                 <td>${job.triggerGroup}</td>
-                <td><g:formatDate date="${job.nextFireTime}" format="EEE, dd MMM yyyy HH:mm" /></td>
-                <td>${job.previousFire}</td>
+                <td><alerts:ISODateTime date="${job.nextFireTime}" /></td>
+                <td><alerts:ISODateTime date="${job.previousFire}" /></td>
                 <td>
                     <span class="badge ${job.state == 'NORMAL' ? 'badge-success' : job.state == 'PAUSED' ? 'badge-warning' : 'badge-danger'}">
                         ${job.state}

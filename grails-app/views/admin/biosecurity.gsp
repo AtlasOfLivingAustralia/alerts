@@ -46,6 +46,20 @@
             return day + ' ' + month + ' ' + year + ' ' + hours + ':' + minutes;
         }
 
+        function formatUtcToLocal(utcString) {
+            if (!utcString) return null;
+
+            const dt = new Date(utcString); // ISO UTC → Date
+            return dt.toLocaleString(undefined, {
+                weekday: 'short',
+                year: 'numeric',
+                month: 'short',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
         function triggerSubscriptionSince(target, queryId) {
             var yes = confirm("It will also update the last check date to the current time. Are you sure you want to proceed?");
 
@@ -356,29 +370,35 @@
             $("#scheduleBtn").click(function () {
                 const pauseDate  = $("form[name='pauseResumeForm']").find("input[name='pauseDate']").val();
                 const resumeDate = $("form[name='pauseResumeForm']").find("input[name='resumeDate']").val();
+
+                const pauseUtcDate = new Date(pauseDate+"T00:00:00").toISOString();
+                const resumeUtcDate = new Date(resumeDate+"T00:00:00").toISOString();
                 $.ajax({
                     url: "${createLink(controller: 'biosecurityAdmin', action: 'pauseResumeAlerts')}",
                     type: "POST",
                     dataType: "json",
                     data: {
-                        pauseDate: pauseDate,
-                        resumeDate: resumeDate
+                        pauseDate: pauseUtcDate,
+                        resumeDate: resumeUtcDate
                     },
                     success: function (response) {
                         if (!response.error) {
-                            if (response.pause && response.resume) {
+                            const pauseLocal  = formatUtcToLocal(response.pause);
+                            const resumeLocal = formatUtcToLocal(response.resume);
+
+                            if (pauseLocal && resumeLocal) {
                                 // Both exist → cleaner phrasing
                                 msg =
-                                    "<b>Alerts will be paused on " + response.pause +
-                                    " and resume on " + response.resume + "</b>";
+                                    "<b>Alerts will be paused on " + pauseLocal +
+                                    " and resume on " + resumeLocal + "</b>";
                             }
-                            else if (response.pause) {
-                                msg = "<b>Alerts will be paused on " + response.pause + "</b>";
+                            else if (pauseLocal) {
+                                msg = "<b>Alerts will be paused on " + pauseLocal + "</b>";
                             }
-                            else if (response.resume) {
-                                msg = "<b>Alerts will resume on " + response.resume + "</b>";
+                            else if (resumeLocal) {
+                                msg = "<b>Alerts will resume on " + resumeLocal + "</b>";
                             }
-                            $("[name='pauseWindowInfo']").html(msg)
+                            $("[name='pauseWindowInfo']").html("<div class='font-warning'>"+msg+"</div>")
                         } else {
                             $("[name='pauseWindowInfo']").html("")
                         }
@@ -395,20 +415,22 @@
                     type: "GET",
                     dataType: "json",
                     success: function (response) {
-
                         let msg = "";
 
-                        if (response.pause && response.resume) {
+                        const pauseLocal  = formatUtcToLocal(response.pause);
+                        const resumeLocal = formatUtcToLocal(response.resume);
+                        if (pauseLocal && resumeLocal) {
                             msg =
-                                "<b>Alerts will be paused on " + response.pause +
-                                " and resume on " + response.resume + "</b>";
-                        } else if (response.pause) {
-                            msg = "<b>Alerts will be paused on " + response.pause + "</b>";
-                        } else if (response.resume) {
-                            msg = "<b>Alerts will resume on " + response.resume + "</b>";
+                                "<b>Alerts will be paused on " + pauseLocal +
+                                " and resume on " + resumeLocal + "</b>";
                         }
-
-                        $("[name='pauseWindowInfo']").html(msg);
+                        else if (pauseLocal) {
+                            msg = "<b>Alerts will be paused on " + pauseLocal + "</b>";
+                        }
+                        else if (resumeLocal) {
+                            msg = "<b>Alerts will resume on " + resumeLocal + "</b>";
+                        }
+                        $("[name='pauseWindowInfo']").html("<div class='font-warning'>"+msg+"</div>")
                     },
                     error: function () {
                         $("[name='pauseWindowInfo']").html("");
@@ -425,7 +447,27 @@
                 const btn = this;
                 btn.style.display = "none";
             });
+
         })
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            // Set the hidden field to the browser's timezone
+            document.getElementById('localTimeZone').value = tz;
+
+            document.querySelectorAll('.ISODateTime').forEach(el => {
+                const dt = new Date(el.dataset.time); // JS Date interprets ISO as UTC
+                el.textContent = dt.toLocaleString(undefined, {
+                    timeZone: tz,
+                    weekday: 'short',
+                    year: 'numeric',
+                    month: 'short',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            });
+        });
 
     </script>
 
@@ -458,13 +500,13 @@
 
                 <g:elseif test="${jobStatus.state == 'NORMAL'}">
                     <span style="color: green; font-weight: bold;">
-                        Next run will be on ${jobStatus.nextFireTime}
+                        Next run will be on <alerts:ISODateTime date="${jobStatus.nextFireTime}" />
                     </span>
                 </g:elseif>
 
                 <g:else>
                     <span style="color: red; font-weight: bold;">
-                        Warning: Alerts is ${jobStatus.state}
+                        Warning: Alerts are ${jobStatus.state}
                     </span>
                 </g:else>
             </div>
@@ -506,23 +548,23 @@
             </g:form>
 
             <div class="row mt-30">
-
                 <div class="col-sm-12">
                     <h4>Schedule Weekly Biosecurity Job</h4>
                     <p>You can change the weekday and time this job runs. This updates the weekly schedule only.</p>
                 </div>
 
                 <g:form controller="biosecurityAdmin" action="updateWeeklySchedule" method="POST">
+                    <input type="hidden" name="localTimeZone" id="localTimeZone" />
                 <div class="col-sm-2 mt-20">
                     <label for="weekday">Run on</label>
                     <select id="weekday" name="weekday" class="form-control">
-                        <option value="MON">Monday</option>
-                        <option value="TUE">Tuesday</option>
-                        <option value="WED">Wednesday</option>
-                        <option value="THU">Thursday</option>
-                        <option value="FRI">Friday</option>
-                        <option value="SAT">Saturday</option>
-                        <option value="SUN">Sunday</option>
+                        <option value="MONDAY">Monday</option>
+                        <option value="TUESDAY">Tuesday</option>
+                        <option value="WEDNESDAY">Wednesday</option>
+                        <option value="THURSDAY">Thursday</option>
+                        <option value="FRIDAY">Friday</option>
+                        <option value="SATURDAY">Saturday</option>
+                        <option value="SUNDAY">Sunday</option>
                     </select>
                 </div>
 

@@ -10,15 +10,11 @@ mail:
 
 serverName: "{{ .Values.config.base.alerts_base_url }}"
 serverURL: "{{ .Values.config.base.alerts_base_url }}"
-#todo check if port is still used
+#AWS uses 8000
 server:
   port: 8000
 
 grails:
-  #todo check if mail section is still used
-  mail:
-    port: 2525
-    server: "localhost"
   serverURL: "{{ .Values.config.base.alerts_base_url }}{{ .Values.config.base.alerts_context_path }}"
   plugin:
     awssdk:

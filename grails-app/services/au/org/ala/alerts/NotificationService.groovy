@@ -576,7 +576,9 @@ class NotificationService {
             Frequency frequency = Frequency.findByName(frequencyName)
             if (frequency) {
                 logs = execQueryForFrequency(frequency, sendEmails, dryRun)
-                //update the frequency last checked
+                //update the frequency last checked.
+                //Refresh in case of another job happens to run simultaneous
+                frequency.refresh()
                 frequency.lastChecked = now
 
                 if (!frequency.save(validate: true, flush: true)) {
