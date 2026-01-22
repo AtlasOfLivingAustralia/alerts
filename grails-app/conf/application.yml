@@ -241,10 +241,6 @@ dataSource:
 
 #For those beans managed by Spring, like Liquibase, Quartz
 #Those properties should be defined in an external properties yml file
-# DB_URL: jdbc:mysql://localhost:3309/alerts
-# DB_USER: alerts_user
-# DB_PASSWORD: password
-# DB_DRIVER: com.mysql.cj.jdbc.Driver
 spring:
     liquibase:
         enabled: true
@@ -310,8 +306,7 @@ environments:
             serverURL: "http://localhost:8080"
             mail:
                 host: "localhost"
-                port: 1025
-                #username: postie.emailSender
+                port: 2525
             plugin:
                 awssdk:
                     region: ap-southeast-2

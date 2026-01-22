@@ -378,7 +378,7 @@
                             else if (response.resume) {
                                 msg = "<b>Alerts will resume on " + response.resume + "</b>";
                             }
-                            $("[name='pauseWindowInfo']").html(msg)
+                            $("[name='pauseWindowInfo']").html("<div class='font-warning'>"+msg+"</div>")
                         } else {
                             $("[name='pauseWindowInfo']").html("")
                         }
@@ -408,7 +408,7 @@
                             msg = "<b>Alerts will resume on " + response.resume + "</b>";
                         }
 
-                        $("[name='pauseWindowInfo']").html(msg);
+                        $("[name='pauseWindowInfo']").html("<div class='font-warning'>"+msg+"</div>");
                     },
                     error: function () {
                         $("[name='pauseWindowInfo']").html("");
@@ -458,7 +458,7 @@
 
                 <g:elseif test="${jobStatus.state == 'NORMAL'}">
                     <span style="color: green; font-weight: bold;">
-                        Next run will be on ${jobStatus.nextFireTime}
+                        Next run will be on <g:formatDate date="${jobStatus.nextFireTime}" format="EEE, dd MMM yyyy HH:mm z" timeZone="${session.timeZone}" />
                     </span>
                 </g:elseif>
 
@@ -506,7 +506,6 @@
             </g:form>
 
             <div class="row mt-30">
-
                 <div class="col-sm-12">
                     <h4>Schedule Weekly Biosecurity Job</h4>
                     <p>You can change the weekday and time this job runs. This updates the weekly schedule only.</p>

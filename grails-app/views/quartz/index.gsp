@@ -45,8 +45,8 @@
                 <td>${job.jobGroup}</td>
                 <td>${job.triggerName}</td>
                 <td>${job.triggerGroup}</td>
-                <td><g:formatDate date="${job.nextFireTime}" format="EEE, dd MMM yyyy HH:mm" /></td>
-                <td>${job.previousFire}</td>
+                <td><g:formatDate date="${job.nextFireTime}" format="EEE, dd MMM yyyy HH:mm z" timeZone="${session.timeZone}" /></td>
+                <td><g:formatDate date="${job.previousFire}" format="EEE, dd MMM yyyy HH:mm z" timeZone="${session.timeZone}" /></td>
                 <td>
                     <span class="badge ${job.state == 'NORMAL' ? 'badge-success' : job.state == 'PAUSED' ? 'badge-warning' : 'badge-danger'}">
                         ${job.state}
