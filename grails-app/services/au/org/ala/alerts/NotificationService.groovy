@@ -24,12 +24,19 @@ class NotificationService {
     def dateFormatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
 
     QueryResult getQueryResult(Query query, Frequency frequency) {
-        QueryResult qr = QueryResult.findByQueryAndFrequency(query, frequency)
-        if (qr == null) {
-            QueryResult.withTransaction {
-                qr = new QueryResult([query: query, frequency: frequency])
+        QueryResult qr = null
+
+        QueryResult.withTransaction {
+            qr = QueryResult.findByQueryAndFrequency(query, frequency)
+
+            if (qr == null) {
+                QueryResult.withTransaction {
+                    qr = new QueryResult([query: query, frequency: frequency])
+
+                }
             }
         }
+        
         qr
     }
 
@@ -565,20 +572,21 @@ class NotificationService {
         log.info("Checking frequency : ${frequencyName}, emails ${sendEmails}, dryRun ${dryRun}")
         def logs = []
         Date now = new Date()
-        Frequency frequency = Frequency.findByName(frequencyName)
-        if (frequency) {
-            logs = execQueryForFrequency(frequency, sendEmails, dryRun)
-            //update the frequency last checked
-            frequency.lastChecked = now
-            Frequency.withTransaction {
+        Frequency.withTransaction {
+            Frequency frequency = Frequency.findByName(frequencyName)
+            if (frequency) {
+                logs = execQueryForFrequency(frequency, sendEmails, dryRun)
+                //update the frequency last checked
+                frequency.lastChecked = now
+
                 if (!frequency.save(validate: true, flush: true)) {
                     frequency.errors.allErrors.each {
                         log.error(it)
                     }
                 }
+            } else {
+                log.warn "Frequency not found for ${frequencyName}"
             }
-        } else {
-            log.warn "Frequency not found for ${frequencyName}"
         }
         return logs
     }
