@@ -107,6 +107,10 @@ a.btn-ala {
     padding-left: 3.5ch;
 }
 
+.font-warning {
+    color: #c44d34;
+}
+
 .badge-primary {
     background-color: #c44d34; /* Red color */
     color: #fff; /* White text */
