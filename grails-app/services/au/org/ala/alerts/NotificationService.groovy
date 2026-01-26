@@ -30,10 +30,7 @@ class NotificationService {
             qr = QueryResult.findByQueryAndFrequency(query, frequency)
 
             if (qr == null) {
-                QueryResult.withTransaction {
-                    qr = new QueryResult([query: query, frequency: frequency])
-
-                }
+                qr = new QueryResult([query: query, frequency: frequency])
             }
         }
 
