@@ -1,4 +1,4 @@
-package alerts
+package au.org.ala.alerts
 
 import java.text.SimpleDateFormat
 import java.util.TimeZone
