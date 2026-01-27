@@ -520,7 +520,7 @@
             <div class="text-center"><h3>Alerts schedule manager</h3></div>
             <div class="row mt-20" >
                 <div class="col-sm-12"><h4>Pause or resume now</h4></div>
-                <div class="col-sm-12">Pause or resume alerts immediately. &nbsp;
+                <div class="col-sm-12">Pause or resume alerts scheduling immediately. &nbsp;
                     <g:link controller="biosecurityAdmin" action="pauseAlerts" class="btn btn-primary" >
                         Pause now
                     </g:link> &nbsp;
@@ -533,9 +533,9 @@
             <g:form name="pauseResumeForm" controller="admin" action="pauseResumeBioSecurityAlerts" method="post">
                 <div><h4>Schedule a pause</h4></div>
                 <div class="row" >
-                    <div class="col-sm-12" >Set a date range to pause alerts. Dates start at midnight AEDT/AEST. You can save on schedued pause at a time.</div>
+                    <div class="col-sm-12" >Set a date range to pause alerts. Dates start at midnight AEDT/AEST. You can save one scheduled pause at a time.</div>
                     <div class="col-sm-12 mt-20">Pause from <input type="date" name="pauseDate" value="${today}" />
-                        , and resume on  <input type="date" name="resumeDate" value="${today}" />
+                        Resume on  <input type="date" name="resumeDate" value="${today}" />
                         &nbsp;&nbsp;
                         <button type="button" id="scheduleBtn" class="btn btn-primary">Save schedule</button>
                         &nbsp;
@@ -549,7 +549,7 @@
 
             <div class="row mt-30">
                 <div class="col-sm-12">
-                    <h4>Schedule Weekly Biosecurity Job</h4>
+                    <h4>Schedule weekly biosecurity job</h4>
                     <p>You can change the weekday and time this job runs. This updates the weekly schedule only.</p>
                 </div>
 

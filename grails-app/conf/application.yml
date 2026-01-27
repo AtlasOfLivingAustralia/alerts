@@ -221,23 +221,31 @@ dataSource:
 
     pooled: true
     jmxExport: true
-    # HikariCP-specific properties
+
     properties:
-        # Pool sizing
-        minimumIdle: 5            # minimum idle connections
-        maximumPoolSize: 50       # max total connections
-        maxLifetime: 1800000      # 30 minutes
-        idleTimeout: 600000       # 10 minutes
-        connectionTimeout: 30000  # 30 seconds to get a connection
-        leakDetectionThreshold: 60000  # 60 sec to detect leaks
+        # --- Pool sizing ---
+        initialSize: 5
+        maxActive: 50
+        minIdle: 5
+        maxIdle: 20
 
-        # Connection validation
-        connectionTestQuery: "SELECT 1"  # ensures connection is valid
-        validationTimeout: 5000          # 5 sec timeout for validation
+        # --- CRITICAL: stale connection protection ---
+        testOnBorrow: true
+        validationQuery: SELECT 1
 
-        # Character encoding
+        testWhileIdle: true
+        timeBetweenEvictionRunsMillis: 300000   # 5 min
+        minEvictableIdleTimeMillis: 600000      # 10 min
+
+        # --- Abandoned connection cleanup ---
+        removeAbandoned: true
+        removeAbandonedTimeout: 60
+        logAbandoned: true
+
+        # --- JDBC / MySQL ---
         useUnicode: true
-        characterEncoding: "UTF-8"
+        characterEncoding: UTF-8
+
 
 #For those beans managed by Spring, like Liquibase, Quartz
 #Those properties should be defined in an external properties yml file
