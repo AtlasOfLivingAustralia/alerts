@@ -85,6 +85,7 @@
 
                       <!-- Tabs Content -->
                       <div class="tab-content" id="alertTabsContent">
+
                           <!-- Standard Alerts Tab -->
                           <div class="tab-pane fade active in" id="standard-alerts" role="tabpanel" aria-labelledby="standard-alerts-tab">
                            <div class="row">

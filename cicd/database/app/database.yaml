@@ -108,6 +108,9 @@ Conditions:
   DatabaseInsights: !Equals 
                    - !Ref pDatabaseInsightsMode
                    - advanced
+  PerformanceInsights: !Equals
+                    - !Ref pPerformanceInsights
+                    - true
   IsServerlessV2: !Equals
                     - !Ref pEngineMode
                     - serverlessv2
@@ -135,7 +138,7 @@ Resources:
   DbParamGrp:
     Type: AWS::RDS::DBParameterGroup
     Properties:
-      Description: Alerts DB instance parameter grp
+      Description: !Sub ${pProductName} DB instance parameter grp
       Family: aurora-mysql8.0
       Parameters:
         long_query_time: 2
@@ -146,7 +149,7 @@ Resources:
   ClusterParamGrp:
     Type: AWS::RDS::DBClusterParameterGroup
     Properties: 
-      Description: Alerts cluster param group
+      Description: !Sub ${pProductName} cluster param group
       Family: aurora-mysql8.0
       Parameters: 
         character_set_client: utf8mb4
@@ -183,7 +186,7 @@ Resources:
             Fn::Sub: ${pVpcStackName}-VpcCidr
       Tags:
       - Key: Name
-        Value: alerts RDS SG
+        Value: !Sub ${pProductName} RDS SG
 
   EnhancedMonitoringRole:
     Type: AWS::IAM::Role
@@ -229,9 +232,12 @@ Resources:
                            - !Ref AWS::NoValue
       PerformanceInsightsEnabled: !Ref pPerformanceInsights
       PerformanceInsightsRetentionPeriod: !If
-                                            - DatabaseInsights
-                                            - 465
-                                            - 7
+                          - PerformanceInsights
+                          - !If
+                            - DatabaseInsights
+                            - 465
+                            - 7
+                          - !Ref AWS::NoValue
       Port: 3306
       PreferredBackupWindow: 16:00-17:00
       PreferredMaintenanceWindow: tue:17:00-tue:19:00
@@ -245,7 +251,7 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub
-                   - Alerts-db-${ResourceName}
+                   - ${pProductName}-db-${ResourceName}
                    - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
       VpcSecurityGroupIds:
         - !Ref DbSecurityGrp
@@ -310,7 +316,7 @@ Resources:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
     Condition: HorizontalScaling
     Properties:
-      PolicyName: Alerts Aurora scaling policy
+      PolicyName: !Sub ${pProductName} Aurora scaling policy
       PolicyType: TargetTrackingScaling
       ScalingTargetId: !Ref RdsScalableTarget
       TargetTrackingScalingPolicyConfiguration:

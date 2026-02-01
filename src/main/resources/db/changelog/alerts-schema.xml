@@ -1,0 +1,280 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+           http://www.liquibase.org/xml/ns/dbchangelog
+           http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.21.xsd">
+
+    <!-- ===================== BASE TABLES ===================== -->
+
+    <changeSet id="1-create-frequency-table" author="alert">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="frequency"/></not>
+        </preConditions>
+        <createTable tableName="frequency">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true" nullable="false"/></column>
+            <column name="name" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="last_checked" type="DATETIME(6)"/>
+            <column name="period_in_seconds" type="INT"><constraints nullable="false"/></column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="2-create-user-table" author="alert">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="user"/></not>
+        </preConditions>
+        <createTable tableName="user">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true" nullable="false"/></column>
+            <column name="version" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="user_id" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="locked" type="BIT(1)"/>
+            <column name="frequency_id" type="BIGINT"/>
+            <column name="unsubscribe_token" type="VARCHAR(255)"/>
+            <column name="email" type="VARCHAR(255)"><constraints nullable="false"/></column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="5-create-query-table" author="alert">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="query"/></not>
+        </preConditions>
+        <createTable tableName="query">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true" nullable="false"/></column>
+            <column name="version" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="resource_name" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="id_json_path" type="VARCHAR(255)"/>
+            <column name="update_message" type="TEXT"><constraints nullable="false"/></column>
+            <column name="record_json_path" type="VARCHAR(255)"/>
+            <column name="base_url" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="base_url_forui" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="name" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="date_format" type="VARCHAR(255)"/>
+            <column name="email_template" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="description" type="TEXT"/>
+            <column name="query_path_forui" type="TEXT"><constraints nullable="false"/></column>
+            <column name="custom" type="BIT(1)"><constraints nullable="false"/></column>
+            <column name="query_path" type="TEXT"><constraints nullable="false"/></column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20-create-query-result-table" author="alert">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="query_result"/></not>
+        </preConditions>
+        <createTable tableName="query_result">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true" nullable="false"/></column>
+            <column name="version" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="last_changed" type="DATETIME(6)"/>
+            <column name="has_changed" type="BIT(1)"><constraints nullable="false"/></column>
+            <column name="previous_check" type="DATETIME(6)"/>
+            <column name="last_checked" type="DATETIME(6)"/>
+            <column name="last_result" type="LONGBLOB"/>
+            <column name="previous_result" type="LONGBLOB"/>
+            <column name="query_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="frequency_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="query_urluiused" type="TEXT"/>
+            <column name="query_url_used" type="TEXT"/>
+            <column name="logs" type="TEXT"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="7-create-notification-table" author="alert">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="notification"/></not>
+        </preConditions>
+        <createTable tableName="notification">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true" nullable="false"/></column>
+            <column name="version" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="query_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="user_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="unsubscribe_token" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="12-create-property-path-table" author="alert">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="property_path"/></not>
+        </preConditions>
+        <createTable tableName="property_path">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true" nullable="false"/></column>
+            <column name="version" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="fire_when_change" type="BIT(1)"><constraints nullable="false"/></column>
+            <column name="json_path" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="query_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="name" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="fire_when_not_zero" type="BIT(1)"><constraints nullable="false"/></column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="15-create-property-value-table" author="alert">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="property_value"/></not>
+        </preConditions>
+        <createTable tableName="property_value">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true" nullable="false"/></column>
+            <column name="version" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="query_result_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="previous_value" type="VARCHAR(255)"/>
+            <column name="current_value" type="VARCHAR(255)"/>
+            <column name="property_path_id" type="BIGINT"><constraints nullable="false"/></column>
+        </createTable>
+    </changeSet>
+
+    <!-- ===================== INDEXES ===================== -->
+
+    <changeSet id="3-create-user-frequency-index" author="alert">
+        <preConditions onFail="MARK_RAN">
+            <not><indexExists indexName="FK9a0rf22a4u2nnxtnh6apl5jd8" tableName="user"/></not>
+        </preConditions>
+        <createIndex indexName="FK9a0rf22a4u2nnxtnh6apl5jd8" tableName="user">
+            <column name="frequency_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="6-create-query-name-index" author="alert">
+        <preConditions onFail="MARK_RAN">
+            <not><indexExists indexName="idx_query_name_fulltext" tableName="query"/></not>
+        </preConditions>
+        <createIndex indexName="idx_query_name_fulltext" tableName="query">
+            <column name="name"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="8-create-notification-query-index" author="alert">
+        <preConditions onFail="MARK_RAN">
+            <not><indexExists indexName="FKaw8acafm8nn6fg0b6x1e5gb90" tableName="notification"/></not>
+        </preConditions>
+        <createIndex indexName="FKaw8acafm8nn6fg0b6x1e5gb90" tableName="notification">
+            <column name="query_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="9-create-notification-user-index" author="alert">
+        <preConditions onFail="MARK_RAN">
+            <not><indexExists indexName="FKb0yvoep4h4k92ipon31wmdf7e" tableName="notification"/></not>
+        </preConditions>
+        <createIndex indexName="FKb0yvoep4h4k92ipon31wmdf7e" tableName="notification">
+            <column name="user_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="13-create-property-path-query-index" author="alert">
+        <preConditions onFail="MARK_RAN">
+            <not><indexExists indexName="FKm2p52tk0x6wk4ywu0xw4kvwvk" tableName="property_path"/></not>
+        </preConditions>
+        <createIndex indexName="FKm2p52tk0x6wk4ywu0xw4kvwvk" tableName="property_path">
+            <column name="query_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="21-create-query-result-query-index" author="alert">
+        <preConditions onFail="MARK_RAN">
+            <not><indexExists indexName="FKp5lt4j29y3j2w7p9u47824dr7" tableName="query_result"/></not>
+        </preConditions>
+        <createIndex indexName="FKp5lt4j29y3j2w7p9u47824dr7" tableName="query_result">
+            <column name="query_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="22-create-query-result-frequency-index" author="alert">
+        <preConditions onFail="MARK_RAN">
+            <not><indexExists indexName="FK9kk5kedby5lvet2ikn1g6woex" tableName="query_result"/></not>
+        </preConditions>
+        <createIndex indexName="FK9kk5kedby5lvet2ikn1g6woex" tableName="query_result">
+            <column name="frequency_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="16-create-property-value-query-result-index" author="alert">
+        <preConditions onFail="MARK_RAN">
+            <not><indexExists indexName="FKro1ub7vdihny4roluijgh9pbp" tableName="property_value"/></not>
+        </preConditions>
+        <createIndex indexName="FKro1ub7vdihny4roluijgh9pbp" tableName="property_value">
+            <column name="query_result_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="17-create-property-value-path-index" author="alert">
+        <preConditions onFail="MARK_RAN">
+            <not><indexExists indexName="FKog0so9c6lblh9lx8wacc6y4y0" tableName="property_value"/></not>
+        </preConditions>
+        <createIndex indexName="FKog0so9c6lblh9lx8wacc6y4y0" tableName="property_value">
+            <column name="property_path_id"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- ===================== FOREIGN KEYS ===================== -->
+
+    <changeSet id="4-add-user-frequency-fk" author="alert">
+        <preConditions onFail="MARK_RAN">
+            <not><foreignKeyConstraintExists foreignKeyName="FK9a0rf22a4u2nnxtnh6apl5jd8"/></not>
+        </preConditions>
+        <addForeignKeyConstraint baseTableName="user" baseColumnNames="frequency_id"
+                                 constraintName="FK9a0rf22a4u2nnxtnh6apl5jd8"
+                                 referencedTableName="frequency" referencedColumnNames="id"/>
+    </changeSet>
+
+    <changeSet id="10-add-notification-query-fk" author="alert">
+        <preConditions onFail="MARK_RAN">
+            <not><foreignKeyConstraintExists foreignKeyName="FKaw8acafm8nn6fg0b6x1e5gb90"/></not>
+        </preConditions>
+        <addForeignKeyConstraint baseTableName="notification" baseColumnNames="query_id"
+                                 constraintName="FKaw8acafm8nn6fg0b6x1e5gb90"
+                                 referencedTableName="query" referencedColumnNames="id"/>
+    </changeSet>
+
+    <changeSet id="11-add-notification-user-fk" author="alert">
+        <preConditions onFail="MARK_RAN">
+            <not><foreignKeyConstraintExists foreignKeyName="FKb0yvoep4h4k92ipon31wmdf7e"/></not>
+        </preConditions>
+        <addForeignKeyConstraint baseTableName="notification" baseColumnNames="user_id"
+                                 constraintName="FKb0yvoep4h4k92ipon31wmdf7e"
+                                 referencedTableName="user" referencedColumnNames="id"/>
+    </changeSet>
+
+    <changeSet id="14-add-property-path-query-fk" author="alert">
+        <preConditions onFail="MARK_RAN">
+            <not><foreignKeyConstraintExists foreignKeyName="FKm2p52tk0x6wk4ywu0xw4kvwvk"/></not>
+        </preConditions>
+        <addForeignKeyConstraint baseTableName="property_path" baseColumnNames="query_id"
+                                 constraintName="FKm2p52tk0x6wk4ywu0xw4kvwvk"
+                                 referencedTableName="query" referencedColumnNames="id"/>
+    </changeSet>
+
+    <changeSet id="23-add-query-result-query-fk" author="alert">
+        <preConditions onFail="MARK_RAN">
+            <not><foreignKeyConstraintExists foreignKeyName="FKp5lt4j29y3j2w7p9u47824dr7"/></not>
+        </preConditions>
+        <addForeignKeyConstraint baseTableName="query_result" baseColumnNames="query_id"
+                                 constraintName="FKp5lt4j29y3j2w7p9u47824dr7"
+                                 referencedTableName="query" referencedColumnNames="id"/>
+    </changeSet>
+
+    <changeSet id="24-add-query-result-frequency-fk" author="alert">
+        <preConditions onFail="MARK_RAN">
+            <not><foreignKeyConstraintExists foreignKeyName="FK9kk5kedby5lvet2ikn1g6woex"/></not>
+        </preConditions>
+        <addForeignKeyConstraint baseTableName="query_result" baseColumnNames="frequency_id"
+                                 constraintName="FK9kk5kedby5lvet2ikn1g6woex"
+                                 referencedTableName="frequency" referencedColumnNames="id"/>
+    </changeSet>
+
+    <changeSet id="18-add-property-value-query-result-fk" author="alert">
+        <preConditions onFail="MARK_RAN">
+            <not><foreignKeyConstraintExists foreignKeyName="FKro1ub7vdihny4roluijgh9pbp"/></not>
+        </preConditions>
+        <addForeignKeyConstraint baseTableName="property_value" baseColumnNames="query_result_id"
+                                 constraintName="FKro1ub7vdihny4roluijgh9pbp"
+                                 referencedTableName="query_result" referencedColumnNames="id"/>
+    </changeSet>
+
+    <changeSet id="19-add-property-value-path-fk" author="alert">
+        <preConditions onFail="MARK_RAN">
+            <not><foreignKeyConstraintExists foreignKeyName="FKog0so9c6lblh9lx8wacc6y4y0"/></not>
+        </preConditions>
+        <addForeignKeyConstraint baseTableName="property_value" baseColumnNames="property_path_id"
+                                 constraintName="FKog0so9c6lblh9lx8wacc6y4y0"
+                                 referencedTableName="property_path" referencedColumnNames="id"/>
+    </changeSet>
+
+</databaseChangeLog>

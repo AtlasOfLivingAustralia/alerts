@@ -14,6 +14,7 @@
 package au.org.ala.alerts
 
 import au.org.ala.web.AlaSecured
+import au.org.ala.ws.service.WebService
 import grails.converters.JSON
 import grails.gorm.transactions.Transactional
 import grails.util.Environment
@@ -24,20 +25,21 @@ import groovyx.net.http.HTTPBuilder
 import groovy.json.JsonSlurper
 import java.nio.file.Files
 
-
 @AlaSecured(value = 'ROLE_ADMIN', redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to view that page.")
 class AdminController {
 
     def authService
     def notificationService
     def biosecurityService
-    def biosecurityCSVService
+    BiosecurityCSVService biosecurityCSVService
+    BiosecurityJobService biosecurityJobService
     def queryResultService
     def diffService
     def emailService
     def queryService
     def userService
     def messageSource
+    WebService webService
     def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
 
     def subscriptionsPerPage = grailsApplication.config.getProperty('biosecurity.subscriptionsPerPage', Integer, 100)
@@ -272,7 +274,8 @@ class AdminController {
     def biosecurity() {
         int total = queryService.countBiosecurityQuery()
         List<Query> queries = queryService.getBiosecurityQuery(0, subscriptionsPerPage)
-        render view: "/admin/biosecurity", model: [total: total, queries: queries, subscriptionsPerPage: subscriptionsPerPage]
+        Map jobStatus = biosecurityJobService.getJobInfo()
+        render view: "/admin/biosecurity", model: [total: total, queries: queries, subscriptionsPerPage: subscriptionsPerPage, jobStatus: jobStatus]
     }
 
     /**
@@ -481,7 +484,7 @@ class AdminController {
             def frequency = 'weekly'
             QueryResult qr = notificationService.getQueryResult(query, Frequency.findByName(frequency))
             qr.lastResult = qr.compress(processedJson)
-            File tempCSV = biosecurityCSVService.createTempCSV(qr)
+            File tempCSV = biosecurityCSVService.createTempCSVFromQueryResult(qr)
             csvFiles.add(tempCSV.path)
         }
 
@@ -808,6 +811,29 @@ class AdminController {
         }
     }
 
+    def sendTestEmail() {
+        try {
+            User currentUser = userService.getUser()
+            if (currentUser) {
+                String title = "Test email"
+                String emailBody = "<p>This is a test email sent to ${currentUser.email} from the ALA Notification System.</p>"
+                sendMail {
+                    from grailsApplication.config.mail.details.alertAddressTitle + "<" + grailsApplication.config.mail.details.sender + ">"
+                    subject title
+                    bcc currentUser.email
+                    html(emailBody)
+                }
+            } else {
+                log.warn("No user found to send email to.")
+            }
+
+            render([status: 0, message: "Test email has been sent to ${currentUser.email}"] as JSON)
+        } catch (Exception e) {
+            log.error("Error in sending test email: ${e.message}", e)
+            render([status: 1, message: "Error in sending test email: ${e.message}"] as JSON)
+        }
+    }
+
 
     @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true, redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to view that page.")
     def listBiosecurityAuditCSV() {
@@ -863,7 +889,7 @@ class AdminController {
         // Gorm object QueryResult does not fetch Query object, so we need to fetch it manually
         QueryResult qs = queryResultService.get(params.id)
         if (qs) {
-            File tempFile = biosecurityCSVService.createTempCSV(qs)
+            File tempFile = biosecurityCSVService.createTempCSVFromQueryResult(qs)
             if (!tempFile.exists() || tempFile.isDirectory()) {
                 render(status: 404, text: "File not found")
                 return

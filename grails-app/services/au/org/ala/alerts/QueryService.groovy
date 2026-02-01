@@ -404,12 +404,20 @@ class QueryService {
 
     // return the number of biosecurity queries
     def countBiosecurityQuery() {
-        return Query.countByEmailTemplate('/email/biosecurity')
+        int count = 0
+        Query.withTransaction {
+            count = Query.countByEmailTemplate('/email/biosecurity')
+        }
+        return count
     }
 
     // get all biosecurity queries
     def getALLBiosecurityQuery() {
-        return Query.findAllByEmailTemplate('/email/biosecurity')
+        def queries
+        Query.withTransaction {
+            queries = Query.findAllByEmailTemplate('/email/biosecurity')
+        }
+        return queries
     }
 
     // get biosecurity queries with offset and limit
@@ -556,9 +564,11 @@ class QueryService {
 
     def getLastCheckedDate(Query query) {
         def lastCheckedDate = null
-        def queryResult = QueryResult.findByQuery(query)
-        if (queryResult) {
-            lastCheckedDate = queryResult.lastChecked
+        QueryResult.withTransaction {
+            def queryResult = QueryResult.findByQuery(query)
+            if (queryResult) {
+                lastCheckedDate = queryResult.lastChecked
+            }
         }
         lastCheckedDate
     }

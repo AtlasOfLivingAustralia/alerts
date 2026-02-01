@@ -28,11 +28,6 @@ grails:
             lockTimeout: 200
     codegen:
         defaultPackage: au.org.au.alerts
-    config:
-        locations:
-            - file:/data/alerts/config/alerts-config.properties
-            - file:/data/alerts/config/alerts-config.yml
-            - file:/data/alerts/config/alerts-config.groovy
     spring:
         transactionManagement:
             proxies: false
@@ -53,6 +48,8 @@ info:
         version: '@info.app.version@'
         grailsVersion: '@info.app.grailsVersion@'
 spring:
+    config:
+        import: "optional:file:/data/alerts/config/alerts-config.yml"
     main:
         banner-mode: "off"
     groovy:
@@ -138,10 +135,6 @@ skin:
 privacyPolicy: "https://www.ala.org.au/terms-of-use/privacy-policy/"
 siteDefaultLanguage: "en"
 customUserAgent: 'alerts/@info.app.version@'
-security:
-    cas:
-        adminRole: ROLE_ADMIN
-        uriFilterPattern: ["/","/alaAdmin/*","/testAuth/*","/query/*","/admin/*","/admin/user/*","/admin/user/debug/*","/admin/debug/all","/notification/myAlerts","/notification/changeFrequency","/notification/addMyAlert","/notification/addMyAlert/*","/notification/deleteMyAlert/*","/notification/deleteMyAlert/*","/notification/deleteMyAlertWR/*","/webservice/*","/webservice/createTaxonAlert","/webservice/taxonAlerts","/webservice/createRegionAlert","/webservice/regionAlerts","/webservice/deleteTaxonAlert/*","/webservice/create*","/webservice/createSpeciesGroupRegionAlert","/ws/*","/ws/createTaxonAlert","/ws/taxonAlerts","/ws/createRegionAlert","/ws/regionAlerts","/ws/deleteTaxonAlert/*","/ws/createTaxonRegionAlert","/ws/createSpeciesGroupRegionAlert","/admin/runChecksNow"]
 
 ala:
     baseURL: "https://www.ala.org.au"
@@ -154,16 +147,17 @@ spatial:
     baseURL: "https://spatial.ala.org.au"
 collectory:
     baseURL: "https://collections.ala.org.au"
+    searchURL: https://biocache.ala.org.au/occurrences/search?q=passer
 collectoryService:
     baseURL: "https://collections.ala.org.au/ws"
+collection:
+    searchURL: "https://collections.ala.org.au/public/show/co13"
+    searchTitle: ANIC
 lists:
     baseURL: "https://lists.ala.org.au"
 speciesPages:
     searchURL: "https://bie.ala.org.au/species/Tiliqua+rugosa"
     searchTitle: Shingle-back
-collection:
-    searchURL: "https://collections.ala.org.au/public/show/co13"
-    searchTitle: ANIC
 regions:
     searchURL: "https://regions.ala.org.au/states/Australian+Capital+Territory"
     searchTitle: ACT
@@ -187,6 +181,8 @@ biosecurity:
         maxRecords: 500
     moreinfo:
         link: https://www.ala.org.au/blogs-news/ala-helps-to-stop-pests-in-their-tracks/
+    # read lga from the given layer
+    lga: cl11170
     csv:
         local:
             enabled: false # See environments.development section below where set to true
@@ -195,8 +191,7 @@ biosecurity:
             enabled: true
             directory: biosecurity # key prefix
             # bucket: alerts # configured via plugin config `grails.plugin.awssdk.s3.bucket`
-        # read lga from the layer
-        lga: LGA2023
+
     subscriptionsPerPage: 100
     legacy:
         aus: cl927:*
@@ -217,29 +212,121 @@ biosecurity:
 encodeBracketInUrlParam:
     enabled: true
 
+#For Grails
+dataSource:
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    driverClassName: ${DB_DRIVER}
+
+    pooled: true
+    jmxExport: true
+
+    properties:
+        # --- Pool sizing ---
+        initialSize: 5
+        maxActive: 50
+        minIdle: 5
+        maxIdle: 20
+
+        # --- CRITICAL: stale connection protection ---
+        testOnBorrow: true
+        validationQuery: SELECT 1
+
+        testWhileIdle: true
+        timeBetweenEvictionRunsMillis: 300000   # 5 min
+        minEvictableIdleTimeMillis: 600000      # 10 min
+
+        # --- Abandoned connection cleanup ---
+        removeAbandoned: true
+        removeAbandonedTimeout: 60
+        logAbandoned: true
+
+        # --- JDBC / MySQL ---
+        useUnicode: true
+        characterEncoding: UTF-8
+
+
+#For those beans managed by Spring, like Liquibase, Quartz
+#Those properties should be defined in an external properties yml file
+spring:
+    liquibase:
+        enabled: true
+        change-log: classpath:db/changelog/db.changelog-master.xml
+        url: ${DB_URL}
+        user: ${DB_USER}
+        password: ${DB_PASSWORD}
+        driver-class-name: ${DB_DRIVER}
+
+cron:
+    daily: '0 30 8 * * ?'
+    hourly: '0 48 * * * ?'
+    weekly: '0 30 10 ? * MON'
+    monthly: '0 15 17 27 * ?'
+
+myannotation:
+    enabled: false
+
+webservice:
+    jwt: true
+    jwt-scopes: "openid users/read"
+
+security:
+    cas:
+        enabled: false
+        adminRole: ROLE_ADMIN
+        uriFilterPattern: [ "/","/alaAdmin/*","/testAuth/*","/query/*","/admin/*","/admin/user/*","/admin/user/debug/*","/admin/debug/all","/notification/myAlerts","/notification/changeFrequency","/notification/addMyAlert","/notification/addMyAlert/*","/notification/deleteMyAlert/*","/notification/deleteMyAlert/*","/notification/deleteMyAlertWR/*","/webservice/*","/webservice/createTaxonAlert","/webservice/taxonAlerts","/webservice/createRegionAlert","/webservice/regionAlerts","/webservice/deleteTaxonAlert/*","/webservice/create*","/webservice/createSpeciesGroupRegionAlert","/ws/*","/ws/createTaxonAlert","/ws/taxonAlerts","/ws/createRegionAlert","/ws/regionAlerts","/ws/deleteTaxonAlert/*","/ws/createTaxonRegionAlert","/ws/createSpeciesGroupRegionAlert","/admin/runChecksNow" ]
+    oidc:
+        enabled: true
+        discoveryUri:  https://cognito-idp.ap-southeast-2.amazonaws.com/ap-southeast-2_OOXU9GW39/.well-known/openid-configuration
+        scope: openid,profile,email,ala,roles
+    # this config is used to check incoming requests to protected APIs (methods protected with @RequireApiKey()) for JWT token in the expected header i.e. "Authorization". `fallbackToLegacyBehaviour` determines whether to check for the legacy API key when JWT is not detected/valid.
+    jwt:
+        discoveryUri:  https://cognito-idp.ap-southeast-2.amazonaws.com/ap-southeast-2_OOXU9GW39/.well-known/openid-configuration
+        enabled: true
+        fallbackToLegacyBehaviour: true
+    apikey:
+        enabled: true
+        auth:
+            serviceUrl: https://auth-test.ala.org.au/apikey/ws/check/
+        check:
+            serviceUrl: https://auth-test.ala.org.au/apikey/ws/check?apikey=
+        userdetails:
+            serviceUrl: https://auth-test.ala.org.au/userdetails/userDetails/
+
+openapi:
+    title: Alerts REST services
+    description: REST services for interacting with the alerts webapp
+    terms: https://www.ala.org.au/terms
+    contact:
+        name: Support
+        email: support@ala.org.au
+    license:
+        name: Mozilla Public License 1.1
+        url: https://www.mozilla.org/en-US/MPL/1.1/
+    version: '@info.app.version@'
+    cachetimeoutms: 0
+
+
 environments:
     development:
         grails:
             serverURL: "http://localhost:8080"
             mail:
                 host: "localhost"
-                port: 1025
-                #username: postie.emailSender
+                port: 2525
             plugin:
                 awssdk:
                     region: ap-southeast-2
-                    profile: assume-ala-developer
+                    profile: test-ala-developer
                     s3:
                         #          accessKey:
                         #          secretKey:
                         bucket: ala-alerts-testing
 
-
         security:
             cas:
                 appServerName: "http://localhost:8080"
-        quartz:
-            autoStartup : false
         biosecurity:
             csv:
                 local:
@@ -259,13 +346,10 @@ environments:
                 infoSender: "alerts-test@ala.org.au"
     test:
         grails:
-            serverURL: "http://dev.ala.org.au:8080"
-            mail:
-                host: "localhost"
-                port: 25
+            serverURL: "http://alerts.test.ala.org.au"
         security:
             cas:
-                appServerName: "https://auth.ala.org.au"
+                appServerName: "https://auth.test.ala.org.au"
         userdetails:
             web:
                 url: https://userdetails.test.ala.org.au/
@@ -291,114 +375,3 @@ environments:
                 url: https://auth.ala.org.au/userdetails/
             api:
                 url: https://api.ala.org.au/userdetails/cognito/
-
----
-hibernate:
-    show_sql: false
-    cache:
-        queries: false
-        use_second_level_cache: true
-        use_query_cache: true
-        region:
-            factory_class: org.hibernate.cache.jcache.internal.JCacheRegionFactory
-
-dataSource:
-    pooled: true
-    jmxExport: true
-    driverClassName: com.mysql.jdbc.Driver
-    username:
-    password:
-    properties:
-        # http://www.grails.org/doc/latest/guide/single.html#dataSource
-        # see http://tomcat.apache.org/tomcat-7.0-doc/jdbc-pool.html#Common_Attributes for more
-        timeBetweenEvictionRunsMillis: 5000 # milliseconds (default: 5000)
-        testOnBorrow: false # default: false
-        testOnReturn: false # default: false
-        testWhileIdle: false # default: false
-        validationQuery: null # default: null
-        validationQueryTimeout: 10 # seconds (default: -1 i.e. disabled)
-        validationInterval: 30000 # milliseconds, default is 30000 (30 seconds)
-        removeAbandoned: true # # default: false
-        removeAbandonedTimeout: 3600 # seconds (default: 60), must be > quartz job duration
-        logAbandoned: true # adds some overhead to every borrow from the pool, disable if it becomes a performance issue
-        logValidationErrors: true # default: false, logs validation errors at SEVERE
-        minEvictableIdleTimeMillis: 180000 # 3 minutes in milliseconds
-        minIdle: 0 # Allow the pool to scale down to zero idle connections
-        maxIdle: 10 # Maximum number of idle connections
-        initialSize: 5 # Initial number of connections created when the pool is started
-        maxActive: 50 # Maximum number of active connections that can be allocated from this pool at the same time
-        # NOTE: removeAbandoned: true OR testWhileIdle: true enables the Pool Cleaner. There is a bug with the
-        # pool cleaner which causes deadlocks when using older mysql jdbc drivers. This configuration has been
-        # tested successfully with mysql:mysql-connector-java:5.1.34.
-        # mysql jdbc connection properties - see http://dev.mysql.com/doc/connector-j/en/connector-j-reference-configuration-properties.html
-        dbProperties:
-            autoReconnect: true
-            connectTimeout: 0
-            useUnicode: true
-            characterEncoding: "UTF-8"
-
-environments:
-    development:
-        dataSource:
-            dbCreate: update
-            driverClassName: com.mysql.jdbc.Driver
-            url: jdbc:mysql://localhost/alerts
-            username: alerts_user
-            password: password
-    test:
-        dataSource:
-            dbCreate: update
-            pooled: true
-            jmxExport: true
-            driverClassName: org.h2.Driver
-            username: sa
-            password:
-            url: jdbc:h2:mem:testDb;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE
-        userDetails:
-            url: https://userdetails.test.ala.org.au/
-    production:
-        dataSource:
-            dbCreate: update
-
-myannotation:
-    enabled: false
-
-webservice:
-    jwt: true
-    jwt-scopes: "openid users/read"
-
-
-
-security:
-    cas:
-        enabled: false
-    oidc:
-        enabled: true
-        discoveryUri: https://cognito-idp.ap-southeast-2.amazonaws.com/ap-southeast-2_8pKx9BtGz/.well-known/openid-configuration
-        scope: openid,profile,email,ala,roles
-    # this config is used to check incoming requests to protected APIs (methods protected with @RequireApiKey()) for JWT token in the expected header i.e. "Authorization". `fallbackToLegacyBehaviour` determines whether to check for the legacy API key when JWT is not detected/valid.
-    jwt:
-        discoveryUri: https://cognito-idp.ap-southeast-2.amazonaws.com/ap-southeast-2_8pKx9BtGz/.well-known/openid-configuration
-        enabled: true
-        fallbackToLegacyBehaviour: true
-    apikey:
-        enabled: true
-        auth:
-            serviceUrl: https://auth-test.ala.org.au/apikey/ws/check/
-        check:
-            serviceUrl: https://auth-test.ala.org.au/apikey/ws/check?apikey=
-        userdetails:
-            serviceUrl: https://auth-test.ala.org.au/userdetails/userDetails/
-
-openapi:
-    title: Alerts REST services
-    description: REST services for interacting with the alerts webapp
-    terms: https://www.ala.org.au/terms
-    contact:
-        name: Support
-        email: support@ala.org.au
-    license:
-        name: Mozilla Public License 1.1
-        url: https://www.mozilla.org/en-US/MPL/1.1/
-    version: '@info.app.version@'
-    cachetimeoutms: 0

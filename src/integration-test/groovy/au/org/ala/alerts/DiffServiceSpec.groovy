@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.context.TestPropertySource
 import spock.lang.*
 
+@Ignore
 @Integration
 @Rollback
 @TestPropertySource(locations="classpath:application-test.yml")

@@ -175,6 +175,7 @@ config:
   biosecurity:
     biosecurity_more_info: ""
     biosecurity_query_url: ""
+    biosecurity_lga: ""
   species_list_server: ""
   csv:
     biosecurity_csv_local_enabled: ""

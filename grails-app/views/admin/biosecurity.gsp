@@ -46,6 +46,20 @@
             return day + ' ' + month + ' ' + year + ' ' + hours + ':' + minutes;
         }
 
+        function formatUtcToLocal(utcString) {
+            if (!utcString) return null;
+
+            const dt = new Date(utcString); // ISO UTC → Date
+            return dt.toLocaleString(undefined, {
+                weekday: 'short',
+                year: 'numeric',
+                month: 'short',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
         function triggerSubscriptionSince(target, queryId) {
             var yes = confirm("It will also update the last check date to the current time. Are you sure you want to proceed?");
 
@@ -353,7 +367,107 @@
                 container: 'body'
             })
 
+            $("#scheduleBtn").click(function () {
+                const pauseDate  = $("form[name='pauseResumeForm']").find("input[name='pauseDate']").val();
+                const resumeDate = $("form[name='pauseResumeForm']").find("input[name='resumeDate']").val();
+
+                const pauseUtcDate = new Date(pauseDate+"T00:00:00").toISOString();
+                const resumeUtcDate = new Date(resumeDate+"T00:00:00").toISOString();
+                $.ajax({
+                    url: "${createLink(controller: 'biosecurityAdmin', action: 'pauseResumeAlerts')}",
+                    type: "POST",
+                    dataType: "json",
+                    data: {
+                        pauseDate: pauseUtcDate,
+                        resumeDate: resumeUtcDate
+                    },
+                    success: function (response) {
+                        if (!response.error) {
+                            const pauseLocal  = formatUtcToLocal(response.pause);
+                            const resumeLocal = formatUtcToLocal(response.resume);
+
+                            if (pauseLocal && resumeLocal) {
+                                // Both exist → cleaner phrasing
+                                msg =
+                                    "<b>Alerts will be paused on " + pauseLocal +
+                                    " and resume on " + resumeLocal + "</b>";
+                            }
+                            else if (pauseLocal) {
+                                msg = "<b>Alerts will be paused on " + pauseLocal + "</b>";
+                            }
+                            else if (resumeLocal) {
+                                msg = "<b>Alerts will resume on " + resumeLocal + "</b>";
+                            }
+                            $("[name='pauseWindowInfo']").html("<div class='font-warning'>"+msg+"</div>")
+                        } else {
+                            $("[name='pauseWindowInfo']").html("")
+                        }
+                    },
+                    error: function (xhr) {
+                        $("[name='pauseWindowInfo']").html("")
+                    }
+                });
+            });
+
+            function loadPauseWindowInfo() {
+                $.ajax({
+                    url: "${createLink(controller: 'biosecurityAdmin', action: 'getAlertsPauseWindow')}",
+                    type: "GET",
+                    dataType: "json",
+                    success: function (response) {
+                        let msg = "";
+
+                        const pauseLocal  = formatUtcToLocal(response.pause);
+                        const resumeLocal = formatUtcToLocal(response.resume);
+                        if (pauseLocal && resumeLocal) {
+                            msg =
+                                "<b>Alerts will be paused on " + pauseLocal +
+                                " and resume on " + resumeLocal + "</b>";
+                        }
+                        else if (pauseLocal) {
+                            msg = "<b>Alerts will be paused on " + pauseLocal + "</b>";
+                        }
+                        else if (resumeLocal) {
+                            msg = "<b>Alerts will resume on " + resumeLocal + "</b>";
+                        }
+                        $("[name='pauseWindowInfo']").html("<div class='font-warning'>"+msg+"</div>")
+                    },
+                    error: function () {
+                        $("[name='pauseWindowInfo']").html("");
+                    }
+                })
+            }
+
+            loadPauseWindowInfo();
+
+            document.getElementById("showScheduleBtn").addEventListener("click", function(e) {
+                e.preventDefault();
+                let div = document.querySelector('div[name="rescheduleBiosecurity"]')
+                div.style.display = "block";
+                const btn = this;
+                btn.style.display = "none";
+            });
+
         })
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            // Set the hidden field to the browser's timezone
+            document.getElementById('localTimeZone').value = tz;
+
+            document.querySelectorAll('.ISODateTime').forEach(el => {
+                const dt = new Date(el.dataset.time); // JS Date interprets ISO as UTC
+                el.textContent = dt.toLocaleString(undefined, {
+                    timeZone: tz,
+                    weekday: 'short',
+                    year: 'numeric',
+                    month: 'short',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            });
+        });
 
     </script>
 
@@ -363,9 +477,7 @@
 <div id="content">
     <header id="page-header">
         <div class="inner row text-center">
-
-                <h1><g:message code="biosecurity.view.header" default="Manage Biosecurity Alerts"/></h1>
-
+            <h1><g:message code="biosecurity.view.header" default="Manage Biosecurity Alerts"/></h1>
         </div>
         <g:if test="${flash.message}">
             <div id="errorAlert" class="alert alert-danger alert-dismissible alert-dismissable" role="alert">
@@ -378,6 +490,102 @@
 
     <div id="page-body" class="col-sm-12">
         <g:set var="today" value="${new java.text.SimpleDateFormat('yyyy-MM-dd').format(new Date())}"/>
+        <div  class="row"  style="text-align: right">
+            <div name="scheduleStatusInfo"  class="col-sm-10">
+                <g:if test="${!jobStatus}">
+                    <span style="color: red; font-weight: bold;">
+                        No job is scheduled
+                    </span>
+                </g:if>
+
+                <g:elseif test="${jobStatus.state == 'NORMAL'}">
+                    <span style="color: green; font-weight: bold;">
+                        Next run will be on <alerts:ISODateTime date="${jobStatus.nextFireTime}" />
+                    </span>
+                </g:elseif>
+
+                <g:else>
+                    <span style="color: red; font-weight: bold;">
+                        Warning: Alerts are ${jobStatus.state}
+                    </span>
+                </g:else>
+            </div>
+            <div  class="col-sm-2">
+                <button type="button" id="showScheduleBtn" class="btn btn-primary-outline">Schedule Manager</button>
+            </div>
+        </div>
+        <p></p>
+
+        <div class="well" name="rescheduleBiosecurity" style="display:none;">
+            <div class="text-center"><h3>Alerts schedule manager</h3></div>
+            <div class="row mt-20" >
+                <div class="col-sm-12"><h4>Pause or resume now</h4></div>
+                <div class="col-sm-12">Pause or resume alerts scheduling immediately. &nbsp;
+                    <g:link controller="biosecurityAdmin" action="pauseAlerts" class="btn btn-primary" >
+                        Pause now
+                    </g:link> &nbsp;
+                    <g:link controller="biosecurityAdmin" action="resumeAlerts" class="btn btn-primary-outline" >
+                        Resume now
+                    </g:link>
+                </div>
+            </div>
+            <div class="mt-20"></div>
+            <g:form name="pauseResumeForm" controller="admin" action="pauseResumeBioSecurityAlerts" method="post">
+                <div><h4>Schedule a pause</h4></div>
+                <div class="row" >
+                    <div class="col-sm-12" >Set a date range to pause alerts. Dates start at midnight AEDT/AEST. You can save one scheduled pause at a time.</div>
+                    <div class="col-sm-12 mt-20">Pause from <input type="date" name="pauseDate" value="${today}" />
+                        Resume on  <input type="date" name="resumeDate" value="${today}" />
+                        &nbsp;&nbsp;
+                        <button type="button" id="scheduleBtn" class="btn btn-primary">Save schedule</button>
+                        &nbsp;
+                        <g:link controller="biosecurityAdmin" action="cancelScheduledPauseResumeJob" class="btn btn-primary-outline" >
+                            Cancel scheduled pause
+                        </g:link>
+                    </div>
+                    <div class="col-sm-12 mt-20" name="pauseWindowInfo" ></div>
+                </div>
+            </g:form>
+
+            <div class="row mt-30">
+                <div class="col-sm-12">
+                    <h4>Schedule weekly biosecurity job</h4>
+                    <p>You can change the weekday and time this job runs. This updates the weekly schedule only.</p>
+                </div>
+
+                <g:form controller="biosecurityAdmin" action="updateWeeklySchedule" method="POST">
+                    <input type="hidden" name="localTimeZone" id="localTimeZone" />
+                <div class="col-sm-2 mt-20">
+                    <label for="weekday">Run on</label>
+                    <select id="weekday" name="weekday" class="form-control">
+                        <option value="MONDAY">Monday</option>
+                        <option value="TUESDAY">Tuesday</option>
+                        <option value="WEDNESDAY">Wednesday</option>
+                        <option value="THURSDAY">Thursday</option>
+                        <option value="FRIDAY">Friday</option>
+                        <option value="SATURDAY">Saturday</option>
+                        <option value="SUNDAY">Sunday</option>
+                    </select>
+                </div>
+
+                <!-- Time selector -->
+                <div class="col-sm-2 mt-20">
+                    <label for="time">At time</label>
+                    <input type="time" id="time" name="time" class="form-control" value="11:00">
+                </div>
+
+                <!-- Save button -->
+                <div class="col-sm-3 mt-20">
+                    <label>&nbsp;</label>
+                    <button type="submit" id="saveWeeklyScheduleBtn" class="btn btn-primary form-control">
+                        Update Weekly Schedule
+                    </button>
+                </div>
+            </g:form>
+            </div>
+
+
+        </div>
 
         <div class="jumbotron jumbotron-fluid">
             <div class="container">
@@ -408,17 +616,18 @@
                         Search for new records of all subscriptions and notify to subscribers
                     </div>
                     <div class="col-sm-2" >
-                        <button class="btn btn-info" onclick="triggerSubscriptions()">Check & Notify </button>
+                        <button class="btn btn-primary-outline" onclick="triggerSubscriptions()">Check & Notify </button>
                     </div>
                 </div>
                 <p></p>
                 <div class="row" style="text-align: right">
                     <div class="col-sm-10" >Download CSV list of all occurrences from all biosecurity alerts sent (scheduled and manual)</div>
                     <div class="col-sm-2" >
-                        <a class="btn btn-info" href="${createLink(controller: 'admin', action: 'listBiosecurityAuditCSV')}" target="_blank">CSV Reporting</a>
+                        <a class="btn btn-primary-outline" href="${createLink(controller: 'admin', action: 'listBiosecurityAuditCSV')}" target="_blank">CSV Reporting</a>
                     </div>
                 </div>
                 <p></p>
+
 %{--                <div>
                 <g:if test="${queries}">
                     <form target="_blank" action="${request.contextPath}/admin/csvAllBiosecurity" method="post">
@@ -446,7 +655,7 @@
                                 <input type="text" class="form-control" placeholder="Search by query name" id="searchSubscriptions" />
                             </div>
                             <div class="col-auto">
-                                <button type="button" id="resetSubscriptionSearch" class="btn btn-info">Reset</button>
+                                <button type="button" id="resetSubscriptionSearch" class="btn btn-primary-outline">Reset</button>
                             </div>
                     </div>
                 </div>

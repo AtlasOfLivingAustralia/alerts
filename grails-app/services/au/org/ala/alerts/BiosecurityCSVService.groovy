@@ -14,13 +14,24 @@
 
 package au.org.ala.alerts
 
-import com.amazonaws.services.s3.AmazonS3
-import com.amazonaws.services.s3.model.CannedAccessControlList
-import com.amazonaws.services.s3.model.ObjectListing
-import com.amazonaws.services.s3.model.S3ObjectSummary
-import grails.plugin.awssdk.s3.AmazonS3Service
+import au.org.ala.ws.service.WebService
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
+import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
+import software.amazon.awssdk.core.sync.RequestBody
+import software.amazon.awssdk.core.sync.ResponseTransformer
+import software.amazon.awssdk.regions.Region
+import software.amazon.awssdk.services.s3.S3Client
+import software.amazon.awssdk.services.s3.S3ClientBuilder
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Response
+import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
+import software.amazon.awssdk.services.s3.model.S3Object;
 import org.apache.commons.csv.CSVPrinter
 import org.apache.commons.csv.CSVFormat
+import org.apache.http.entity.ContentType
+
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import java.text.SimpleDateFormat
@@ -37,8 +48,7 @@ import java.text.SimpleDateFormat
 class BiosecurityCSVService {
     def diffService
     def grailsApplication
-
-    AmazonS3Service amazonS3Service
+    WebService webService
 
     def list() throws Exception {
         if (grailsApplication.config.getProperty('biosecurity.csv.s3.enabled', Boolean, false)) {
@@ -70,6 +80,31 @@ class BiosecurityCSVService {
         }
     }
 
+    S3Client getS3Client() {
+        // no longer using the grails plugin - build S3 client directly
+        S3ClientBuilder builder = S3Client.builder()
+
+        String region = grailsApplication.config.getProperty("grails.plugin.awssdk.region", "")
+        if (region) {
+            builder = builder.region(Region.of(region))
+        }
+
+        String profile = grailsApplication.config.getProperty("grails.plugin.awssdk.profile", "")
+        if (profile) {
+            builder = builder.credentialsProvider(ProfileCredentialsProvider.create(profile))
+        }
+
+        String accessKey = grailsApplication.config.getProperty("grails.plugin.awssdk.s3.accessKey", "")
+        String secretKey = grailsApplication.config.getProperty("grails.plugin.awssdk.s3.secretKey", "")
+        if (accessKey && secretKey) {
+            builder = builder.credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create(accessKey, secretKey)))
+        }
+
+        S3Client s3Client = builder.build();
+
+        return s3Client;
+    }
+
     /**
      * todo: limits the maximum number of files returned - to avoid overwhelming the browser
      *
@@ -78,28 +113,98 @@ class BiosecurityCSVService {
      * @param folderName - "/" for root folder, or "2024-10-01" for specific date folder
      * @return list of S3ObjectSummary
      */
-    List<S3ObjectSummary> collectFilesInS3(String folderName) {
+    List<S3Object> collectFilesInS3(String folderName) {
         if (!folderName) {
             folderName="/"
         }
 
-        AmazonS3 s3Client = amazonS3Service.client
+        S3Client s3Client = getS3Client()
 
         String s3Directory = grailsApplication.config.getProperty('biosecurity.csv.s3.directory', 'biosecurity')
-        def allObjects = []
         String bucketName = grailsApplication.config.getProperty("grails.plugin.awssdk.s3.bucket")
         String prefix = "${s3Directory}/${folderName == '/' ? '' : folderName}"
-        ObjectListing listing = s3Client.listObjects(bucketName,prefix)
 
-        while (true) {
-            allObjects.addAll(listing.getObjectSummaries())
-            if (!listing.isTruncated()) break
-            listing = s3Client.listNextBatchOfObjects(listing)
+        List<S3Object> allObjects = new ArrayList<>()
+        String continuationToken = null;
+
+        do {
+            ListObjectsV2Request.Builder requestBuilder = ListObjectsV2Request.builder().bucket(bucketName).prefix(prefix)
+            if (continuationToken != null) {
+                requestBuilder.continuationToken(continuationToken);
+            }
+            ListObjectsV2Response response = s3Client.listObjectsV2(requestBuilder.build())
+            allObjects.addAll(response.contents())
+            continuationToken = response.nextContinuationToken()
+        } while (continuationToken != null)
+
+        allObjects.sort((a, b) -> Long.compare(b.lastModified().toEpochMilli(), a.lastModified().toEpochMilli()));
+        log.info("Found ${allObjects.size()} files in S3 bucket: ${bucketName}, directory: ${prefix}")
+        return allObjects;
+    }
+
+    //Batch Query Biocache (Using qid) to collect extra info
+    //Those extra info are only stored in CSV file, not included in the Emails
+    //e.g. first loaded date, lga layerID, lga name etc
+    //
+    def fetchExtraOccurrenceInfo(def records) {
+        String layerId = grailsApplication.config.getProperty('biosecurity.lga', 'cl11170')
+        String qidUrl = grailsApplication.config.getProperty('biocacheService.baseURL') + '/qid'
+
+        int limits = 1000
+        records.collate(limits).each {batch ->
+            def ids = batch.collect {it.uuid}
+            def query = ids.collect { "id:${it}" }.join(" OR ")
+            def qidResp = webService.post(
+                    qidUrl,
+                    ["q": query],
+                    [:],
+                    ContentType.APPLICATION_FORM_URLENCODED
+            )
+
+            if (qidResp.statusCode == 200) {
+                def qid = qidResp.resp?.keySet()?.iterator()?.next()
+                if (qid) {
+                    def occurrenceUrl = grailsApplication.config.getProperty('biocacheService.baseURL') + "/occurrences/search?q=qid:${qid}&pageSize=${limits}&fl=id,firstLoadedDate,${layerId}"
+                    def occurrencesResp = webService.get(occurrenceUrl)
+                    //e.g.
+                    //{
+                    //    uuid: "d8b1bd1a-98b6-494d-91c0-f0a4aa636d30",
+                    //    otherProperties: {
+                    //        firstLoadedDate: "2025-11-13T03:29:22.089+00:00",
+                    //        cl11170: "Western Downs"
+                    //    }
+                    //}
+                    if (occurrencesResp.statusCode == 200) {
+                        def occurrences = occurrencesResp.resp?["occurrences"]
+                        def occMap = occurrences.collectEntries { occ ->
+                            [(occ.uuid): occ]
+                        }
+
+                        //Update each record only if a matching occurrence exists
+                        batch.each { record ->
+                            def occ = occMap[record.uuid]
+                            if (occ) {
+                                record['lgaLayer'] = layerId
+                                record['lga'] = occ.otherProperties?[layerId] ?: ""
+                                record['firstLoaded'] = occ.otherProperties?.firstLoadedDate
+                            }
+                        }
+                    }
+                }
+            }
         }
+    }
 
-        List<S3ObjectSummary> sortedFiles = allObjects.sort { -it.lastModified.time }
-        log.info("Found ${sortedFiles.size()} files in S3 bucket: ${bucketName}, directory: ${prefix}")
-        sortedFiles
+    void s3StoreFile(String s3Key, File outputFile) {
+        S3Client s3Client = getS3Client()
+
+        String bucketName = grailsApplication.config.getProperty("grails.plugin.awssdk.s3.bucket")
+        try (def inputStream = new FileInputStream(outputFile)) {
+            s3Client.putObject(builder -> builder.bucket(bucketName).key(s3Key).build(), RequestBody.fromInputStream(inputStream, outputFile.length()))
+            log.info("Uploaded file to S3: " + s3Key)
+        } catch (Exception e) {
+            log.error("Error uploading file to S3: " + e.getMessage(), e)
+        }
     }
 
     /**
@@ -109,14 +214,14 @@ class BiosecurityCSVService {
      */
     void generateAuditCSV(QueryResult qs) {
         def task = {
-            File outputFile = createTempCSV(qs)
+            File outputFile = createTempCSVFromQueryResult(qs)
             String folderName = new SimpleDateFormat("yyyy-MM-dd").format(new Date())
             String fileName = sanitizeFileName("${qs.query.name}")+ ".csv"
             if (grailsApplication.config.getProperty('biosecurity.csv.s3.enabled', Boolean, false)) {
                 def s3Directory = grailsApplication.config.getProperty('biosecurity.csv.s3.directory', 'biosecurity')
                 String s3Key = "${s3Directory}/${folderName}/${fileName}"
                 log.debug("Uploading file to S3: " + s3Key)
-                amazonS3Service.storeFile(s3Key, outputFile, CannedAccessControlList.Private)
+                s3StoreFile(s3Key, outputFile)
             } else if (grailsApplication.config.getProperty('biosecurity.csv.local.enabled', Boolean, true)) {
               String destinationFolder = new File(grailsApplication.config.getProperty('biosecurity.csv.local.directory', '/tmp'), folderName).absolutePath
               File destinationFile = new File(destinationFolder, fileName)
@@ -132,8 +237,11 @@ class BiosecurityCSVService {
      * @param QueryResult
      * @return File object
      */
-    File createTempCSV(QueryResult qs) {
+    File createTempCSVFromQueryResult(QueryResult qs) {
         def records = diffService.getNewRecords(qs)
+        log.info("Generating CSV for ${qs.query?.name} : [ ${records.size()}] occurrences")
+        //Batch query extra info for each occurrences
+        fetchExtraOccurrenceInfo(records)
 
         String outputFile = sanitizeFileName("${new SimpleDateFormat("yyyy-MM-dd").format(qs.lastChecked)}")
 
@@ -144,7 +252,8 @@ class BiosecurityCSVService {
         String rawHeader = "recordID:uuid, recordLink:occurrenceLink, scientificName,taxonConceptID,decimalLatitude,decimalLongitude,eventDate,occurrenceStatus,dataResourceName,multimedia,mediaId:image," +
                 "vernacularName,taxonConceptID_new,kingdom,phylum,class:classs,order,family,genus,species,subspecies," +
                 "firstLoadedDate:firstLoaded,basisOfRecord,match," +
-                "searchTerm:search_term,correct name:scientificName,provided name:providedName,common name:vernacularName,state:stateProvince,lga layer,lga,fq,list id:listId,list name:listName, listLink:listLink, cw_state,shape feature:shape_feature,creator:collector," +
+                "searchTerm:search_term,correct name:scientificName,provided name:providedName,common name:vernacularName,state:stateProvince,lga layer:lgaLayer,lga,fq," +
+                "list id:listId,list name:listName, listLink:listLink, cw_state,shape feature:shape_feature,creator:collector," +
                 "license,mimetype," +
                 "image url:smallImageUrl," + // TBC , multiple image urls
                 "date sent:dateSent"
@@ -174,26 +283,13 @@ class BiosecurityCSVService {
                     def value = record[field]
 
                     switch (field) {
-                        case "lga":
-                            //read from cl (context layer)
-                            def cls = record["cl"]
-                            //LGA2023 is the default layer id
-                            def layerId = grailsApplication.config.getProperty('biosecurity.csv.lga', 'LGA2023')
-                            if(cls) {
-                                String matched = cls.find {
-                                    def (k, v) = it.split(':') // Split the string into key and value
-                                    k.toLowerCase() == layerId.toLowerCase()
-                                }
-                                //assure return "" if matched is null
-                                value = matched?.split(':')?.with { it.size() > 1 ? it[1] : "" } ?: ""
-                            }
-                            break
-                        case "lga layer":
-                            value = grailsApplication.config.getProperty('biosecurity.csv.lga', 'LGA2023')
-                            break
-                        case "eventDate":
+                        case ["eventDate", "firstLoaded"]:
                             if (value) {
-                                value = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss").format(value.toLong())
+                                try {
+                                    value = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss").format(value.toLong())
+                                } catch(Exception ignored) {
+                                    value = ""
+                                }
                             } else {
                                 value = ""
                             }
@@ -221,8 +317,38 @@ class BiosecurityCSVService {
                 writer.write(stringWriter.toString())
             }
         }
-
+        log.info("The CSV for ${qs.query?.name} was generated")
         tempFile
+    }
+
+    // returns a File at the localPath, or null
+    File s3GetFile(String s3Key, String localPath) {
+        S3Client s3Client = getS3Client()
+
+        String bucketName = grailsApplication.config.getProperty("grails.plugin.awssdk.s3.bucket")
+        File localFile = new File(localPath)
+
+        try (def outputStream = new FileOutputStream(localFile)) {
+            GetObjectRequest getObjectRequest = GetObjectRequest.builder().bucket(bucketName).key(s3Key).build()
+            s3Client.getObject(getObjectRequest, ResponseTransformer.toOutputStream(outputStream))
+            log.info("Downloaded file from S3: " + s3Key)
+        } catch (Exception e) {
+            log.error("Error downloading file from S3: " + e.getMessage(), e)
+        }
+
+        return localFile
+    }
+
+    Boolean s3Exists(String s3Key) {
+        S3Client s3Client = getS3Client()
+        String bucketName = grailsApplication.config.getProperty("grails.plugin.awssdk.s3.bucket")
+        try {
+            s3Client.headObject(builder -> builder.bucket(bucketName).key(s3Key).build())
+            return true
+        } catch (NoSuchKeyException e) {
+            log.error("S3 object does not exist: " + s3Key)
+        }
+        return false
     }
 
     /**
@@ -241,7 +367,7 @@ class BiosecurityCSVService {
             s3Files.each { objectSummary ->
                 def key = objectSummary.key
                 if (key.endsWith('.csv')) { // Filter out deleted files (end with '_deleted')
-                    def tempFile = amazonS3Service.getFile(key, "/tmp/${UUID.randomUUID()}.csv")
+                    def tempFile = s3GetFile(key, "/tmp/${UUID.randomUUID()}.csv")
                     csvFiles.add(tempFile)
                 }
             }
@@ -286,6 +412,19 @@ class BiosecurityCSVService {
         }
     }
 
+    ListObjectsV2Response listObjects(String s3Prefix) {
+        S3Client s3Client = getS3Client()
+        String bucketName = grailsApplication.config.getProperty("grails.plugin.awssdk.s3.bucket")
+
+        ListObjectsV2Request request = ListObjectsV2Request.builder()
+                .bucket(bucketName)
+                .prefix(s3Prefix)
+                .build()
+
+        ListObjectsV2Response response = s3Client.listObjectsV2(request)
+        return response
+    }
+
     /**
      * Check if folder exists
      *
@@ -299,9 +438,9 @@ class BiosecurityCSVService {
         if (config.getProperty('biosecurity.csv.s3.enabled', Boolean, false)) {
             def folderPrefix = config.getProperty('biosecurity.csv.s3.directory', 'biosecurity')
             def s3Prefix = "${folderPrefix}/${folderName == '/' ? '' : folderName}"
-            def s3Files = amazonS3Service.listObjects(s3Prefix)
-            log.debug("Listing S3: $s3Prefix -> ${s3Files.objectSummaries.size()} files")
-            return !s3Files.objectSummaries.isEmpty()
+            ListObjectsV2Response s3Files = listObjects(s3Prefix)
+            log.debug("Listing S3: $s3Prefix -> ${s3Files.contents().size()} files")
+            return !s3Files.contents().isEmpty()
         } else if (config.getProperty('biosecurity.csv.local.enabled', Boolean, true)) {
             String baseDirectory = config.getProperty('biosecurity.csv.local.directory', String, '/tmp')
             File folder = new File(baseDirectory, folderName)
@@ -325,8 +464,8 @@ class BiosecurityCSVService {
         if (config.getProperty('biosecurity.csv.s3.enabled', Boolean, false)) {
             // Folders in S3 are not real folders, but prefixes in the key
             def folderPrefix = config.getProperty('biosecurity.csv.s3.directory', 'biosecurity')
-            if (amazonS3Service.exists("${folderPrefix}/${filename}")) {
-                def file = amazonS3Service.getFile("${folderPrefix}/${filename}", "/tmp/${filename.tokenize(File.separator).last()}")
+            if (s3Exists("${folderPrefix}/${filename}")) {
+                def file = s3GetFile("${folderPrefix}/${filename}", "/tmp/${filename.tokenize(File.separator).last()}")
                 return file.text
             }
         } else if (config.getProperty('biosecurity.csv.local.enabled', Boolean, true)) {
@@ -340,6 +479,30 @@ class BiosecurityCSVService {
         ''
     }
 
+    Boolean s3MoveObject(String sourceBucket, String sourceKey, String destinationBucket, String destinationKey) {
+        S3Client s3Client = getS3Client()
+        try {
+            // Copy the object to the new location
+            s3Client.copyObject(builder -> builder
+                    .copySource("${sourceBucket}/${sourceKey}")
+                    .bucket(destinationBucket)
+                    .key(destinationKey)
+                    .build())
+
+            // Delete the original object
+            s3Client.deleteObject(builder -> builder
+                    .bucket(sourceBucket)
+                    .key(sourceKey)
+                    .build())
+
+            log.info("Moved S3 object from ${sourceKey} to ${destinationKey}")
+            return true
+        } catch (Exception e) {
+            log.error("Error moving S3 object: " + e.getMessage(), e)
+            return false
+        }
+    }
+
     Map deleteFile(String filename) {
         if (!filename) return [:]
 
@@ -351,8 +514,8 @@ class BiosecurityCSVService {
             String bucket = config.getProperty('grails.plugin.awssdk.s3.bucket', null)
             Map message
 
-            if (amazonS3Service.exists("${folderPrefix}/${filename}")) {
-                Boolean success = amazonS3Service.moveObject(bucket, "${folderPrefix}/${filename}", bucket, "${folderPrefix}/${filename}_deleted")
+            if (s3Exists("${folderPrefix}/${filename}")) {
+                Boolean success = s3MoveObject(bucket, "${folderPrefix}/${filename}", bucket, "${folderPrefix}/${filename}_deleted")
                 message = success ? [status: 0, message: "File deleted"] : [status: 1, message: "File deletion failed"]
             } else {
                 message = [status: 1, message: "File not found"]
@@ -408,7 +571,7 @@ class BiosecurityCSVService {
                 String s3Key = s3BasePath + relativePath.replace(File.separator, '/')
 
                 // Check if the file already exists in S3
-                if (amazonS3Service.exists(s3Key) || !s3Key.endsWith('.csv')) {
+                if (s3Exists(s3Key) || !s3Key.endsWith('.csv')) {
                     log.info "File ${file.name} already exists in S3 bucket ${bucketName} with key ${s3Key}. Skipping."
                     msg.filesSkipped = (msg.filesSkipped ?: []) + [file.name]
                     return  // Skip this file and continue with the next
@@ -416,7 +579,7 @@ class BiosecurityCSVService {
 
                 def inputStream = new FileInputStream(file)
                 try {
-                    Boolean success = !dryRun && amazonS3Service.storeFile(s3Key, file, CannedAccessControlList.Private)
+                    Boolean success = !dryRun && s3StoreFile(s3Key, file)
                     if (success) {
                         msg.filesUploaded = (msg.filesUploaded ?: []) + [s3Key]
                         log.info "Uploaded ${file.name} to S3 bucket ${bucketName} with key ${s3Key} (dryrun: ${dryRun})"

@@ -1,22 +1,18 @@
-/*
+/**
  *   Copyright (c) 2024.  Atlas of Living Australia
  *   All Rights Reserved.
- *   The contents of this file are subject to the Mozilla Public
- *   License Version 1.1 (the "License"); you may not use this file
- *   except in compliance with the License. You may obtain a copy of
- *   the License at http://www.mozilla.org/MPL/
- *   Software distributed under the License is distributed on an "AS
- *   IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
- *   implied. See the License for the specific language governing
- *   rights and limitations under the License.
+ *   @author Qifeng Bai
  *
  */
 
-package au.org.ala.alerts;
+package au.org.ala.alerts
 
+import au.org.ala.ws.service.WebService;
 import grails.converters.JSON
 import org.apache.commons.lang.time.DateUtils
 import org.apache.http.entity.ContentType
+
+import javax.transaction.Transactional
 import java.text.SimpleDateFormat
 
 /**
@@ -27,9 +23,10 @@ class BiosecurityService {
     def queryService
     def grailsApplication
     def emailService
-    def webService
+    WebService webService
     def biosecurityCSVService
     def diffService
+
 
     def biosecurityAlerts() {
         def results = []
@@ -71,75 +68,77 @@ class BiosecurityService {
         def result = [status: 1, message: message, logs: [ "Processing at ${sdf.format(now)} ", message]]
 
         def frequency = 'weekly'
-        QueryResult qr = notificationService.getQueryResult(query, Frequency.findByName(frequency))
 
-        try {
-            def processedJson = processQueryBiosecurity(query, since, now)
-            // set check time
-            qr.previousCheck = since
-            // store the last result from the webservice call
-            qr.previousResult = qr.lastResult
-            qr.lastResult = qr.compress(processedJson)
-            qr.lastChecked = now
+        QueryResult.withTransaction {
 
-            //def recordsFound = JsonPath.read(processedJson, '$.totalRecords')
-            qr.newRecords =  diffService.getNewRecords(qr)
-            qr.totalRecords = qr.newRecords?.size()
-            if ( qr.totalRecords > 0) {
-                qr.hasChanged = true
-                qr.lastChanged = since
-            } else {
-                qr.hasChanged = false
-            }
-            qr.succeeded = true
-            log.debug("[QUERY " + query.id + "] Has changed?: " + qr.hasChanged)
-            result.logs << "${qr.totalRecords} record(s) found since ${sdf.format(since)}."
+            QueryResult qr = notificationService.getQueryResult(query, Frequency.findByName(frequency))
 
-            def todayNDaysAgo = DateUtils.addDays(since, -1 * grailsApplication.config.getProperty("biosecurity.legacy.eventDateAge", Integer, 150))
-            def firstLoadedDate = sdf.format(since)
-            def occurrenceDate = sdf.format(todayNDaysAgo)
+            try {
+                def processedJson = processQueryBiosecurity(query, since, now)
+                // set check time
+                qr.previousCheck = since
+                // store the last result from the webservice call
+                qr.previousResult = qr.lastResult
+                qr.lastResult = qr.compress(processedJson)
+                qr.lastChecked = now
 
-            //Demo purpose. Those URLs are not used in Biosecurity queries
-            String queryPath = query.queryPathForUI
-            String modifiedPath = queryPath.replaceAll('___DATEPARAM___', firstLoadedDate).replaceAll('___LASTYEARPARAM___', occurrenceDate)
-            qr.queryUrlUIUsed = query.baseUrlForUI + modifiedPath
+                //def recordsFound = JsonPath.read(processedJson, '$.totalRecords')
+                qr.newRecords =  diffService.getNewRecords(qr)
+                qr.totalRecords = qr.newRecords?.size()
+                if ( qr.totalRecords > 0) {
+                    qr.hasChanged = true
+                    qr.lastChanged = since
+                } else {
+                    qr.hasChanged = false
+                }
+                qr.succeeded = true
+                log.debug("[QUERY " + query.id + "] Has changed?: " + qr.hasChanged)
+                result.logs << "${qr.totalRecords} record(s) found since ${sdf.format(since)}."
 
-            if (qr.hasChanged) {
-                biosecurityCSVService.generateAuditCSV(qr)
-                def users = queryService.getSubscribers(query.id)
-                def recipients = users.collect { user ->
-                        def notificationUnsubToken = user.notifications.find { it.query.id == query.id }?.unsubscribeToken
-                        [email: user.email, userUnsubToken: user.unsubscribeToken, notificationUnsubToken: notificationUnsubToken]
+                def todayNDaysAgo = DateUtils.addDays(since, -1 * grailsApplication.config.getProperty("biosecurity.legacy.eventDateAge", Integer, 150))
+                def firstLoadedDate = sdf.format(since)
+                def occurrenceDate = sdf.format(todayNDaysAgo)
+
+                //Demo purpose. Those URLs are not used in Biosecurity queries
+                String queryPath = query.queryPathForUI
+                String modifiedPath = queryPath.replaceAll('___DATEPARAM___', firstLoadedDate).replaceAll('___LASTYEARPARAM___', occurrenceDate)
+                qr.queryUrlUIUsed = query.baseUrlForUI + modifiedPath
+
+                if (qr.hasChanged) {
+                    biosecurityCSVService.generateAuditCSV(qr)
+                    def users = queryService.getSubscribers(query.id)
+                    def recipients = users.collect { user ->
+                            def notificationUnsubToken = user.notifications.find { it.query.id == query.id }?.unsubscribeToken
+                            [email: user.email, userUnsubToken: user.unsubscribeToken, notificationUnsubToken: notificationUnsubToken]
+                    }
+
+                    def emails = recipients.collect { it.email }
+                    result.logs << "Sending emails to ${emails.size() <= 2 ? emails.join('; ') : emails.take(2).join('; ') + ' and ' + (emails.size() - 2) + ' other users.'}"
+
+                    if (!users.isEmpty()) {
+                        def emailStatus = emailService.sendGroupNotification(qr, Frequency.findByName('weekly'), recipients)
+
+                        result.status = emailStatus.status
+                        result.logs << emailStatus.message
+                    }
+                } else {
+                    result.logs << "No emails will be sent because no changes were detected."
                 }
 
-                def emails = recipients.collect { it.email }
-                result.logs << "Sending emails to ${emails.size() <= 2 ? emails.join('; ') : emails.take(2).join('; ') + ' and ' + (emails.size() - 2) + ' other users.'}"
-
-                if (!users.isEmpty()) {
-                    def emailStatus = emailService.sendGroupNotification(qr, Frequency.findByName('weekly'), recipients)
-
-                    result.status = emailStatus.status
-                    result.logs << emailStatus.message
-                }
-            } else {
-                result.logs << "No emails will be sent because no changes were detected."
-            }
-
-            result.logs << "Completed!"
-            result.message = "Completion of Subscription: [${query?.id}]. ${query?.name}."
-            result.status = 0
-        } catch (Exception e) {
-            qr.succeeded = false
-            String error = "Error: Failed to trigger subscription [ ${query?.id}  ${query?.name} ]"
-            log.error(e.message)
-            result.status = 1
-            result.message = error
-            result.logs << e.message
-            result.logs << error
-        } finally {
-            log.info(result.message)
-            qr.newLogs(result.logs)
-            QueryResult.withTransaction {
+                result.logs << "Completed!"
+                result.message = "Completion of Subscription: [${query?.id}]. ${query?.name}."
+                result.status = 0
+            } catch (Exception e) {
+                qr.succeeded = false
+                String error = "Error: Failed to trigger subscription [ ${query?.id}  ${query?.name} ]"
+                log.error(e.message)
+                result.status = 1
+                result.message = error
+                result.logs << e.message
+                result.logs << error
+            } finally {
+                log.info(result.message)
+                qr.newLogs(result.logs)
                 qr.save(flush: true, failOnError: true)
             }
         }
@@ -247,7 +246,6 @@ class BiosecurityService {
                         occurrence['kvs'] = listItem.kvpValues.collect { kv -> "${kv.key}:${kv.value}" }
                         occurrence['fq'] = listItem.kvpValues?.find { it.key == 'fq' }?.value
                     }
-                    fetchExtraInfo(occurrence.uuid, occurrence)
                 }
             } catch (Exception e) {
                 log.error("Biosecurity: ${e.message}")
@@ -256,22 +254,6 @@ class BiosecurityService {
         }
     }
 
-    def fetchExtraInfo(def uuid, def occurrence) {
-        try {
-            def url = grailsApplication.config.getProperty('biocacheService.baseURL') + '/occurrences/' + uuid
-            def record = JSON.parse(new URL(url).openConnection().with { conn ->
-                conn.setRequestProperty("User-Agent", grailsApplication.config.getProperty("customUserAgent", "alerts"))
-                conn.inputStream.text
-            })
-            occurrence['firstLoaded'] = record.raw?.firstLoaded
-            //Do not join, let CSV generate handle it
-            occurrence['cl'] = record.processed?.cl?.collect { "${it.key}:${it.value}" }
-
-        } catch (Exception e) {
-            log.error("failed to get extra info for uuid: " + uuid)
-            log.error(e.message)
-        }
-    }
 
     def buildFq(def it) {
         def fqValue = it.kvpValues?.find { it.key == 'fq' }?.value
