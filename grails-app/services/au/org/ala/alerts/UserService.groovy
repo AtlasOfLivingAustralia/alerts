@@ -27,7 +27,7 @@ class UserService {
 
     def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
 
-    def getUserAlertsConfig(User user) {
+    Map getUserAlertsConfig(User user) {
 
         log.debug('getUserAlertsConfig - Viewing my alerts :  ' + user)
         //enabled alerts

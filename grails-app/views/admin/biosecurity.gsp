@@ -10,7 +10,8 @@
 
     <title>Admin - Manage BioSecurity alerts</title>
     <asset:stylesheet href="alerts.css"/>
-    <asset:javascript src="bootstrap-3-typeahead-4.0.1.min.js"/>
+    <asset:javascript src="typeahead-1.3.1.min.js"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
     <script>
         var subscriptionsPerLoad = ${subscriptionsPerPage?:10};
         var nextSubscription = 0;
@@ -141,9 +142,9 @@
                         type: "GET",
                         success: function(response) {
                             if (nextSubscription+subscriptionsPerLoad >= response.count) {
-                                $("button.more-button").hide();
+                                $("button[name=displayMore]").hide();
                             } else {
-                                $("button.more-button").show();
+                                $("button[name=displayMore]").show();
                             }
                         },
                         error: function(xhr, status, error) {
@@ -263,13 +264,7 @@
             }
         }
 
-        // Initialize popovers again after any records are loaded by Ajax
-        function initializePopoverAgain() {
-            $('[data-toggle="popover"]').popover({
-                html: true,
-                container: 'body'
-            });
-        }
+
 
         function addSubscribers(button) {
             let form = button.closest('form')
@@ -304,35 +299,38 @@
 
 
         $(document).ready(function(){
-            $('input#searchSubscriptions').typeahead({
-                minLength: 3,
-                displayText: function(item) {
-                    return item.name;
+            $('input#searchSubscriptions').typeahead(
+                {
+                    hint: true,
+                    highlight: true,
+                    minLength: 3
                 },
-                source: function(query, process) {
-                    // Fetch options from another URL based on the input value
-                    $.ajax({
-                        url: '${request.contextPath}/ws/searchBiosecuritySubscriptions?q=' + query, // Replace with your URL
-                        dataType: 'json',
-                        success: function(data) {
-                            process(data);
-                        },
-                        error: function(xhr, status, error) {
-                            if (xhr.status == 401) {
-                                alert.error('Authentication expired. Please login again.');
-                            } else {
-                                console.error('Failed to find queries. Please refresh pages and try again.');
+                {
+                    name: 'searchSubscriptions',
+                    display: "name",
+                    source: function (query, syncResults, asyncResults) {
+                        // Fetch options from another URL based on the input value
+                        $.ajax({
+                            url: '${request.contextPath}/ws/searchBiosecuritySubscriptions?q=' + query, // Replace with your URL
+                            dataType: 'json',
+                            success: function (data) {
+                                asyncResults(data);
+                            },
+                            error: function (xhr, status, error) {
+                                if (xhr.status == 401) {
+                                    alert.error('Authentication expired. Please login again.');
+                                } else {
+                                    console.error('Failed to find queries. Please refresh pages and try again.');
+                                }
+                                console.error('Failed to fetch options:', error);
                             }
-                            console.error('Failed to fetch options:', error);
-                        }
-                    });
-                },
-                afterSelect: function(item) {
-                    if(item.id) {
+                        });
+                    }
+                }).bind('typeahead:select', function(ev, item) {
+                    if (item.id) {
                         loadSubscription(item.id);
                     }
-                }
-            });
+                });
 
             /**
              * Used by autocomplete to load subscription details
@@ -346,7 +344,7 @@
                     success: function(response) {
                         $("div#biosecurityDetails").html(response);
                         //hide 'load more' button
-                        $("button.more-button").hide();
+                        $("button[name=displayMore]").hide();
                         initializePopoverAgain();
                     },
                     error: function(xhr, status, error) {
@@ -361,11 +359,6 @@
                 loadMore(0);
             })
 
-            //Init popup on page load
-            $('[data-toggle="popover"]').popover({
-                html: true,
-                container: 'body'
-            })
 
             $("#scheduleBtn").click(function () {
                 const pauseDate  = $("form[name='pauseResumeForm']").find("input[name='pauseDate']").val();
@@ -451,14 +444,17 @@
         })
 
         document.addEventListener('DOMContentLoaded', () => {
-            const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-            // Set the hidden field to the browser's timezone
-            document.getElementById('localTimeZone').value = tz;
+
+            // --- Timezone handling ---
+            const tzField = document.getElementById('localTimeZone');
+            if (tzField) {
+                tzField.value = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            }
 
             document.querySelectorAll('.ISODateTime').forEach(el => {
-                const dt = new Date(el.dataset.time); // JS Date interprets ISO as UTC
+                const dt = new Date(el.dataset.time); // ISO assumed UTC
                 el.textContent = dt.toLocaleString(undefined, {
-                    timeZone: tz,
+                    timeZone: tzField?.value,
                     weekday: 'short',
                     year: 'numeric',
                     month: 'short',
@@ -467,7 +463,31 @@
                     minute: '2-digit'
                 });
             });
+
+            // --- Bootstrap popovers ---
+            document
+                .querySelectorAll('[data-bs-toggle="popover"]')
+                .forEach(el => {
+                    new bootstrap.Popover(el);
+                });
+
         });
+
+        function initializePopoverAgain() {
+            document
+                .querySelectorAll('[data-bs-toggle="popover"]')
+                .forEach(el => {
+                    // Dispose existing popover (important for Ajax reloads)
+                    if (bootstrap.Popover.getInstance(el)) {
+                        bootstrap.Popover.getInstance(el).dispose();
+                    }
+
+                    new bootstrap.Popover(el, {
+                        html: true,
+                        container: 'body'
+                    });
+                });
+        }
 
     </script>
 
@@ -511,12 +531,12 @@
                 </g:else>
             </div>
             <div  class="col-sm-2">
-                <button type="button" id="showScheduleBtn" class="btn btn-primary-outline">Schedule Manager</button>
+                <button type="button" id="showScheduleBtn" class="btn btn-outline-primary">Schedule Manager</button>
             </div>
         </div>
         <p></p>
 
-        <div class="well" name="rescheduleBiosecurity" style="display:none;">
+        <div class="card card-body" name="rescheduleBiosecurity" style="display:none;">
             <div class="text-center"><h3>Alerts schedule manager</h3></div>
             <div class="row mt-20" >
                 <div class="col-sm-12"><h4>Pause or resume now</h4></div>
@@ -524,13 +544,13 @@
                     <g:link controller="biosecurityAdmin" action="pauseAlerts" class="btn btn-primary" >
                         Pause now
                     </g:link> &nbsp;
-                    <g:link controller="biosecurityAdmin" action="resumeAlerts" class="btn btn-primary-outline" >
+                    <g:link controller="biosecurityAdmin" action="resumeAlerts" class="btn btn-outline-primary" >
                         Resume now
                     </g:link>
                 </div>
             </div>
             <div class="mt-20"></div>
-            <g:form name="pauseResumeForm" controller="admin" action="pauseResumeBioSecurityAlerts" method="post">
+            <g:form name="pauseResumeForm" controller="admin" action="pauseResumeBioSecurityAlerts" method="post" >
                 <div><h4>Schedule a pause</h4></div>
                 <div class="row" >
                     <div class="col-sm-12" >Set a date range to pause alerts. Dates start at midnight AEDT/AEST. You can save one scheduled pause at a time.</div>
@@ -539,7 +559,7 @@
                         &nbsp;&nbsp;
                         <button type="button" id="scheduleBtn" class="btn btn-primary">Save schedule</button>
                         &nbsp;
-                        <g:link controller="biosecurityAdmin" action="cancelScheduledPauseResumeJob" class="btn btn-primary-outline" >
+                        <g:link controller="biosecurityAdmin" action="cancelScheduledPauseResumeJob" class="btn btn-outline-primary" >
                             Cancel scheduled pause
                         </g:link>
                     </div>
@@ -553,9 +573,9 @@
                     <p>You can change the weekday and time this job runs. This updates the weekly schedule only.</p>
                 </div>
 
-                <g:form controller="biosecurityAdmin" action="updateWeeklySchedule" method="POST">
+                <g:form controller="biosecurityAdmin" action="updateWeeklySchedule" method="POST" class="d-flex flex-wrap align-items-center gap-3">
                     <input type="hidden" name="localTimeZone" id="localTimeZone" />
-                <div class="col-sm-2 mt-20">
+                <div class="mt-10">
                     <label for="weekday">Run on</label>
                     <select id="weekday" name="weekday" class="form-control">
                         <option value="MONDAY">Monday</option>
@@ -569,13 +589,13 @@
                 </div>
 
                 <!-- Time selector -->
-                <div class="col-sm-2 mt-20">
+                <div class="mt-10">
                     <label for="time">At time</label>
                     <input type="time" id="time" name="time" class="form-control" value="11:00">
                 </div>
 
                 <!-- Save button -->
-                <div class="col-sm-3 mt-20">
+                <div class="mt-10">
                     <label>&nbsp;</label>
                     <button type="submit" id="saveWeeklyScheduleBtn" class="btn btn-primary form-control">
                         Update Weekly Schedule
@@ -587,23 +607,24 @@
 
         </div>
 
-        <div class="jumbotron jumbotron-fluid">
-            <div class="container">
-                <p class="lead">Quick entry for adding subscribers</p>
-                <g:form name="create-security-alert" action="subscribeBioSecurity" method="post" class="form-horizontal">
+        <div class="card card-body mt-20">
+            <div class="container-fluid">
+                <h3>Quick entry for adding subscribers</h3>
+
+                <g:form name="create-security-alert" action="subscribeBioSecurity" method="post" class="form-horizontal mt-20">
                     <div class="row" >
                         <div class="col-sm-3">
-                            <label class="control-label"><g:message code="biosecurity.view.body.label.specieslistid" default="Species list uid"/></label>
+                            <label class="form-label"> <g:message code="biosecurity.view.body.label.specieslistid" default="Species list uid"/></label>
                             <input type="text" name="listid" class="form-control" placeholder='Species list ID, AKA drid'/>
                         </div>
 
                         <div class="col-sm-7">
-                            <label for="useremails" class="control-label"><g:message code="biosecurity.view.body.label.useremails" default="User emails"/></label>
+                            <label for="useremails" class="form-label"><g:message code="biosecurity.view.body.label.useremails" default="User emails"/></label>
                             <input type="text" id="useremails" name="useremails" class="form-control" placeholder="<g:message code="biosecurity.view.body.label.useremailsallowmultiple" default="You can input multiple user emails by separating them with ';'"/>"/>
                         </div>
 
-                        <div class="col-sm-2" style="text-align: right; ">
-                            <label for="quick-submit"  style="visibility: hidden;">control</label>
+                        <div class="col-sm-2 mt-20 text-end" >
+                            <label class="form-label invisible" >control</label>
                             <button type="submit" id="quick-submit" form="create-security-alert" class="btn btn-primary"><g:message code="biosecurity.view.body.button.subscribe" default="Subscribe"/></button>
                         </div>
 
@@ -611,16 +632,16 @@
                 </g:form>
 
                 <p></p>
-                <div class="row" style="text-align: right">
+                <div class="row text-end">
                     <div class="col-sm-10" >
                         Search for new records of all subscriptions and notify to subscribers
                     </div>
                     <div class="col-sm-2" >
-                        <button class="btn btn-primary-outline" onclick="triggerSubscriptions()">Check & Notify </button>
+                        <button class="btn btn-outline-primary" onclick="triggerSubscriptions()">Check & Notify </button>
                     </div>
                 </div>
                 <p></p>
-                <div class="row" style="text-align: right">
+                <div class="row text-end">
                     <div class="col-sm-10" >Download CSV list of all occurrences from all biosecurity alerts sent (scheduled and manual)</div>
                     <div class="col-sm-2" >
                         <a class="btn btn-primary-outline" href="${createLink( namespace: 'biosecurity',
@@ -628,39 +649,19 @@
                     </div>
                 </div>
                 <p></p>
-
-%{--                <div>
-                <g:if test="${queries}">
-                    <form target="_blank" action="${request.contextPath}/admin/csvAllBiosecurity" method="post">
-                        <div class="row" style="text-align: right">
-                            <div class="col-sm-10" >
-                                Download CSV list of all occurrences from all alerts since: <input type="date" class="form" name="date" value="${today}"/>
-                            </div>
-                            <div class="col-sm-2">
-                                <button type="submit" class="btn  btn-info">Download CSV</button>
-                            </div>
-                        </div>
-                    </form>
-                </g:if>
-                </div>--}%
-
             </div>
         </div>
 
         <g:if test="${queries}">
-            <div>
-                <div style="display: flex; justify-content: space-between">
-                    <div ><p class="lead">There are <span id="numOfSubscriptions">${total}</span> active alert(s)</p></div>
-                    <div class="col-md-6 row" >
-                            <div class="col-md-8">
-                                <input type="text" class="form-control" placeholder="Search by query name" id="searchSubscriptions" />
-                            </div>
-                            <div class="col-auto">
-                                <button type="button" id="resetSubscriptionSearch" class="btn btn-primary-outline">Reset</button>
-                            </div>
+            <div class="mt-20">
+                <div class="row">
+                    <div  class="col-md-6"><p class="lead">There are <span id="numOfSubscriptions">${total}</span> active alert(s)</p></div>
+                    <div class="d-flex col-md-6 align-items-center justify-content-end gap-2" >
+                        <input type="text" class="form-control" placeholder="Search by query name" id="searchSubscriptions" />
+                        <button type="button" id="resetSubscriptionSearch" class="btn btn-outline-primary">Reset</button>
                     </div>
                 </div>
-                <div id="biosecurityDetails" class="bioscecrurity-padding" >
+                <div id="biosecurityDetails" class="pt-4 pb-4" >
                     <div class="row">
                         <div class="col-md-4"><b><g:message code="biosecurity.view.body.table.header.queryname" default="Subscription"/></b></div>
                         <div class="col-md-5"><b>Subscribers</b></div>
@@ -670,7 +671,7 @@
                 </div>
                 <g:if test="${ total > subscriptionsPerPage}">
                     <div>
-                        <button  class="more-button" onclick="loadMore()">Show More</button>
+                        <button  class="btn btn-primary" name="displayMore" onclick="loadMore()">Show More</button>
                     </div>
                 </g:if>
             </div>

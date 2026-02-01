@@ -9,8 +9,8 @@
     <meta name="breadcrumbParent" content="${request.contextPath}/admin,Alerts admin"/>
 
     <title>Admin - Manage alerts</title>
-    <asset:stylesheet href="alerts.css"/>
-    <asset:javascript src="bootstrap-3-typeahead-4.0.1.min.js"/>
+    <asset:stylesheet src="alerts.css"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
 
     <script>
         $(document).ready(function () {
@@ -48,21 +48,19 @@
 </head>
 <body>
     <div>
-        <ul class="nav nav-tabs" id="myTab" role="tablist">
+        <div class="nav nav-tabs" id="myTab" role="tablist">
             <g:each var="queryType" in="${queries.keySet()}" status="i">
-                <li class="nav-item ${i == 0 ? 'active' : ''}">
-                    <a class="nav-link"  id="tab-${queryType}-tab" data-toggle="tab" href="#tab-${queryType}-content" role="tab" aria-controls="tab-${queryType}" >${queryType}</a>
-                </li>
+                <button class="nav-link  ${i == 0 ? 'active' : ''}"  id="tab-${queryType}-tab" data-bs-toggle="tab" data-bs-target="#tab-${queryType}-content"  role="tab" aria-controls="tab-${queryType}" >${queryType}</button>
             </g:each>
-        </ul>
+        </div>
         <div class="tab-content" id="myTabContent">
             <g:each var="queryType" in="${queries.keySet()}" status="i">
-                <div class="tab-pane fade ${i == 0 ? 'active in' : ''}" id="tab-${queryType}-content" role="tabpanel" aria-labelledby="tab-${queryType}-content">
+                <div class="tab-pane fade ${i == 0 ? 'show active' : ''}" id="tab-${queryType}-content" role="tabpanel" aria-labelledby="tab-${queryType}-content">
                     <ul>
                         <g:each var="query" in="${queries[queryType]}">
                             <li>
-                                <g:link controller="query" action="wipe" params="[id: query.id]" target="_blank"><i class="fa fa-trash" aria-hidden="true"></i></g:link>
-                                <span class="badge badge-light">${query.id}</span>
+                               <g:link controller="query" action="wipe" params="[id: query.id]" target="_blank"><i class="fas fa-trash" aria-hidden="true"></i></g:link>
+                                <span class="badge bg-light">${query.id}</span>
                                 <a href="javascript:void(0);" class="toggle-more-query-details" data-target="#more-${query.id}"  title="Query ID:${query.id}">
                                  <g:if test="${query.name == 'My Annotations'}">
                                        <%
@@ -77,15 +75,17 @@
                             </li>
                             <div class="collapse" id="more-${query.id}">
                                 <div class="card card-body">
-                                    <div><p class="bg-info"><b>Query URL:</b> ${query.baseUrl+query.queryPath} </p>
+                                    <div><p class="bg-light"><b>Query URL:</b> ${query.baseUrl+query.queryPath} </p>
                                         <p><i class="fa fa-info-circle" aria-hidden="true" title="The URL MAY be used to build a UI link for this query."></i> <i>UI ref. ${query.baseUrlForUI}</i></p>
                                     </div>
-                                    <g:each var="propertyPath" in="${query.propertyPaths}">
-                                        <g:if test="${propertyPath.fireWhenNotZero}">
-                                            <span class="badge badge-info">New records</span> JSON path for the number of records: ${propertyPath?.jsonPath}<br>
-                                        </g:if>
-                                    </g:each>
-                                    <i class="fa fa-cog" aria-hidden="true"></i> <i><b>JSON record path:</b>${query.recordJsonPath} <b>JSON ID path:</b>${query.idJsonPath}</i>
+%{--                                    <g:each var="propertyPath" in="${query.propertyPaths}">--}%
+%{--                                        <g:if test="${propertyPath.fireWhenNotZero}">--}%
+%{--                                            <span class="badge badge-info">New records</span> JSON path for the number of records: ${propertyPath?.jsonPath}<br>--}%
+%{--                                        </g:if>--}%
+%{--                                    </g:each>--}%
+                                    <div>
+                                      <i class="fa fa-cog" aria-hidden="true"></i> <i><b>JSON record path:</b>${query.recordJsonPath} <b>JSON ID path:</b>${query.idJsonPath}</i>
+                                    </div>
                                     <br/>
 
                                     %{-- <div>--}%
@@ -133,22 +133,22 @@
 %{--                                                        <span class="badge badge-light">${pv.id}</span> Current Value: ${pv.currentValue}; Previous Value: ${pv.previousValue} <br>--}%
 %{--                                                    </g:each>--}%
                                                     </div>
-                                                    <div style="text-align: right;">
+                                                    <div class="text-end" >
                                                         <hr>
-                                                         <div style="padding: 5px;">
+                                                         <div class="p-1">
                                                             <label>Evaluate the new record discovery algorithm using
                                                                 <span title="It won't query our data services">
-                                                                <i class="fa fa-info-circle" aria-hidden="true" style="color: #c44d34;"></i> the last check results</span> in Alerts.</label><g:link class="btn btn-info"  controller="notification" action="evaluateChangeDetectionAlgorithm" params="[queryId: query.id, queryResultId: queryResult.id, emailMe:true]" target="_blank">
+                                                                <i class="fa fa-info-circle" aria-hidden="true" style="color: #c44d34;"></i> the last check results</span> in Alerts.</label><g:link class="btn btn-outline-primary"  controller="notification" action="evaluateChangeDetectionAlgorithm" params="[queryId: query.id, queryResultId: queryResult.id, emailMe:true]" target="_blank">
                                                                 Evaluate & Email me
                                                             </g:link>
                                                          </div>
                                                         <g:if test="${queryType != 'biosecurity'}">
-                                                            <div style="padding: 5px;">
+                                                            <div class="p-1">
                                                             <label>Query the latest records from the data services
                                                                 <i class="fa fa-question-circle-o" aria-hidden="true" style="color: #c44d34;"
                                                                    title="The query may use the last checked date. The query may end on that date, span a period around that date, or not used at all. e.g, if the last checked date of a Monthly Image alerts is 1 Jan 2025, this function will query the images which were uploaded from 1 Dec 2024 to current time"></i>
                                                                 , compare them with the current records in Alerts, and email me the findings.</label>
-                                                                <g:link class="btn btn-info"  controller="admin" action="emailMeLastCheck" params="[queryId: query.id, frequency: queryResult.frequency?.name]" target="_blank">
+                                                                <g:link class="btn btn-outline-primary"  controller="admin" action="emailMeLastCheck" params="[queryId: query.id, frequency: queryResult.frequency?.name]" target="_blank">
                                                                 Query & Email me.
                                                             </g:link>
                                                             </div>
@@ -157,15 +157,15 @@
 %{--                                                                    Dry run (no DB update, no emails)--}%
 %{--                                                                </g:link>--}%
 %{--                                                            </div>--}%
-                                                            <div style="margin-top: 20px; margin-bottom: 20px;">
-                                                                <g:form class="form-inline" controller="admin" action="emailAlertsOnCheckDate" method="POST" target="_blank">
+                                                            <div class="row my-3">
+                                                                <g:form  class="d-flex flex-wrap align-items-center" controller="admin" action="emailAlertsOnCheckDate" method="POST" target="_blank">
                                                                     <%@ page import="java.time.LocalDate" %>
                                                                     <%
                                                                         String today = LocalDate.now().toString();  // Format: YYYY-MM-DD
                                                                     %>
                                                                     <input type="hidden" name="queryId" value="${query.id}" />
                                                                     <input type="hidden" name="frequency" value="${queryResult.frequency?.name}" />
-                                                                    <label for="checkDate">Run the
+                                                                    Run the
                                                                         <g:if test="${queryResult?.queryUrlUsed}">
                                                                             <a href="${queryResult?.queryUrlUsed}" target="_blank" title="URL for search"><i class="fa fa-link" aria-hidden="true"></i> query</a>
                                                                          </g:if>
@@ -176,9 +176,9 @@
                                                                                                   title="It may be set as starting from that date, ending on that date, spanning a period around that date, or not used at all."></i>
                                                                         , and email new records. The date range associated with the given date is determined by the query.
 
-                                                                     </label>
-                                                                     <input type="date" id="checkDate" name="checkDate" value="${today}" class="form-control" />
-                                                                    <button type="submit" class="btn btn-info mb-2">Email me</button>
+                                                                     <input type="date" id="checkDate" name="checkDate" value="${today}" class="form-control w-auto mr-3" />
+                                                                    <button type="submit" class="btn btn-outline-primary mb-2">Email me</button>
+
                                                                 </g:form>
                                                             </div>
                                                             <div>

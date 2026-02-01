@@ -122,7 +122,7 @@ dependencies {
 
 
     // Grails plugin dependencies
-    runtimeOnly "org.grails.plugins:ala-bootstrap3:4.5.0", noCache
+    implementation "org.grails.plugins:ala-bootstrap5:1.0.0-SNAPSHOT", noCache
     implementation "org.grails.plugins:ala-auth:$alaSecurityLibsVersion"
     implementation "org.grails.plugins:ala-ws-security-plugin:$alaSecurityLibsVersion"
     implementation "org.grails.plugins:ala-ws-plugin:$alaSecurityLibsVersion"
@@ -212,6 +212,7 @@ war {
 }
 
 java {
-    sourceCompatibility = JavaVersion.toVersion("11")
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
 

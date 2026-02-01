@@ -16,6 +16,12 @@
 *= require grails
 */
 
+:root {
+    --bs-body-font-family: 'Roboto', sans-serif;
+    /*--bs-body-font-size: 0.875rem;   !* 14px *!*/
+    /*--bs-body-line-height: 1.428;*/
+}
+
 .queryActions {
     padding:20px;
 }
@@ -39,10 +45,13 @@
     color: #fff;
 }
 
-.btn-primary-outline {
-    color: #000;              /* black text */
-    background-color: #fff;   /* white background */
-    border: 1px solid #c44d34; /* same border color as your primary */
+.btn-primary {
+    color: #fff;              /* black text */
+}
+
+.btn-disable-outline {
+    background-color: #fff;
+    border: 1px solid gray;
 }
 
 .badge-primary-outline {
@@ -61,9 +70,9 @@
     font-size: 18px;
 }
 
-a.btn-ala {
-    font-weight: 500;
-}
+/*a.btn-ala {*/
+/*    font-weight: 500;*/
+/*}*/
 
 #main ul {
     list-style-type: disc;
@@ -77,21 +86,21 @@ a.btn-ala {
     width: 20%;
 }
 
-.bioscecrurity-padding {
-    padding: 20px 0px 20px 0px;
-}
+/*.bioscecrurity-padding {*/
+/*    padding: 20px 0px 20px 0px;*/
+/*}*/
 
-.more-button {
-    background-color: #C44D34;
-    cursor: pointer;
-    border: 0;
-    border-radius: 10px;
-    color: white;
-    padding: 11px 19px;
-    text-align: center;
-    display: inline-block;
-    font-size: 16px;
-}
+/*.more-button {*/
+/*    background-color: #C44D34;*/
+/*    cursor: pointer;*/
+/*    border: 0;*/
+/*    border-radius: 10px;*/
+/*    color: white;*/
+/*    padding: 11px 19px;*/
+/*    text-align: center;*/
+/*    display: inline-block;*/
+/*    font-size: 16px;*/
+/*}*/
 
 .badge-info {
     background-color: #17a2b8; /* Adjust the color as needed */
@@ -155,27 +164,32 @@ a.btn-ala {
     word-break: break-word !important; /* Break long words inside list items */
 }
 
-.nav-tabs > li.active > a,
-.nav-tabs > li.active > a:focus,
-.nav-tabs > li.active > a:hover {
-    background-color: #ffffff;
-    color:  #c44d34;
-    border-color: grey grey transparent;
-}
+/*.nav-tabs > li.active > a,*/
+/*.nav-tabs > li.active > a:focus,*/
+/*.nav-tabs > li.active > a:hover {*/
+/*    background-color: #ffffff;*/
+/*    color:  #c44d34;*/
+/*}*/
 
-.nav-tabs > li > a:hover {
-    background-color: #c44d34;
-    color: #ffffff;
-}
+/*.nav-tabs > li > a:hover {*/
+/*    background-color: #c44d34;*/
+/*    color: #ffffff;*/
+/*}*/
 
-.nav-tabs > li > a {
-    color: grey;
-    background-color: transparent;
-}
+/*.nav-tabs > li > a {*/
+/*    color: grey;*/
+/*    background-color: transparent;*/
+/*}*/
+
+/*.tab-content {*/
+/*    border-color: #dee2e6;  !* content border color *!*/
+/*    background-color: #fff;  !* default white content *!*/
+/*}*/
 
 .tab-content > .tab-pane {
-    border: 1px solid grey;
+    border: 1px solid;
     border-top: none;
+    border-color: #dee2e6;
     padding: 15px;
     background-color: #fff;
 }
@@ -183,4 +197,24 @@ a.btn-ala {
 .mt-20 {
     margin-top: 20px;
 }
+
+/**
+ Starting with .tt is for Typehead
+ */
+.tt-menu {
+    background-color: #fff;        /* white like card body */
+    border: 1px solid #dee2e6;    /* light gray border */
+    border-radius: .25rem;         /* rounded corners */
+    box-shadow: 0 .25rem .5rem rgba(0,0,0,.1); /* optional shadow */
+    padding: 0.25rem 0;           /* spacing for items */
+    width: 100% !important;
+}
+.tt-suggestion {
+    padding: 0.25rem 0.75rem;
+    cursor: pointer;
+}
+.tt-suggestion:hover {
+    background-color: #e9ecef;     /* highlight on hover */
+}
+
 
