@@ -1,3 +1,8 @@
+<%--
+    TODO: POSSIBLY UNUSED PAGE
+    - No known links as of 2026-02
+    - Verify before removal
+--%>
 <html>
     <head>
         <title><g:message code="admin.notification.title" /> | ${grailsApplication.config.skin.orgNameLong?: 'Atlas of Living Australia'}</title>

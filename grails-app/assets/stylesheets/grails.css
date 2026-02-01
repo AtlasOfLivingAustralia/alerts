@@ -102,7 +102,6 @@ textarea {
 
 input[type=checkbox], input[type=radio] {
     background-color: transparent;
-    border: 0;
     padding: 0;
 }
 

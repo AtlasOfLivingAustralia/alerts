@@ -682,7 +682,7 @@ class NotificationService {
         }
     }
 
-        def deleteAlertForUser(User user, Long queryId) {
+    def deleteAlertForUser(User user, Long queryId) {
         log.debug('Deleting my alert :  ' + queryId + ' for user : ' + user)
         def query = Query.findById(queryId)
 

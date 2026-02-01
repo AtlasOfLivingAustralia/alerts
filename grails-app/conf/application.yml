@@ -124,9 +124,8 @@ grails:
 #                profile: comp-ala-developer
 ---
 headerAndFooter:
-    baseURL: "https://www.ala.org.au/commonui-bs3-2019"
-    version: "2"
-
+    baseURL: https://www.ala.org.au/commonui-bs5-2019
+    version: 2
 skin:
     layout: "ala-main"
     orgNameLong: "Atlas of Living Australia"
@@ -342,6 +341,9 @@ environments:
                 alertAddressTitle: "Atlas alerts [Dev]"
                 infoAddressTitle: "Atlas of Living Australia [Dev]"
                 infoSender: "alerts-test@ala.org.au"
+        headerAndFooter:
+            baseURL: https://www.test.ala.org.au/commonui-bs5-2019
+
     test:
         grails:
             serverURL: "http://alerts.test.ala.org.au"

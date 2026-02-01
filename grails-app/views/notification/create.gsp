@@ -1,4 +1,3 @@
-
 <%@ page import="au.org.ala.alerts.Notification" %>
 <html>
     <head>

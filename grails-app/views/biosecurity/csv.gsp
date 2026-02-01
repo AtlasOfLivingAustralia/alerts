@@ -5,6 +5,9 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <meta name="layout" content="${grailsApplication.config.skin.layout}"/>
     <meta name="breadcrumb" content="CSV"/>
+    <meta name="breadcrumbParent" content="${request.contextPath}/admin,Alerts admin"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <meta name="breadcrumb" content="CSV"/>
     <meta name="breadcrumbParent" content="${request.contextPath}/admin/biosecurity,BioSecurity"/>
     <style>
     .folder {
@@ -27,7 +30,7 @@
                 $('#files-' + folderName).toggle();
 
                 var icon = $(this).find('i.fa.folder');
-                icon.toggleClass('fa-folder fa-folder-open-o');
+                icon.toggleClass('far fa-folder-open');
             });
         });
 
@@ -59,8 +62,8 @@
 </head>
 <body>
     <div>
-        <h4 class="pull-right">
-            <span class="label label-info">
+        <h4 class="float-end">
+            <span class="badge bg-info">
                 <g:if test="${totalFiles}">${totalFiles} files </g:if>
                 <g:if test="${totalSize}">, ${totalSize} in total, </g:if>
                 %{-- Indicate the storage type being used with a BS label --}%
@@ -68,13 +71,12 @@
                     ? "s3://${grailsApplication.config.getProperty('grails.plugin.awssdk.s3.bucket')}/${grailsApplication.config.getProperty('biosecurity.csv.s3.directory')}/"
                     : "/${grailsApplication.config.getProperty('biosecurity.csv.local.directory')}"}
             </span>
-
         </h4>
         <h2>Biosecurity Alerts Reports</h2>
         <p>Download a comprehensive CSV file detailing all occurrence records from every biosecurity alert sent. This includes both scheduled and manually triggered emails</p>
 
         <a class="btn btn-primary " href="${createLink( namespace: 'biosecurity', controller: 'csv', action: 'aggregate', params: [name:'/'])}" onclick="return confirmDownload();">
-            <i class="fa fa-cloud-download" aria-hidden="true" ></i>&nbsp;&nbsp;Download Full CSV Report
+            <i class="fas fa-cloud-arrow-down" aria-hidden="true" ></i>&nbsp;&nbsp;Download Full CSV Report
         </a>
         <g:if test="${grailsApplication.config.getProperty('biosecurity.csv.s3.enabled', Boolean) == true}">
             &nbsp;

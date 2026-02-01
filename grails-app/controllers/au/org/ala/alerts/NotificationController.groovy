@@ -1,3 +1,7 @@
+/**
+ * todo reviews methods to check if they are used still
+ */
+
 package au.org.ala.alerts
 
 import grails.converters.JSON
@@ -14,38 +18,49 @@ class NotificationController {
 
     static allowedMethods = [save: "POST", update: "POST", delete: "POST"]
 
-    def myalerts = { redirect(action: "myAlerts", params: params) }
-
-    def myAlerts = {
+    // Main action to show the user's alerts
+    def myAlerts() {
+        // Get the currently logged-in user
         User user = userService.getUser()
-        log.debug('Viewing my alerts :  ' + user)
-        userService.getUserAlertsConfig(user)
+
+        // Retrieve the user's alert configuration
+        Map userConfig = userService.getUserAlertsConfig(user)
+        userConfig.put('isMyAlerts', true)
+
+        render(view: "../notification/myAlerts", model: userConfig)
     }
 
-    def addMyAlert = {
+
+    def addMyAlert() {
         def user = getUser()
 
         if (!user) {
-            response.status = HttpStatus.NOT_FOUND.code
-            response.sendError(HttpStatus.NOT_FOUND.code, "Unrecognised user")
-        } else {
-            notificationService.addAlertForUser(user, Long.valueOf(params.id))
-            return null
+            render status: HttpStatus.NOT_FOUND.value(), text: "Unrecognised user"
+            return
         }
+
+        notificationService.addAlertForUser(user, params.id as Long)
+        render status: HttpStatus.OK.value(), text: "Alert added successfully"
     }
 
-    def deleteMyAlert = {
+
+    // Deletes an alert for the currently logged-in user
+    def deleteMyAlert() {
+        // Get the current user
         def user = getUser()
 
         if (!user) {
+            // Return 404 if user is not found
             response.status = HttpStatus.NOT_FOUND.code
             response.sendError(HttpStatus.NOT_FOUND.code, "Unrecognised user")
-        } else {
-            notificationService.deleteAlertForUser(user, Long.valueOf(params.id))
+            return
         }
+
+        // Delete the alert for this user
+        notificationService.deleteAlertForUser(user, params.id as Long)
     }
 
-    def subscribeMyAnnotation = {
+    def subscribeMyAnnotation()  {
         def user = getUser()
         try {
             notificationService.subscribeMyAnnotation(user)
@@ -53,10 +68,9 @@ class NotificationController {
         } catch (ignored) {
             response.sendError(HttpStatus.INTERNAL_SERVER_ERROR.code, "failed to subscribe to 'my annotation' alert for user " + user?.getUserId())
         }
-
     }
 
-    def unsubscribeMyAnnotation = {
+    def unsubscribeMyAnnotation() {
         def user = getUser()
         try {
             def done = notificationService.unsubscribeMyAnnotation(user)
@@ -154,17 +168,13 @@ class NotificationController {
         render results as JSON
     }
 
-    def index = {
-        //if is ADMIN, then index page
-        //else redirect to /notification/myAlerts
-        if (authService.userInRole("ADMIN")) {
-            redirect(action: "admin")
-        } else {
-            redirect(action: "myAlerts")
-        }
+    def index(){
+        redirect(action: "myAlerts")
     }
 
     def admin = {
-
+        if (!authService.userInRole("ROLE_ADMIN")) {
+            redirect(action: "myAlerts")
+        }
     }
 }

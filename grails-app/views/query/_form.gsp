@@ -1,167 +1,162 @@
 <%@ page import="au.org.ala.alerts.Query" %>
 
-<div class="fieldcontain ${hasErrors(bean: queryInstance, field: 'name', 'error')} required">
-    <label for="name">
-        <g:message code="query.name.label" default="Name" />
-        <span class="required-indicator">*</span>
-    </label>
-    <g:textField name="name" required="" value="${queryInstance?.name}" class="input-xxlarge"/>
-
-</div>
-
-<div class="fieldcontain ${hasErrors(bean: queryInstance, field: 'description', 'error')} ">
-	<label for="description">
-		<g:message code="query.description.label" default="Description" />
-		
+<!-- Name -->
+<div class="mb-3">
+	<label for="name" class="form-label">
+		<g:message code="query.name.label" default="Name"/>
+		<span class="text-danger">*</span>
 	</label>
-	<g:textArea name="description" cols="80" class="input-xxlarge" rows="5" maxlength="400" value="${queryInstance?.description}"/>
-
+	<g:textField
+			name="name"
+			value="${queryInstance?.name}"
+			required=""
+			class="form-control ${hasErrors(bean: queryInstance, field: 'name', 'is-invalid')}"
+	/>
 </div>
 
-<div class="fieldcontain ${hasErrors(bean: queryInstance, field: 'dateFormat', 'error')} ">
-	<label for="dateFormat">
-		<g:message code="query.dateFormat.label" default="Date Format" />
-		
+<!-- Description -->
+<div class="mb-3">
+	<label for="description" class="form-label">
+		<g:message code="query.description.label" default="Description"/>
 	</label>
-	<g:textField name="dateFormat" value="${queryInstance?.dateFormat}"/>
-
+	<g:textArea
+			name="description"
+			rows="5"
+			maxlength="400"
+			value="${queryInstance?.description}"
+			class="form-control ${hasErrors(bean: queryInstance, field: 'description', 'is-invalid')}"
+	/>
 </div>
 
-<div class="fieldcontain ${hasErrors(bean: queryInstance, field: 'idJsonPath', 'error')} ">
-	<label for="idJsonPath">
-		<g:message code="query.idJsonPath.label" default="Id Json Path" />
-		
+<!-- Date Format -->
+<div class="mb-3">
+	<label for="dateFormat" class="form-label">
+		<g:message code="query.dateFormat.label" default="Date Format"/>
 	</label>
-	<g:textField name="idJsonPath" class="input-xxlarge"  value="${queryInstance?.idJsonPath}"/>
-
+	<g:textField
+			name="dateFormat"
+			value="${queryInstance?.dateFormat}"
+			class="form-control ${hasErrors(bean: queryInstance, field: 'dateFormat', 'is-invalid')}"
+	/>
 </div>
 
-<div class="fieldcontain ${hasErrors(bean: queryInstance, field: 'recordJsonPath', 'error')} ">
-	<label for="recordJsonPath">
-		<g:message code="query.recordJsonPath.label" default="Record Json Path" />
-		
+<!-- Id Json Path -->
+<div class="mb-3">
+	<label for="idJsonPath" class="form-label">
+		<g:message code="query.idJsonPath.label" default="Id Json Path"/>
 	</label>
-	<g:textField name="recordJsonPath" class="input-xxlarge"  value="${queryInstance?.recordJsonPath}"/>
-
+	<g:textField
+			name="idJsonPath"
+			value="${queryInstance?.idJsonPath}"
+			class="form-control ${hasErrors(bean: queryInstance, field: 'idJsonPath', 'is-invalid')}"
+	/>
 </div>
 
-<div class="fieldcontain ${hasErrors(bean: queryInstance, field: 'updateMessage', 'error')} required">
-	<label for="updateMessage">
-		<g:message code="query.updateMessage.label" default="Update Message" />
-		<span class="required-indicator">*</span>
+<!-- Record Json Path -->
+<div class="mb-3">
+	<label for="recordJsonPath" class="form-label">
+		<g:message code="query.recordJsonPath.label" default="Record Json Path"/>
 	</label>
-	<g:textArea name="updateMessage" required="" class="input-xxlarge"  value="${queryInstance?.updateMessage}"/>
-
+	<g:textField
+			name="recordJsonPath"
+			value="${queryInstance?.recordJsonPath}"
+			class="form-control ${hasErrors(bean: queryInstance, field: 'recordJsonPath', 'is-invalid')}"
+	/>
 </div>
 
-<div class="fieldcontain ${hasErrors(bean: queryInstance, field: 'queryPathForUI', 'error')} required">
-	<label for="queryPathForUI">
-		<g:message code="query.queryPathForUI.label" default="Query Path For UI" />
-		<span class="required-indicator">*</span>
+<!-- Update Message -->
+<div class="mb-3">
+	<label for="updateMessage" class="form-label">
+		<g:message code="query.updateMessage.label" default="Update Message"/>
+		<span class="text-danger">*</span>
 	</label>
-	<g:textArea name="queryPathForUI" required="" class="input-xxlarge"  value="${queryInstance?.queryPathForUI}"/>
-
+	<g:textArea
+			name="updateMessage"
+			required=""
+			value="${queryInstance?.updateMessage}"
+			class="form-control ${hasErrors(bean: queryInstance, field: 'updateMessage', 'is-invalid')}"
+	/>
 </div>
 
-<div class="fieldcontain ${hasErrors(bean: queryInstance, field: 'queryPath', 'error')} required">
-	<label for="queryPath">
-		<g:message code="query.queryPath.label" default="Query Path" />
-		<span class="required-indicator">*</span>
+<!-- Query Path For UI -->
+<div class="mb-3">
+	<label for="queryPathForUI" class="form-label">
+		<g:message code="query.queryPathForUI.label" default="Query Path For UI"/>
+		<span class="text-danger">*</span>
 	</label>
-	<g:textArea name="queryPath" required="" class="input-xxlarge"  value="${queryInstance?.queryPath}"/>
-
+	<g:textArea
+			name="queryPathForUI"
+			required=""
+			value="${queryInstance?.queryPathForUI}"
+			class="form-control ${hasErrors(bean: queryInstance, field: 'queryPathForUI', 'is-invalid')}"
+	/>
 </div>
 
-<div class="fieldcontain ${hasErrors(bean: queryInstance, field: 'baseUrl', 'error')} required">
-	<label for="baseUrl">
-		<g:message code="query.baseUrl.label" default="Base Url" />
-		<span class="required-indicator">*</span>
+<!-- Query Path -->
+<div class="mb-3">
+	<label for="queryPath" class="form-label">
+		<g:message code="query.queryPath.label" default="Query Path"/>
+		<span class="text-danger">*</span>
 	</label>
-	<g:textField name="baseUrl" required="" class="input-xxlarge"  value="${queryInstance?.baseUrl}"/>
-
+	<g:textArea
+			name="queryPath"
+			required=""
+			value="${queryInstance?.queryPath}"
+			class="form-control ${hasErrors(bean: queryInstance, field: 'queryPath', 'is-invalid')}"
+	/>
 </div>
 
-<div class="fieldcontain ${hasErrors(bean: queryInstance, field: 'baseUrlForUI', 'error')} required">
-	<label for="baseUrlForUI">
-		<g:message code="query.baseUrlForUI.label" default="Base Url For UI" />
-		<span class="required-indicator">*</span>
+<!-- Base Url -->
+<div class="mb-3">
+	<label for="baseUrl" class="form-label">
+		<g:message code="query.baseUrl.label" default="Base Url"/>
+		<span class="text-danger">*</span>
 	</label>
-	<g:textField name="baseUrlForUI" required="" class="input-xxlarge"  value="${queryInstance?.baseUrlForUI}"/>
-
+	<g:textField
+			name="baseUrl"
+			required=""
+			value="${queryInstance?.baseUrl}"
+			class="form-control ${hasErrors(bean: queryInstance, field: 'baseUrl', 'is-invalid')}"
+	/>
 </div>
 
-<div class="fieldcontain ${hasErrors(bean: queryInstance, field: 'custom', 'error')} ">
-	<label for="custom">
-		<g:message code="query.custom.label" default="Custom" />
-		
+<!-- Base Url For UI -->
+<div class="mb-3">
+	<label for="baseUrlForUI" class="form-label">
+		<g:message code="query.baseUrlForUI.label" default="Base Url For UI"/>
+		<span class="text-danger">*</span>
 	</label>
-	<g:checkBox name="custom" value="${queryInstance?.custom}" />
-
+	<g:textField
+			name="baseUrlForUI"
+			required=""
+			value="${queryInstance?.baseUrlForUI}"
+			class="form-control ${hasErrors(bean: queryInstance, field: 'baseUrlForUI', 'is-invalid')}"
+	/>
 </div>
 
-<div class="fieldcontain ${hasErrors(bean: queryInstance, field: 'emailTemplate', 'error')} required">
-	<label for="emailTemplate">
-		<g:message code="query.emailTemplate.label" default="Email Template" />
-		<span class="required-indicator">*</span>
+<!-- Custom -->
+<div class="mb-3 form-check">
+	<g:checkBox
+			name="custom"
+			value="${queryInstance?.custom}"
+			class="form-check-input"
+			id="custom"
+	/>
+	<label for="custom" class="form-check-label">
+		<g:message code="query.custom.label" default="Custom"/>
 	</label>
-	<g:textField name="emailTemplate" required="" value="${queryInstance?.emailTemplate}"/>
-
 </div>
 
-
-%{--<div class="fieldcontain ${hasErrors(bean: queryInstance, field: 'notifications', 'error')} ">--}%
-	%{--<label for="notifications">--}%
-		%{--<g:message code="query.notifications.label" default="Notifications" />--}%
-	%{--</label>--}%
-	%{----}%
-%{--<ul class="one-to-many">--}%
-%{--<g:each in="${queryInstance?.notifications?}" var="n">--}%
-    %{--<li><g:link controller="notification" action="show" id="${n.id}">${n?.encodeAsHTML()}</g:link></li>--}%
-%{--</g:each>--}%
-%{--</ul>--}%
-
-
-%{--</div>--}%
-
-<div class="fieldcontain ${hasErrors(bean: queryInstance, field: 'propertyPaths', 'error')} ">
-	<label for="propertyPaths">
-		<g:message code="query.propertyPaths.label" default="Property Paths" />
-		
+<!-- Email Template -->
+<div class="mb-3">
+	<label for="emailTemplate" class="form-label">
+		<g:message code="query.emailTemplate.label" default="Email Template"/>
+		<span class="text-danger">*</span>
 	</label>
-	
-<ul class="one-to-many">
-<g:each in="${queryInstance?.propertyPaths?}" var="p">
-    <li><g:link controller="propertyPath" action="show" id="${p.id}">${p?.encodeAsHTML()}</g:link></li>
-</g:each>
-<li class="add">
-<g:link controller="propertyPath" action="create" params="['query.id': queryInstance?.id]">${message(code: 'default.add.label', args: [message(code: 'propertyPath.label', default: 'PropertyPath')])}</g:link>
-</li>
-</ul>
-
-
+	<g:textField
+			name="emailTemplate"
+			required=""
+			value="${queryInstance?.emailTemplate}"
+			class="form-control ${hasErrors(bean: queryInstance, field: 'emailTemplate', 'is-invalid')}"
+	/>
 </div>
-
-<div class="fieldcontain ${hasErrors(bean: queryInstance, field: 'queryResults', 'error')} ">
-	<label for="queryResults">
-		<g:message code="query.queryResults.label" default="Query Results" />
-		
-	</label>
-	
-<ul class="one-to-many">
-<g:each in="${queryInstance?.queryResults?}" var="q">
-    <li><g:link controller="queryResult" action="show" id="${q.id}">${q?.encodeAsHTML()}</g:link></li>
-</g:each>
-</ul>
-
-
-</div>
-
-<div class="fieldcontain ${hasErrors(bean: queryInstance, field: 'resourceName', 'error')} required">
-	<label for="resourceName">
-		<g:message code="query.resourceName.label" default="Resource Name" />
-		<span class="required-indicator">*</span>
-	</label>
-	<g:textField name="resourceName" required="" value="${queryInstance?.resourceName}"/>
-
-</div>
-

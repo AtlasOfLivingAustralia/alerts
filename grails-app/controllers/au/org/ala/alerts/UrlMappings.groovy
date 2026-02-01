@@ -46,6 +46,7 @@ class UrlMappings {
         "/ws/$action?/$id?"(controller: 'webservice')
 
         "/"(controller: 'notification', action: 'index')
+        "/notification/myalerts"(controller: "notification", action: "myAlerts")
 
         "/$controller/$action?/$id?(.$format)?"{
             constraints {

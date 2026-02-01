@@ -191,11 +191,21 @@ class AdminController {
         render(view: 'index', model: [message: "Removed ${result['OrphanQuery']} queries, and ${result['OrphanNotification']} orphaned notifications."])
     }
 
+    /**
+     * Show other users info.
+     * @return
+     */
     def showUsersAlerts() {
         User user = User.findByUserId(params.userId)
         if (user) {
             def userConfig = userService.getUserAlertsConfig(user)
             userConfig.put('adminUser', authService.userDetails())
+
+            if (authService.userDetails()?.userId == user.userId) {
+                userConfig.put('isMyAlerts', true)
+            } else {
+                userConfig.put('isMyAlerts', false)
+            }
 
             render(view: "../notification/myAlerts", model: userConfig)
         } else {
