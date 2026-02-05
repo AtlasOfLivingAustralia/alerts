@@ -1,17 +1,17 @@
-FROM ubuntu:24.04
+# Use Amazon Corretto 17 as the base image
+FROM amazoncorretto:17
 
 # Set environment variables for non-interactive installations
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Update package list and install OpenJDK 11
-RUN apt-get update && apt-get install -y \
-    openjdk-11-jdk \
-    && rm -rf /var/lib/apt/lists/*
+# Optional: update package list (if you need other packages)
+RUN yum -y update && yum clean all
 
-# Set JAVA_HOME environment variable
-RUN export JAVA_HOME=$(readlink -f /usr/bin/java | sed 's/\/bin\/java//')
-ENV PATH=$JAVA_HOME/bin:$PATH
-
+# Set working directory
 WORKDIR /app
+
+# Copy the WAR file
 COPY build/libs/*.war app.war
+
+# Set the entrypoint to run the WAR
 CMD ["java", "-jar", "app.war"]
