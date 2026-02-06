@@ -203,8 +203,9 @@
         </createIndex>
     </changeSet>
 
-    <!-- ===================== FOREIGN KEYS ===================== -->
+    <!-- ===================== FOREIGN KEYS (COMMENTED OUT) ===================== -->
 
+    <!--
     <changeSet id="4-add-user-frequency-fk" author="alert">
         <preConditions onFail="MARK_RAN">
             <not><foreignKeyConstraintExists foreignKeyName="FK9a0rf22a4u2nnxtnh6apl5jd8"/></not>
@@ -276,5 +277,6 @@
                                  constraintName="FKog0so9c6lblh9lx8wacc6y4y0"
                                  referencedTableName="property_path" referencedColumnNames="id"/>
     </changeSet>
+    -->
 
 </databaseChangeLog>
