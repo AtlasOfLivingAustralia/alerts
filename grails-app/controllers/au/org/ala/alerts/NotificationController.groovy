@@ -21,13 +21,17 @@ class NotificationController {
     // Main action to show the user's alerts
     def myAlerts() {
         // Get the currently logged-in user
-        User user = userService.getUser()
+        User user = userService?.getUser()
+        if (user) {
+            // Retrieve the user's alert configuration
+            Map userConfig = userService.getUserAlertsConfig(user)
+            userConfig.put('isMyAlerts', true)
 
-        // Retrieve the user's alert configuration
-        Map userConfig = userService.getUserAlertsConfig(user)
-        userConfig.put('isMyAlerts', true)
+            render(view: "../notification/myAlerts", model: userConfig)
+        } else {
+            render status: HttpStatus.UNAUTHORIZED
+        }
 
-        render(view: "../notification/myAlerts", model: userConfig)
     }
 
 
