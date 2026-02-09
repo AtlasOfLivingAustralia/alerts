@@ -70,6 +70,20 @@
 				grailsApplication.config.skin.orgSupportEmail
 		]" />
 	</p>
+	<g:if test="${error}">
+		<div class="error-details">
+			<g:if test="${error.status}">
+				<p><strong>Error Code:</strong>${error.status}</p>
+			</g:if>
+			<g:if test="${error.message}">
+				<p><strong>Message:</strong> ${error.message}</p>
+			</g:if>
+			<g:if test="${error.details}">
+				<p><strong>Details:</strong> ${error.details}</p>
+			</g:if>
+		</div>
+	</g:if>
+
 	<g:if test="${exception}">
 		<div class="error-details">
 			<p><strong>Status:</strong> ${request.'javax.servlet.error.status_code'} - ${request.'javax.servlet.error.message'.encodeAsHTML()}</p>
@@ -92,9 +106,11 @@
 			</pre>
 		</div>
 	</g:if>
-	<g:link controller="notification" action="myAlerts" class="btn btn-primary">
-		<i class="fas fa-home me-2"></i> Go Home
-	</g:link>
+	<g:if test="${!redirectUrl}">
+		<g:set var="redirectUrl"
+			   value="${request.scheme}://${request.serverName}${request.serverPort in [80,443] ? '' : ':'+request.serverPort}${request.contextPath}" />
+	</g:if>
+	<a href="${redirectUrl}"  class="btn btn-primary"><i class="fas fa-home me-2"></i> Go Home</a>
 </div>
 
 </body>

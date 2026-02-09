@@ -54,16 +54,13 @@
           <div id="page-body" role="main">
                 <g:set var="userId">${user.userId}</g:set>
                 <div>
-                  Manage your ALA alerts, send to : <span class="badge text-muted border border-disable">
-                      <i class="fas fa-envelope"></i> ${user.email}
-                  </span>
+              <i class="fas fa-envelope"></i> Notifications will be sent to <b>${user.email}</b>
                 </div>
                 <div class="mt-2">
-                  <b>Send me alerts:</b>
+                    <i class="fas fa-clock"></i> Notification frequency
                   <g:select name="userFrequency" from="${frequencies}" id="userFrequency" value="${user?.frequency?.name}" optionKey="name"
                             optionValue="${ { name->g.message(code: 'frequency.' + name) } }"
-                  /> &nbsp;
-                  This setting applies to all your active ALA alerts, including standard and custom alerts.
+                  /> &nbsp;applies to all active notifications
                 </div>
           </div>
               <!-- Main Content starts -->
@@ -88,26 +85,26 @@
                                   <tbody>
                                   <g:each in="${enabledQueries}" status="i" var="query">
                                       <tr class="${(i % 2) == 0 ? 'odd' : 'even'}">
-                                          <td class="queryDescription">
+                                          <td class="queryDescription py-2">
                                               <h4>${query.name}</h4>
                                               ${query.description}
                                           </td>
-                                          <td class="queryActions">
+                                          <td class="queryActions py-2">
                                               <div class="form-check form-switch">
-                                                  <input class="form-check-input" type="checkbox" role="switch" id="${query.id}" checked />
+                                                  <input class="form-check-input" type="checkbox" role="switch" id="${query.id}" checked  style="transform: scale(1.4);"/>
                                               </div>
                                           </td>
                                       </tr>
                                   </g:each>
                                   <g:each in="${disabledQueries}" status="i" var="query">
                                       <tr class="${(i % 2) == 0 ? 'odd' : 'even'}">
-                                          <td class="queryDescription">
+                                          <td class="queryDescription py-2">
                                               <h4>${query.name}</h4>
                                               ${query.description}
                                           </td>
-                                          <td class="queryActions">
+                                          <td class="queryActions py-2">
                                               <div class="form-check form-switch">
-                                                  <input class="form-check-input" type="checkbox" role="switch" id="${query.id}" />
+                                                  <input class="form-check-input" type="checkbox" role="switch" id="${query.id}" style="transform: scale(1.4);"/>
                                               </div>
                                           </td>
                                       </tr>
@@ -123,10 +120,10 @@
                                           <td class="queryActions">
                                               <div class="form-check form-switch" data-on="danger">
                                                   <g:if test="${myannotationChecked}">
-                                                      <input class="form-check-input" type="checkbox" role="switch" data-type='myannotation' checked />
+                                                      <input class="form-check-input" type="checkbox" role="switch" data-type='myannotation' checked style="transform: scale(1.4);"/>
                                                   </g:if>
                                                   <g:else>
-                                                      <input class="form-check-input" type="checkbox" role="switch" data-type='myannotation' />
+                                                      <input class="form-check-input" type="checkbox" role="switch" data-type='myannotation' style="transform: scale(1.4);"/>
                                                   </g:else>
                                               </div>
                                           </td>
@@ -135,6 +132,14 @@
                                   </tbody>
                                </table>
                              </div>
+                               <div class="mt-2">
+                                   <g:if test="${isMyAlerts}">
+                                       <g:link controller="unsubscribe"
+                                               action="index"
+                                               class="btn btn-outline-primary">Disable all alerts
+                                       </g:link>
+                                   </g:if>
+                               </div>
                            </div>
                           </div>
 
@@ -163,10 +168,9 @@
                                   </div>
                               </g:if>
                                   <div class="col-md-5">
-                                      <br/>
-                                      <div class="well">
+                                        <div class="card card-body mt-1">
                                           <p>You can set up specific alerts in various sections of the ALA, including</p>
-                                          <p>
+
                                           <ul>
                                               <li>
                                                   <g:message code="my.alerts.data.resource.desc" args="[grailsApplication.config.collection.searchURL, grailsApplication.config.collection.searchTitle]" />
@@ -181,7 +185,7 @@
                                                   <g:message code="my.alerts.new.record.desc" args="[grailsApplication.config.occurrence.searchURL, grailsApplication.config.occurrence.searchTitle]" />
                                               </li>
                                           </ul>
-                                      </p>
+
                                           <p>
                                               Look for the <a class="btn btn-disable-outline" disabled="true"> <i class="fa-regular fa-bell"></i> Alerts</a> button.
                                           </p>
@@ -191,14 +195,6 @@
                           </div>
                       </div>
                 </div>
-              <div class="mt-2">
-                  <g:if test="${isMyAlerts}">
-                      <g:link controller="unsubscribe"
-                                action="index"
-                                class="btn btn-outline-primary"> Unsubscribe all my alerts
-                      </g:link>
-                  </g:if>
-              </div>
           </div>
          <!-- end main content -->
       </div>

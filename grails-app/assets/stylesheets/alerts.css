@@ -45,22 +45,22 @@
     color: #fff;
 }
 
-.btn-primary {
-    color: #fff;              /* black text */
-}
+/*.btn-primary {*/
+/*    color: #fff;              !* black text *!*/
+/*}*/
 
-.btn-disable-outline {
-    background-color: #fff;
-    border: 1px solid gray;
-}
+/*.btn-disable-outline {*/
+/*    background-color: #fff;*/
+/*    border: 1px solid gray;*/
+/*}*/
 
-.badge-primary-outline {
-    color: #c44d34;          /* text in your primary color */
-    background-color: #fff;  /* white background */
-    border: 1px solid #c44d34;
-    padding: 3px 7px;        /* match Bootstrap badge spacing */
-    border-radius: 10px;     /* same rounded look as .badge */
-}
+/*.badge-primary-outline {*/
+/*    color: #c44d34;          !* text in your primary color *!*/
+/*    background-color: #fff;  !* white background *!*/
+/*    border: 1px solid #c44d34;*/
+/*    padding: 3px 7px;        !* match Bootstrap badge spacing *!*/
+/*    border-radius: 10px;     !* same rounded look as .badge *!*/
+/*}*/
 
 #content h3 {
     font-weight: 500;
@@ -186,6 +186,10 @@
 /*    background-color: #fff;  !* default white content *!*/
 /*}*/
 
+.nav-tabs {
+    border-color: #dee2e6;
+}
+
 .tab-content > .tab-pane {
     border: 1px solid;
     border-top: none;
@@ -215,6 +219,26 @@
 }
 .tt-suggestion:hover {
     background-color: #e9ecef;     /* highlight on hover */
+}
+
+/**
+For admin page layout
+ */
+.two-col-masonry {
+    column-count: 2;
+    column-gap: 2rem;   /* increase this value */
+}
+
+.two-col-masonry > .box {
+    break-inside: avoid;
+    margin-bottom: 1rem;   /* space between stacked boxes */
+}
+
+/* Mobile: 1 column */
+@media (max-width: 768px) {
+    .two-col-masonry {
+        column-count: 1;
+    }
 }
 
 
