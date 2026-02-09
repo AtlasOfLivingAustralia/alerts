@@ -3,6 +3,7 @@
     <head>
         <title><g:message code="not.found.title" /></title>
         <meta name="layout" content="${grailsApplication.config.skin.layout}" />
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     </head>
 
     <body class="bg-light">
@@ -20,12 +21,11 @@
                         ${request.forwardURI}
                     </p>
 
-                    <!-- Navigation buttons -->
                     <div class="d-flex justify-content-center gap-2 mb-4">
-                        <g:link controller="notification" action="myAlerts" class="btn btn-primary">
-                            <g:message code="error.page.home" default="Go Home"/>
-                        </g:link>
+                        <g:set var="redirectUrl"
+                                   value="${request.scheme}://${request.serverName}${request.serverPort in [80,443] ? '' : ':'+request.serverPort}${request.contextPath}" />
 
+                        <a href="${redirectUrl}"  class="btn btn-primary"><i class="fas fa-home me-2"></i> Go Home</a>
                         <a href="javascript:history.back()" class="btn btn-outline-secondary">
                             <g:message code="error.page.back" default="Go Back"/>
                         </a>

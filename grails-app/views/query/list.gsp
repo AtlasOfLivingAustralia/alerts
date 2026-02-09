@@ -20,7 +20,7 @@
 		<div id="list-query" class="content scaffold-list" role="main">
 			<h3><g:message code="default.list.label" args="[entityName]" /> :  ${queryInstanceTotal}</h3>
 			<g:if test="${flash.message}">
-			<div class="message" role="status">${flash.message}</div>
+			<div class="alert alert-danger" role="status">${flash.message}</div>
 			</g:if>
 			<table class="table table-bordered table-striped">
 				<thead>

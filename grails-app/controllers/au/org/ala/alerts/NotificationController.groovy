@@ -29,9 +29,8 @@ class NotificationController {
 
             render(view: "../notification/myAlerts", model: userConfig)
         } else {
-            render status: HttpStatus.UNAUTHORIZED
+            render status: HttpStatus.UNAUTHORIZED.code
         }
-
     }
 
 
