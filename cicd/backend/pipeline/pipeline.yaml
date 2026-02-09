@@ -97,10 +97,18 @@ Resources:
       Environment:
         Type: LINUX_CONTAINER
         ComputeType: BUILD_GENERAL1_SMALL
-        Image: aws/codebuild/standard:7.0
+        Image: !Sub
+          - ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/codebuild-feat-codebuild:grails-java17
+          - RepoSuffix: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
+        ImagePullCredentialsType: SERVICE_ROLE
       Source:
         Type: CODEPIPELINE
         BuildSpec: !Sub cicd/${pProductComponent}/pipeline/build_alerts_buildspec.yaml
+      Cache:
+        Type: LOCAL
+        Modes:
+          - LOCAL_DOCKER_LAYER_CACHE
+          - LOCAL_CUSTOM_CACHE
       TimeoutInMinutes: 30
 
   DeployAlerts:
