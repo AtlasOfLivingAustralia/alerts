@@ -23,7 +23,7 @@
         </script>
     </head>
     <body>
-      <div id="content" class="container ms-2">
+      <div class="container ms-2">
           <header id="page-header">
               <div class="row align-items-center">
                   <div class="col-6">
@@ -51,20 +51,20 @@
           <g:if test="${flash.errorMessage}">
               <div class="alert alert-danger">${flash.errorMessage}</div>
           </g:if>
-          <div id="page-body" role="main">
+          <div id="page-body" role="main" class="mt-3">
                 <g:set var="userId">${user.userId}</g:set>
-                <div>
-              <i class="fas fa-envelope"></i> Notifications will be sent to <b>${user.email}</b>
+                <div  class="mt-2">
+                      <i class="fas fa-envelope"></i> Notifications will be sent to <b>${user.email}</b>
                 </div>
-                <div class="mt-2">
+                <div class="mt-3">
                     <i class="fas fa-clock"></i> Notification frequency
                   <g:select name="userFrequency" from="${frequencies}" id="userFrequency" value="${user?.frequency?.name}" optionKey="name"
                             optionValue="${ { name->g.message(code: 'frequency.' + name) } }"
                   /> &nbsp;applies to all active notifications
                 </div>
           </div>
-              <!-- Main Content starts -->
-          <div class="row mt-2">
+          <!-- Main Content starts -->
+          <div class="row mt-4">
               <div class="col-12">
                       <div class="nav nav-tabs" id="alertTabs" role="tablist">
                           <button class="nav-link active " id="standard-alerts-tab"  data-bs-toggle="tab" data-bs-target="#standard-alerts" role="tab" aria-controls="standard-alerts" >Standard Alerts</button>
@@ -81,56 +81,50 @@
                                 <div class="pt-1">
                                 Enable alerts to have notifications sent to your email address.
                                 </div>
-                              <table>
-                                  <tbody>
-                                  <g:each in="${enabledQueries}" status="i" var="query">
-                                      <tr class="${(i % 2) == 0 ? 'odd' : 'even'}">
-                                          <td class="queryDescription py-2">
-                                              <h4>${query.name}</h4>
-                                              ${query.description}
-                                          </td>
-                                          <td class="queryActions py-2">
-                                              <div class="form-check form-switch">
-                                                  <input class="form-check-input" type="checkbox" role="switch" id="${query.id}" checked  style="transform: scale(1.4);"/>
-                                              </div>
-                                          </td>
-                                      </tr>
-                                  </g:each>
-                                  <g:each in="${disabledQueries}" status="i" var="query">
-                                      <tr class="${(i % 2) == 0 ? 'odd' : 'even'}">
-                                          <td class="queryDescription py-2">
-                                              <h4>${query.name}</h4>
-                                              ${query.description}
-                                          </td>
-                                          <td class="queryActions py-2">
-                                              <div class="form-check form-switch">
-                                                  <input class="form-check-input" type="checkbox" role="switch" id="${query.id}" style="transform: scale(1.4);"/>
-                                              </div>
-                                          </td>
-                                      </tr>
-                                  </g:each>
+                                <div class="list-group mt-2">
+                                    <g:each in="${enabledQueries}" status="i" var="query">
+                                        <div class="list-group-item d-flex justify-content-between align-items-center py-2 ">
+                                            <div class="queryDescription">
+                                                <h5>${query.name}</h5>
+                                                <p class="mb-0">${query.description}</p>
+                                            </div>
+                                            <div class="queryActions">
+                                                <div class="form-check form-switch">
+                                                    <input class="form-check-input" type="checkbox" role="switch" id="${query.id}" checked style="transform: scale(1.4);"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </g:each>
 
-                                  <g:if test="${myannotation != null}">
-                                      <g:set var="myannotationChecked" value="${myannotation.size() != 0}" />
-                                      <tr>
-                                          <td class="queryDescription">
-                                              <h4>My Annotations</h4>
-                                              Notify me when records I have flagged are updated.
-                                          </td>
-                                          <td class="queryActions">
-                                              <div class="form-check form-switch" data-on="danger">
-                                                  <g:if test="${myannotationChecked}">
-                                                      <input class="form-check-input" type="checkbox" role="switch" data-type='myannotation' checked style="transform: scale(1.4);"/>
-                                                  </g:if>
-                                                  <g:else>
-                                                      <input class="form-check-input" type="checkbox" role="switch" data-type='myannotation' style="transform: scale(1.4);"/>
-                                                  </g:else>
-                                              </div>
-                                          </td>
-                                      </tr>
-                                  </g:if>
-                                  </tbody>
-                               </table>
+                                    <g:each in="${disabledQueries}" status="i" var="query">
+                                        <div class="list-group-item d-flex justify-content-between align-items-center py-2">
+                                            <div class="queryDescription">
+                                                <h5>${query.name}</h5>
+                                                <p class="mb-0">${query.description}</p>
+                                            </div>
+                                            <div class="queryActions">
+                                                <div class="form-check form-switch">
+                                                    <input class="form-check-input" type="checkbox" role="switch" id="${query.id}" style="transform: scale(1.4);"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </g:each>
+
+                                    <g:if test="${myannotation != null}">
+                                        <g:set var="myannotationChecked" value="${myannotation.size() != 0}" />
+                                        <div class="list-group-item d-flex justify-content-between align-items-center py-2">
+                                            <div class="queryDescription">
+                                                <h5>My Annotations</h5>
+                                                <p class="mb-0">Notify me when records I have flagged are updated.</p>
+                                            </div>
+                                            <div class="queryActions">
+                                                <div class="form-check form-switch" data-on="danger">
+                                                    <input class="form-check-input" type="checkbox" role="switch" data-type='myannotation' ${myannotationChecked ? 'checked' : ''} style="transform: scale(1.4);"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </g:if>
+                                </div>
                              </div>
                                <div class="mt-2">
                                    <g:if test="${isMyAlerts}">
@@ -146,27 +140,31 @@
                           <!-- Custom Alerts Tab -->
                           <div class="tab-pane fade" id="custom-alerts" role="tabpanel" aria-labelledby="custom-alerts-tab">
                             <div class="row">
-                              <g:if test="${customQueries}">
+
                                   <div class="col-md-7">
-                                     <table>
-                                         <tbody id="customQueries">
-                                          <g:each in="${customQueries}" status="i" var="query">
-                                              <tr class="${(i % 2) == 0 ? 'odd' : 'even'} " id='custom-${query.id}'>
-                                                  <td class="queryDescription pb-3">
-                                                      <h4>${query.name}</h4>
-                                                      ${query.description}
-                                                  </td>
-                                                  <td class="queryActions pb-3">
-                                                      <button type="button" class="btn btn-outline-primary deleteButton" id="${query.id}">
-                                                          Delete
-                                                      </button>
-                                                  </td>
-                                              </tr>
-                                          </g:each>
-                                          </tbody>
-                                      </table>
+                                      <g:if test="${customQueries?.size() > 0}">
+                                          <div id="customQueries" class="row g-3">
+                                              <g:each in="${customQueries}" status="i" var="query">
+                                                  <div class="col-12" id="custom-${query.id}">
+                                                      <div class="card" >
+                                                          <div class="card-body d-flex justify-content-between align-items-center">
+                                                              <div class="queryDescription">
+                                                                  <h5 class="card-title mb-1">${query.name}</h5>
+                                                                  <p class="card-text mb-0">${query.description}</p>
+                                                              </div>
+                                                              <div class="queryActions">
+                                                                  <button type="button" class="btn btn-outline-primary deleteButton" id="${query.id}">
+                                                                      Delete
+                                                                  </button>
+                                                              </div>
+                                                          </div>
+                                                      </div>
+                                                  </div>
+                                              </g:each>
+                                          </div>
+                                      </g:if>
                                   </div>
-                              </g:if>
+
                                   <div class="col-md-5">
                                         <div class="card card-body mt-1">
                                           <p>You can set up specific alerts in various sections of the ALA, including</p>
@@ -187,7 +185,7 @@
                                           </ul>
 
                                           <p>
-                                              Look for the <a class="btn btn-disable-outline" disabled="true"> <i class="fa-regular fa-bell"></i> Alerts</a> button.
+                                              Look for the <a class="btn btn-outline-disable" disabled="true"> <i class="fa-regular fa-bell"></i> Alerts</a> button.
                                           </p>
                                       </div>
                                   </div>
