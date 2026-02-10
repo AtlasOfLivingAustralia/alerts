@@ -12,7 +12,7 @@
   <title>My email alerts | ${grailsApplication.config.skin.orgNameLong}</title>
 </head>
 <body>
-<div id="content">
+<div>
   <header id="page-header">
     <div class="inner">
       <nav id="breadcrumb">

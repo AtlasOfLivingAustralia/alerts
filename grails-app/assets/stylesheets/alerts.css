@@ -41,19 +41,30 @@
     filter:alpha(opacity=60);
 }
 
-#content .btn-danger:hover, #content .btn-danger:focus {
-    color: #fff;
-}
+/*#content .btn-danger:hover, #content .btn-danger:focus {*/
+/*    color: #fff;*/
+/*}*/
 
 /*.btn-primary {*/
 /*    color: #fff;              !* black text *!*/
 /*}*/
 
-/*.btn-disable-outline {*/
-/*    background-color: #fff;*/
-/*    border: 1px solid gray;*/
-/*}*/
+.btn-outline-disable {
+    background-color: #fff;
+    border: 1px solid gray;
+    color: gray;
+    cursor: not-allowed; /* optional: show disabled cursor */
+}
 
+/* prevent hover/focus/active changes */
+.btn-outline-disable:hover,
+.btn-outline-disable:focus,
+.btn-outline-disable:active {
+    background-color: #fff !important;
+    border-color: gray !important;
+    color: gray !important;
+    box-shadow: none !important;
+}
 /*.badge-primary-outline {*/
 /*    color: #c44d34;          !* text in your primary color *!*/
 /*    background-color: #fff;  !* white background *!*/
@@ -62,13 +73,13 @@
 /*    border-radius: 10px;     !* same rounded look as .badge *!*/
 /*}*/
 
-#content h3 {
-    font-weight: 500;
-}
+/*#content h3 {*/
+/*    font-weight: 500;*/
+/*}*/
 
-#content h3 select {
-    font-size: 18px;
-}
+/*#content h3 select {*/
+/*    font-size: 18px;*/
+/*}*/
 
 /*a.btn-ala {*/
 /*    font-weight: 500;*/
@@ -241,4 +252,8 @@ For admin page layout
     }
 }
 
+/* todo: confirm with common-ui*/
+.card {
+    background-color: #f5f5f5;
+}
 
