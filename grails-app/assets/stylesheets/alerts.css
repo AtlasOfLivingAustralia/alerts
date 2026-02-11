@@ -16,19 +16,15 @@
 *= require grails
 */
 
-:root {
-    --bs-body-font-family: 'Roboto', sans-serif;
-    /*--bs-body-font-size: 0.875rem;   !* 14px *!*/
-    /*--bs-body-line-height: 1.428;*/
-}
+/*:root {*/
+/*    --bs-body-font-family: 'Roboto', sans-serif;*/
+/*    !*--bs-body-font-size: 0.875rem;   !* 14px *!*!*/
+/*    !*--bs-body-line-height: 1.428;*!*/
+/*}*/
 
-.queryActions {
-    padding:20px;
-}
-
-#userFrequency {
-    width:auto;
-}
+/*#userFrequency {*/
+/*    width:auto;*/
+/*}*/
 
 #customQueriesHdr {
     margin-top: 20px;
@@ -36,10 +32,10 @@
     padding-bottom: 0px;
 }
 
-.icon {
-    opacity:0.6;
-    filter:alpha(opacity=60);
-}
+/*.icon {*/
+/*    opacity:0.6;*/
+/*    filter:alpha(opacity=60);*/
+/*}*/
 
 /*#content .btn-danger:hover, #content .btn-danger:focus {*/
 /*    color: #fff;*/
@@ -65,13 +61,15 @@
     color: gray !important;
     box-shadow: none !important;
 }
-/*.badge-primary-outline {*/
-/*    color: #c44d34;          !* text in your primary color *!*/
-/*    background-color: #fff;  !* white background *!*/
-/*    border: 1px solid #c44d34;*/
-/*    padding: 3px 7px;        !* match Bootstrap badge spacing *!*/
-/*    border-radius: 10px;     !* same rounded look as .badge *!*/
-/*}*/
+
+/* biosecurity */
+.badge-outline-primary {
+    color: #c44d34;          /* text in your primary color */
+    background-color: #fff;  /* white background */
+    border: 1px solid #c44d34;
+    padding: 3px 7px;        /* match Bootstrap badge spacing */
+    border-radius: 10px;     /* same rounded look as .badge */
+}
 
 /*#content h3 {*/
 /*    font-weight: 500;*/
@@ -89,13 +87,13 @@
     list-style-type: disc;
 }
 
-#admin-functions li {
-    margin: 5px 0;
-}
+/*#admin-functions li {*/
+/*    margin: 5px 0;*/
+/*}*/
 
-.biosecurityTableColumn {
-    width: 20%;
-}
+/*.biosecurityTableColumn {*/
+/*    width: 20%;*/
+/*}*/
 
 /*.bioscecrurity-padding {*/
 /*    padding: 20px 0px 20px 0px;*/

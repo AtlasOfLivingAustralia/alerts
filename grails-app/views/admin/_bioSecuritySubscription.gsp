@@ -74,9 +74,9 @@
                 <input type="date" name="date" value="${today}" class="form-control" /><br/>
                 <button class="btn btn-primary" name="previewSubscription" type="button" onclick="submitPreview(this)" >Preview</button>
                 <button class="btn btn-primary" name="triggerSubscription" type="button" onclick="triggerSubscriptionSince(this, ${query.id})">Notify</button>
-                <br>
-                <small class="form-text text-info">"Notify" will send alerts to the subscribers and update the last check date to today</small><br>
-
+                <div class="mt-1">
+                    <small class="form-text text-muted">"Notify" will send alerts to the subscribers and update the last check date to today</small>
+                </div>
         </form>
     </div>
 </div>

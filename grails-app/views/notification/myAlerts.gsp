@@ -58,9 +58,8 @@
                 </div>
                 <div class="mt-3">
                     <i class="fas fa-clock"></i> Notification frequency
-                  <g:select name="userFrequency" from="${frequencies}" id="userFrequency" value="${user?.frequency?.name}" optionKey="name"
-                            optionValue="${ { name->g.message(code: 'frequency.' + name) } }"
-                  /> &nbsp;applies to all active notifications
+                    <g:select name="userFrequency" from="${frequencies}" id="userFrequency" value="${user?.frequency?.name}" optionKey="name"
+                            optionValue="${ { name->g.message(code: 'frequency.' + name) } }"/> &nbsp;applies to all active notifications
                 </div>
           </div>
           <!-- Main Content starts -->
@@ -77,18 +76,18 @@
                           <!-- Standard Alerts Tab -->
                           <div class="tab-pane fade active show" id="standard-alerts" role="tabpanel" aria-labelledby="standard-alerts-tab">
                            <div class="row">
-                            <div class="col-md-7">
+                            <div class="col-12 col-lg-7">
                                 <div class="pt-1">
-                                Enable alerts to have notifications sent to your email address.
+                                Enable alerts to have notifications sent to your email address
                                 </div>
                                 <div class="list-group mt-2">
                                     <g:each in="${enabledQueries}" status="i" var="query">
-                                        <div class="list-group-item d-flex justify-content-between align-items-center py-2 ">
-                                            <div class="queryDescription">
+                                        <div class="list-group-item border-top-0  border-start-0 border-end-0 d-flex justify-content-between align-items-center px-0 py-2">
+                                            <div class="flex-grow-1 me-2" >
                                                 <h5>${query.name}</h5>
                                                 <p class="mb-0">${query.description}</p>
                                             </div>
-                                            <div class="queryActions">
+                                            <div class="pe-1">
                                                 <div class="form-check form-switch">
                                                     <input class="form-check-input" type="checkbox" role="switch" id="${query.id}" checked style="transform: scale(1.4);"/>
                                                 </div>
@@ -97,12 +96,12 @@
                                     </g:each>
 
                                     <g:each in="${disabledQueries}" status="i" var="query">
-                                        <div class="list-group-item d-flex justify-content-between align-items-center py-2">
-                                            <div class="queryDescription">
+                                        <div class="list-group-item border-top-0  border-start-0 border-end-0 d-flex justify-content-between align-items-center px-0 py-2">
+                                            <div class="flex-grow-1 me-2">
                                                 <h5>${query.name}</h5>
                                                 <p class="mb-0">${query.description}</p>
                                             </div>
-                                            <div class="queryActions">
+                                            <div class="pe-1">
                                                 <div class="form-check form-switch">
                                                     <input class="form-check-input" type="checkbox" role="switch" id="${query.id}" style="transform: scale(1.4);"/>
                                                 </div>
@@ -112,12 +111,12 @@
 
                                     <g:if test="${myannotation != null}">
                                         <g:set var="myannotationChecked" value="${myannotation.size() != 0}" />
-                                        <div class="list-group-item d-flex justify-content-between align-items-center py-2">
-                                            <div class="queryDescription">
+                                        <div class="list-group-item border-top-0  border-start-0 border-end-0 d-flex justify-content-between align-items-center px-0 py-2">
+                                            <div class="flex-grow-1 me-2">
                                                 <h5>My Annotations</h5>
                                                 <p class="mb-0">Notify me when records I have flagged are updated.</p>
                                             </div>
-                                            <div class="queryActions">
+                                            <div class="pe-1">
                                                 <div class="form-check form-switch" data-on="danger">
                                                     <input class="form-check-input" type="checkbox" role="switch" data-type='myannotation' ${myannotationChecked ? 'checked' : ''} style="transform: scale(1.4);"/>
                                                 </div>
@@ -140,24 +139,19 @@
                           <!-- Custom Alerts Tab -->
                           <div class="tab-pane fade" id="custom-alerts" role="tabpanel" aria-labelledby="custom-alerts-tab">
                             <div class="row">
-
-                                  <div class="col-md-7">
+                                  <div class="col-12 col-lg-7">
                                       <g:if test="${customQueries?.size() > 0}">
-                                          <div id="customQueries" class="row g-3">
+                                          <div class="list-group">
                                               <g:each in="${customQueries}" status="i" var="query">
-                                                  <div class="col-12" id="custom-${query.id}">
-                                                      <div class="card" >
-                                                          <div class="card-body d-flex justify-content-between align-items-center">
-                                                              <div class="queryDescription">
-                                                                  <h5 class="card-title mb-1">${query.name}</h5>
-                                                                  <p class="card-text mb-0">${query.description}</p>
-                                                              </div>
-                                                              <div class="queryActions">
-                                                                  <button type="button" class="btn btn-outline-primary deleteButton" id="${query.id}">
-                                                                      Delete
-                                                                  </button>
-                                                              </div>
-                                                          </div>
+                                                  <div id="custom-${query.id}" class="list-group-item border-top-0  border-start-0 border-end-0 d-flex justify-content-between align-items-center px-0 py-2">
+                                                      <div class="flex-grow-1 me-2">
+                                                          <h5>${query.name}</h5>
+                                                          <p class="mb-0">${query.description}</p>
+                                                      </div>
+                                                      <div class="pe-1">
+                                                          <button type="button" class="btn btn-outline-primary deleteButton" id="${query.id}">
+                                                              Delete
+                                                          </button>
                                                       </div>
                                                   </div>
                                               </g:each>
@@ -165,7 +159,7 @@
                                       </g:if>
                                   </div>
 
-                                  <div class="col-md-5">
+                                  <div class="col-12 col-lg-5">
                                         <div class="card card-body mt-1">
                                           <p>You can set up specific alerts in various sections of the ALA, including</p>
 
