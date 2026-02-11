@@ -34,7 +34,8 @@ phases:
       - echo Build completed on $(date)
       - rm -rf build/libs/*-plain.war
       - echo Building the Docker image...
-      - docker build -t ala-alerts .
+      - BASE_IMAGE=748909248546.dkr.ecr.ap-southeast-2.amazonaws.com/codebuild-feat-codebuild:base-java11
+      - docker build --build-arg BASE_IMAGE=${BASE_IMAGE} -f cicd/backend/docker/Dockerfile -t ala-alerts .
       - echo Tagging the Docker image...
       - BUILD_TAG=$CLEAN_BRANCH-$CODEBUILD_BUILD_NUMBER
       - echo build tag is $BUILD_TAG
