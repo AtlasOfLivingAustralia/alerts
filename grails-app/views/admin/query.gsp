@@ -110,7 +110,7 @@
                                                     </div>
                                                     <div>
                                                         <g:link controller="queryResult" action="getDetails" params="[id: queryResult.id]" target="_blank"> <span class="badge badge-primary"><i class="fa fa-info-circle" aria-hidden="true"></i> ${queryResult.id}</span></g:link> &nbsp;<b><i class="fa fa-calendar-check-o" aria-hidden="true"></i> ${queryResult.frequency?.name?.toUpperCase()}</b>
-                                                        &nbsp; <label title="${query.getSubscribers(queryResult.frequency?.name)}"><span class="badge badge-info"> <i class="fa fa-user"></i> ${query.countSubscribers(queryResult.frequency?.name)}</span></label>
+                                                        &nbsp; <label title="${query.getSubscribers(queryResult.frequency?.name)}"><span class="badge bg-info"> <i class="fa fa-user"></i> ${query.countSubscribers(queryResult.frequency?.name)}</span></label>
 
                                                         <g:if test="${queryResult?.lastChecked}">
                                                              Last checked: ${queryResult?.lastChecked}&nbsp;&nbsp;

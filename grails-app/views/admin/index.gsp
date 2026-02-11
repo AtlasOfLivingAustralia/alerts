@@ -21,22 +21,22 @@
         <div class="col-auto" ><i class="fa-solid fa-user-gear fa-2x text-primary"></i></div>
         <div class="col-auto">
             <h2> Admin Dashboard</h2>
-            <figcaption class="text-muted">
+            <div class="text-muted">
             Manage users, alerts and system settings.
-            </figcaption>
+            </div>
         </div>
     </div>
     <div class="two-col-masonry">
         <div class="box">
             <div class="shadow card card-body ">
-                <figure>
-                    <blockquote>
-                          <h5><i class="fa-solid fa-user-group text-primary"></i> Users Management</h5>
-                    </blockquote>
-                    <figcaption class="blockquote-footer">Manage user accounts ans subscriptions</figcaption>
-                </figure>
+                <div class="row">
+                    <div class="fw-bold fs-5"><i class="fa-solid fa-user-group text-primary"></i> Users Management</div>
+                    <div>
+                        <small class="text-muted ps-4">&nbsp; Manage user accounts ans subscriptions</small>
+                    </div>
+                </div>
 
-                <div>
+                <div class="mt-3">
                 <g:link controller="admin" action="updateUserEmails">Update user emails with CAS</g:link>
                 <small class="text-muted ms-2"> - synchronise alerts user database with users from CAS.</small>
                 </div>
@@ -49,44 +49,41 @@
 
         <div class="box">
             <div class="shadow card card-body ">
-                <figure>
-                    <blockquote>
-                        <h5><i class="fa-regular fa-calendar-days text-primary"></i> Manage Scheduling</h5>
-                    </blockquote>
-                    <figcaption class="blockquote-footer">Control when alerts are sent</figcaption>
-                </figure>
-
-             <div>
+                <div class="row">
+                    <div class="fw-bold fs-5"><i class="fa-regular fa-calendar-days text-primary"></i> Manage Scheduling</div>
+                    <div>
+                        <small class="text-muted ps-4">Control when alerts are sent</small>
+                    </div>
+                </div>
+             <div class="mt-3">
                  <g:link controller="quartz">View scheduling</g:link> <small class="text-muted ms-2"> - Run and/or reschedule alerts.</small>
              </div>
             </div>
         </div>
 
         <div class="box">
-            <div class="shadow card card-body">
-                <figure>
-                    <blockquote>
-                        <h5><i class="fa-regular fa-bell text-primary"></i> Manage Alerts</h5>
-                    </blockquote>
-                    <figcaption class="blockquote-footer">view and test all alerts</figcaption>
-                </figure>
-
-                <div><g:link controller="notification" action="myAlerts">View my alerts</g:link> - my subscriptions.</div>
-                <div><g:link controller="query" action="list">View all alerts</g:link>  - list all available custom and default alerts.</div>
-                <div><g:link controller="admin" action="notificationReport">
-                    View alerts with users</g:link> - view the user subscriptions per alert.</div>
+            <div class="shadow card card-body ">
+                <div class="row">
+                    <div class="fw-bold fs-5"><i class="fa-regular fa-bell text-primary"></i> Manage Alerts</div>
+                    <div>
+                        <small class="text-muted ps-4">View and test all alerts</small>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <div><g:link controller="notification" action="myAlerts">View my alerts</g:link> - my subscriptions.</div>
+                    <div><g:link controller="query" action="list">View all alerts</g:link>  - list all available custom and default alerts.</div>
+                    <div><g:link controller="admin" action="notificationReport">
+                        View alerts with users</g:link> - view the user subscriptions per alert.</div>
+                </div>
             </div>
         </div>
 
         <div class="box">
             <div class="shadow card card-body">
-                <figure>
-                    <blockquote>
-                        <h5><i class="fa-solid fa-bug text-primary"></i> Developer tools</h5>
-                    </blockquote>
-                </figure>
-                <div><a class="btn btn-primary" href="${request.contextPath}/admin/query">Debug and Test</a></div>
-                <div class="mt-20">
+                <div class="fw-bold fs-5"><i class="fa-solid fa-bug text-primary"></i> Developer tools</div>
+                <div  class="mt-4"><a class="btn btn-primary" href="${request.contextPath}/admin/query">Debug and Test</a></div>
+                <hr>
+                <div class="mt-2">
                     <div class="d-flex flex-wrap align-items-center">
                         Simulating a
                         <select id="frequencySimulated" class="form-select w-auto mx-2">
@@ -109,13 +106,13 @@
 
         <div class="box">
             <div class="shadow card card-body">
-                <figure>
-                    <blockquote>
-                        <h5><i class="fa-solid fa-shield-halved text-primary"></i> BioSecurity</h5>
-                    </blockquote>
-                    <figcaption class="blockquote-footer">Manage / reschedule Biosecurity alerts</figcaption>
-                </figure>
-                <div>
+                <div class="row">
+                    <div class="fw-bold fs-5"><i class="fa-solid fa-shield-halved text-primary"></i> BioSecurity</div>
+                    <div>
+                        <small class="text-muted ps-4">Manage / reschedule Biosecurity alerts</small>
+                    </div>
+                </div>
+                <div class="mt-2">
                     <a href="${request.contextPath}/admin/biosecurity">Manage BioSecurity alerts</a><small class="text-muted ms-2"> - Add, update, remove or reschedule BioSecurity alerts and users.</small>
                 </div>
             </div>
@@ -123,13 +120,13 @@
 
         <div class="box">
             <div class="shadow card card-body">
-                <figure>
-                    <blockquote>
-                        <h5><i class="fa-solid fa-wrench text-primary"></i> Maintenance and fixes</h5>
-                    </blockquote>
-                    <figcaption class="blockquote-footer">Repair broken data</figcaption>
-                </figure>
-                <div>
+                <div class="row">
+                    <div class="fw-bold fs-5"><i class="fa-solid fa-wrench text-primary"></i> Maintenance and fixes</div>
+                    <div>
+                        <small class="text-muted ps-4">Repair broken data</small>
+                    </div>
+                </div>
+                <div class="mt-2">
                     <g:link controller="admin" action="repairNotificationsWithoutUnsubscribeToken">
                         Fix missing tokens in notification unsubscribe links
                     </g:link>
@@ -159,8 +156,8 @@
 
         <div class="box">
             <div class="shadow card card-body">
-                <h5><i class="fa-regular fa-file-lines text-primary"></i> Alerts for News and Blogs</h5>
-                <div>
+                <div class="fw-bold fs-5"><i class="fa-regular fa-file-lines text-primary"></i> Alerts for News and Blogs</div>
+                <div class="mt-2">
                     <a href="${request.contextPath}/admin/previewBlogAlerts">Preview alerts for the five most recent blogs</a>
                 </div>
             </div>
@@ -181,7 +178,7 @@
             <div class="shadow card card-body">
                 <h5><i class="fa-regular fa-envelope text-primary"></i> Email testing </h5>
                 <div>
-                    <g:link controller="admin" action="sendTestEmail">Send an email to yourself</g:link> <small class="text-muted ms-2"> - Test if emails server works) </small>
+                    <g:link controller="admin" action="sendTestEmail">Send an email to yourself</g:link> <small class="text-muted ms-2"> - Test if emails server works </small>
                 </div>
             </div>
         </div>
