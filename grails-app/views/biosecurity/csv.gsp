@@ -4,8 +4,8 @@
     <title>Biosecurity Alerts Reporting</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <meta name="layout" content="${grailsApplication.config.skin.layout}"/>
-    <meta name="breadcrumb" content="BioSecurity CSV"/>
-    <meta name="breadcrumbParent" content="${request.contextPath}/admin,Alerts admin"/>
+    <meta name="breadcrumb" content="CSV"/>
+    <meta name="breadcrumbParent" content="${request.contextPath}/admin/biosecurity,BioSecurity"/>
     <style>
     .folder {
         cursor: pointer;
@@ -33,7 +33,7 @@
 
         function deleteFile(filename) {
             $.ajax({
-                url: "${createLink(controller: 'admin', action: 'deleteBiosecurityAuditCSV')}",
+                url: "${createLink( namespace: 'biosecurity', controller: 'csv', action: 'delete')}",
                 type: 'POST',
                 data: {
                     filename: filename
@@ -63,7 +63,7 @@
         <h2>Biosecurity Alerts Reports</h2>
         <p>Download a comprehensive CSV file detailing all occurrence records from every biosecurity alert sent. This includes both scheduled and manually triggered emails</p>
 
-        <a class="btn btn-primary " href="${createLink(controller: 'admin', action: 'aggregateBiosecurityAuditCSV', params: [folderName:'/'])}">
+        <a class="btn btn-primary " href="${createLink( namespace: 'biosecurity', controller: 'csv', action: 'aggregate', params: [folderName:'/'])}">
             <i class="fa fa-cloud-download" aria-hidden="true" ></i>&nbsp;&nbsp;Download Full CSV Report
         </a>
         <g:if test="${grailsApplication.config.getProperty('biosecurity.csv.s3.enabled', Boolean) == true}">
@@ -82,14 +82,19 @@
             <g:each in="${foldersAndFiles}" var="folder">
                 <div class="folder" data-folder="${folder.name}">
                     <i class="fa fa-folder folder-icon folder" aria-hidden="true"></i> ${folder.name}
-                    <a href="${createLink(controller: 'admin', action: 'aggregateBiosecurityAuditCSV', params: [folderName:folder.name])}">
-                        <i class="fa fa-cloud-download" aria-hidden="true" title="Download as one CSV file for the date."></i>
+                    <a href="${createLink(
+                        namespace: 'biosecurity',
+                        controller: 'csv',
+                        action: 'aggregate',
+                        params: [folderName: folder.name]
+                      )}">
+                        <i class="fa fa-cloud-download" aria-hidden="true" title="Download as one CSV csv for the date."></i>
                     </a>
                 </div>
                 <div class="file-list" id="files-${folder.name}">
                     <g:each in="${folder.files}" var="file">
                         <div>
-                            <a href="${createLink(controller: 'admin', action: 'downloadBiosecurityAuditCSV', params: [filename:folder.name +'/' + file])}"><i class="fa fa-download" aria-hidden="true"></i>  ${file}</a>
+                            <a href="${createLink( namespace: 'biosecurity', controller: 'csv', action: 'download', params: [filename:folder.name +'/' + file])}"><i class="fa fa-download" aria-hidden="true"></i>  ${file}</a>
                             <a href="#" onclick="deleteFile('${folder.name}/${file}'); return false;">
                                 <i class="fa fa-trash-o" aria-hidden="true"></i>
                             </a>

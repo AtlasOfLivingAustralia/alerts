@@ -29,10 +29,17 @@ class UrlMappings {
         "/admin/subscribeBioSecurity"(controller: 'admin', action: 'subscribeBioSecurity')
         "/admin/unsubscribeAllUsers"(controller: 'admin', action: 'unsubscribeAllUsers')
         "/admin/deleteQuery"(controller: 'admin', action: 'deleteQuery')
-        "/biosecurity/csv"(controller: 'admin', action: 'listBiosecurityAuditCSV')
-        "/biosecurity/csv/download"(controller: 'admin', action: 'downloadBiosecurityAuditCSV')
-        "/biosecurity/csv/delete"(controller: 'admin', action: 'deleteBiosecurityAuditCSV')
-        "/biosecurity/csv/aggregate"(controller: 'admin', action: 'aggregateBiosecurityAuditCSV')
+//        "/biosecurity/csv"(controller: 'admin', action: 'listBiosecurityAuditCSV')
+//        "/biosecurity/csv/download"(controller: 'admin', action: 'downloadBiosecurityAuditCSV')
+//        "/biosecurity/csv/delete"(controller: 'admin', action: 'deleteBiosecurityAuditCSV')
+//        "/biosecurity/csv/aggregate"(controller: 'admin', action: 'aggregateBiosecurityAuditCSV')
+
+        group "/biosecurity/csv", {
+            "/"(namespace: "biosecurity",controller: "csv", action: "list")
+            "/download"(namespace: "biosecurity",controller: "csv", action: "download")
+            "/delete"(namespace: "biosecurity",controller: "csv", action: "delete")
+            "/aggregate"(namespace: "biosecurity",controller: "csv", action: "aggregate")
+        }
 
 
         "/ws/alerts/user/$userId"(controller: 'webservice', action: 'getUserAlerts')
