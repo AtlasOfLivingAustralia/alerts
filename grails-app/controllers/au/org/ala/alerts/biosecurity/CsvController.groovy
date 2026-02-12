@@ -3,19 +3,25 @@ package au.org.ala.alerts.biosecurity
 import au.org.ala.alerts.QueryResult
 import au.org.ala.web.AlaSecured
 import grails.converters.JSON
-
 import java.text.SimpleDateFormat
 
 class CsvController {
     static namespace = "biosecurity"
 
-    def biosecurityCSVService
+    def biosecurityLocalCSVService
+    def biosecurityS3CSVService
+    def queryResultService
+
+    private def getCsvService() {
+        return  grailsApplication.config.getProperty('biosecurity.csv.s3.enabled', Boolean, false) ? biosecurityS3CSVService : biosecurityLocalCSVService
+    }
 
     @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true, redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to view that page.")
     def list() {
         def result = [:]
+        def csvService = getCsvService()
         try {
-            result  = biosecurityCSVService.list()
+            result  = csvService.list()
         } catch (Exception e) {
             log.error("Error in listing Biosecurity CSV files: ${e.message}")
             result = [status: 1, message: "Error in listing Biosecurity CSV files: ${e.message}"]
@@ -25,25 +31,37 @@ class CsvController {
 
     @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true,redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to view that page.")
     def aggregate(String folderName) {
-        if (!biosecurityCSVService.folderExists(folderName)) {
+        def csvService = getCsvService()
+
+        if (!csvService.folderExists(folderName)) {
             render(status: 404, text: 'Data not found')
             return
         }
 
-        // Get a list of all CSV files in the folder
-        String mergedCSVFile = biosecurityCSVService.aggregateCSVFiles(folderName)
+        StringReader mergedFileStreamReader = csvService.aggregateCSVFiles(folderName)
         if (folderName == "/" || folderName.isEmpty()) {
             folderName = "biosecurity_alerts"
         }
         def saveToFile = folderName +".csv"
-        response.contentType = 'application/octet-stream'
-        response.setHeader('Content-Disposition', "attachment; filename=\"${saveToFile}\"")
-        response.outputStream << new File(mergedCSVFile).bytes
+
+        response.setContentType("text/csv")
+        response.setHeader("Content-Disposition", "attachment; filename=\"${saveToFile}\"")
+
+        mergedFileStreamReader.withReader { r ->
+            response.outputStream.withWriter('UTF-8') { writer ->
+                r.eachLine { line ->
+                    writer.write(line + System.lineSeparator())
+                }
+            }
+        }
+        response.outputStream.flush()
     }
 
     @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true,redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to view that page.")
     def download(String filename) {
-        String contents = biosecurityCSVService.getFile(filename)
+        def csvService = getCsvService()
+
+        String contents = csvService.getFile(filename)
         if (!contents) {
             render(status: 404, text: "Data not found")
             return
@@ -61,17 +79,18 @@ class CsvController {
      * @return
      */
     @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
-    def downloadLastBiosecurityResult() {
+    def downloadLastResult() {
+        def csvService = getCsvService()
         // Gorm object QueryResult does not fetch Query object, so we need to fetch it manually
         QueryResult qs = queryResultService.get(params.id)
         if (qs) {
-            File tempFile = biosecurityCSVService.createTempCSVFromQueryResult(qs)
+            File tempFile = csvService.createTempCSVFromQueryResult(qs)
             if (!tempFile.exists() || tempFile.isDirectory()) {
                 render(status: 404, text: "File not found")
                 return
             }
 
-            def saveToFile = biosecurityCSVService.sanitizeFileName(qs.query?.name + "-" + (qs.lastChecked?new SimpleDateFormat("yyyy-MM-dd").format(qs.lastChecked):"") + ".csv")
+            def saveToFile = csvService.sanitizeFileName(qs.query?.name + "-" + (qs.lastChecked?new SimpleDateFormat("yyyy-MM-dd").format(qs.lastChecked):"") + ".csv")
             response.contentType = 'application/octet-stream'
             response.setHeader('Content-Disposition', "attachment; filename=\"${saveToFile}\"")
             response.outputStream << tempFile.bytes
@@ -82,14 +101,17 @@ class CsvController {
 
     @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
     def delete(String filename) {
-        Map message = biosecurityCSVService.deleteFile(filename)
+        def csvService = getCsvService()
+        Map message = csvService.deleteFile(filename)
         render(status: 200, contentType: 'application/json', text: message as JSON)
     }
 
     @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
     def moveLocalFilesToS3() {
+        def csvService = getCsvService()
+
         Boolean dryRun = params.boolean('dryRun', true)
-        Map message = biosecurityCSVService.moveLocalFilesToS3(dryRun)
+        Map message = csvService.moveLocalFilesToS3(dryRun)
         render(status: 200, contentType: 'application/json', text: message as JSON)
     }
 }

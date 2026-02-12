@@ -189,7 +189,7 @@
                                                             </div>
                                                         </g:if>
                                                         <g:else>
-                                                            <g:link class="btn btn-primary" controller="admin" action="downloadLastBiosecurityResult" params="[id:  queryResult.id]" target="_blank">
+                                                            <g:link class="btn btn-primary" namespace="biosecurity" controller="csv" action="downloadLastResult" params="[id:  queryResult.id]" target="_blank">
                                                                 Download CSV from the latest check result
                                                             </g:link>
                                                         </g:else>

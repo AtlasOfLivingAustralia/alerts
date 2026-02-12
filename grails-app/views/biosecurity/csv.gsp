@@ -54,11 +54,14 @@
     <div>
         <h4 class="pull-right">
             <span class="label label-info">
+                <g:if test="${totalFiles}">${totalFiles} files </g:if>
+                <g:if test="${totalSize}">, ${totalSize} in total, </g:if>
                 %{-- Indicate the storage type being used with a BS label --}%
                 ${grailsApplication.config.getProperty('biosecurity.csv.s3.enabled', Boolean) == true
                     ? "s3://${grailsApplication.config.getProperty('grails.plugin.awssdk.s3.bucket')}/${grailsApplication.config.getProperty('biosecurity.csv.s3.directory')}/"
                     : "/${grailsApplication.config.getProperty('biosecurity.csv.local.directory')}"}
             </span>
+
         </h4>
         <h2>Biosecurity Alerts Reports</h2>
         <p>Download a comprehensive CSV file detailing all occurrence records from every biosecurity alert sent. This includes both scheduled and manually triggered emails</p>
