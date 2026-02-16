@@ -37,23 +37,19 @@ class CsvController {
             render(status: 404, text: 'Data not found')
             return
         }
-
-        StringReader mergedFileStreamReader = csvService.aggregateCSVFiles(folderName)
-        if (folderName == "/" || folderName.isEmpty()) {
-            folderName = "biosecurity_alerts"
+        def outputFilename = folderName
+        if (!folderName || folderName == "/") {
+            outputFilename = "biosecurity_alerts"
         }
-        def saveToFile = folderName +".csv"
 
-        response.setContentType("text/csv")
-        response.setHeader("Content-Disposition", "attachment; filename=\"${saveToFile}\"")
+        response.contentType = "text/csv"
+        response.setHeader(
+                "Content-Disposition",
+                "attachment; filename=\"${outputFilename}.csv\""
+        )
 
-        mergedFileStreamReader.withReader { r ->
-            response.outputStream.withWriter('UTF-8') { writer ->
-                r.eachLine { line ->
-                    writer.write(line + System.lineSeparator())
-                }
-            }
-        }
+        csvService.aggregateCSVFiles(folderName, response.outputStream)
+
         response.outputStream.flush()
     }
 

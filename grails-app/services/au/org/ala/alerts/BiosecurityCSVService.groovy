@@ -19,7 +19,30 @@ abstract class BiosecurityCSVService {
     @Autowired
     protected WebService webService
 
-    String formatSize(def size) {
+    /**
+     * List all files, including the total number of files, and the total size of files
+     *
+     * @return [status:0, foldersAndFiles: [folder:filesInside], totalFiles: int, totalSize: String (GB,MB..)]
+     */
+    abstract def list()
+    abstract void aggregateCSVFiles(String folder, OutputStream out)
+    abstract String getFile(String filename)
+    /**
+     *  message['status'] = 0 : deletion completed
+     * @param filename
+     * @return ['status', ',message']
+     */
+    abstract Map deleteFile(String filename)
+    /**
+     * Called by cron job to generate CSV files when Notification service finds  new records
+     * Should be an Async call
+     * @param qs
+     */
+    abstract void generateAuditCSV(QueryResult qs)
+    abstract boolean folderExists(String folderName)
+
+
+    String formatSize(long size) {
         String totalSizeFormatted = ""
         if (size >= 1024 * 1024 * 1024) {
             totalSizeFormatted = "${(size / (1024 * 1024 * 1024)).round()} GB"
@@ -96,26 +119,6 @@ abstract class BiosecurityCSVService {
             }
         }
     }
-
-    /**
-     * Called by cron job to generate CSV files when Notification service finds  new records
-     *
-     * @param qs
-     */
-    void generateAuditCSV(QueryResult qs) {
-        def task = {
-            File outputFile = createTempCSVFromQueryResult(qs)
-            String folderName = new SimpleDateFormat("yyyy-MM-dd").format(new Date())
-            String fileName = sanitizeFileName("${qs.query.name}")+ ".csv"
-            String destinationFolder = new File(grailsApplication.config.getProperty('biosecurity.csv.local.directory', '/tmp'), folderName).absolutePath
-            File destinationFile = new File(destinationFolder, fileName)
-            moveToDestination(outputFile, destinationFile)
-        }
-
-        Thread.start(task)
-    }
-
-    protected abstract void moveToDestination(File source, File destination)
 
      /**
      * Main logic to create a temp CSV file from query result
