@@ -31,6 +31,13 @@
             });
         });
 
+        function confirmDownload() {
+            return confirm(
+                "This download may take some time.\n\n" +
+                "Please keep an eye on the download status in the top-right toolbar of your browser."
+            );
+        }
+
         function deleteFile(filename) {
             $.ajax({
                 url: "${createLink( namespace: 'biosecurity', controller: 'csv', action: 'delete')}",
@@ -66,15 +73,15 @@
         <h2>Biosecurity Alerts Reports</h2>
         <p>Download a comprehensive CSV file detailing all occurrence records from every biosecurity alert sent. This includes both scheduled and manually triggered emails</p>
 
-        <a class="btn btn-primary " href="${createLink( namespace: 'biosecurity', controller: 'csv', action: 'aggregate', params: [folderName:'/'])}">
+        <a class="btn btn-primary " href="${createLink( namespace: 'biosecurity', controller: 'csv', action: 'aggregate', params: [folderName:'/'])}" onclick="return confirmDownload();">
             <i class="fa fa-cloud-download" aria-hidden="true" ></i>&nbsp;&nbsp;Download Full CSV Report
         </a>
-        <g:if test="${grailsApplication.config.getProperty('biosecurity.csv.s3.enabled', Boolean) == true}">
-            &nbsp;&nbsp;
-            <a class="btn btn-default pull-right" href="${createLink(controller: 'admin', action: 'moveLocalFilesToS3')}">
-                <i class="fa fa-copy" aria-hidden="true" ></i>&nbsp;&nbsp;Copy all local files to S3
-            </a>
-        </g:if>
+%{--        <g:if test="${grailsApplication.config.getProperty('biosecurity.csv.s3.enabled', Boolean) == true}">--}%
+%{--            &nbsp;&nbsp;--}%
+%{--            <a class="btn btn-default pull-right" href="${createLink(controller: 'admin', action: 'moveLocalFilesToS3')}">--}%
+%{--                <i class="fa fa-copy" aria-hidden="true" ></i>&nbsp;&nbsp;Copy all local files to S3--}%
+%{--            </a>--}%
+%{--        </g:if>--}%
         <hr>
     </div>
 
