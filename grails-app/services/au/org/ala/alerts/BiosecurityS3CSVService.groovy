@@ -34,9 +34,9 @@ import java.text.SimpleDateFormat
 
 
 /**
- * Generate CSV reports for Biosecurity alerts
- * CSV files are generated from the query results and stored on the local file system
- * or on AWS S3
+ * Generate CSV reports for Biosecurity alerts.
+ * This implementation generates CSV files from query results and stores them in AWS S3 only.
+ * Local filesystem storage is handled by {@link BiosecurityLocalCSVService}.
  *
  * @author qifeng-bai
  * @author dos009 nickdos
