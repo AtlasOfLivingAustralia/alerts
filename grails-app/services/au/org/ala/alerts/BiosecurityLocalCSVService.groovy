@@ -20,9 +20,9 @@ import java.nio.file.StandardCopyOption
 import java.text.SimpleDateFormat
 
 /**
- * Generate CSV reports for Biosecurity alerts
- * CSV files are generated from the query results and stored on the local file system
- * or on AWS S3
+ * Generate CSV reports for Biosecurity alerts.
+ * CSV files are generated from the query results and stored on the local file system.
+ * S3 storage is handled separately by {@code BiosecurityS3CSVService}.
  *
  * @author qifeng-bai
  *
