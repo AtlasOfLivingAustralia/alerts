@@ -30,6 +30,11 @@ class CsvController {
         render(view: '/biosecurity/csv', model: result)
     }
 
+    /**
+     * todo handle exception occurred during the streaming process
+     * @param folderName
+     * @return
+     */
     @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true,redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to view that page.")
     def aggregate(String folderName) {
         def csvService = getCsvService()

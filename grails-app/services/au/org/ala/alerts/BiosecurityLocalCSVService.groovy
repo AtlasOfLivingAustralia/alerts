@@ -58,6 +58,10 @@ class BiosecurityLocalCSVService  extends BiosecurityCSVService {
                 )
 
         def folder = new File(BASE_DIRECTORY, folderName)
+        if (folder == null || !folder.exists() || !folder.isDirectory()) {
+            return
+        }
+
         Collection<File> csvFiles = []
 
         collectLocalCsvFiles(folder, csvFiles)

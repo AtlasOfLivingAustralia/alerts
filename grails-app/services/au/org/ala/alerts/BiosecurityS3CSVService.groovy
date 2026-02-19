@@ -213,7 +213,7 @@ class BiosecurityS3CSVService extends BiosecurityCSVService{
 
     @Override
     Map deleteFile(String filename) {
-        if (!filename) return [status:0, message: "File not found"]
+        if (!filename) return [status:1, message: "File not found"]
 
         def config = grailsApplication.config
         // Folders in S3 are not real folders, but prefixes in the key
@@ -225,7 +225,7 @@ class BiosecurityS3CSVService extends BiosecurityCSVService{
             Boolean success = s3MoveObject(bucket, "${folderPrefix}/${filename}", bucket, "${folderPrefix}/${filename}_deleted")
             message = success ? [status: 0, message: "File deleted"] : [status: 1, message: "File deletion failed"]
         } else {
-            message = [status: 0, message: "File not found"]
+            message = [status: 1, message: "File not found"]
         }
 
         return message
