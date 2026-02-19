@@ -11,6 +11,7 @@ class CsvController {
     def biosecurityLocalCSVService
     def biosecurityS3CSVService
     def queryResultService
+    def grailsApplication
 
     private def getCsvService() {
         return  grailsApplication.config.getProperty('biosecurity.csv.s3.enabled', Boolean, false) ? biosecurityS3CSVService : biosecurityLocalCSVService
