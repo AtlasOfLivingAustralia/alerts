@@ -375,7 +375,7 @@ class BiosecurityS3CSVService extends BiosecurityCSVService{
             }
         }
 
-        msg.message = dryRun ? "Dry run: No files were uploaded to S3, add '?dryRun=false'`' to URL to copy files over." : "Finished upload to S3"
+        msg.message = dryRun ? "Dry run: No files were uploaded to S3, add '?dryRun=false' to URL to copy files over." : "Finished upload to S3"
 
         msg
     }
