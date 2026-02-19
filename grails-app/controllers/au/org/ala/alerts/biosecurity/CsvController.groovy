@@ -107,6 +107,15 @@ class CsvController {
         def csvService = getCsvService()
 
         Boolean dryRun = params.boolean('dryRun', true)
+
+        if (!csvService?.respondsTo('moveLocalFilesToS3', Boolean)) {
+            Map unsupportedMessage = [
+                    success: false,
+                    message: 'Moving local files to S3 is not supported for the current CSV storage configuration.'
+            ]
+            render(status: 501, contentType: 'application/json', text: unsupportedMessage as JSON)
+            return
+        }
         Map message = csvService.moveLocalFilesToS3(dryRun)
         render(status: 200, contentType: 'application/json', text: message as JSON)
     }
