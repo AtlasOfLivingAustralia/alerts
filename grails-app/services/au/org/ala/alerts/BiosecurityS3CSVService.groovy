@@ -367,7 +367,7 @@ class BiosecurityS3CSVService extends BiosecurityCSVService{
                         log.info "Dry run: Would have uploaded ${file.name} to S3 bucket ${bucketName} with key ${s3Key}"
                     } else {
                         msg.filesFailed = (msg.filesFailed ?: []) + [s3Key]
-                        log.error "Filed to uploaded ${file.name} to S3 bucket ${bucketName} with key ${s3Key} (dryrun: ${dryRun})"
+                        log.error "Failed to upload ${file.name} to S3 bucket ${bucketName} with key ${s3Key} (dryrun: ${dryRun})"
                     }
                 } finally {
                     inputStream.close()
