@@ -15,6 +15,8 @@
 package au.org.ala.alerts
 
 import grails.core.GrailsApplication
+import org.apache.commons.lang.NotImplementedException
+
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import java.text.SimpleDateFormat
@@ -80,7 +82,11 @@ class BiosecurityLocalCSVService  extends BiosecurityCSVService {
         }
     }
 
-    /**
+    @Override
+    Map asyncAggregateCSVFiles(String folder) {
+        throw new NotImplementedException("This function is not needed for the local CSV storage")
+    }
+/**
      * Collect CSV files from the folder and its subfolders
      * @param folder
      * @param collectedFiles
@@ -119,7 +125,7 @@ class BiosecurityLocalCSVService  extends BiosecurityCSVService {
      * @return file content as String
      */
     @Override
-    String getFile(String filename) {
+    InputStream getFile(String filename) {
         if (!filename) return ''
 
         def config = grailsApplication.config
@@ -127,16 +133,16 @@ class BiosecurityLocalCSVService  extends BiosecurityCSVService {
         String BASE_DIRECTORY = config.getProperty('biosecurity.csv.local.directory', String, '/tmp')
         def file = new File(BASE_DIRECTORY, filename)
         if (file.exists()) {
-            return file.text
+            return new FileInputStream(file)
         }
-        ''
+        return null
     }
 
     @Override
     Map deleteFile(String filename) {
         if (!filename) return [:]
 
-        def BASE_DIRECTORY = grailsApplication.config.biosecurity.csv.local.directory
+        def BASE_DIRECTORY = grailsApplication.config.getProperty('biosecurity.csv.local.directory', String, '/tmp')
         def file = new File(BASE_DIRECTORY, filename)
         def message = [:]
 

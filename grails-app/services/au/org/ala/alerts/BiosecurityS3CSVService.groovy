@@ -14,6 +14,7 @@
 package au.org.ala.alerts
 
 import grails.core.GrailsApplication
+import grails.web.mapping.LinkGenerator
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
 import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
@@ -43,6 +44,7 @@ import java.text.SimpleDateFormat
  */
 class BiosecurityS3CSVService extends BiosecurityCSVService{
     GrailsApplication grailsApplication
+    LinkGenerator grailsLinkGenerator
 
     @Override
     def list() throws Exception {
@@ -114,6 +116,99 @@ class BiosecurityS3CSVService extends BiosecurityCSVService{
     }
 
     @Override
+    Map asyncAggregateCSVFiles(String folderName) {
+        User user = userService.getUser()
+        if (user?.email) {
+            new Thread({
+                try {
+                    Collection<File> csvFiles = []
+                    // Folders in S3 are not real folders, but prefixes in the key - doesn't need to be recursive
+                    def s3Files = collectFilesInS3(folderName)
+                    s3Files.each { objectSummary ->
+                        def key = objectSummary.key
+                        if (key.endsWith('.csv')) { // Filter out deleted files (end with '_deleted')
+                            def tempPath = Files.createTempFile("biosecurity_", ".csv")
+                            s3GetFile(key, tempPath.toAbsolutePath().toString())
+                            csvFiles.add(tempPath.toFile())
+                        }
+                    }
+
+
+                    def tempMergedFilePath = Files.createTempFile("biosecurity_merged_", ".csv")
+                    def tempMergedFile = tempMergedFilePath.toFile()
+                    tempMergedFile.withWriter { writer ->
+                        csvFiles.eachWithIndex { csvFile, index ->
+                            csvFile.withReader('UTF-8') { reader ->
+                                reader.eachLine { line, lineNumber ->
+                                    if (index == 0 || lineNumber > 1) {
+                                        // Write header from the first file and skip headers from the rest
+                                        writer.writeLine(line)
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    String token = UUID.randomUUID().toString()
+                    DownloadToken.withTransaction {
+                        new DownloadToken(
+                                token: token,
+                                fileKey: tempMergedFile.absolutePath,
+                                expiresAt: new Date(System.currentTimeMillis() + 24 * 60 * 60 * 1000) // one day
+                        ).save(flush: true,failOnError: true)
+                    }
+
+                    def downloadUrl = grailsLinkGenerator.link(
+                            namespace: 'biosecurity',
+                            controller: 'csv',
+                            action: 'downloadWithToken',
+                            params: [token: token],
+                            absolute: true
+                    )
+
+                    sendMail {
+                        from grailsApplication.config.mail.details.alertAddressTitle + "<" + grailsApplication.config.mail.details.sender + ">"
+                        subject "Your requested Biosecurity CSV is ready for download"
+                        to user.email
+                        html """
+                                <p>Hello Biosecurity User,</p>
+                        
+                                <p>Your requested CSV file is ready. You can download it using the link below. 
+                                Please note that the download link will expire in 24 hours.</p>
+                        
+                                <p><a href="${downloadUrl}">Download CSV File</a></p>
+                        
+                                <p>If you did not request this download, please ignore this email.</p>
+                        
+                                <p>Best regards,<br/>
+                                Biosecurity Alerts Team</p>
+                            """
+                    }
+
+                    //Clean up
+                    csvFiles.each{
+                        it.delete()
+                    }
+                    log.info("User ${user.id} download processed; email sent with link: ${downloadUrl}")
+                } catch (Exception e) {
+                    log.error("Error processing download for user ${user.id}: ${e.message}", e)
+                }
+            }).start()
+
+            return [
+                    status: 0,
+                    message: "Your download request is being processed. You will receive an email once it is ready."
+            ]
+        } else {
+            return [
+                    status: 1,
+                    message: "An email address is required to process this download request."
+            ]
+        }
+    }
+
+
+    @Override
     void generateAuditCSV(QueryResult qs) {
         def task = {
             File outputFile = createTempCSVFromQueryResult(qs)
@@ -136,16 +231,24 @@ class BiosecurityS3CSVService extends BiosecurityCSVService{
      * @return file content as String
      */
     @Override
-    String getFile(String filename) {
+    InputStream getFile(String filename) {
         if (filename) {
             def config = grailsApplication.config
             def folderPrefix = config.getProperty('biosecurity.csv.s3.directory', 'biosecurity')
             if (s3Exists("${folderPrefix}/${filename}")) {
-                def file = s3GetFile("${folderPrefix}/${filename}", "/tmp/${filename.tokenize(File.separator).last()}")
-                return file.text
+                def tempPath = Files.createTempFile("biosecurity_", ".csv")
+                File file = s3GetFile("${folderPrefix}/${filename}", tempPath.toAbsolutePath().toString())
+                return new FileInputStream(file) {
+                    @Override
+                    void close() throws IOException {
+                        super.close()
+                        Files.deleteIfExists(file.toPath()) // delete temp file after stream is closed
+                    }
+                }
+
             }
         }
-        ''
+        return null
     }
 
     S3Client getS3Client() {

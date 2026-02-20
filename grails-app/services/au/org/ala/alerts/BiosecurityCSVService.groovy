@@ -18,6 +18,10 @@ abstract class BiosecurityCSVService {
     protected GrailsApplication grailsApplication
     @Autowired
     protected WebService webService
+    @Autowired
+    protected UserService userService
+    @Autowired
+    protected EmailService emailService
 
     /**
      * List all files, including the total number of files, and the total size of files
@@ -26,7 +30,8 @@ abstract class BiosecurityCSVService {
      */
     abstract def list()
     abstract void aggregateCSVFiles(String folder, OutputStream out)
-    abstract String getFile(String filename)
+    abstract Map asyncAggregateCSVFiles(String folder)
+    abstract InputStream getFile(String filename)
     /**
      *  message['status'] = 0 : deletion completed
      * @param filename

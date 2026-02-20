@@ -1,8 +1,11 @@
 package au.org.ala.alerts.biosecurity
 
+import au.org.ala.alerts.DownloadToken
 import au.org.ala.alerts.QueryResult
 import au.org.ala.web.AlaSecured
 import grails.converters.JSON
+
+
 import java.text.SimpleDateFormat
 
 class CsvController {
@@ -31,19 +34,19 @@ class CsvController {
 
     /**
      * todo handle exception occurred during the streaming process
-     * @param folderName
+     * @param name
      * @return
      */
     @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true,redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to view that page.")
-    def aggregate(String folderName) {
+    def aggregate(String name) {
         def csvService = getCsvService()
 
-        if (!csvService.folderExists(folderName)) {
+        if (!csvService.folderExists(name)) {
             render(status: 404, text: 'Data not found')
             return
         }
-        def outputFilename = folderName
-        if (!folderName || folderName == "/") {
+        def outputFilename = name
+        if (!name || name == "/") {
             outputFilename = "biosecurity_alerts"
         }
 
@@ -53,8 +56,51 @@ class CsvController {
                 "attachment; filename=\"${outputFilename}.csv\""
         )
 
-        csvService.aggregateCSVFiles(folderName, response.outputStream)
+        csvService.aggregateCSVFiles(name, response.outputStream)
 
+        response.outputStream.flush()
+    }
+
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true,redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to view that page.")
+    def asyncAggregate(String name) {
+        name = name ?: '/'
+        def csvService = getCsvService()
+        if (!csvService.folderExists(name)) {
+            render(status: 404, text: 'Data not found')
+        } else {
+            Map result= csvService.asyncAggregateCSVFiles(name)
+            render(result as JSON)
+        }
+    }
+
+    /**
+     * Download CSV files from S3
+     * @param token
+     * @return
+     */
+    def downloadWithToken(String token) {
+        if (!token) {
+            render(status: 400, text: "Token is missing")
+            return
+        }
+
+        // Lookup the file by token
+        DownloadToken dt = DownloadToken.findByToken(token)
+        if (!dt || dt.expiresAt.before(new Date()) ) {
+            render(status: 404, text: "Invalid or expired token")
+            return
+        }
+
+        // Serve the file
+        File file = new File(dt.fileKey)
+        if (!file.exists()) {
+            render(status: 404, text: "File not found")
+            return
+        }
+
+        response.setHeader("Content-disposition", "attachment; filename=${file.name}")
+        response.contentType = "text/csv"
+        response.outputStream << file.bytes
         response.outputStream.flush()
     }
 
@@ -62,15 +108,21 @@ class CsvController {
     def download(String filename) {
         def csvService = getCsvService()
 
-        String contents = csvService.getFile(filename)
-        if (!contents) {
+        InputStream fileStream = csvService.getFile(filename)
+        if (!fileStream) {
             render(status: 404, text: "Data not found")
             return
         }
+
         response.contentType = 'text/csv'
-        response.setHeader("Content-disposition", "attachment; filename=\"${filename.tokenize(File.separator).last()}\"")
-        response.outputStream.withWriter("UTF-8") { writer ->
-            writer << contents
+        response.setHeader(
+                "Content-disposition",
+                "attachment; filename=\"${filename.tokenize(File.separator).last()}\""
+        )
+
+        // stream the content to the response output
+        fileStream.withCloseable { stream ->
+            response.outputStream << stream
         }
         response.outputStream.flush()
     }
