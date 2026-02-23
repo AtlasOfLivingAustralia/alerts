@@ -98,9 +98,11 @@ class CsvController {
             return
         }
 
-        response.setHeader("Content-disposition", "attachment; filename=${file.name}")
+        response.setHeader("Content-disposition", "attachment; filename=\"biosecurity_all.csv\"")
         response.contentType = "text/csv"
-        response.outputStream << file.bytes
+        file.withInputStream { stream ->
+            response.outputStream << stream
+        }
         response.outputStream.flush()
     }
 

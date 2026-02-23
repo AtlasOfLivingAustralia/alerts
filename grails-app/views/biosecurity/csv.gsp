@@ -76,10 +76,12 @@
         <a class="btn btn-primary " href="${createLink( namespace: 'biosecurity', controller: 'csv', action: 'aggregate', params: [name:'/'])}" onclick="return confirmDownload();">
             <i class="fa fa-cloud-download" aria-hidden="true" ></i>&nbsp;&nbsp;Download Full CSV Report
         </a>
-        &nbsp;
-        <a href="${createLink( namespace: 'biosecurity', controller: 'csv', action: 'asyncAggregate', absolute: true)}" >
-            <i class="fas fa-shipping-fast"></i>&nbsp;&nbsp;Email Me Full CSV Report (!Beta)
-        </a>
+        <g:if test="${grailsApplication.config.getProperty('biosecurity.csv.s3.enabled', Boolean) == true}">
+            &nbsp;
+            <a href="${createLink( namespace: 'biosecurity', controller: 'csv', action: 'asyncAggregate', absolute: true)}" >
+                <i class="fas fa-shipping-fast"></i>&nbsp;&nbsp;Email Me Full CSV Report (!Beta)
+            </a>
+        </g:if>
 %{--        <g:if test="${grailsApplication.config.getProperty('biosecurity.csv.s3.enabled', Boolean) == true}">--}%
 %{--            &nbsp;&nbsp;--}%
 %{--            <a class="btn btn-default pull-right" href="${createLink(controller: 'admin', action: 'moveLocalFilesToS3')}">--}%
