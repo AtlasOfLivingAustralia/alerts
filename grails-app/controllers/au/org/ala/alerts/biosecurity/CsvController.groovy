@@ -47,7 +47,7 @@ class CsvController {
         }
         def outputFilename = name
         if (!name || name == "/") {
-            outputFilename = "biosecurity_alerts"
+            outputFilename = "biosecurity_alerts_before_${new SimpleDateFormat("yyyy-MM-dd").format(new Date())}"
         }
 
         response.contentType = "text/csv"
@@ -99,7 +99,7 @@ class CsvController {
         }
 
         file.withInputStream { inputStream ->
-            response.setHeader("Content-disposition", "attachment; filename=${file.name}")
+            response.setHeader("Content-disposition", "attachment; filename=biosecurity_alerts_before_${new SimpleDateFormat("yyyy-MM-dd").format(dt.createdAt)}.csv")
             response.contentType = "text/csv"
             response.outputStream << inputStream
             response.outputStream.flush()

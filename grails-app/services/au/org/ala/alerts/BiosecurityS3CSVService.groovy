@@ -368,7 +368,6 @@ class BiosecurityS3CSVService extends BiosecurityCSVService{
         try (def outputStream = new FileOutputStream(localFile)) {
             GetObjectRequest getObjectRequest = GetObjectRequest.builder().bucket(bucketName).key(s3Key).build()
             s3Client.getObject(getObjectRequest, ResponseTransformer.toOutputStream(outputStream))
-            log.info("Downloaded file from S3: " + s3Key)
         } catch (Exception e) {
             log.error("Error downloading file from S3: " + e.getMessage(), e)
         }

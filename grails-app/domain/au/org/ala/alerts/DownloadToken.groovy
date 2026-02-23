@@ -7,6 +7,10 @@ class DownloadToken {
     Date expiresAt
     Date createdAt
 
+    def beforeInsert() {
+        createdAt = new Date()
+    }
+
     static constraints = {
         token unique: true, nullable: false, maxSize: 64
         fileKey nullable: false, maxSize: 512
