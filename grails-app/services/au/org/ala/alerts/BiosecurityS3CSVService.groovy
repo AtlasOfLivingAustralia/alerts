@@ -136,7 +136,7 @@ class BiosecurityS3CSVService extends BiosecurityCSVService{
 
                     def tempMergedFilePath = Files.createTempFile("biosecurity_merged_", ".csv")
                     def tempMergedFile = tempMergedFilePath.toFile()
-                    tempMergedFile.withWriter { writer ->
+                    tempMergedFile.withWriter('UTF-8') { writer ->
                         csvFiles.eachWithIndex { csvFile, index ->
                             csvFile.withReader('UTF-8') { reader ->
                                 reader.eachLine { line, lineNumber ->
