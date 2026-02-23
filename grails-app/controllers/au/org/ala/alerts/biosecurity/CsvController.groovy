@@ -98,10 +98,12 @@ class CsvController {
             return
         }
 
-        response.setHeader("Content-disposition", "attachment; filename=${file.name}")
-        response.contentType = "text/csv"
-        response.outputStream << file.bytes
-        response.outputStream.flush()
+        file.withInputStream { inputStream ->
+            response.setHeader("Content-disposition", "attachment; filename=${file.name}")
+            response.contentType = "text/csv"
+            response.outputStream << inputStream
+            response.outputStream.flush()
+        }
     }
 
     @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true,redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to view that page.")
