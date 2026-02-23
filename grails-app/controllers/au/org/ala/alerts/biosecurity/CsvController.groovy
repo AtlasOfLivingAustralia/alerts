@@ -178,4 +178,11 @@ class CsvController {
         Map message = csvService.moveLocalFilesToS3(dryRun)
         render(status: 200, contentType: 'application/json', text: message as JSON)
     }
+
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
+    def downloads() {
+        List<DownloadToken> tokens = DownloadToken.list(sort: 'createdAt', order: 'desc')
+        render(view: "/biosecurity/downloads", model:[downloads: tokens])
+
+    }
 }

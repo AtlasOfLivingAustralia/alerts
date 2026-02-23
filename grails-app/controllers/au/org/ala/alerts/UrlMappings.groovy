@@ -37,6 +37,7 @@ class UrlMappings {
             "/aggregate"(namespace: "biosecurity",controller: "csv", action: "aggregate")
             "/download/async/$name?"(namespace: "biosecurity",controller: "csv", action: "asyncAggregate")
             "/download/token/$token"(namespace: "biosecurity",controller: "csv", action: "downloadWithToken")
+            "/downloads"(namespace: "biosecurity",controller: "csv", action: "downloads")
         }
 
 

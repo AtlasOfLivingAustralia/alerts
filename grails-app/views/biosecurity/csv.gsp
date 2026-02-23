@@ -81,6 +81,11 @@
             <a href="${createLink( namespace: 'biosecurity', controller: 'csv', action: 'asyncAggregate', absolute: true)}" >
                 <i class="fas fa-shipping-fast"></i>&nbsp;&nbsp;Email Me Full CSV Report (!Beta)
             </a>
+            &nbsp;
+            <a href="${createLink( namespace: 'biosecurity', controller: 'csv', action: 'downloads', absolute: true)}" >
+                <i class="fas fa-history"></i> logs
+            </a>
+
         </g:if>
 %{--        <g:if test="${grailsApplication.config.getProperty('biosecurity.csv.s3.enabled', Boolean) == true}">--}%
 %{--            &nbsp;&nbsp;--}%
