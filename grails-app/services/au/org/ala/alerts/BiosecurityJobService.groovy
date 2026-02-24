@@ -26,6 +26,7 @@ import java.time.format.DateTimeFormatter
  */
 class BiosecurityJobService {
     QuartzService quartzService
+    UserService userService
     Scheduler quartzScheduler
 
     String pauseJobId= "pauseBiosecurity"
@@ -39,6 +40,8 @@ class BiosecurityJobService {
 
             TriggerKey key = new TriggerKey(triggerName, triggerGroup)
             quartzScheduler.pauseTrigger(key)
+
+            logEvent("Biosecurity has been paused.")
         }
     }
 
@@ -50,6 +53,7 @@ class BiosecurityJobService {
 
             TriggerKey key = new TriggerKey(triggerName, triggerGroup)
             quartzScheduler.resumeTrigger(key)
+            logEvent("Biosecurity has been resumed.")
         }
     }
 
@@ -69,6 +73,8 @@ class BiosecurityJobService {
 
             // Replace the old trigger with the new one
             quartzScheduler.rescheduleJob(triggerKey, newTrigger)
+
+            logEvent("Biosecurity schedule has been changed to : ${cron} .")
         }
     }
 
@@ -118,6 +124,8 @@ class BiosecurityJobService {
                     .build()
 
             quartzScheduler.scheduleJob(resumeJob, resumeTrigger)
+
+            logEvent("Biosecurity schedule has been set to pause at ${pauseDate} and resume at ${resumeDate}.")
         }
     }
 
@@ -135,6 +143,8 @@ class BiosecurityJobService {
         if (quartzScheduler.checkExists(resumeJobKey)) {
             quartzScheduler.deleteJob(resumeJobKey)
         }
+
+        logEvent("Biosecurity pause/resume schedule has been cancelled.")
     }
 
     /**
@@ -168,4 +178,12 @@ class BiosecurityJobService {
         return results.find{ it->it.jobName == JobKeys.BIOSECURITY_JOB_NAME}
     }
 
+    void logEvent(String msg) {
+        def currentUser = userService?.getUser()
+        if (currentUser) {
+            log.info( "${msg} Performed by (${currentUser.unsubscribeToken}) ${currentUser.email} ")
+        } else {
+            log.info( "${msg}")
+        }
+    }
 }

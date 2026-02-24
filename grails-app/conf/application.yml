@@ -320,8 +320,6 @@ environments:
                     region: ap-southeast-2
                     profile: test-ala-developer
                     s3:
-                        #          accessKey:
-                        #          secretKey:
                         bucket: ala-alerts-testing
 
         security:
@@ -347,6 +345,12 @@ environments:
     test:
         grails:
             serverURL: "http://alerts.test.ala.org.au"
+            plugin:
+                awssdk:
+                    region: ap-southeast-2
+                    profile: test-ala-developer
+                    s3:
+                        bucket: ala-alerts-testing
         security:
             cas:
                 appServerName: "https://auth.test.ala.org.au"
