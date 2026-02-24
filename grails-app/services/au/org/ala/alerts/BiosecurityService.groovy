@@ -24,7 +24,8 @@ class BiosecurityService {
     def grailsApplication
     def emailService
     WebService webService
-    def biosecurityCSVService
+    BiosecurityLocalCSVService biosecurityLocalCSVService
+    BiosecurityS3CSVService biosecurityS3CSVService
     def diffService
 
 
@@ -105,7 +106,9 @@ class BiosecurityService {
                 qr.queryUrlUIUsed = query.baseUrlForUI + modifiedPath
 
                 if (qr.hasChanged) {
-                    biosecurityCSVService.generateAuditCSV(qr)
+                    def csvService =  getCsvService()
+                    csvService.generateAuditCSV(qr)
+
                     def users = queryService.getSubscribers(query.id)
                     def recipients = users.collect { user ->
                             def notificationUnsubToken = user.notifications.find { it.query.id == query.id }?.unsubscribeToken
@@ -310,6 +313,10 @@ class BiosecurityService {
         }
 
         fq
+    }
+
+    private def getCsvService() {
+        return  grailsApplication.config.getProperty('biosecurity.csv.s3.enabled', Boolean, false) ? biosecurityS3CSVService : biosecurityLocalCSVService
     }
 
 }

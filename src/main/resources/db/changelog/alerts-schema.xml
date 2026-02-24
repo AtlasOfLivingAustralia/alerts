@@ -203,6 +203,42 @@
         </createIndex>
     </changeSet>
 
+    <changeSet id="18-create-download-token-table" author="alert">
+
+        <createTable tableName="download_token">
+
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="token" type="VARCHAR(64)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+
+            <column name="file_key" type="VARCHAR(512)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="expires_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="created_at" type="TIMESTAMP"
+                    defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+
+        <createIndex indexName="idx_download_token_token"
+                     tableName="download_token">
+            <column name="token"/>
+        </createIndex>
+
+        <createIndex indexName="idx_download_token_expires"
+                     tableName="download_token">
+            <column name="expires_at"/>
+        </createIndex>
+
+    </changeSet>
+
     <!-- ===================== FOREIGN KEYS (COMMENTED OUT) ===================== -->
 
     <!--
