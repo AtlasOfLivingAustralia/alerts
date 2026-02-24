@@ -10,7 +10,10 @@ import java.text.SimpleDateFormat
 import org.apache.commons.csv.CSVPrinter
 import org.apache.commons.csv.CSVFormat
 
-
+/**
+ *  Abstract service for generating and managing CSV files for Biosecurity alerts.
+ *  Concrete implementations include {@code BiosecurityLocalCSVService} for local file storage and {@code BiosecurityS3CSVService} for S3 storage.
+ */
 abstract class BiosecurityCSVService {
     @Autowired
     protected DiffService diffService

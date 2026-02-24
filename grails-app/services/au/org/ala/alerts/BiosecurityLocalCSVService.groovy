@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2024.  Atlas of Living Australia
+ *   Copyright (c) 2026.  Atlas of Living Australia
  *   All Rights Reserved.
  *   The contents of this file are subject to the Mozilla Public
  *   License Version 1.1 (the "License"); you may not use this file
@@ -86,7 +86,8 @@ class BiosecurityLocalCSVService  extends BiosecurityCSVService {
     Map asyncAggregateCSVFiles(String folder) {
         throw new NotImplementedException("This function is not needed for the local CSV storage")
     }
-/**
+
+    /**
      * Collect CSV files from the folder and its subfolders
      * @param folder
      * @param collectedFiles
@@ -126,7 +127,7 @@ class BiosecurityLocalCSVService  extends BiosecurityCSVService {
      */
     @Override
     InputStream getFile(String filename) {
-        if (!filename) return ''
+        if (!filename) return null
 
         def config = grailsApplication.config
 
