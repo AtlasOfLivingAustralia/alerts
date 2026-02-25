@@ -612,7 +612,7 @@
                 <h3>Quick entry for adding subscribers</h3>
 
                 <g:form name="create-security-alert" action="subscribeBioSecurity" method="post" class="form-horizontal mt-20">
-                    <div class="row" >
+                    <div class="row align-items-center mb-2" >
                         <div class="col-sm-3">
                             <label class="form-label"> <g:message code="biosecurity.view.body.label.specieslistid" default="Species list uid"/></label>
                             <input type="text" name="listid" class="form-control" placeholder='Species list ID, AKA drid'/>
@@ -623,16 +623,14 @@
                             <input type="text" id="useremails" name="useremails" class="form-control" placeholder="<g:message code="biosecurity.view.body.label.useremailsallowmultiple" default="You can input multiple user emails by separating them with ';'"/>"/>
                         </div>
 
-                        <div class="col-sm-2 mt-20 text-end" >
+                        <div class="col-sm-2 mt-10 text-end" >
                             <label class="form-label invisible" >control</label>
                             <button type="submit" id="quick-submit" form="create-security-alert" class="btn btn-primary"><g:message code="biosecurity.view.body.button.subscribe" default="Subscribe"/></button>
                         </div>
 
                     </div>
                 </g:form>
-
-                <p></p>
-                <div class="row text-end">
+                <div class="row text-end mb-2 align-items-center">
                     <div class="col-sm-10" >
                         Search for new records of all subscriptions and notify to subscribers
                     </div>
@@ -640,15 +638,22 @@
                         <button class="btn btn-outline-primary" onclick="triggerSubscriptions()">Check & Notify </button>
                     </div>
                 </div>
-                <p></p>
-                <div class="row text-end">
+                <div class="row text-end mb-2 align-items-center">
                     <div class="col-sm-10" >View and download CSV files generated from each alert</div>
                     <div class="col-sm-2" >
                         <a class="btn btn-outline-primary" href="${createLink( namespace: 'biosecurity',
                                 controller: 'csv', action: 'list')}" target="_blank">CSV Reporting</a>
                     </div>
                 </div>
-                <p></p>
+                <g:if test="${grailsApplication.config.getProperty('biosecurity.csv.s3.enabled', Boolean) == true}">
+                    <div class="row text-end mb-2 align-items-center">
+                        <div class="col-sm-10" >Generate the full CSV report and email me a download link</div>
+                        <div class="col-sm-2" > <a class = "btn btn-outline-primary" href="${createLink( namespace: 'biosecurity', controller: 'csv', action: 'asyncAggregate', absolute: true)}">
+                            Email Me CSV</a>
+                        </div>
+                      </div>
+                    </div>
+                </g:if>
             </div>
         </div>
 

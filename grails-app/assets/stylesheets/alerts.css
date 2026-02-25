@@ -173,12 +173,19 @@
     word-break: break-word !important; /* Break long words inside list items */
 }
 
-/*.nav-tabs > li.active > a,*/
-/*.nav-tabs > li.active > a:focus,*/
-/*.nav-tabs > li.active > a:hover {*/
-/*    background-color: #ffffff;*/
-/*    color:  #c44d34;*/
-/*}*/
+
+.nav-tabs .nav-link{
+    color:  #000000;
+}
+.nav-tabs .nav-link.active{
+    color:  #c44d34;
+    pointer-events: none;
+}
+
+.nav-tabs .nav-link:hover{
+    color:  #c44d34;
+    border-color: transparent;
+}
 
 /*.nav-tabs > li > a:hover {*/
 /*    background-color: #c44d34;*/
