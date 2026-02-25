@@ -30,7 +30,7 @@
                     </span>
                     <g:if test="${query.queryResults.find{it.frequency.name=='weekly'}?.id}">
                         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                        <g:link controller="admin" action="downloadLastBiosecurityResult" params="[id:  query.queryResults.find{it.frequency.name=='weekly'}?.id]" target="_blank">
+                        <g:link namespace="biosecurity" controller="csv" action="downloadLastResult" params="[id:  query.queryResults.find{it.frequency.name=='weekly'}?.id]" target="_blank">
                             <span><i class="fa fa-download"></i>CSV</span>
                         </g:link>
                     </g:if>
