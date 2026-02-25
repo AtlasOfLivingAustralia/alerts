@@ -642,9 +642,9 @@
                 </div>
                 <p></p>
                 <div class="row text-end">
-                    <div class="col-sm-10" >Download CSV list of all occurrences from all biosecurity alerts sent (scheduled and manual)</div>
+                    <div class="col-sm-10" >View and download CSV files generated from each alert</div>
                     <div class="col-sm-2" >
-                        <a class="btn btn-primary-outline" href="${createLink( namespace: 'biosecurity',
+                        <a class="btn btn-outline-primary" href="${createLink( namespace: 'biosecurity',
                                 controller: 'csv', action: 'list')}" target="_blank">CSV Reporting</a>
                     </div>
                 </div>
