@@ -66,10 +66,11 @@ class CsvController {
         name = name ?: '/'
         def csvService = getCsvService()
         if (!csvService.folderExists(name)) {
-            render(status: 404, text: 'Data not found')
+            render (view: "/info",model:[staus:1, message: "Data not found",
+                                         redirectUrl: grailsLinkGenerator.link(namespace: 'biosecurity',controller: 'csv', action: 'list')])
         } else {
             Map result= csvService.asyncAggregateCSVFiles(name)
-            render(result as JSON)
+            render (view: "/info",model:result)
         }
     }
 

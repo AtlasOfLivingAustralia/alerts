@@ -317,7 +317,7 @@ environments:
             plugin:
                 awssdk:
                     region: ap-southeast-2
-                    profile: test-ala-developer
+                    #profile: test-ala-developer
                     s3:
                         bucket: ala-alerts-testing
 

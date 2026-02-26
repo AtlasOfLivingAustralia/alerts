@@ -338,11 +338,21 @@ class BiosecurityS3CSVService extends BiosecurityCSVService{
     boolean folderExists(String folderName) {
         if (!folderName) return false
 
-        def folderPrefix =  grailsApplication.config.getProperty('biosecurity.csv.s3.directory', 'biosecurity')
-        def s3Prefix = "${folderPrefix}/${folderName == '/' ? '' : folderName}"
+        def folderPrefix = grailsApplication.config.getProperty('biosecurity.csv.s3.directory', 'biosecurity')
+
+        // Determine the S3 prefix
+        String s3Prefix
+        if (folderName == '/') {
+            s3Prefix = "${folderPrefix}/" // root folder
+        } else {
+            s3Prefix = "${folderPrefix}/${folderName}/" // exact folder
+        }
+
         ListObjectsV2Response s3Files = listObjects(s3Prefix)
         log.debug("Listing S3: $s3Prefix -> ${s3Files.contents().size()} files")
-        return !s3Files.contents().isEmpty()
+
+        // Return true if at least one object exists under this exact folder
+        return s3Files.contents().any { it.key().startsWith(s3Prefix) }
     }
 
     void s3StoreFile(String s3Key, File outputFile) {
