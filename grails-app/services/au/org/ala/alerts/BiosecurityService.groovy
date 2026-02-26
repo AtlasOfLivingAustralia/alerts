@@ -102,7 +102,7 @@ class BiosecurityService {
             String queryPath = query.queryPathForUI
             String modifiedPath = queryPath.replaceAll('___DATEPARAM___', firstLoadedDate).replaceAll('___LASTYEARPARAM___', occurrenceDate)
             qr.queryUrlUIUsed = query.baseUrlForUI + modifiedPath
-            
+
             if (qr.hasChanged) {
                 def csvService =  getCsvService()
                 csvService.generateAuditCSV(qr)
@@ -312,6 +312,10 @@ class BiosecurityService {
         }
 
         fq
+    }
+
+    private def getCsvService() {
+        return  grailsApplication.config.getProperty('biosecurity.csv.s3.enabled', Boolean, false) ? biosecurityS3CSVService : biosecurityLocalCSVService
     }
 
 }
