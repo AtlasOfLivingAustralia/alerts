@@ -23,6 +23,26 @@ grails:
         bucket: "{{ .Values.config.s3.grails_plugin_awssdk_s3_bucket }}"
         profile: "{{ .Values.config.s3.grails_plugin_awssdk_s3_profile }}"
 
+dataSource:
+  properties:
+    # --- Pool sizing ---
+    initialSize: 5
+    maxActive: 50
+    minIdle: 0
+    maxIdle: 10
+
+    # --- CRITICAL: stale connection protection ---
+    testOnBorrow: true
+    validationQuery: {{ .Values.config.db.validation_query }}
+
+    testWhileIdle: true
+    timeBetweenEvictionRunsMillis: 300000   # 5 min
+    minEvictableIdleTimeMillis: 600000      # 10 min
+
+    # --- Abandoned connection cleanup ---
+    removeAbandoned: true
+    removeAbandonedTimeout: 3600
+
 biosecurity:
   csv:
     s3:

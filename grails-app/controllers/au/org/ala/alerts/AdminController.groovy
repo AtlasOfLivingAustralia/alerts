@@ -362,7 +362,14 @@ class AdminController {
     def previewBiosecurityAlert() {
         log.info("Building preview page for BioSecurity alert")
         def date = params.date //only from preview
-        def query = Query.get(params.queryid)
+        def query = null
+        Query.withTransaction {
+            query = Query.get(params.queryid)
+        }
+        if (!query) {
+            log.error("Query: ${params.queryid} not exists")
+            render(text: "Query: ${params.queryid} not exists", contentType: "text/plain", encoding: "UTF-8")
+        }
 
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd")
         Date since =  sdf.parse(date)
