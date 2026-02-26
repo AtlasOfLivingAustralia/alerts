@@ -161,7 +161,6 @@
                                             <div class="card card-body mt-1">
                                                 <p>You have no custom alerts.</p>
                                                 <p>Custom alerts allow you to create specific notifications based on your unique interests and needs.</p>
-                                                <p>To create a custom alert, start by performing a search in the ALA. Once you have your search results, look for the <a class="btn btn-outline-disable" disabled="true"> <i class="fa-regular fa-bell"></i> Alerts</a> button to set up an alert based on that search.</p>
                                             </div>
                                       </g:else>
                                   </div>
