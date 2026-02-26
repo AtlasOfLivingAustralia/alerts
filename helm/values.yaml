@@ -133,6 +133,7 @@ config:
     alerts_db_password: ""
     mysql_connection_ssl: ""
     dataSource_dbCreate: ""
+    validation_query: ""
   enable_myannotation: ""
   enable_specieslists_alerts: ""
   enable_spatial_alerts: ""
