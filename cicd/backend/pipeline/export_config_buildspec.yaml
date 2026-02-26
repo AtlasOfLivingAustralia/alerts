@@ -133,6 +133,7 @@ phases:
             alerts_db_password: "${DB_PASSWORD}"
             mysql_connection_ssl: "${MYSQL_CONNECTION_SSL}"
             dataSource_dbCreate: "${DB_CREATE_MODE}"
+            validation_query: "${DB_VALIDATION_QUERY}"
           enable_myannotation: "${ENABLE_MYANNOTATION}"
           enable_specieslists_alerts: "${ENABLE_SPECIESLISTS_ALERTS}"
           enable_spatial_alerts: "${ENABLE_SPATIAL_ALERTS}"
