@@ -34,10 +34,11 @@ dataSource:
     # --- CRITICAL: stale connection protection ---
     testOnBorrow: true
     validationQuery: {{ .Values.config.db.validation_query }}
+    validationQueryTimeout: 5
 
     testWhileIdle: true
-    timeBetweenEvictionRunsMillis: 300000   # 5 min
-    minEvictableIdleTimeMillis: 600000      # 10 min
+    timeBetweenEvictionRunsMillis: 30000   # 5 min
+    minEvictableIdleTimeMillis: 60000      # 10 min
 
     # --- Abandoned connection cleanup ---
     removeAbandoned: true
