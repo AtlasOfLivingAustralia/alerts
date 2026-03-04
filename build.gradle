@@ -201,6 +201,7 @@ bootWar {
     manifest {
         attributes 'Start-Class': 'au.org.ala.alerts.Application'
     }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     dependsOn(compileGroovyPages)
 }
 
