@@ -9,7 +9,7 @@ package au.org.ala.alerts
 
 import au.org.ala.ws.service.WebService;
 import grails.converters.JSON
-import org.apache.commons.lang.time.DateUtils
+import org.apache.commons.lang3.time.DateUtils
 import org.apache.http.entity.ContentType
 
 import javax.transaction.Transactional

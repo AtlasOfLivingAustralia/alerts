@@ -21,7 +21,6 @@ import grails.util.Environment
 import grails.util.Holders
 
 import java.text.SimpleDateFormat
-import groovyx.net.http.HTTPBuilder
 import groovy.json.JsonSlurper
 import java.nio.file.Files
 
@@ -444,16 +443,15 @@ class AdminController {
         if (query) {
             QueryResult qs = QueryResult.findByQuery(query)
             if(qs) {
-                def http = new HTTPBuilder(query.baseUrl)
                 try {
-                    http.get(path: query.queryPath) { resp, json ->
-                        if (json) {
-                            records = json
-                        }
-                    }
+                    def url = new URL("${query.baseUrl}${query.queryPath}")
+                    def connection = url.openConnection()
+                    connection.setRequestProperty("Accept", "application/json")
+                    def jsonSlurper = new JsonSlurper()
+                    records = jsonSlurper.parse(connection.inputStream)
                 } catch (Exception ex) {
                     // Handle any exceptions
-                    log.error("An error fetching data from ${query.baseUrl}, Using records in databae. : ${ex.message}")
+                    log.error("An error fetching data from ${query.baseUrl}, Using records in database. : ${ex.message}")
                     def lastResult = diffService.decompressZipped(qs?.lastResult)
                     def jsonSlurper = new JsonSlurper()
                     records = jsonSlurper.parseText(lastResult)
