@@ -19,6 +19,12 @@ class QueryService {
         Query.get(id)
     }
 
+    def getFrequency(name) {
+        Frequency.withTransaction {
+           return Frequency.findByName(name)
+        }
+    }
+
     Notification getNotificationForUser(Query query, User user) {
         Notification n = null
         //find the query

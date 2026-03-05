@@ -68,9 +68,10 @@ class BiosecurityService {
         log.info(message)
         def result = [status: 1, message: message, logs: [ "Processing at ${sdf.format(now)} ", message]]
 
-        def frequency = 'weekly'
+        def frequency = queryService.getFrequency("weekly")
 
-        QueryResult qr = notificationService.getQueryResult(query, Frequency.findByName(frequency))
+
+        QueryResult qr = notificationService.getQueryResult(query, frequency)
 
         try {
             def processedJson = processQueryBiosecurity(query, since, now)
@@ -117,7 +118,7 @@ class BiosecurityService {
                 result.logs << "Sending emails to ${emails.size() <= 2 ? emails.join('; ') : emails.take(2).join('; ') + ' and ' + (emails.size() - 2) + ' other users.'}"
 
                 if (!users.isEmpty()) {
-                    def emailStatus = emailService.sendGroupNotification(qr, Frequency.findByName('weekly'), recipients)
+                    def emailStatus = emailService.sendGroupNotification(qr, frequency, recipients)
 
                     result.status = emailStatus.status
                     result.logs << emailStatus.message
