@@ -107,21 +107,22 @@ class BiosecurityService {
             if (qr.hasChanged) {
                 def csvService =  getCsvService()
                 csvService.generateAuditCSV(qr)
-
-                def users = queryService.getSubscribers(query.id)
-                def recipients = users.collect { user ->
+                User.withTransaction {
+                    def users = queryService.getSubscribers(query.id)
+                    def recipients = users.collect { user ->
                         def notificationUnsubToken = user.notifications.find { it.query.id == query.id }?.unsubscribeToken
                         [email: user.email, userUnsubToken: user.unsubscribeToken, notificationUnsubToken: notificationUnsubToken]
-                }
+                    }
 
-                def emails = recipients.collect { it.email }
-                result.logs << "Sending emails to ${emails.size() <= 2 ? emails.join('; ') : emails.take(2).join('; ') + ' and ' + (emails.size() - 2) + ' other users.'}"
+                    def emails = recipients.collect { it.email }
+                    result.logs << "Sending emails to ${emails.size() <= 2 ? emails.join('; ') : emails.take(2).join('; ') + ' and ' + (emails.size() - 2) + ' other users.'}"
 
-                if (!users.isEmpty()) {
-                    def emailStatus = emailService.sendGroupNotification(qr, frequency, recipients)
+                    if (!users.isEmpty()) {
+                        def emailStatus = emailService.sendGroupNotification(qr, frequency, recipients)
 
-                    result.status = emailStatus.status
-                    result.logs << emailStatus.message
+                        result.status = emailStatus.status
+                        result.logs << emailStatus.message
+                    }
                 }
             } else {
                 result.logs << "No emails will be sent because no changes were detected."
