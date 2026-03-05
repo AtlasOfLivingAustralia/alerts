@@ -27,13 +27,14 @@ class NotificationService {
         QueryResult qr = null
 
         QueryResult.withTransaction {
-            qr = QueryResult.findByQueryAndFrequency(query, frequency)
+            qr = QueryResult.where {
+                query == query && frequency == frequency
+            }.join('query').find()
 
-            if (qr == null) {
-                qr = new QueryResult([query: query, frequency: frequency])
+            if (!qr) {
+                qr = new QueryResult(query: query, frequency: frequency)
             }
         }
-
         qr
     }
 

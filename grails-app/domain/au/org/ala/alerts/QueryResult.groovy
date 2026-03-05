@@ -92,6 +92,7 @@ class QueryResult {
         logs nullable: true
     }
 
+
     static mapping = {
         propertyValues cascade: 'all-delete-orphan'
 
@@ -100,6 +101,9 @@ class QueryResult {
         queryUrlUsed sqlType: 'text'
         queryUrlUIUsed sqlType: 'text'
         logs sqlType: 'text' , defaultValue: ""
+
+        frequency lazy: false
+        query lazy: false
     }
 
     String toString() {
