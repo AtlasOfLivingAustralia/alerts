@@ -75,8 +75,8 @@ class BiosecurityS3CSVService extends BiosecurityCSVService{
             ]
         }.sort { it.name }.reverse()
 
-        long totalFiles = foldersAndFiles.sum { it.fileCount }
-        long totalSize  = foldersAndFiles.sum { it.totalSize }
+        long totalFiles = (foldersAndFiles.sum { it.fileCount } ?: 0L) as long
+        long totalSize  = (foldersAndFiles.sum { it.totalSize } ?: 0L) as long
 
         return [status:0, foldersAndFiles: foldersAndFiles, totalFiles: totalFiles, totalSize: formatSize(totalSize)]
     }
@@ -309,7 +309,11 @@ class BiosecurityS3CSVService extends BiosecurityCSVService{
             continuationToken = response.nextContinuationToken()
         } while (continuationToken != null)
 
-        allObjects.sort((a, b) -> Long.compare(b.lastModified().toEpochMilli(), a.lastModified().toEpochMilli()));
+        allObjects.sort((a, b) -> {
+            long aTime = a.lastModified() != null ? a.lastModified().toEpochMilli() : 0L
+            long bTime = b.lastModified() != null ? b.lastModified().toEpochMilli() : 0L
+            return Long.compare(bTime, aTime)
+        })
         log.info("Found ${allObjects.size()} files in S3 bucket: ${bucketName}, directory: ${prefix}")
         return allObjects;
     }
