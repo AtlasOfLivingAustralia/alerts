@@ -45,6 +45,7 @@ import java.text.SimpleDateFormat
 class BiosecurityS3CSVService extends BiosecurityCSVService{
     GrailsApplication grailsApplication
     LinkGenerator grailsLinkGenerator
+    static final long  EXPIRED_TIME_MILLIS = 24 * 60 * 60 * 1000*7 // 7 days
 
     @Override
     def list() throws Exception {
@@ -154,7 +155,7 @@ class BiosecurityS3CSVService extends BiosecurityCSVService{
                         new DownloadToken(
                                 token: token,
                                 fileKey: tempMergedFile.absolutePath,
-                                expiresAt: new Date(System.currentTimeMillis() + 24 * 60 * 60 * 1000) // one day
+                                expiresAt: new Date(System.currentTimeMillis() + EXPIRED_TIME_MILLIS)
                         ).save(flush: true,failOnError: true)
                     }
 
