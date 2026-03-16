@@ -139,6 +139,18 @@ class BiosecurityService {
             result.message = error
             result.logs << e.message
             result.logs << error
+
+            ErrorLog.withTransaction {
+               new ErrorLog(
+                       stackTrace: e.stackTrace?.join('\n'),
+                       executedAt: now,
+                       context: message,
+                       queryType: "Biosecurity",
+                       queryId: query?.id as Long,
+                       queryName: query?.name
+               ).save(flush: true)
+            }
+
         } finally {
             log.info(result.message)
             qr.newLogs(result.logs)

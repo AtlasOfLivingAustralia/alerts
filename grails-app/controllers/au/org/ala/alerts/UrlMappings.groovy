@@ -48,6 +48,10 @@ class UrlMappings {
         "/"(controller: 'notification', action: 'index')
         "/notification/myalerts"(controller: "notification", action: "myAlerts")
 
+        "/admin/log"(controller: 'log', action: 'index')
+        "/admin/log/update"(controller: 'log', action: 'update', method: 'PUT')
+        "/admin/log/delete/$id?"(controller: 'log', action: 'delete', method: 'DELETE')
+
         "/$controller/$action?/$id?(.$format)?"{
             constraints {
                 // apply constraints here
