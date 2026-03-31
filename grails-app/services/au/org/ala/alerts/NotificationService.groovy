@@ -2,7 +2,7 @@ package au.org.ala.alerts
 
 import com.jayway.jsonpath.JsonPath
 import grails.converters.JSON
-import org.apache.commons.lang.time.DateUtils
+import org.apache.commons.lang3.time.DateUtils
 import org.grails.web.json.JSONArray
 import org.grails.web.json.JSONObject
 import java.text.SimpleDateFormat
@@ -442,7 +442,7 @@ class NotificationService {
      String processQuery(Query query, String url) {
         String queryResult = "{}"
         def resp = httpService.getJson(url)
-        if (resp.status == 200 || resp.status == 201) {
+        if (resp.status >= 200 && resp.status < 300) {
             def occurrences = resp.json
             if (queryService.isMyAnnotation(query)) {
                 queryResult = myAnnotationService.preProcess(query, occurrences)
@@ -683,7 +683,7 @@ class NotificationService {
         }
     }
 
-        def deleteAlertForUser(User user, Long queryId) {
+    def deleteAlertForUser(User user, Long queryId) {
         log.debug('Deleting my alert :  ' + queryId + ' for user : ' + user)
         def query = Query.findById(queryId)
 

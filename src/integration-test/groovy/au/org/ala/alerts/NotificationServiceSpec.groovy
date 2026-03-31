@@ -5,7 +5,7 @@ import grails.gorm.transactions.Rollback
 import grails.util.Holders
 import groovy.json.JsonBuilder
 import org.apache.commons.io.IOUtils
-import org.apache.commons.lang.time.DateUtils
+import org.apache.commons.lang3.time.DateUtils
 import org.springframework.beans.factory.annotation.Autowired
 import spock.lang.Ignore
 import spock.lang.Specification
