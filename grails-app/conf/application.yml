@@ -124,7 +124,7 @@ grails:
 #                profile: comp-ala-developer
 ---
 headerAndFooter:
-    baseURL: https://www.ala.org.au/commonui-bs5-2019
+    baseURL: https://www.test.ala.org.au/commonui-bs5-2019
     version: 2
 skin:
     layout: "ala-main"

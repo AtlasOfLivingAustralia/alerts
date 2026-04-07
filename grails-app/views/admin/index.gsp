@@ -5,7 +5,6 @@
     <meta name="breadcrumb" content="Admin functions" />
     <meta name="breadcrumbParent" content="${grailsApplication.config.grails.serverURL?:'/notification/myAlerts'},My alerts" />
     <asset:stylesheet href="alerts.css"/>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
 </head>
 
 <body>
@@ -29,11 +28,9 @@
     <div class="two-col-masonry">
         <div class="box">
             <div class="shadow card card-body ">
-                <div class="row">
-                    <div class="fw-bold fs-5"><i class="fa-solid fa-user-group text-primary"></i> Users Management</div>
-                    <div>
-                        <small class="text-muted ps-4">&nbsp; Manage user accounts ans subscriptions</small>
-                    </div>
+                <div class="fw-bold fs-5"><i class="fa-solid fa-user-group text-primary"></i> Users Management</div>
+                <div>
+                    <small class="text-muted ps-4">Manage user accounts and subscriptions</small>
                 </div>
 
                 <div class="mt-3">
@@ -49,11 +46,9 @@
 
         <div class="box">
             <div class="shadow card card-body ">
-                <div class="row">
-                    <div class="fw-bold fs-5"><i class="fa-regular fa-calendar-days text-primary"></i> Manage Scheduling</div>
-                    <div>
-                        <small class="text-muted ps-4">Control when alerts are sent</small>
-                    </div>
+                <div class="fw-bold fs-5"><i class="fa-regular fa-calendar-days text-primary"></i> Manage Scheduling</div>
+                <div>
+                    <small class="text-muted ps-4">Control when alerts are sent</small>
                 </div>
              <div class="mt-3">
                  <g:link controller="quartz">View scheduling</g:link> <small class="text-muted ms-2"> - Run and/or reschedule alerts.</small>
@@ -63,11 +58,9 @@
 
         <div class="box">
             <div class="shadow card card-body ">
-                <div class="row">
-                    <div class="fw-bold fs-5"><i class="fa-regular fa-bell text-primary"></i> Manage Alerts</div>
-                    <div>
-                        <small class="text-muted ps-4">View and test all alerts</small>
-                    </div>
+                <div class="fw-bold fs-5"><i class="fa-regular fa-bell text-primary"></i> Manage Alerts</div>
+                <div>
+                    <small class="text-muted ps-4">View and test all alerts</small>
                 </div>
                 <div class="mt-3">
                     <div><g:link controller="notification" action="myAlerts">View my alerts</g:link> - my subscriptions.</div>
@@ -106,11 +99,9 @@
 
         <div class="box">
             <div class="shadow card card-body">
-                <div class="row">
-                    <div class="fw-bold fs-5"><i class="fa-solid fa-shield-halved text-primary"></i> BioSecurity</div>
-                    <div>
-                        <small class="text-muted ps-4">Manage / reschedule Biosecurity alerts</small>
-                    </div>
+                <div class="fw-bold fs-5"><i class="fa-solid fa-shield-halved text-primary"></i> BioSecurity</div>
+                <div>
+                    <small class="text-muted ps-4">Manage / reschedule Biosecurity alerts</small>
                 </div>
                 <div class="mt-2">
                     <a href="${request.contextPath}/admin/biosecurity">Manage BioSecurity alerts</a><small class="text-muted ms-2"> - Add, update, remove or reschedule BioSecurity alerts and users.</small>
@@ -123,11 +114,9 @@
 
         <div class="box">
             <div class="shadow card card-body">
-                <div class="row">
-                    <div class="fw-bold fs-5"><i class="fa-solid fa-wrench text-primary"></i> Maintenance and fixes</div>
-                    <div>
-                        <small class="text-muted ps-4">Repair broken data</small>
-                    </div>
+                <div class="fw-bold fs-5"><i class="fa-solid fa-wrench text-primary"></i> Maintenance and fixes</div>
+                <div>
+                    <small class="text-muted ps-4">Repair broken data</small>
                 </div>
                 <div class="mt-2">
                     <g:link controller="admin" action="repairNotificationsWithoutUnsubscribeToken">

@@ -11,7 +11,6 @@
     <title>Admin - Manage BioSecurity alerts</title>
     <asset:stylesheet href="alerts.css"/>
     <asset:javascript src="typeahead-1.3.1.min.js"/>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
     <script>
         var subscriptionsPerLoad = ${subscriptionsPerPage?:10};
         var nextSubscription = 0;
@@ -500,9 +499,8 @@
             <h1><g:message code="biosecurity.view.header" default="Manage Biosecurity Alerts"/></h1>
         </div>
         <g:if test="${flash.message}">
-            <div id="errorAlert" class="alert alert-danger alert-dismissible alert-dismissable" role="alert">
-                <button type="button" class="close" onclick="$(this).parent().hide()" aria-label="Close"><span
-                        aria-hidden="true">&times;</span></button>
+            <div id="errorAlert" class="alert alert-danger alert-dismissible" role="alert">
+                <button type="button" class="btn-close" onclick="$(this).closest('.alert').hide()" aria-label="Close"></button>
                 <h4>${flash.message}</h4>
             </div>
         </g:if>
@@ -611,7 +609,7 @@
             <div class="container-fluid">
                 <h3>Quick entry for adding subscribers</h3>
 
-                <g:form name="create-security-alert" action="subscribeBioSecurity" method="post" class="form-horizontal mt-20">
+                <g:form name="create-security-alert" action="subscribeBioSecurity" method="post" class="mt-20">
                     <div class="row align-items-center mb-2" >
                         <div class="col-sm-3">
                             <label class="form-label"> <g:message code="biosecurity.view.body.label.specieslistid" default="Species list uid"/></label>

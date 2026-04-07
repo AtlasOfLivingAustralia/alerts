@@ -6,7 +6,6 @@
     <meta name="layout" content="${grailsApplication.config.skin.layout}"/>
     <meta name="breadcrumb" content="CSV"/>
     <meta name="breadcrumbParent" content="${request.contextPath}/admin,Alerts admin"/>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
     <meta name="breadcrumb" content="CSV"/>
     <meta name="breadcrumbParent" content="${request.contextPath}/admin/biosecurity,BioSecurity"/>
     <style>

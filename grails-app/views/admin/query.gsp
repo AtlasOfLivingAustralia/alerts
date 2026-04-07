@@ -10,13 +10,14 @@
 
     <title>Admin - Manage alerts</title>
     <asset:stylesheet src="alerts.css"/>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
 
     <script>
         $(document).ready(function () {
             $('.toggle-more-query-details').click(function () {
-                var target = $(this).data('target');
-                $(target).collapse('toggle');
+                var target = document.querySelector($(this).data('target'));
+                if (target) {
+                    new bootstrap.Collapse(target).toggle();
+                }
             });
         });
 
@@ -102,14 +103,14 @@
 
                                                     <div>
                                                         <g:if test="${queryResult.hasChanged}">
-                                                            <span class="badge badge-info">Changed</span>
+                                                            <span class="badge bg-info">Changed</span>
                                                         </g:if>
                                                         <g:else>
-                                                            <span class="badge badge-dark">No changes</span>
+                                                            <span class="badge bg-dark">No changes</span>
                                                         </g:else>
                                                     </div>
                                                     <div>
-                                                        <g:link controller="queryResult" action="getDetails" params="[id: queryResult.id]" target="_blank"> <span class="badge badge-primary"><i class="fa fa-info-circle" aria-hidden="true"></i> ${queryResult.id}</span></g:link> &nbsp;<b><i class="fa fa-calendar-check-o" aria-hidden="true"></i> ${queryResult.frequency?.name?.toUpperCase()}</b>
+                                                        <g:link controller="queryResult" action="getDetails" params="[id: queryResult.id]" target="_blank"> <span class="badge bg-primary"><i class="fa fa-info-circle" aria-hidden="true"></i> ${queryResult.id}</span></g:link> &nbsp;<b><i class="fa fa-calendar-check-o" aria-hidden="true"></i> ${queryResult.frequency?.name?.toUpperCase()}</b>
                                                         &nbsp; <label title="${query.getSubscribers(queryResult.frequency?.name)}"><span class="badge bg-info"> <i class="fa fa-user"></i> ${query.countSubscribers(queryResult.frequency?.name)}</span></label>
 
                                                         <g:if test="${queryResult?.lastChecked}">
@@ -176,7 +177,7 @@
                                                                                                   title="It may be set as starting from that date, ending on that date, spanning a period around that date, or not used at all."></i>
                                                                         , and email new records. The date range associated with the given date is determined by the query.
 
-                                                                     <input type="date" id="checkDate" name="checkDate" value="${today}" class="form-control w-auto mr-3" />
+                                                                     <input type="date" id="checkDate" name="checkDate" value="${today}" class="form-control w-auto me-3" />
                                                                     <button type="submit" class="btn btn-outline-primary mb-2">Email me</button>
 
                                                                 </g:form>

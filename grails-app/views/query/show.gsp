@@ -61,7 +61,7 @@
 
 				<g:if test="${queryInstance?.queryPath}">
 					<dt class="col-sm-3"><g:message code="query.queryPath.label" default="Query Path" /></dt>
-					<dd class="col-sm-9">${queryInstance.queryPath}"</dd>
+					<dd class="col-sm-9">${queryInstance.queryPath}</dd>
 				</g:if>
 
 				<g:if test="${queryInstance?.baseUrl}">
@@ -71,7 +71,7 @@
 
 				<g:if test="${queryInstance?.baseUrlForUI}">
 					<dt class="col-sm-3"><g:message code="query.baseUrlForUI.label" default="Base Url For UI" /></dt>
-					<dd class="col-sm-9">${queryInstance.baseUrlForUI}"</dd>
+					<dd class="col-sm-9">${queryInstance.baseUrlForUI}</dd>
 				</g:if>
 
 				<g:if test="${queryInstance?.custom}">

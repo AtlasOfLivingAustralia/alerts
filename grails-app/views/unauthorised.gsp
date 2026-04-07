@@ -5,7 +5,6 @@
 	<meta charset="UTF-8">
 	<title>Unauthorised</title>
 	<meta name="layout" content="${grailsApplication.config.skin.layout}" />
-	<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 	<style>
 	body {
 		background-color: #f8f9fa;

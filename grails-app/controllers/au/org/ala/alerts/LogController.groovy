@@ -8,6 +8,7 @@ import grails.validation.ValidationException
 class LogController {
     static allowedMethods = [save: "POST", update: "PUT", delete: "DELETE"]
 
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
     def index(Integer max) {
         params.max = Math.min(max ?: 20, 100)
         params.sort = 'executedAt'
@@ -15,6 +16,7 @@ class LogController {
         respond ErrorLog.list(params), model: [errorLogCount: ErrorLog.count()]
     }
 
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
     def show(Long id) {
         respond ErrorLog.get(id)
     }

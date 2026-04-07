@@ -14,6 +14,20 @@
 	/>
 </div>
 
+<!-- Resource Name -->
+<div class="mb-3">
+	<label for="resourceName" class="form-label">
+		<g:message code="query.resourceName.label" default="Resource Name"/>
+		<span class="text-danger">*</span>
+	</label>
+	<g:textField
+			name="resourceName"
+			value="${queryInstance?.resourceName}"
+			required=""
+			class="form-control ${hasErrors(bean: queryInstance, field: 'resourceName', 'is-invalid')}"
+	/>
+</div>
+
 <!-- Description -->
 <div class="mb-3">
 	<label for="description" class="form-label">

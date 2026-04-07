@@ -12,7 +12,6 @@
         <g:set var="userPrefix" value="${adminUser ? user.email : message(code:"my.alerts.my") }"/>
         <title><g:message code="my.alerts.title" args="[userPrefix]" /> | ${grailsApplication.config.skin.orgNameLong}</title>
         <asset:stylesheet src="alerts.css"/>
-        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
         <script>
             document.addEventListener('DOMContentLoaded', function () {
                 var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
@@ -30,7 +29,7 @@
                       <h2>
                           <g:message code="my.alerts.h1" args="[userPrefix]" />
                           <g:if test="${user.locked}">
-                              <i class="fas fa-lock" data-bs-toggle="tooltip" data-placement="bottom" title="${g.message(code:'my.alerts.user.isLocked.title')}"></i>
+                              <i class="fas fa-lock" data-bs-toggle="tooltip" data-bs-placement="bottom" title="${g.message(code:'my.alerts.user.isLocked.title')}"></i>
                           </g:if>
                       </h2>
                   </div>
@@ -124,15 +123,15 @@
                                         </div>
                                     </g:if>
                                 </div>
+                                <div class="mt-2">
+                                    <g:if test="${isMyAlerts}">
+                                        <g:link controller="unsubscribe"
+                                                action="index"
+                                                class="btn btn-outline-primary">Disable all alerts
+                                        </g:link>
+                                    </g:if>
+                                </div>
                              </div>
-                               <div class="mt-2">
-                                   <g:if test="${isMyAlerts}">
-                                       <g:link controller="unsubscribe"
-                                               action="index"
-                                               class="btn btn-outline-primary">Disable all alerts
-                                       </g:link>
-                                   </g:if>
-                               </div>
                            </div>
                           </div>
 
@@ -185,7 +184,7 @@
                                           </ul>
 
                                           <p>
-                                              Look for the <a class="btn btn-outline-disable" disabled="true"> <i class="fa-regular fa-bell"></i> Alerts</a> button.
+                                              Look for the <a class="btn btn-outline-secondary disabled"> <i class="fa-regular fa-bell"></i> Alerts</a> button.
                                           </p>
                                       </div>
                                   </div>
@@ -209,10 +208,10 @@
 
               $("#userFrequency").change(function(){
                   $.get('changeFrequency?userId=${userId}&frequency='+$('#userFrequency').val())
-                      .success(function() {
+                      .done(function() {
                           //alert("Your alerts have been changed to : " + $('#userFrequency').val());
                       })
-                      .error(function() {
+                      .fail(function() {
                           alert(<g:message code="my.alerts.problem.retry" />);
                       });
               });
@@ -260,12 +259,12 @@
           $(window).on('load', function () {
               var hash = window.location.hash;
               if (hash) {
-                var alertsTab = $('a.nav-link[href="' + hash + '"]');
-                if (alertsTab.length) {
-                  alertsTab.tab('show');
-                }
+                  var tabEl = document.querySelector('button.nav-link[data-bs-target="' + hash + '"]');
+                  if (tabEl) {
+                      new bootstrap.Tab(tabEl).show();
+                  }
               }
-            });
+          });
       </script>
     </body>
 </html>
