@@ -18,18 +18,18 @@ class NotificationController {
 
     static allowedMethods = [save: "POST", update: "POST", delete: "POST"]
 
+    def myalerts = { redirect(action: "myAlerts", params: params) }
+
     // Main action to show the user's alerts
     def myAlerts() {
         // Get the currently logged-in user
-        User user = userService?.getUser()
+        User user = userService.getUser()
         if (user) {
             // Retrieve the user's alert configuration
             Map userConfig = userService.getUserAlertsConfig(user)
             userConfig.put('isMyAlerts', true)
 
             render(view: "../notification/myAlerts", model: userConfig)
-        } else {
-            render status: HttpStatus.UNAUTHORIZED.code
         }
     }
 
@@ -43,7 +43,7 @@ class NotificationController {
         }
 
         notificationService.addAlertForUser(user, params.id as Long)
-        render status: HttpStatus.OK.value(), text: "Alert added successfully"
+        render([success: true] as JSON)
     }
 
 
@@ -61,6 +61,7 @@ class NotificationController {
 
         // Delete the alert for this user
         notificationService.deleteAlertForUser(user, params.id as Long)
+        render([success: true] as JSON)
     }
 
     def subscribeMyAnnotation()  {

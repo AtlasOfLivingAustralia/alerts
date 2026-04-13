@@ -46,7 +46,6 @@ class UrlMappings {
         "/ws/$action?/$id?"(controller: 'webservice')
 
         "/"(controller: 'notification', action: 'index')
-        "/notification/myalerts"(controller: "notification", action: "myAlerts")
 
         "/admin/log"(controller: 'log', action: 'index')
         "/admin/log/update"(controller: 'log', action: 'update', method: 'PUT')

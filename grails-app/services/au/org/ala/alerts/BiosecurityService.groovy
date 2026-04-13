@@ -144,10 +144,10 @@ class BiosecurityService {
                new ErrorLog(
                        stackTrace: e.stackTrace?.join('\n'),
                        executedAt: now,
-                       context: message,
+                       context: message?.toString()?.take(255),
                        queryType: "Biosecurity",
                        queryId: query?.id as Long,
-                       queryName: query?.name
+                       queryName: query?.name?.take(255)
                ).save(flush: true)
             }
 
