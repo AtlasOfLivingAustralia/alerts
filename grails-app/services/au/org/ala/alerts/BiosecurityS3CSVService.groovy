@@ -45,6 +45,7 @@ import java.text.SimpleDateFormat
 class BiosecurityS3CSVService extends BiosecurityCSVService{
     GrailsApplication grailsApplication
     LinkGenerator grailsLinkGenerator
+    static final long  EXPIRED_TIME_MILLIS = 24 * 60 * 60 * 1000*7 // 7 days
 
     @Override
     def list() throws Exception {
@@ -74,8 +75,8 @@ class BiosecurityS3CSVService extends BiosecurityCSVService{
             ]
         }.sort { it.name }.reverse()
 
-        long totalFiles = foldersAndFiles.sum { it.fileCount }
-        long totalSize  = foldersAndFiles.sum { it.totalSize }
+        long totalFiles = (foldersAndFiles.sum { it.fileCount } ?: 0L) as long
+        long totalSize  = (foldersAndFiles.sum { it.totalSize } ?: 0L) as long
 
         return [status:0, foldersAndFiles: foldersAndFiles, totalFiles: totalFiles, totalSize: formatSize(totalSize)]
     }
@@ -154,7 +155,7 @@ class BiosecurityS3CSVService extends BiosecurityCSVService{
                         new DownloadToken(
                                 token: token,
                                 fileKey: tempMergedFile.absolutePath,
-                                expiresAt: new Date(System.currentTimeMillis() + 24 * 60 * 60 * 1000) // one day
+                                expiresAt: new Date(System.currentTimeMillis() + EXPIRED_TIME_MILLIS)
                         ).save(flush: true,failOnError: true)
                     }
 
@@ -174,7 +175,7 @@ class BiosecurityS3CSVService extends BiosecurityCSVService{
                                 <p>Hello Biosecurity User,</p>
                         
                                 <p>Your requested CSV file is ready. You can download it using the link below. 
-                                Please note that the download link will expire in 24 hours.</p>
+                                Please note that the download link will expire in 7 days.</p>
                         
                                 <p><a href="${downloadUrl}">Download CSV File</a></p>
                         
@@ -308,7 +309,11 @@ class BiosecurityS3CSVService extends BiosecurityCSVService{
             continuationToken = response.nextContinuationToken()
         } while (continuationToken != null)
 
-        allObjects.sort((a, b) -> Long.compare(b.lastModified().toEpochMilli(), a.lastModified().toEpochMilli()));
+        allObjects.sort((a, b) -> {
+            long aTime = a.lastModified() != null ? a.lastModified().toEpochMilli() : 0L
+            long bTime = b.lastModified() != null ? b.lastModified().toEpochMilli() : 0L
+            return Long.compare(bTime, aTime)
+        })
         log.info("Found ${allObjects.size()} files in S3 bucket: ${bucketName}, directory: ${prefix}")
         return allObjects;
     }
@@ -338,11 +343,21 @@ class BiosecurityS3CSVService extends BiosecurityCSVService{
     boolean folderExists(String folderName) {
         if (!folderName) return false
 
-        def folderPrefix =  grailsApplication.config.getProperty('biosecurity.csv.s3.directory', 'biosecurity')
-        def s3Prefix = "${folderPrefix}/${folderName == '/' ? '' : folderName}"
+        def folderPrefix = grailsApplication.config.getProperty('biosecurity.csv.s3.directory', 'biosecurity')
+
+        // Determine the S3 prefix
+        String s3Prefix
+        if (folderName == '/') {
+            s3Prefix = "${folderPrefix}/" // root folder
+        } else {
+            s3Prefix = "${folderPrefix}/${folderName}/" // exact folder
+        }
+
         ListObjectsV2Response s3Files = listObjects(s3Prefix)
         log.debug("Listing S3: $s3Prefix -> ${s3Files.contents().size()} files")
-        return !s3Files.contents().isEmpty()
+
+        // Return true if at least one object exists under this exact folder
+        return s3Files.contents().any { it.key().startsWith(s3Prefix) }
     }
 
     void s3StoreFile(String s3Key, File outputFile) {

@@ -16,14 +16,13 @@
 <div id="content">
     <header id="page-header">
         <div class="inner row">
-            <div class="col-sm-6 col-xs-12">
+            <div class="col-sm-6">
                 <h2><g:message code="" default="Users subscribed to alert dr2627"/></h2>
             </div>
         </div>
         <g:if test="${flash.message}">
-            <div id="errorAlert" class="alert alert-danger alert-dismissible alert-dismissable" role="alert">
-                <button type="button" class="close" onclick="$(this).parent().hide()" aria-label="Close"><span
-                        aria-hidden="true">&times;</span></button>
+            <div id="errorAlert" class="alert alert-danger alert-dismissible" role="alert">
+                <button type="button" class="btn-close" onclick="$(this).closest('.alert').hide()" aria-label="Close"></button>
                 <h4>${flash.message}</h4>
             </div>
         </g:if>

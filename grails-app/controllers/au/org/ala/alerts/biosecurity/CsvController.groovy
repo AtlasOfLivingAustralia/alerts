@@ -4,7 +4,7 @@ import au.org.ala.alerts.DownloadToken
 import au.org.ala.alerts.QueryResult
 import au.org.ala.web.AlaSecured
 import grails.converters.JSON
-
+import grails.gorm.transactions.Transactional
 
 import java.text.SimpleDateFormat
 
@@ -66,10 +66,11 @@ class CsvController {
         name = name ?: '/'
         def csvService = getCsvService()
         if (!csvService.folderExists(name)) {
-            render(status: 404, text: 'Data not found')
+            render (view: "/info",model:[staus:1, message: "Data not found",
+                                         redirectUrl: grailsLinkGenerator.link(namespace: 'biosecurity',controller: 'csv', action: 'list')])
         } else {
             Map result= csvService.asyncAggregateCSVFiles(name)
-            render(result as JSON)
+            render (view: "/info",model:result)
         }
     }
 
@@ -179,10 +180,25 @@ class CsvController {
         render(status: 200, contentType: 'application/json', text: message as JSON)
     }
 
+    @Transactional
     @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
     def downloads() {
         List<DownloadToken> tokens = DownloadToken.list(sort: 'createdAt', order: 'desc')
+        tokens = tokens.findAll { token ->
+            def file = new File(token.fileKey)
+            if (!file.exists()) {
+                token.delete()
+                return false
+            }
+            //remove tokens that are expired for more than 1 month, as the file is likely to be deleted by then
+            long oneMonthMillis = 30L * 24 * 60 * 60 * 1000
+            if (new Date().time > token.expiresAt.time + oneMonthMillis) {
+                file.delete()
+                token.delete()
+                return false
+            }
+            return true
+        }
         render(view: "/biosecurity/downloads", model:[downloads: tokens])
-
     }
 }

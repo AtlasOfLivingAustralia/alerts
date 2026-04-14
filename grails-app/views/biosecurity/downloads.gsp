@@ -10,13 +10,13 @@
 </head>
 <body>
 <div class="container py-4">
-    <h1 class="mb-4">All Downloads</h1>
+    <h2 class="mb-4">Downloads history</h2>
 
-    <div class="vstack gap-3">
+    <div class="vstack gap-4">
         <g:each in="${downloads}" var="download">
 
-            <div class="row align-items-center border rounded p-3 g-3">
-
+            <div class="row align-items-center border rounded p-2 g-2">
+                <g:set var="isExpired" value="${download.expiresAt < new Date()}" />
                 <!-- Created -->
                 <div class="col-12 col-md-3">
                     <div class="text-muted small">Created</div>
@@ -25,21 +25,23 @@
                     </div>
                 </div>
                 <!-- Expires + Status -->
-                <div class="col-12 col-md-4">
+                <div class="col-12 col-md-3">
                     <div class="text-muted small">Expires</div>
                     <div>
                         <g:formatDate date="${download.expiresAt}" format="yyyy-MM-dd HH:mm:ss"/>
-                        <span class="badge bg-${download.expiresAt < new Date() ? 'danger' : 'success'} ms-2">
-                            ${download.expiresAt < new Date() ? 'Expired' : 'Active'}
+                        <span class="badge bg-${isExpired ? 'danger' : 'success'} ms-2">
+                            ${isExpired ? 'Expired' : 'Active'}
                         </span>
                     </div>
                 </div>
                 <!-- Download Button -->
-                <div class="col-12 col-md-2 text-md-end">
+                <div class="col-12 col-md-4 text-md-end">
+                <g:if test="${!isExpired}">
                     <a href="${createLink(controller:'csv', action:'downloadWithToken', params:[token:download.token])}"
-                       class="btn btn-primary btn-sm w-100 w-md-auto">
+                       class="btn btn-primary btn-sm ">
                         Download
                     </a>
+                </g:if>
                 </div>
             </div>
 
