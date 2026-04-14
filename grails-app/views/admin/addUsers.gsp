@@ -1,3 +1,8 @@
+<%--
+    TODO: POSSIBLY UNUSED PAGE
+    - No known links as of 2026-02
+    - Verify before removal
+--%>
 <%@ page import="au.org.ala.alerts.Notification" %>
 <html>
 <head>
@@ -7,7 +12,7 @@
   <title>My email alerts | ${grailsApplication.config.skin.orgNameLong}</title>
 </head>
 <body>
-<div id="content">
+<div>
   <header id="page-header">
     <div class="inner">
       <nav id="breadcrumb">

@@ -4,17 +4,11 @@
 		<meta name="layout" content="${grailsApplication.config.skin.layout}" />
 		<g:set var="entityName" value="${message(code: 'query.label', default: 'Query')}" />
 		<title>Notification report | ${grailsApplication.config.skin.orgNameLong?: 'Atlas of Living Australia'}</title>
+		<meta name="breadcrumb" content="Notification report"/>
+		<meta name="breadcrumbParent" content="${request.contextPath}/admin, Admin"/>
 	</head>
 	<body>
-		<a href="#list-query" class="skip" tabindex="-1"><g:message code="default.link.skip.label" default="Skip to content&hellip;"/></a>
-		<div class="nav" role="navigation">
-			<ul>
-				<li><g:link controller="admin" class="home">Admin</g:link></li>
-				<li>Notification report</li>
-			</ul>
-		</div>
 		<div id="list-query" class="content scaffold-list" role="main">
-			<h1>Notification report</h1>
 			<g:if test="${flash.message}">
 			<div class="message" role="status">${flash.message}</div>
 			</g:if>

@@ -9,7 +9,7 @@ package au.org.ala.alerts
 
 import au.org.ala.ws.service.WebService;
 import grails.converters.JSON
-import org.apache.commons.lang.time.DateUtils
+import org.apache.commons.lang3.time.DateUtils
 import org.apache.http.entity.ContentType
 
 import javax.transaction.Transactional
@@ -139,6 +139,18 @@ class BiosecurityService {
             result.message = error
             result.logs << e.message
             result.logs << error
+
+            ErrorLog.withTransaction {
+               new ErrorLog(
+                       stackTrace: e.stackTrace?.join('\n'),
+                       executedAt: now,
+                       context: message?.toString()?.take(255),
+                       queryType: "Biosecurity",
+                       queryId: query?.id as Long,
+                       queryName: query?.name?.take(255)
+               ).save(flush: true)
+            }
+
         } finally {
             log.info(result.message)
             qr.newLogs(result.logs)

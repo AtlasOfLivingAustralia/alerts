@@ -15,8 +15,7 @@
 package au.org.ala.alerts
 
 import grails.core.GrailsApplication
-import org.apache.commons.lang.NotImplementedException
-
+import org.apache.commons.lang3.NotImplementedException
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import java.text.SimpleDateFormat

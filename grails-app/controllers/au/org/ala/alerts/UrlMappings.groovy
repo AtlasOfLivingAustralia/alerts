@@ -47,6 +47,10 @@ class UrlMappings {
 
         "/"(controller: 'notification', action: 'index')
 
+        "/admin/log"(controller: 'log', action: 'index')
+        "/admin/log/update"(controller: 'log', action: 'update', method: 'PUT')
+        "/admin/log/delete/$id?"(controller: 'log', action: 'delete', method: 'DELETE')
+
         "/$controller/$action?/$id?(.$format)?"{
             constraints {
                 // apply constraints here
@@ -62,9 +66,11 @@ class UrlMappings {
         "/api/alerts/user/$userId"(controller: 'webservice', action: [GET: 'getUserAlertsWS'])
 
         "/robots.txt"(view:'/notFound')
-        "400"(view:'/error')
-        "403"(view:'/error')
+
+        "401"(view:'/unauthorised')
         "404"(view:'/notFound')
+        "403"(view:'/error')
+        "400"(view:'/error')
         "405"(view:'/error')
         "500"(view:'/error')
     }
