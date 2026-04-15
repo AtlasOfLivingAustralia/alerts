@@ -120,7 +120,7 @@ class NotificationController {
         def user = getUser()
         log.debug("Changing frequency to: " + params.frequency + " for user ${user}")
         notificationService.updateFrequency(user, params.frequency)
-        return null
+        render([success: true] as JSON)
     }
 
     /**
