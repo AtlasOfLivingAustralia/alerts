@@ -1,4 +1,4 @@
-DB_URL: "jdbc:mysql://{{ .Values.rds.name }}/{{ .Values.config.db.database_name }}?autoReconnect=true&connectTimeout=0&useUnicode=true&characterEncoding=UTF-8&useSSL={{ .Values.config.db.mysql_connection_ssl }}"
+DB_URL: "jdbc:mysql://{{ .Values.rds.name }}/{{ .Values.config.db.database_name }}?useUnicode=true&characterEncoding=UTF-8&useSSL={{ .Values.config.db.mysql_connection_ssl }}"
 DB_USER: "{{ .Values.config.db.alerts_db_username }}"
 DB_PASSWORD: "{{ .Values.config.db.alerts_db_password }}"
 DB_DRIVER: "{{ .Values.config.db.driver_class_name }}"
@@ -15,6 +15,9 @@ server:
   port: 8000
 
 grails:
+  cors:
+    enabled: true
+    allowedOriginPatterns: "{{ .Values.config.cors.allowed_origin_patterns }}"
   serverURL: "{{ .Values.config.base.alerts_base_url }}{{ .Values.config.base.alerts_context_path }}"
   plugin:
     awssdk:

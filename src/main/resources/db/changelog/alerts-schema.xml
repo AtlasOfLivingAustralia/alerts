@@ -239,6 +239,28 @@
 
     </changeSet>
 
+    <changeSet id="30-create-error-log-table" author="alert">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="error_log"/></not>
+        </preConditions>
+        <createTable tableName="error_log">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="stack_trace" type="TEXT"/>
+            <column name="executed_at" type="DATETIME(6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="context" type="VARCHAR(255)"/>
+            <column name="query_type" type="VARCHAR(255)"/>
+            <column name="query_id" type="BIGINT"/>
+            <column name="query_name" type="VARCHAR(255)"/>
+            <column name="reviewed" type="BIT(1)" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
     <!-- ===================== FOREIGN KEYS (COMMENTED OUT) ===================== -->
 
     <!--
