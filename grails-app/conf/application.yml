@@ -16,6 +16,11 @@ mail:
         infoAddressTitle: "Atlas of Living Australia"
         defaultResourceName: "Atlas of Living Australia"
 grails:
+    cors:
+      enabled: true
+      allowedOriginPatterns:
+        - https://*.ala.org.au
+        - http://localhost:5173
     #default mail service
     mail:
         port: 2525

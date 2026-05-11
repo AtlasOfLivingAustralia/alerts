@@ -15,6 +15,9 @@ server:
   port: 8000
 
 grails:
+  cors:
+    enabled: true
+    allowedOriginPatterns: "{{ .Values.config.cors.allowed_origin_patterns }}"
   serverURL: "{{ .Values.config.base.alerts_base_url }}{{ .Values.config.base.alerts_context_path }}"
   plugin:
     awssdk:

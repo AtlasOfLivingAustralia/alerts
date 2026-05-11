@@ -221,6 +221,8 @@ phases:
             userdetails_url: "${USERDETAILS_URL}"
             userdetails_web_url: "${USERDETAILS_WEB_URL}"
             userdetails_api_url: "${USERDETAILS_API_URL}"
+          cors:
+            allowed_origin_patterns: "${CORS_ALLOWED_ORIGIN_PATTERNS}"
           openapi:
             openapi_oauth_url: "${OPENAPI_OAUTH_URL}"
             terms_url: "${TERMS_URL}"
