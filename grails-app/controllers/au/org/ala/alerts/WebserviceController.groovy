@@ -21,7 +21,7 @@ import grails.converters.JSON
 import grails.gorm.transactions.Transactional
 import grails.util.Holders
 import grails.web.servlet.mvc.GrailsParameterMap
-import io.micronaut.http.HttpStatus
+import org.springframework.http.HttpStatus
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.Content

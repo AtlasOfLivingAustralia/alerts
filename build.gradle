@@ -4,6 +4,7 @@ buildscript {
         maven {
             url = 'https://repo.grails.org/grails/restricted'
         }
+        maven { url "https://nexus.ala.org.au/content/groups/public/" }
     }
     dependencies {
         classpath platform("org.apache.grails:grails-bom:$grailsVersion")
@@ -68,21 +69,28 @@ configurations {
     runtimeClasspath {
         extendsFrom developmentOnly
     }
-//    all {
-//        //resolutionStrategy.force 'org.codehaus.groovy:groovy-xml:4.0.29'
-////        resolutionStrategy.eachDependency { DependencyResolveDetails details->
-////            if (details.requested.group == 'org.seleniumhq.selenium') {
-////                details.useVersion('4.10.0')
-////            }
-////        }
-//    }
     all {
         resolutionStrategy.eachDependency { DependencyResolveDetails details ->
             if (details.requested.group == 'org.grails' &&
                     details.requested.name == 'grails-bootstrap') {
                 details.useTarget('org.apache.grails.bootstrap:grails-bootstrap:7.1.1')
             }
+            // Some ALA/Grails 6-era transitive deps still request org.codehaus.groovy:*.
+            // Force them onto Groovy 4 (org.apache.groovy) to avoid module version conflicts.
+            if (details.requested.group == 'org.codehaus.groovy') {
+                details.useTarget("org.apache.groovy:${details.requested.name}:${groovyVersion}")
+            }
+            if (details.requested.group == 'org.apache.groovy') {
+                details.useVersion(groovyVersion)
+            }
         }
+        resolutionStrategy.force(
+                "org.apache.groovy:groovy:${groovyVersion}",
+                "org.apache.groovy:groovy-xml:${groovyVersion}",
+                "org.apache.groovy:groovy-json:${groovyVersion}",
+                "org.apache.groovy:groovy-templates:${groovyVersion}",
+                "org.apache.groovy:groovy-sql:${groovyVersion}"
+        )
     }
 }
 
@@ -90,6 +98,7 @@ dependencies {
     def noCache = {
         exclude group: 'org.grails.plugins', module: 'cache'
         exclude group: 'org.ehcache', module: 'ehcache'
+        exclude group: 'org.codehaus.groovy'
     }
 
     // ── Grails 7.1.1 BOM (must be first) ──────────────────────────────────
@@ -121,10 +130,7 @@ dependencies {
     implementation "org.springframework.boot:spring-boot-starter-tomcat"
     implementation "org.springframework.boot:spring-boot-starter-quartz"
 
-    // ── GORM / Hibernate 5 ────────────────────────────────────────────────
-    // REMOVED: compileOnly("io.micronaut:micronaut-inject-groovy") ← Grails 6 only
-    // REMOVED: org.grails.plugins:hibernate5:7.0.7 ← wrong group+version
-    implementation "org.grails.plugins:hibernate5:9.0.0-M3"  // ✅ Grails 7 compatible
+    // Hibernate is provided via org.apache.grails:grails-data-hibernate5 above (BOM-managed)
 
     // ── Database ───────────────────────────────────────────────────────────
     implementation 'org.liquibase:liquibase-core:4.27.0'
@@ -136,14 +142,22 @@ dependencies {
     implementation "org.grails.plugins:grails-mail:5.0.3"    // ✅ Grails 7, new artifact ID
     implementation 'au.org.ala:ala-mail:2.0.0-SNAPSHOT'      // ⚠️ verify Grails 7 compatible
 
+    // ── OpenAPI 3 (Swagger annotations) ───────────────────────────────────
+    implementation "io.swagger.core.v3:swagger-annotations:2.2.15"
+
+    // ── Cache Plugin ──────────────────────────────────────────────────────
+    implementation "org.grails.plugins:cache:5.0.0"
+
     // ── ALA Plugins (⚠️ still on Grails 6, blocked on ALA team) ──────────
     implementation "org.grails.plugins:ala-bootstrap5:1.0.0-SNAPSHOT", noCache
+
     implementation "org.grails.plugins:ala-auth:$alaSecurityLibsVersion"
-    implementation "org.grails.plugins:ala-ws-security-plugin:$alaSecurityLibsVersion"
     implementation "org.grails.plugins:ala-ws-plugin:$alaSecurityLibsVersion"
+    implementation "org.grails.plugins:ala-ws-security-plugin:$alaSecurityLibsVersion"
     implementation "au.org.ala:userdetails-service-client:$alaSecurityLibsVersion"
+
     implementation "org.grails.plugins:ala-admin-plugin:2.4.0-SNAPSHOT"
-    implementation "au.org.ala.plugins:openapi:1.3.0"
+    implementation "au.org.ala.plugins:openapi:2.0.0-SNAPSHOT"  // ✅ ALA OpenAPI plugin, new artifact ID
 
     // ── AWS ────────────────────────────────────────────────────────────────
     implementation platform("software.amazon.awssdk:bom:2.40.8")
@@ -195,4 +209,3 @@ assets {
             'webjars/bootstrap-icons/*/font/fonts/*',
     ]
 }
-

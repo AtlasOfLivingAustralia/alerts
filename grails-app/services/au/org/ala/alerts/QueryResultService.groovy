@@ -14,7 +14,7 @@
 
 package au.org.ala.alerts
 
-import javax.transaction.Transactional
+import jakarta.transaction.Transactional
 
 /**
  * Database service for QueryResult:

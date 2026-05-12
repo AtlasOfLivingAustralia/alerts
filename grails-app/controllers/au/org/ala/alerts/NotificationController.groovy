@@ -5,7 +5,7 @@
 package au.org.ala.alerts
 
 import grails.converters.JSON
-import io.micronaut.http.HttpStatus
+import org.springframework.http.HttpStatus
 
 class NotificationController {
 
@@ -54,8 +54,8 @@ class NotificationController {
 
         if (!user) {
             // Return 404 if user is not found
-            response.status = HttpStatus.NOT_FOUND.code
-            response.sendError(HttpStatus.NOT_FOUND.code, "Unrecognised user")
+            response.status = HttpStatus.NOT_FOUND.value()
+            response.sendError(HttpStatus.NOT_FOUND.value(), "Unrecognised user")
             return
         }
 
@@ -70,7 +70,7 @@ class NotificationController {
             notificationService.subscribeMyAnnotation(user)
             render ([success: true] as JSON)
         } catch (ignored) {
-            response.sendError(HttpStatus.INTERNAL_SERVER_ERROR.code, "failed to subscribe to 'my annotation' alert for user " + user?.getUserId())
+            response.sendError(HttpStatus.INTERNAL_SERVER_ERROR.value(), "failed to subscribe to 'my annotation' alert for user " + user?.getUserId())
         }
     }
 
@@ -80,7 +80,7 @@ class NotificationController {
             def done = notificationService.unsubscribeMyAnnotation(user)
             render ([success: done] as JSON)
         } catch (ignored) {
-            response.sendError(HttpStatus.INTERNAL_SERVER_ERROR.code, "failed to unsubscribe 'my annotation' alert for user " + user?.getUserId())
+            response.sendError(HttpStatus.INTERNAL_SERVER_ERROR.value(), "failed to unsubscribe 'my annotation' alert for user " + user?.getUserId())
         }
     }
 

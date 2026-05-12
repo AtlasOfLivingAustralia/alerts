@@ -1,7 +1,7 @@
 package au.org.ala.alerts
 
 import grails.gorm.transactions.Transactional
-import io.micronaut.http.HttpStatus
+import org.springframework.http.HttpStatus
 
 
 class UnsubscribeController {
