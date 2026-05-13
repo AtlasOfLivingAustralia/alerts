@@ -134,6 +134,7 @@ phases:
             mysql_connection_ssl: "${MYSQL_CONNECTION_SSL}"
             dataSource_dbCreate: "${DB_CREATE_MODE}"
             validation_query: "${DB_VALIDATION_QUERY}"
+            db_dialect: "${DB_DIALECT}"
           enable_myannotation: "${ENABLE_MYANNOTATION}"
           enable_specieslists_alerts: "${ENABLE_SPECIESLISTS_ALERTS}"
           enable_spatial_alerts: "${ENABLE_SPATIAL_ALERTS}"
