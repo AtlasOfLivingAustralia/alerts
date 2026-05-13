@@ -218,11 +218,13 @@ encodeBracketInUrlParam:
 
 #For Grails
 dataSource:
-    url: ${DB_URL}
-    username: ${DB_USER}
-    password: ${DB_PASSWORD}
-    driverClassName: ${DB_DRIVER}
-
+    url: jdbc:mysql://localhost/alerts
+    username: alerts_user
+    password: password
+    driverClassName: com.mysql.cj.jdbc.Driver
+    dialect: org.hibernate.dialect.MySQL8Dialect
+    # Using liquibase for schema management
+    dbCreate: none
     pooled: true
     jmxExport: true
 
@@ -250,17 +252,13 @@ dataSource:
         useUnicode: true
         characterEncoding: UTF-8
 
-
-#For those beans managed by Spring, like Liquibase, Quartz
-#Those properties should be defined in an external properties yml file
 spring:
     liquibase:
-        enabled: true
-        change-log: classpath:db/changelog/db.changelog-master.xml
-        url: ${DB_URL}
-        user: ${DB_USER}
-        password: ${DB_PASSWORD}
-        driver-class-name: ${DB_DRIVER}
+        enabled: false  # Managed via alerts.liquibase.enabled
+
+alerts:
+    liquibase:
+        enabled: true # Disable when managed by cicd
 
 cron:
     daily: '0 30 8 * * ?'
