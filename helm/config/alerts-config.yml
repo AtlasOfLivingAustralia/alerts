@@ -1,8 +1,3 @@
-DB_URL: "jdbc:mysql://{{ .Values.rds.name }}/{{ .Values.config.db.database_name }}?useUnicode=true&characterEncoding=UTF-8&useSSL={{ .Values.config.db.mysql_connection_ssl }}"
-DB_USER: "{{ .Values.config.db.alerts_db_username }}"
-DB_PASSWORD: "{{ .Values.config.db.alerts_db_password }}"
-DB_DRIVER: "{{ .Values.config.db.driver_class_name }}"
-
 mail:
   enabled: {{ .Values.config.mail.enabled }}
   ses:
@@ -27,6 +22,11 @@ grails:
         profile: "{{ .Values.config.s3.grails_plugin_awssdk_s3_profile }}"
 
 dataSource:
+  url: "jdbc:mysql://{{ .Values.rds.name }}/{{ .Values.config.db.database_name }}?useUnicode=true&characterEncoding=UTF-8&useSSL={{ .Values.config.db.mysql_connection_ssl }}"
+  username: "{{ .Values.config.db.alerts_db_username }}"
+  password: "{{ .Values.config.db.alerts_db_password }}"
+  driverClassName: "{{ .Values.config.db.driver_class_name }}"
+  dialect: "{{ .Values.config.db.db_dialect }}"
   properties:
     # --- Pool sizing ---
     initialSize: 5
