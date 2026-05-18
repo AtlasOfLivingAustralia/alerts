@@ -2,11 +2,15 @@ import grails.util.Holders
 import org.springframework.scheduling.quartz.SchedulerFactoryBean
 import org.springframework.web.servlet.i18n.SessionLocaleResolver
 import au.org.ala.alerts.quartz.AutowiringSpringBeanJobFactory
+import com.nimbusds.jose.util.DefaultResourceRetriever
 
 beans = {
     localeResolver(SessionLocaleResolver) {
         defaultLocale= new java.util.Locale(Holders.config.siteDefaultLanguage as String)
     }
+    //todo user role info is not picked up. No admin role for developers
+    // Work around ala-auth expecting this named bean in Grails 7 runtime.
+    oidcResourceRetriever(DefaultResourceRetriever)
 
     // This tells Spring to find all @Component, @Service, etc. in your package
     // Assure the Quartz schedulers are loaded

@@ -146,17 +146,18 @@ dependencies {
     implementation "io.swagger.core.v3:swagger-annotations:2.2.15"
 
     // ── Cache Plugin ──────────────────────────────────────────────────────
-    implementation "org.grails.plugins:cache:5.0.0"
+    implementation "org.apache.grails:grails-cache"  // ✅ Grails 7 BOM-managed, replaces org.grails.plugins:cache:5.0.0
 
     // ── ALA Plugins (⚠️ still on Grails 6, blocked on ALA team) ──────────
-    implementation "org.grails.plugins:ala-bootstrap5:1.0.0-SNAPSHOT", noCache
+    implementation "org.grails.plugins:ala-bootstrap5:2.0.0-SNAPSHOT", noCache
 
     implementation "org.grails.plugins:ala-auth:$alaSecurityLibsVersion"
+    implementation "au.org.ala:ala-security-common:$alaSecurityLibsVersion"
     implementation "org.grails.plugins:ala-ws-plugin:$alaSecurityLibsVersion"
     implementation "org.grails.plugins:ala-ws-security-plugin:$alaSecurityLibsVersion"
     implementation "au.org.ala:userdetails-service-client:$alaSecurityLibsVersion"
 
-    implementation "org.grails.plugins:ala-admin-plugin:2.4.0-SNAPSHOT"
+    //implementation "org.grails.plugins:ala-admin-plugin:2.4.0-SNAPSHOT"
     implementation "au.org.ala.plugins:openapi:2.0.0-SNAPSHOT"  // ✅ ALA OpenAPI plugin, new artifact ID
 
     // ── AWS ────────────────────────────────────────────────────────────────
