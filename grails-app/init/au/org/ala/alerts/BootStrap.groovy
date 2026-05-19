@@ -1,8 +1,5 @@
 package au.org.ala.alerts
 
-import javax.sql.DataSource
-
-
 class BootStrap {
 
     def grailsApplication
