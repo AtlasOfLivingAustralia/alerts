@@ -8,7 +8,8 @@ beans = {
     localeResolver(SessionLocaleResolver) {
         defaultLocale= new java.util.Locale(Holders.config.siteDefaultLanguage as String)
     }
-    //todo user role info is not picked up. No admin role for developers
+    //todo  find a better way to do this - ala-auth should not be a runtime dependency of the app,
+    // but it is currently because of the way the OIDC client is implemented.
     // Work around ala-auth expecting this named bean in Grails 7 runtime.
     oidcResourceRetriever(DefaultResourceRetriever)
 
