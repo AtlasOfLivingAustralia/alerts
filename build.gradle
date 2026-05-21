@@ -157,7 +157,7 @@ dependencies {
     implementation "org.grails.plugins:ala-ws-security-plugin:$alaSecurityLibsVersion"
     implementation "au.org.ala:userdetails-service-client:$alaSecurityLibsVersion"
 
-    //implementation "org.grails.plugins:ala-admin-plugin:2.4.0-SNAPSHOT"
+    implementation "org.grails.plugins:ala-admin-plugin:3.0.0-SNAPSHOT"
     implementation "au.org.ala.plugins:openapi:2.0.0-SNAPSHOT"  // ✅ ALA OpenAPI plugin, new artifact ID
 
     // ── AWS ────────────────────────────────────────────────────────────────
@@ -184,6 +184,9 @@ dependencies {
     runtimeOnly "org.fusesource.jansi:jansi"
 
     // ── Test ───────────────────────────────────────────────────────────────
+    testImplementation "org.apache.grails:grails-testing-support-web"
+    testImplementation "org.apache.grails:grails-testing-support-datamapping"
+    testImplementation "org.spockframework:spock-core"
     integrationTestImplementation testFixtures("org.apache.grails:grails-geb")
 }
 

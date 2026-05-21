@@ -4,6 +4,10 @@ This is a small app responsible for sending email alerts when there are changes 
 
 Scheduling is handled by Quartz plugin in the app. It works like RSS - it checks the JSON service and reads the results and then compares that with the previously stored check and if there are new records, it triggers an email. Relies on records being sorted by date loaded. Works with any endpoint that can return date-sorted JSON output.
 
+## The latest version is: `6.0.0-SNAPSHOT`, which supports Grails 7.1.1.
+NOTES:
+Grails 7.1.1 is not compatible with Grails 6
+
 ## Grails 6 updates IMPORTANT >= version 5.2.0 
 
 In Grails 6, Liquibase is bootstrapped directly by Spring Boot during application startup.  

@@ -16,7 +16,7 @@ class UnsubscribeController {
         Map userAndNotifications = findUserAndNotificationsForToken(params.token)
 
         if (!userAndNotifications?.user) {
-            response.status = HttpStatus.BAD_REQUEST.code
+            response.status = HttpStatus.BAD_REQUEST.value()
             flash.message = message(code: 'email.unsubscribe.fail.alreadyunsubscribed', default: 'Unable to unsubscribe. You may have already unsubscribed.')
             render view: '../error'
         } else {
@@ -29,7 +29,7 @@ class UnsubscribeController {
         Map userAndNotifications = findUserAndNotificationsForToken(params.token)
 
         if (!userAndNotifications?.user) {
-            response.status = HttpStatus.BAD_REQUEST.code
+            response.status = HttpStatus.BAD_REQUEST.value()
             flash.message = message(code: 'email.unsubscribe.fail.alreadyunsubscribed', default: 'Unable to unsubscribe. You may have already unsubscribed.')
             render view: '../error'
         } else {
