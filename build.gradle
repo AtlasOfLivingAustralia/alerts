@@ -144,7 +144,7 @@ dependencies {
     implementation 'au.org.ala:ala-mail:2.0.0-SNAPSHOT'      // ⚠️ verify Grails 7 compatible
 
     // ── OpenAPI 3 (Swagger annotations) ───────────────────────────────────
-    implementation "io.swagger.core.v3:swagger-annotations:2.2.15"
+    implementation "io.swagger.core.v3:swagger-annotations:2.2.23"
 
     // ── Cache Plugin ──────────────────────────────────────────────────────
     implementation "org.apache.grails:grails-cache"  // ✅ Grails 7 BOM-managed, replaces org.grails.plugins:cache:5.0.0
