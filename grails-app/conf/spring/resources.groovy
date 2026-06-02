@@ -2,19 +2,15 @@ import grails.util.Holders
 import org.springframework.scheduling.quartz.SchedulerFactoryBean
 import org.springframework.web.servlet.i18n.SessionLocaleResolver
 import au.org.ala.alerts.quartz.AutowiringSpringBeanJobFactory
-import com.nimbusds.jose.util.DefaultResourceRetriever
 
 beans = {
     localeResolver(SessionLocaleResolver) {
         defaultLocale= new java.util.Locale(Holders.config.siteDefaultLanguage as String)
     }
-    //todo  find a better way to do this - ala-auth should not be a runtime dependency of the app,
-    // but it is currently because of the way the OIDC client is implemented.
-    // Work around ala-auth expecting this named bean in Grails 7 runtime.
-    oidcResourceRetriever(DefaultResourceRetriever)
 
     // This tells Spring to find all @Component, @Service, etc. in your package
     // Assure the Quartz schedulers are loaded
+
     xmlns context: "http://www.springframework.org/schema/context"
     context.'component-scan'('base-package': "au.org.ala.alerts.quartz")
 
@@ -35,4 +31,5 @@ beans = {
                 'org.quartz.jobStore.tablePrefix': 'QRTZ_'
         ] as Properties
     }
+
 }
