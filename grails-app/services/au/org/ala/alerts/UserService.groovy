@@ -13,6 +13,7 @@
 
 package au.org.ala.alerts
 import au.org.ala.userdetails.UserDetailsFromIdListResponse
+import au.org.ala.web.AuthService
 import au.org.ala.web.UserDetails
 import grails.converters.JSON
 import grails.plugin.cache.Cacheable
@@ -238,9 +239,12 @@ class UserService {
         user
     }
 
-    User createUser(String userId) {
+    User createUser(String userIdOrEmail) {
         User user = null
-        UserDetails userDetails = authService.getUserForUserId(userId)
+        boolean isEmail = userIdOrEmail.contains('@')
+        UserDetails userDetails = isEmail ?
+             authService.getUserForEmailAddress(userIdOrEmail) :  authService.getUserForUserId(userIdOrEmail)
+
         if (userDetails?.userId && userDetails?.email) {
             log.debug "User is not in user table - creating new record for " + userDetails
             user = new User([email: userDetails.email, userId: userDetails.userId, locked: userDetails.locked, frequency: Frequency.findByName("weekly")])
