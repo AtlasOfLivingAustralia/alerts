@@ -134,6 +134,7 @@ config:
     mysql_connection_ssl: ""
     dataSource_dbCreate: ""
     validation_query: ""
+    db_dialect: ""
   enable_myannotation: ""
   enable_specieslists_alerts: ""
   enable_spatial_alerts: ""
