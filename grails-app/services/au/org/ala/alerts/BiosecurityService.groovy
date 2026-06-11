@@ -242,8 +242,9 @@ class BiosecurityService {
             searchTerms.add('raw_scientificName:"' + name + '"')
 
             def searchTerm = 'q=' + URLEncoder.encode("(" + searchTerms.join(") OR (") + ")")
+            def pageSize = grailsApplication.config.getProperty('pageSizeForBiosecurity', Integer, 100)
 
-            def url = grailsApplication.config.getProperty('biocacheService.baseURL') + '/occurrences/search?' + searchTerm + fq + legacyFq + dateRange + firstLoadedDate + "&pageSize=10000"
+            def url = grailsApplication.config.getProperty('biocacheService.baseURL') + '/occurrences/search?' + searchTerm + fq + legacyFq + dateRange + firstLoadedDate + "&pageSize=${pageSize}"
             log.debug("URL: " + url)
 
             try {
