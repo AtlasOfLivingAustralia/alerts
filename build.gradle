@@ -132,14 +132,11 @@ dependencies {
     implementation "org.springframework.boot:spring-boot-starter-quartz"
 
     // Hibernate is provided via org.apache.grails:grails-data-hibernate5 above (BOM-managed)
-
     // ── Database ───────────────────────────────────────────────────────────
     implementation 'org.liquibase:liquibase-core:4.27.0'
     runtimeOnly 'mysql:mysql-connector-java:8.0.33'
     runtimeOnly "org.apache.tomcat:tomcat-jdbc"
 
-    // ── Mail (artifact RENAMED in Grails 7) ───────────────────────────────
-    // REMOVED: org.grails.plugins:mail:4.0.0 ← Grails 6 era, old artifact ID
     implementation "org.grails.plugins:grails-mail:5.0.3"    // ✅ Grails 7, new artifact ID
     implementation 'au.org.ala:ala-mail:3.0.0-SNAPSHOT'      // ⚠️ verify Grails 7 compatible
 
