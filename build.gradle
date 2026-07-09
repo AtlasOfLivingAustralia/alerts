@@ -163,6 +163,8 @@ dependencies {
     implementation "software.amazon.awssdk:sts"
     implementation "software.amazon.awssdk:auth"
     implementation "software.amazon.awssdk:sso"
+    implementation "com.fasterxml.woodstox:woodstox-core:6.7.0"
+
 
     // ── Utilities ──────────────────────────────────────────────────────────
     implementation "org.apache.commons:commons-lang3:3.14.0"

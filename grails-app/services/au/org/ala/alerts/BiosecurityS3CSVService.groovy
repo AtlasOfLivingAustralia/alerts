@@ -58,18 +58,21 @@ class BiosecurityS3CSVService extends BiosecurityCSVService{
                 def folder = parts[1]
                 def file = parts[2]
                 if (file.endsWith('.csv')) { // Only include CSV files
-                   folderMap.computeIfAbsent(folder) { [] }.add([
-                           name: file,
-                           size: it.size()   // bytes
-                   ])
+                    long lastUpdated = it.lastModified() ? it.lastModified().toEpochMilli() : 0L
+                    folderMap.computeIfAbsent(folder) { [] }.add([
+                            name         : file,
+                            size         : it.size(),
+                            formattedSize: formatSize(it.size()),
+                            lastUpdated  : lastUpdated
+                    ])
                 }
             }
         }
 
         def foldersAndFiles = folderMap.collect { k, v ->
             [
-                    name      : k,
-                    files     : v.collect { it.name },
+                    name     : k,
+                    files    : v,
                     fileCount: v.size(),
                     totalSize: v.sum { it.size ?: 0L }   // bytes
             ]
@@ -214,7 +217,7 @@ class BiosecurityS3CSVService extends BiosecurityCSVService{
         def task = {
             File outputFile = createTempCSVFromQueryResult(qs)
             String folderName = new SimpleDateFormat("yyyy-MM-dd").format(new Date())
-            String fileName = sanitizeFileName("${qs.query.name}")+ ".csv"
+            String fileName = sanitizeFileName("${qs.query.name}")+ "_${qs.query.id}.csv"
 
             def s3Directory = grailsApplication.config.getProperty('biosecurity.csv.s3.directory', 'biosecurity')
             String s3Key = "${s3Directory}/${folderName}/${fileName}"

@@ -50,7 +50,7 @@ abstract class BiosecurityCSVService {
     abstract boolean folderExists(String folderName)
 
 
-    String formatSize(long size) {
+    static String formatSize(long size) {
         String totalSizeFormatted = ""
         if (size >= 1024 * 1024 * 1024) {
             totalSizeFormatted = "${(size / (1024 * 1024 * 1024)).round()} GB"
@@ -72,7 +72,19 @@ abstract class BiosecurityCSVService {
     static String sanitizeFileName(String fileName) {
         // Define a pattern for illegal characters
         def pattern = /[^a-zA-Z0-9\.\-\_]/
-        return fileName.replaceAll(pattern, '_')
+        def sanitized = fileName.replaceAll(pattern, '_')
+        // Truncate to 200 characters preserving extension if possible
+        if (sanitized.length() > 200) {
+            int dotIndex = sanitized.lastIndexOf('.')
+            if (dotIndex > 0 && dotIndex > sanitized.length() - 20) {
+                // keep extension
+                String ext = sanitized.substring(dotIndex)
+                sanitized = sanitized.substring(0, 200 - ext.length()) + ext
+            } else {
+                sanitized = sanitized.substring(0, 200)
+            }
+        }
+        return sanitized
     }
 
     //Batch Query Biocache (Using qid) to collect extra info
@@ -119,7 +131,7 @@ abstract class BiosecurityCSVService {
                             if (occ) {
                                 record['lgaLayer'] = layerId
                                 record['lga'] = occ.otherProperties?[layerId] ?: ""
-                                record['firstLoaded'] = occ.otherProperties?.firstLoadedDate
+                                record['firstLoadedDate'] = occ.otherProperties?.firstLoadedDate
                             }
                         }
                     }
@@ -147,7 +159,7 @@ abstract class BiosecurityCSVService {
         // recordID:uuid  recordID is the header name, uuid is the property in the record
         String rawHeader = "recordID:uuid, recordLink:occurrenceLink, scientificName,taxonConceptID,decimalLatitude,decimalLongitude,eventDate,occurrenceStatus,dataResourceName,multimedia,mediaId:image," +
                 "vernacularName,taxonConceptID_new,kingdom,phylum,class:classs,order,family,genus,species,subspecies," +
-                "firstLoadedDate:firstLoaded,basisOfRecord,match," +
+                "firstLoadedDate,basisOfRecord,match," +
                 "searchTerm:search_term,correct name:scientificName,provided name:providedName,common name:vernacularName,state:stateProvince,lga layer:lgaLayer,lga,fq," +
                 "list id:listId,list name:listName, listLink:listLink, cw_state,shape feature:shape_feature,creator:collector," +
                 "license,mimetype," +
@@ -179,12 +191,12 @@ abstract class BiosecurityCSVService {
                     def value = record[field]
 
                     switch (field) {
-                        case ["eventDate", "firstLoaded"]:
+                        case ["eventDate"]:
                             if (value) {
                                 try {
                                     value = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss").format(value.toLong())
                                 } catch(Exception ignored) {
-                                    value = ""
+                                    //keep the original value if it cannot be parsed
                                 }
                             } else {
                                 value = ""

@@ -18,6 +18,7 @@ import grails.core.GrailsApplication
 import org.apache.commons.lang3.NotImplementedException
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
+import java.nio.file.attribute.BasicFileAttributes
 import java.text.SimpleDateFormat
 
 /**
@@ -166,7 +167,7 @@ class BiosecurityLocalCSVService  extends BiosecurityCSVService {
         def task = {
             File outputFile = createTempCSVFromQueryResult(qs)
             String folderName = new SimpleDateFormat("yyyy-MM-dd").format(new Date())
-            String fileName = sanitizeFileName("${qs.query.name}")+ ".csv"
+            String fileName = sanitizeFileName("${qs.query.name}")+ "_${qs.query.id}.csv"
             String destinationFolder = new File(grailsApplication.config.getProperty('biosecurity.csv.local.directory', '/tmp'), folderName).absolutePath
             File destinationFile = new File(destinationFolder, fileName)
             moveToDestination(outputFile, destinationFile)
@@ -201,10 +202,20 @@ class BiosecurityLocalCSVService  extends BiosecurityCSVService {
             def csvFiles = folder.listFiles().findAll { File file ->
                 file.isFile() && file.name.endsWith('.csv')
             }
+
+            def fileDetails = csvFiles.collect { File file ->
+                [
+                        name            : file.name,
+                        size            : file.length(),
+                        formattedSize   : formatSize(file.length()),
+                        lastUpdated     : file.lastModified()
+                ]
+            }
+
             [
                     name : folder.name,
-                    files: csvFiles.collect { it.name } ?: [],
-                    size : csvFiles.sum { it.length() } ?: 0  // bytes
+                    files: fileDetails ?: [],
+                    size : fileDetails.sum { it.size } ?: 0  // bytes
             ]
         }
         return foldersAndFiles.sort({ it.name }).reverse()
