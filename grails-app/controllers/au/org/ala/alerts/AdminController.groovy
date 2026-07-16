@@ -394,6 +394,7 @@ class AdminController {
             qr.lastChecked = since
             query.lastChecked = since
             def records = diffService.diff(qr)
+            biosecurityService.fetchExtraOccurrenceInfo(records)
 
             String urlPrefix = "${grailsApplication.config.getProperty("grails.serverURL")}${grailsApplication.config.getProperty('security.cas.contextPath', '')}"
             def localeSubject = messageSource.getMessage("emailservice.update.subject", [query.name] as Object[], siteLocale)

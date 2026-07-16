@@ -77,7 +77,7 @@ try {
     println "Uploading CSV files from '${sourceRoot}' to s3://${bucket}/${s3BasePrefix ? s3BasePrefix + '/' : ''}"
     println "Rule: local '~' is converted back to '/' in S3 key (PutObject overwrites existing objects)."
 
-    Files.walk(sourceRoot).forEach { path ->
+    Files.list(sourceRoot).forEach { path ->
         if (!Files.isRegularFile(path)) {
             return
         }

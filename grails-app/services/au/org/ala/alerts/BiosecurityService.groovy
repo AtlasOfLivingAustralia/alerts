@@ -82,8 +82,9 @@ class BiosecurityService {
             qr.lastResult = qr.compress(processedJson)
             qr.lastChecked = now
 
-            //def recordsFound = JsonPath.read(processedJson, '$.totalRecords')
-            qr.newRecords =  diffService.getNewRecords(qr)
+            def newRecords = diffService.getNewRecords(qr)
+            fetchExtraOccurrenceInfo(newRecords)
+            qr.newRecords = newRecords
             qr.totalRecords = qr.newRecords?.size()
             if ( qr.totalRecords > 0) {
                 qr.hasChanged = true
@@ -346,6 +347,59 @@ class BiosecurityService {
         }
 
         fq
+    }
+
+    //Batch Query Biocache (Using qid) to collect extra info
+    //Those extra info are now stored in CSV file and the Emails
+    //e.g. first loaded date, lga layerID, lga name etc
+    //
+    def fetchExtraOccurrenceInfo(def records) {
+        String layerId = grailsApplication.config.getProperty('biosecurity.lga', 'cl11170')
+        String qidUrl = grailsApplication.config.getProperty('biocacheService.baseURL') + '/qid'
+
+        int limits = grailsApplication.config.biocacheService.pageSize
+        records.collate(limits).each {batch ->
+            def ids = batch.collect {it.uuid}
+            def query = ids.collect { "id:${it}" }.join(" OR ")
+            def qidResp = webService.post(
+                    qidUrl,
+                    ["q": query],
+                    [:],
+                    ContentType.APPLICATION_FORM_URLENCODED
+            )
+
+            if (qidResp.statusCode == 200) {
+                def qid = qidResp.resp?.keySet()?.iterator()?.next()
+                if (qid) {
+                    def occurrenceUrl = grailsApplication.config.getProperty('biocacheService.baseURL') + "/occurrences/search?q=qid:${qid}&pageSize=${limits}&fl=id,firstLoadedDate,${layerId}"
+                    def occurrencesResp = webService.get(occurrenceUrl)
+                    //e.g.
+                    //{
+                    //    uuid: "d8b1bd1a-98b6-494d-91c0-f0a4aa636d30",
+                    //    otherProperties: {
+                    //        firstLoadedDate: "2025-11-13T03:29:22.089+00:00",
+                    //        cl11170: "Western Downs"
+                    //    }
+                    //}
+                    if (occurrencesResp.statusCode == 200) {
+                        def occurrences = occurrencesResp.resp?["occurrences"]
+                        def occMap = occurrences.collectEntries { occ ->
+                            [(occ.uuid): occ]
+                        }
+
+                        //Update each record only if a matching occurrence exists
+                        batch.each { record ->
+                            def occ = occMap[record.uuid]
+                            if (occ) {
+                                record['lgaLayer'] = layerId
+                                record['lga'] = occ.otherProperties?[layerId] ?: ""
+                                record['firstLoadedDate'] = occ.otherProperties?.firstLoadedDate
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private def getCsvService() {
