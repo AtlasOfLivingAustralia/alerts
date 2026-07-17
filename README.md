@@ -4,30 +4,32 @@ This is a small app responsible for sending email alerts when there are changes 
 
 Scheduling is handled by Quartz plugin in the app. It works like RSS - it checks the JSON service and reads the results and then compares that with the previously stored check and if there are new records, it triggers an email. Relies on records being sorted by date loaded. Works with any endpoint that can return date-sorted JSON output.
 
-## Grails 6 updates IMPORTANT >= version 5.2.5
+## The latest version is: `6.0.0-SNAPSHOT`, which supports Grails 7.1.1.
+NOTES:
+Grails 7.1.1 is not compatible with Grails 6
 
-The custom dataSource configuration is no longer required from this version. Use the standard:
-```
-dataSource:
-    url: jdbc:mysql://localhost/alerts
-    username: alerts_user
-    password: password
-    driverClassName: com.mysql.cj.jdbc.Driver
-    dialect: org.hibernate.dialect.MySQL8Dialect
-```
+## Grails 6 updates IMPORTANT >= version 5.2.0 
 
-## IMPORTANT
+In Grails 6, Liquibase is bootstrapped directly by Spring Boot during application startup.  
+This happens **before** the Grails `external-config` plugin is invoked.
 
-The application continues to use this optional external config file:
+As a result, any beans managed by Spring (such as **Liquibase** and **Quartz**) must have their required
+configuration available **at Spring initialization time**.
+
+To support this, the safest way is that database-related properties are defined in an external Spring configuration file,
+for example:
+
+```yaml
+DB_URL: jdbc:mysql://localhost:3309/alerts
+DB_USER: alerts_user
+DB_PASSWORD: password
+DB_DRIVER: com.mysql.cj.jdbc.Driver
 ```
-spring:
+The external configuration file is referenced in application.yml using:, 
+```spring:
     config:
         import: "optional:file:/data/alerts/config/alerts-config.yml"
 ```
-
-To align with the Grails 6 initialization process, the Grails externalConfig plugin has been removed.
-All properties previously defined in alerts-config.properties have been migrated to alerts-config.yml and are now loaded exclusively through Spring using SPRING_CONFIG_ADDITIONAL_LOCATION.
-
 Spring can also load this external configuration via an environment variable, allowing you to specify your own file, for example:
 
 ```
@@ -35,6 +37,11 @@ SPRING_CONFIG_ADDITIONAL_LOCATION=file:/data/alerts/config/alerts-config.yml
 ```
 If neither the import nor the environment variable is provided, Spring-managed components will not see the required configuration and may fall back to
 defaults (for example, H2 or Quartz RAMJobStore).
+
+## IMPORTANT
+
+To align with the Grails 6 initialization process, the Grails externalConfig plugin has been removed.
+All properties previously defined in alerts-config.properties have been migrated to alerts-config.yml and are now loaded exclusively through Spring using SPRING_CONFIG_ADDITIONAL_LOCATION.
 
 # Build status
 

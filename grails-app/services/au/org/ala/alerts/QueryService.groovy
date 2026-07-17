@@ -11,7 +11,7 @@ import grails.gorm.transactions.Transactional
 class QueryService {
 
     def serviceMethod() {}
-    def grailsApplication, notificationService, alertsWebService, webService
+    def grailsApplication, notificationService, webService
     def messageSource, dataSource
     def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
 

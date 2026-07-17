@@ -134,7 +134,6 @@ phases:
             mysql_connection_ssl: "${MYSQL_CONNECTION_SSL}"
             dataSource_dbCreate: "${DB_CREATE_MODE}"
             validation_query: "${DB_VALIDATION_QUERY}"
-            db_dialect: "${DB_DIALECT}"
           enable_myannotation: "${ENABLE_MYANNOTATION}"
           enable_specieslists_alerts: "${ENABLE_SPECIESLISTS_ALERTS}"
           enable_spatial_alerts: "${ENABLE_SPATIAL_ALERTS}"
@@ -222,8 +221,6 @@ phases:
             userdetails_url: "${USERDETAILS_URL}"
             userdetails_web_url: "${USERDETAILS_WEB_URL}"
             userdetails_api_url: "${USERDETAILS_API_URL}"
-          cors:
-            allowed_origin_patterns: "${CORS_ALLOWED_ORIGIN_PATTERNS}"
           openapi:
             openapi_oauth_url: "${OPENAPI_OAUTH_URL}"
             terms_url: "${TERMS_URL}"

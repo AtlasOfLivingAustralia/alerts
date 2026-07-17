@@ -1,24 +1,16 @@
 import grails.util.Holders
-import liquibase.integration.spring.SpringLiquibase
 import org.springframework.scheduling.quartz.SchedulerFactoryBean
 import org.springframework.web.servlet.i18n.SessionLocaleResolver
 import au.org.ala.alerts.quartz.AutowiringSpringBeanJobFactory
 
 beans = {
-    if (Holders.config.getProperty('alerts.liquibase.enabled', Boolean, true)) {
-        // configure Liquibase to use GORM dataSource
-        liquibase(SpringLiquibase) {
-            dataSource = ref('dataSource')
-            changeLog = 'classpath:db/changelog/db.changelog-master.xml'
-        }
-    }
-
     localeResolver(SessionLocaleResolver) {
         defaultLocale= new java.util.Locale(Holders.config.siteDefaultLanguage as String)
     }
 
     // This tells Spring to find all @Component, @Service, etc. in your package
     // Assure the Quartz schedulers are loaded
+
     xmlns context: "http://www.springframework.org/schema/context"
     context.'component-scan'('base-package': "au.org.ala.alerts.quartz")
 
@@ -39,4 +31,5 @@ beans = {
                 'org.quartz.jobStore.tablePrefix': 'QRTZ_'
         ] as Properties
     }
+
 }

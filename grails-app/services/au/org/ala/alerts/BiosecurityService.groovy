@@ -12,7 +12,7 @@ import grails.converters.JSON
 import org.apache.commons.lang3.time.DateUtils
 import org.apache.http.entity.ContentType
 
-import javax.transaction.Transactional
+import jakarta.transaction.Transactional
 import java.text.SimpleDateFormat
 
 /**

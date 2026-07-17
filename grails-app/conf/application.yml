@@ -16,11 +16,6 @@ mail:
         infoAddressTitle: "Atlas of Living Australia"
         defaultResourceName: "Atlas of Living Australia"
 grails:
-    cors:
-      enabled: true
-      allowedOriginPatterns:
-        - https://*.ala.org.au
-        - http://localhost:5173
     #default mail service
     mail:
         port: 2525
@@ -218,13 +213,11 @@ encodeBracketInUrlParam:
 
 #For Grails
 dataSource:
-    url: jdbc:mysql://localhost/alerts
-    username: alerts_user
-    password: password
-    driverClassName: com.mysql.cj.jdbc.Driver
-    dialect: org.hibernate.dialect.MySQL8Dialect
-    # Using liquibase for schema management
-    dbCreate: none
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    driverClassName: ${DB_DRIVER}
+
     pooled: true
     jmxExport: true
 
@@ -252,13 +245,17 @@ dataSource:
         useUnicode: true
         characterEncoding: UTF-8
 
+
+#For those beans managed by Spring, like Liquibase, Quartz
+#Those properties should be defined in an external properties yml file
 spring:
     liquibase:
-        enabled: false  # Managed via alerts.liquibase.enabled
-
-alerts:
-    liquibase:
-        enabled: true # Disable when managed by cicd
+        enabled: true
+        change-log: classpath:db/changelog/db.changelog-master.xml
+        url: ${DB_URL}
+        user: ${DB_USER}
+        password: ${DB_PASSWORD}
+        driver-class-name: ${DB_DRIVER}
 
 cron:
     daily: '0 30 8 * * ?'
@@ -281,20 +278,12 @@ security:
     oidc:
         enabled: true
         discoveryUri:  https://cognito-idp.ap-southeast-2.amazonaws.com/ap-southeast-2_OOXU9GW39/.well-known/openid-configuration
-        scope: openid,profile,email,ala,roles
+        scope: openid, profile, email, ala/attrs, ala/roles
     # this config is used to check incoming requests to protected APIs (methods protected with @RequireApiKey()) for JWT token in the expected header i.e. "Authorization". `fallbackToLegacyBehaviour` determines whether to check for the legacy API key when JWT is not detected/valid.
     jwt:
         discoveryUri:  https://cognito-idp.ap-southeast-2.amazonaws.com/ap-southeast-2_OOXU9GW39/.well-known/openid-configuration
         enabled: true
         fallbackToLegacyBehaviour: true
-    apikey:
-        enabled: true
-        auth:
-            serviceUrl: https://auth-test.ala.org.au/apikey/ws/check/
-        check:
-            serviceUrl: https://auth-test.ala.org.au/apikey/ws/check?apikey=
-        userdetails:
-            serviceUrl: https://auth-test.ala.org.au/userdetails/userDetails/
 
 openapi:
     title: Alerts REST services

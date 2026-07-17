@@ -16,13 +16,12 @@ package au.org.ala.alerts
 import au.ala.org.ws.security.RequireApiKey
 import au.org.ala.plugins.openapi.Path
 import au.org.ala.web.AlaSecured
-import au.org.ala.web.UserDetails
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import grails.converters.JSON
 import grails.gorm.transactions.Transactional
 import grails.util.Holders
 import grails.web.servlet.mvc.GrailsParameterMap
-import io.micronaut.http.HttpStatus
+import org.springframework.http.HttpStatus
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.Content
@@ -40,11 +39,11 @@ import static io.swagger.v3.oas.annotations.enums.ParameterIn.HEADER
 class WebserviceController {
 
     def queryService
+    def queryResultService
     def userService
     def notificationService
     def biosecurityService
     def messageSource
-    def authService
     def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
     def CUSTOM_ALERTS_URL = grailsApplication.config.grails.serverURL+"/notification/myAlerts#custom-alerts"
 
@@ -63,9 +62,10 @@ class WebserviceController {
     }
 
     def getUserAlerts = {
-        User user = userService.getUser()
+        def model = [:]
+        User user = userService.getUserById(params.userId)
         log.debug('#getUserAlerts - Viewing my alerts :  ' + user)
-        def model = userService.getUserAlertsConfig(user)
+        model = userService.getUserAlertsConfig(user)
         render model as JSON
     }
 
@@ -83,7 +83,7 @@ class WebserviceController {
         //check for notifications for this query and this user
         Query query = queryService.createTaxonQuery(taxonGuid, params.taxonName)
 
-        Notification notification = queryService.getNotificationForUser(query, userService.getUser())
+        Notification notification = queryService.getNotificationForUser(query, retrieveUser(params))
 
         String link = null
         if (notification != null) {
@@ -120,7 +120,7 @@ class WebserviceController {
         //check for notifications for this query and this user
         Query query = queryService.createRegionQuery(params.layerId, params.regionName)
 
-        Notification notification = queryService.getNotificationForUser(query, userService.getUser())
+        Notification notification = queryService.getNotificationForUser(query, retrieveUser(params))
 
         String link = null
         if (notification != null) {
@@ -143,7 +143,7 @@ class WebserviceController {
         //check for notifications for this query and this user
         Query query = queryService.createTaxonRegionQuery(params.taxonGuid, params.taxonName, params.layerId, params.regionName)
 
-        Notification notification = queryService.getNotificationForUser(query, userService.getUser())
+        Notification notification = queryService.getNotificationForUser(query, retrieveUser(params))
 
         String link = null
         if (notification != null) {
@@ -171,7 +171,7 @@ class WebserviceController {
         //check for notifications for this query and this user
         Query query = queryService.createSpeciesGroupRegionQuery(params.speciesGroup, params.layerId, params.regionName)
 
-        Notification notification = queryService.getNotificationForUser(query, userService.getUser())
+        Notification notification = queryService.getNotificationForUser(query, retrieveUser(params))
 
         String link = null
         if (notification != null) {
@@ -217,7 +217,7 @@ class WebserviceController {
         Query query = queryService.createBioCacheChangeQuery(params.webserviceQuery, params.uiQuery, params.queryDisplayName,
                 params.baseUrlForWS, params.baseUrlForUI, params.resourceName)
 
-        Notification notification = queryService.getNotificationForUser(query, userService.getUser())
+        Notification notification = queryService.getNotificationForUser(query, retrieveUser(params))
 
         String link = null
         if (notification != null) {
@@ -259,7 +259,7 @@ class WebserviceController {
         Query query = queryService.createBioCacheAnnotationQuery(params.webserviceQuery, params.uiQuery, params.queryDisplayName,
                 params.baseUrlForWS, params.baseUrlForUI, params.resourceName)
 
-        Notification notification = queryService.getNotificationForUser(query, userService.getUser())
+        Notification notification = queryService.getNotificationForUser(query, retrieveUser(params))
 
         String link = null
         if (notification != null) {
@@ -300,7 +300,7 @@ class WebserviceController {
         Query query = queryService.createBioCacheQuery(params.webserviceQuery, params.uiQuery, params.queryDisplayName,
                 params.baseUrlForWS, params.baseUrlForUI, params.resourceName)
 
-        Notification notification = queryService.getNotificationForUser(query, userService.getUser())
+        Notification notification = queryService.getNotificationForUser(query, retrieveUser(params))
 
         String link = null
         if (notification != null) {
@@ -404,14 +404,13 @@ class WebserviceController {
             security = [@SecurityRequirement(name = 'openIdConnect')]
     )
     @RequireApiKey
-    @Path("api/alerts/user/{userId}/unsubscribe")
+    @Path("/api/alerts/user/{userId}/unsubscribe")
     def deleteAllAlertsForUser() {
-        String resolvedUserId = resolveUserId(params.userId)
-        if (!resolvedUserId) {
+        if (!params.userId) {
             response.status = HttpStatus.BAD_REQUEST.code
-            response.sendError(HttpStatus.BAD_REQUEST.code)
+            response.sendError(HttpStatus.BAD_REQUEST.code, "userId is a required parameter")
         } else {
-            def user = userService.getUserById(resolvedUserId)
+            def user = userService.getUserById(params.userId)
 
             if (user) {
                 List<Notification> notifications = Notification.findAllByUser(user)
@@ -471,25 +470,15 @@ class WebserviceController {
             security = [@SecurityRequirement(name = 'openIdConnect')]
     )
     @RequireApiKey
-    @Path("api/alerts/user/createAlerts")
+    @Path("/api/alerts/user/createAlerts")
     def createUserAlerts() {
-        def resolvedUserId = resolveUserId(params.userId)
-        if (!resolvedUserId) {
+        if (!params.userId) {
             response.status = HttpStatus.BAD_REQUEST.code
-            response.sendError(HttpStatus.BAD_REQUEST.code)
+            response.sendError(HttpStatus.BAD_REQUEST.code, "userId is a required parameter")
         } else {
-            User user = userService.getUserById(resolvedUserId)
+            def user = userService.getUserById(params.userId)
             if (!user) {
-                Map userDetails = [:]
-
-                if (authService.userInRole('ala/internal') || authService.userInRole('ROLE_ADMIN')) {
-                    // only if admin/m2m, create the user using the supplied details
-                    userDetails = ["userId": params.userId, "email": params.email, "userDisplayName": params.firstName + " " + params.lastName]
-                } else {
-                    // create for the current user
-                    UserDetails currentUser = authService.getUserForUserId(resolvedUserId, true)
-                    userDetails = ["userId": currentUser.userId, "email": currentUser.email, "userDisplayName": currentUser.firstName + " " + currentUser.lastName]
-                }
+                Map userDetails = ["userId": params.userId, "email": params.email, "userDisplayName": params.firstName + " " + params.lastName]
                 user = userService.getUser(userDetails)
                 response.status = HttpStatus.CREATED.code
             } else {
@@ -502,38 +491,13 @@ class WebserviceController {
         }
     }
 
-    /**
-     * Resolves the effective userId for API calls protected by @RequireApiKey.
-     *
-     * - M2M with scope (find in role) ala/internal returns the requestedId
-     * - Admin user with role ROLE_ADMIN returns the requestedId
-     * - Otherwise return the authenticated user's id and log discrepancies
-     *
-     * @param requestedId
-     * @return the resolved userId string, or null if unauthenticated
-     */
-    private String resolveUserId(requestedId) {
 
-        // M2M JWT has scope ala/internal that is copied into roles for use cases such as this
-        if (authService.userInRole('ala/internal')) {
-            log.debug("resolveUserId: M2M token - using params.userId: ${requestedId}")
-            return requestedId
+    private User retrieveUser(params) {
+        User user = userService.getUser()
+        if (user == null && params.userName) {
+            user = userService.getUserByUserName(params.userName)
         }
-
-        // Admin user JWT
-        if (authService.userInRole('ROLE_ADMIN')) {
-            log.debug("resolveUserId: ROLE_ADMIN - using params.userId: ${requestedId}")
-            return requestedId
-        }
-
-        // Regular user JWTt
-        String authenticatedUserId = authService.userDetails()?.userId
-        if (!authenticatedUserId) {
-            log.error("resolveUserId: Unable to determine authenticated user identity")
-            return null
-        }
-
-        return authenticatedUserId
+        user
     }
 
     @Operation(
@@ -566,13 +530,12 @@ class WebserviceController {
             security = [@SecurityRequirement(name = 'openIdConnect')]
     )
     @RequireApiKey
-    @Path("api/alerts/user/{userId}")
+    @Path("/api/alerts/user/{userId}")
     def getUserAlertsWS() {
-        String resolvedUserId = resolveUserId(params.userId)
-        User user = userService.getUserById(resolvedUserId)
+        User user = userService.getUserById(params.userId)
         if (user == null) {
             response.status = HttpStatus.NOT_FOUND.code
-            render ([error : "can't find a user with userId " + resolvedUserId] as JSON)
+            render ([error : "can't find a user with userId " + params.userId] as JSON)
         } else {
             render(userService.getUserAlertsConfig(user) as JSON)
         }
@@ -609,20 +572,13 @@ class WebserviceController {
             // hidden = grailsApplication.config.myannotation.enabled
     )
     @RequireApiKey
-    @Path("api/alerts/user/{userId}/subscribeMyAnnotation")
+    @Path("/api/alerts/user/{userId}/subscribeMyAnnotation")
     def subscribeMyAnnotationWS() {
         if (!grailsApplication.config.myannotation.enabled) {
             return
         }
 
-        String resolvedUserId = resolveUserId(params.userId)
-        if (!resolvedUserId) {
-            response.status = HttpStatus.BAD_REQUEST.code
-            response.sendError(HttpStatus.BAD_REQUEST.code)
-            return
-        }
-
-        User user = userService.getUserById(resolvedUserId)
+        User user = userService.getUser((String)params.userId)
         if (user == null) {
             response.status = HttpStatus.NOT_FOUND.code
             render ([error : "can't find a user with userId " + params.userId] as JSON)
@@ -668,29 +624,22 @@ class WebserviceController {
             // hidden = grailsApplication.config.myannotation.enabled
     )
     @RequireApiKey
-    @Path("api/alerts/user/{userId}/unsubscribeMyAnnotation")
+    @Path("/api/alerts/user/{userId}/unsubscribeMyAnnotation")
     def unsubscribeMyAnnotationWS() {
         if (!grailsApplication.config.myannotation.enabled) {
             return
         }
 
-        String resolvedUserId = resolveUserId(params.userId)
-        if (!resolvedUserId) {
-            response.status = HttpStatus.BAD_REQUEST.code
-            response.sendError(HttpStatus.BAD_REQUEST.code)
-            return
-        }
-
-        User user = userService.getUserById(resolvedUserId)
+        User user = userService.getUserById(params.userId)
         if (user == null) {
             response.status = HttpStatus.NOT_FOUND.code
-            render ([error : "can't find a user with userId " + resolvedUserId] as JSON)
+            render ([error : "can't find a user with userId " + params.userId] as JSON)
         } else {
             try {
                 notificationService.unsubscribeMyAnnotation(user)
                 render([success: true] as JSON)
             } catch (ignored) {
-                render text: "failed to unsubscribe my annotation for user " + resolvedUserId, contentType: 'text/plain', status: 500
+                render text: "failed to unsubscribe my annotation for user " + params.userId, contentType: 'text/plain', status: 500
             }
         }
     }

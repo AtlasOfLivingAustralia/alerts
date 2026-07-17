@@ -178,7 +178,11 @@
                                                                         , and email new records. The date range associated with the given date is determined by the query.
 
                                                                      <input type="date" id="checkDate" name="checkDate" value="${today}" class="form-control w-auto me-3" />
-                                                                    <button type="submit" class="btn btn-outline-primary mb-2">Email me</button>
+                                                                     <button type="submit" class="btn btn-outline-primary mb-2">Email me</button>
+                                                                     <label class="form-check-label ms-3 mb-2">
+                                                                         <input type="checkbox" name="sendToSubscribers" class="form-check-input me-1" />
+                                                                         send a copy to subscribers
+                                                                     </label>
 
                                                                 </g:form>
                                                             </div>
