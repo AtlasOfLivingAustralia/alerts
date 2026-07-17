@@ -64,7 +64,7 @@ class BiosecurityJobService {
             String triggerGroup = currentJobInfo.triggerGroup
             TriggerKey triggerKey = new TriggerKey(triggerName, triggerGroup)
             JobKey jobKey= new JobKey(currentJobInfo.jobName, currentJobInfo.jobGroup)
-           
+
             Trigger newTrigger = TriggerBuilder.newTrigger()
                     .withIdentity(triggerName, triggerGroup)
                     .withSchedule(CronScheduleBuilder.cronSchedule(cron))

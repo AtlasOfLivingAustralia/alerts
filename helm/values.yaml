@@ -134,6 +134,7 @@ config:
     mysql_connection_ssl: ""
     dataSource_dbCreate: ""
     validation_query: ""
+    db_dialect: ""
   enable_myannotation: ""
   enable_specieslists_alerts: ""
   enable_spatial_alerts: ""
@@ -222,6 +223,8 @@ config:
     userdetails_url: ""
     userdetails_web_url: ""
     userdetails_api_url: ""
+  cors:
+    allowed_origin_patterns: "https://*.ala.org.au,http://localhost:5173"
   openapi:
     openapi_oauth_url: ""
     terms_url: ""

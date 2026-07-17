@@ -83,7 +83,7 @@ abstract class BiosecurityCSVService {
         String layerId = grailsApplication.config.getProperty('biosecurity.lga', 'cl11170')
         String qidUrl = grailsApplication.config.getProperty('biocacheService.baseURL') + '/qid'
 
-        int limits = 1000
+        int limits = grailsApplication.config.biocacheService.pageSize
         records.collate(limits).each {batch ->
             def ids = batch.collect {it.uuid}
             def query = ids.collect { "id:${it}" }.join(" OR ")
