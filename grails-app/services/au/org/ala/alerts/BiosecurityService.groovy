@@ -12,7 +12,7 @@ import grails.converters.JSON
 import org.apache.commons.lang3.time.DateUtils
 import org.apache.http.entity.ContentType
 
-import javax.transaction.Transactional
+import jakarta.transaction.Transactional
 import java.text.SimpleDateFormat
 
 /**
@@ -82,8 +82,9 @@ class BiosecurityService {
             qr.lastResult = qr.compress(processedJson)
             qr.lastChecked = now
 
-            //def recordsFound = JsonPath.read(processedJson, '$.totalRecords')
-            qr.newRecords =  diffService.getNewRecords(qr)
+            def newRecords = diffService.getNewRecords(qr)
+            fetchExtraOccurrenceInfo(newRecords)
+            qr.newRecords = newRecords
             qr.totalRecords = qr.newRecords?.size()
             if ( qr.totalRecords > 0) {
                 qr.hasChanged = true
@@ -243,29 +244,49 @@ class BiosecurityService {
 
             def searchTerm = 'q=' + URLEncoder.encode("(" + searchTerms.join(") OR (") + ")")
 
-            def url = grailsApplication.config.getProperty('biocacheService.baseURL') + '/occurrences/search?' + searchTerm + fq + legacyFq + dateRange + firstLoadedDate + "&pageSize=10000"
-            log.debug("URL: " + url)
+            int pageSize = grailsApplication.config.biocacheService.pageSize as int
+            String baseUrl = "${grailsApplication.config.getProperty('biocacheService.baseURL')}/occurrences/search?${searchTerm + fq + legacyFq + dateRange + firstLoadedDate}&pageSize=${pageSize}"
+            String userAgent = grailsApplication.config.getProperty("customUserAgent", "alerts")
 
             try {
-                def get = JSON.parse(new URL(url).openConnection().with { conn ->
-                    conn.setRequestProperty("User-Agent", grailsApplication.config.getProperty("customUserAgent", "alerts"))
-                    conn.inputStream.text
-                })
-                get?.occurrences?.each { occurrence ->
-                    occurrences[occurrence.uuid] = occurrence
-                    //extra info should be added here
-                    occurrence['providedName'] = name
-                    occurrence['occurrenceLink'] = grailsApplication.config.getProperty('biocache.baseURL') + '/occurrences/' + occurrence.uuid
-                    //occurrence['fq']= searchTerm + fq + legacyFq
-                    if (listItem.kvpValues?.size()>0) {
-                        //Do not join, let CSV generate handle it
-                        occurrence['kvs'] = listItem.kvpValues.collect { kv -> "${kv.key}:${kv.value}" }
-                        occurrence['fq'] = listItem.kvpValues?.find { it.key == 'fq' }?.value
+                int pageOffset = 0
+                int totalRecords = -1   // unknown until first response
+
+                while (totalRecords == -1 || pageOffset < totalRecords) {
+                    def url = baseUrl + "&start=${pageOffset}"
+                    log.debug("URL (offset=${pageOffset}): " + url)
+
+                    def get = JSON.parse(new URL(url).openConnection().with { conn ->
+                        conn.setRequestProperty("User-Agent", userAgent)
+                        conn.inputStream.text
+                    })
+
+                    // Capture total on first page
+                    if (totalRecords == -1) {
+                        totalRecords = (get?.totalRecords as Integer) ?: 0
+                        log.debug("Biosecurity pagination: totalRecords=${totalRecords}, pageSize=${pageSize} for name='${name}'")
+                        if (totalRecords == 0) break
                     }
+
+                    def page = get?.occurrences ?: []
+                    if (!page) break  // guard against empty page
+
+                    page.each { occurrence ->
+                        occurrences[occurrence.uuid] = occurrence
+                        occurrence['providedName'] = name
+                        occurrence['occurrenceLink'] = "${grailsApplication.config.getProperty('biocache.baseURL')}/occurrences/${occurrence.uuid}"
+                        if (listItem.kvpValues?.size() > 0) {
+                            // Do not join, let CSV generate handle it
+                            occurrence['kvs'] = listItem.kvpValues.collect { kv -> "${kv.key}:${kv.value}" }
+                            occurrence['fq'] = listItem.kvpValues?.find { it.key == 'fq' }?.value
+                        }
+                    }
+
+                    pageOffset += pageSize
                 }
             } catch (Exception e) {
                 log.error("Biosecurity: ${e.message}")
-                throw new Exception("Biosecurity: failed to process occurrences: ${url}")
+                throw new Exception("Biosecurity: failed to process occurrences: ${baseUrl}")
             }
         }
     }
@@ -326,6 +347,59 @@ class BiosecurityService {
         }
 
         fq
+    }
+
+    //Batch Query Biocache (Using qid) to collect extra info
+    //Those extra info are now stored in CSV file and the Emails
+    //e.g. first loaded date, lga layerID, lga name etc
+    //
+    def fetchExtraOccurrenceInfo(def records) {
+        String layerId = grailsApplication.config.getProperty('biosecurity.lga', 'cl11170')
+        String qidUrl = grailsApplication.config.getProperty('biocacheService.baseURL') + '/qid'
+
+        int limits = grailsApplication.config.biocacheService.pageSize
+        records.collate(limits).each {batch ->
+            def ids = batch.collect {it.uuid}
+            def query = ids.collect { "id:${it}" }.join(" OR ")
+            def qidResp = webService.post(
+                    qidUrl,
+                    ["q": query],
+                    [:],
+                    ContentType.APPLICATION_FORM_URLENCODED
+            )
+
+            if (qidResp.statusCode == 200) {
+                def qid = qidResp.resp?.keySet()?.iterator()?.next()
+                if (qid) {
+                    def occurrenceUrl = grailsApplication.config.getProperty('biocacheService.baseURL') + "/occurrences/search?q=qid:${qid}&pageSize=${limits}&fl=id,firstLoadedDate,${layerId}"
+                    def occurrencesResp = webService.get(occurrenceUrl)
+                    //e.g.
+                    //{
+                    //    uuid: "d8b1bd1a-98b6-494d-91c0-f0a4aa636d30",
+                    //    otherProperties: {
+                    //        firstLoadedDate: "2025-11-13T03:29:22.089+00:00",
+                    //        cl11170: "Western Downs"
+                    //    }
+                    //}
+                    if (occurrencesResp.statusCode == 200) {
+                        def occurrences = occurrencesResp.resp?["occurrences"]
+                        def occMap = occurrences.collectEntries { occ ->
+                            [(occ.uuid): occ]
+                        }
+
+                        //Update each record only if a matching occurrence exists
+                        batch.each { record ->
+                            def occ = occMap[record.uuid]
+                            if (occ) {
+                                record['lgaLayer'] = layerId
+                                record['lga'] = occ.otherProperties?[layerId] ?: ""
+                                record['firstLoadedDate'] = occ.otherProperties?.firstLoadedDate
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private def getCsvService() {

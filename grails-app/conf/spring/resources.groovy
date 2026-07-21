@@ -19,6 +19,7 @@ beans = {
 
     // This tells Spring to find all @Component, @Service, etc. in your package
     // Assure the Quartz schedulers are loaded
+
     xmlns context: "http://www.springframework.org/schema/context"
     context.'component-scan'('base-package': "au.org.ala.alerts.quartz")
 
@@ -39,4 +40,5 @@ beans = {
                 'org.quartz.jobStore.tablePrefix': 'QRTZ_'
         ] as Properties
     }
+
 }

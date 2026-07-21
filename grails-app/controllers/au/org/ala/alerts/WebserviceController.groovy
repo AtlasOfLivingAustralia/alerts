@@ -22,7 +22,7 @@ import grails.converters.JSON
 import grails.gorm.transactions.Transactional
 import grails.util.Holders
 import grails.web.servlet.mvc.GrailsParameterMap
-import io.micronaut.http.HttpStatus
+import org.springframework.http.HttpStatus
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.Content
@@ -404,7 +404,7 @@ class WebserviceController {
             security = [@SecurityRequirement(name = 'openIdConnect')]
     )
     @RequireApiKey
-    @Path("api/alerts/user/{userId}/unsubscribe")
+    @Path("/api/alerts/user/{userId}/unsubscribe")
     def deleteAllAlertsForUser() {
         String resolvedUserId = resolveUserId(params.userId)
         if (!resolvedUserId) {
@@ -471,7 +471,7 @@ class WebserviceController {
             security = [@SecurityRequirement(name = 'openIdConnect')]
     )
     @RequireApiKey
-    @Path("api/alerts/user/createAlerts")
+    @Path("/api/alerts/user/createAlerts")
     def createUserAlerts() {
         def resolvedUserId = resolveUserId(params.userId)
         if (!resolvedUserId) {
@@ -566,7 +566,7 @@ class WebserviceController {
             security = [@SecurityRequirement(name = 'openIdConnect')]
     )
     @RequireApiKey
-    @Path("api/alerts/user/{userId}")
+    @Path("/api/alerts/user/{userId}")
     def getUserAlertsWS() {
         String resolvedUserId = resolveUserId(params.userId)
         User user = userService.getUserById(resolvedUserId)
@@ -609,7 +609,7 @@ class WebserviceController {
             // hidden = grailsApplication.config.myannotation.enabled
     )
     @RequireApiKey
-    @Path("api/alerts/user/{userId}/subscribeMyAnnotation")
+    @Path("/api/alerts/user/{userId}/subscribeMyAnnotation")
     def subscribeMyAnnotationWS() {
         if (!grailsApplication.config.myannotation.enabled) {
             return
@@ -668,7 +668,7 @@ class WebserviceController {
             // hidden = grailsApplication.config.myannotation.enabled
     )
     @RequireApiKey
-    @Path("api/alerts/user/{userId}/unsubscribeMyAnnotation")
+    @Path("/api/alerts/user/{userId}/unsubscribeMyAnnotation")
     def unsubscribeMyAnnotationWS() {
         if (!grailsApplication.config.myannotation.enabled) {
             return

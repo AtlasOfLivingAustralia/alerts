@@ -1,11 +1,14 @@
 package au.org.ala.auth;
 
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * todo check if this is still needed
+ */
 public class AuthenticationCookieUtils {
 
     private final static Logger logger = LoggerFactory.getLogger(AuthenticationCookieUtils.class);

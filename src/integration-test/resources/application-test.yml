@@ -5,5 +5,3 @@ security:
         enabled: false
     jwt:
         enabled: false
-    apikey:
-        enabled: false

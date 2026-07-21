@@ -11,7 +11,7 @@ import grails.gorm.transactions.Transactional
 class QueryService {
 
     def serviceMethod() {}
-    def grailsApplication, notificationService, alertsWebService, webService
+    def grailsApplication, notificationService, webService
     def messageSource, dataSource
     def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
 
@@ -330,8 +330,8 @@ class QueryService {
                 name          : messageSource.getMessage("query.myannotations.title", null, siteLocale),
                 updateMessage : messageSource.getMessage("myannotations.update.message", null, siteLocale),
                 description   : messageSource.getMessage("query.myannotations.descr", null, siteLocale),
-                queryPath     : '/occurrences/search?fq=assertion_user_id:' + userId + '&dir=desc&pageSize=300&fq=lastAssertionDate:[___DATEPARAM___%20TO%20*]&sort=lastAssertionDate',
-                queryPathForUI: '/occurrences/search?fq=assertion_user_id:' + userId + '&dir=desc&pageSize=300&fq=lastAssertionDate:[___DATEPARAM___%20TO%20*]&sort=lastAssertionDate',
+                queryPath     : "/occurrences/search?fq=assertion_user_id:${userId}&dir=desc&pageSize=${grailsApplication.config.biocacheService.pageSize}&fq=lastAssertionDate:[___DATEPARAM___%20TO%20*]&sort=lastAssertionDate",
+                queryPathForUI: "/occurrences/search?fq=assertion_user_id:${userId}&dir=desc&pageSize=${grailsApplication.config.biocacheService.pageSize}&fq=lastAssertionDate:[___DATEPARAM___%20TO%20*]&sort=lastAssertionDate",
                 dateFormat    : """yyyy-MM-dd'T'HH:mm:ss'Z'""",
                 emailTemplate : '/email/myAnnotations',
                 recordJsonPath: '\$.occurrences[*]',
