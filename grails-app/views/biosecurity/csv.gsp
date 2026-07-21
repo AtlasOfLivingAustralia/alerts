@@ -118,8 +118,17 @@
                 <div class="file-list" id="files-${folder.name}">
                     <g:each in="${folder.files}" var="file">
                         <div>
-                            <a href="${createLink( namespace: 'biosecurity', controller: 'csv', action: 'download', params: [filename:folder.name +'/' + file])}"><i class="fa fa-download" aria-hidden="true"></i>  ${file}</a>
-                            <a href="#" onclick="deleteFile('${folder.name}/${file}'); return false;">
+                            <a href="${createLink(namespace: 'biosecurity', controller: 'csv', action: 'download', params: [filename: folder.name + '/' + file.name])}">
+                                <i class="fa fa-download" aria-hidden="true"></i>  ${file.name}
+                            </a>
+                            <span class="text-muted ms-2">(
+                                ${file.formattedSize},
+                                <g:if test="${file.lastUpdated}">
+                                    <g:formatDate date="${new Date(file.lastUpdated as Long)}" format="yyyy-MM-dd HH:mm"/>
+                                </g:if>
+                                )
+                            </span>
+                            <a href="#" onclick="deleteFile('${folder.name}/${file.name}'); return false;">
                                 <i class="fa fa-trash-o" aria-hidden="true"></i>
                             </a>
                         </div>

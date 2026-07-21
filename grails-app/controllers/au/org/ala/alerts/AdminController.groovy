@@ -394,6 +394,7 @@ class AdminController {
             qr.lastChecked = since
             query.lastChecked = since
             def records = diffService.diff(qr)
+            biosecurityService.fetchExtraOccurrenceInfo(records)
 
             String urlPrefix = "${grailsApplication.config.getProperty("grails.serverURL")}${grailsApplication.config.getProperty('security.cas.contextPath', '')}"
             def localeSubject = messageSource.getMessage("emailservice.update.subject", [query.name] as Object[], siteLocale)
@@ -658,19 +659,28 @@ class AdminController {
         def id = params.queryId
         def frequency = params.frequency
         def checkDate = params.checkDate
+        boolean sendToSubscribers = params.sendToSubscribers ?: false
         if (id && frequency && checkDate) {
             Query query = Query.get(id)
             Frequency fre = Frequency.findByName(frequency)
+
             Date date = new SimpleDateFormat("yyyy-MM-dd").parse(checkDate)
             if (query && fre) {
                 QueryResult qs = notificationService.executeQuery(query, fre, false, true, date)
                 if (qs.succeeded) {
                     def records = qs.newRecords
                     User currentUser = userService.getUser()
-                    def recipient =
-                            [email: currentUser.email, userUnsubToken: currentUser.unsubscribeToken, notificationUnsubToken: '']
-                    emailService.sendGroupNotification(qs, fre, [recipient])
-                    def results = ["hasChanged": qs.hasChanged, "records": records, "recipient": currentUser.email, details: qs.brief()]
+                    def recipients =
+                            [[email: currentUser.email, userUnsubToken: currentUser.unsubscribeToken, notificationUnsubToken: '']]
+                    if (sendToSubscribers) {
+                        def subscribers = queryService.getSubscribers(id.toLong())
+                        def others = subscribers.collect { subscriber ->
+                            [email:subscriber.email, userUnsubToken: subscriber.unsubscribeToken, notificationUnsubToken: '']
+                        }
+                        recipients.addAll(others)
+                    }
+                    emailService.sendGroupNotification(qs, fre, recipients)
+                    def results = ["hasChanged": qs.hasChanged, "records": records, "recipient": recipients*.email, details: qs.brief()]
                     render results as JSON
                 } else {
                     def results = ["status": qs.succeeded, "error": qs.logs]

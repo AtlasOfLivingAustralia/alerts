@@ -5,6 +5,9 @@ import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
+/**
+ * todo check if this is still needed
+ */
 @Configuration
 class S3ClientConfig {
 

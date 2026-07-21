@@ -59,6 +59,9 @@
                                         <g:if test="${oc.vernacularName}">
                                             Common name: ${oc.vernacularName}<br>
                                         </g:if>
+                                        <g:if test="${oc.lga}">
+                                            <strong>${oc.lga}</strong><br>
+                                        </g:if>
                                         <g:if test="${oc.locality && oc.stateProvince}">
                                             <strong>${oc.locality}; ${oc.stateProvince}</strong>><br>
                                         </g:if>

@@ -50,7 +50,7 @@ abstract class BiosecurityCSVService {
     abstract boolean folderExists(String folderName)
 
 
-    String formatSize(long size) {
+    static String formatSize(long size) {
         String totalSizeFormatted = ""
         if (size >= 1024 * 1024 * 1024) {
             totalSizeFormatted = "${(size / (1024 * 1024 * 1024)).round()} GB"
@@ -72,61 +72,21 @@ abstract class BiosecurityCSVService {
     static String sanitizeFileName(String fileName) {
         // Define a pattern for illegal characters
         def pattern = /[^a-zA-Z0-9\.\-\_]/
-        return fileName.replaceAll(pattern, '_')
-    }
-
-    //Batch Query Biocache (Using qid) to collect extra info
-    //Those extra info are only stored in CSV file, not included in the Emails
-    //e.g. first loaded date, lga layerID, lga name etc
-    //
-    def fetchExtraOccurrenceInfo(def records) {
-        String layerId = grailsApplication.config.getProperty('biosecurity.lga', 'cl11170')
-        String qidUrl = grailsApplication.config.getProperty('biocacheService.baseURL') + '/qid'
-
-        int limits = 1000
-        records.collate(limits).each {batch ->
-            def ids = batch.collect {it.uuid}
-            def query = ids.collect { "id:${it}" }.join(" OR ")
-            def qidResp = webService.post(
-                    qidUrl,
-                    ["q": query],
-                    [:],
-                    ContentType.APPLICATION_FORM_URLENCODED
-            )
-
-            if (qidResp.statusCode == 200) {
-                def qid = qidResp.resp?.keySet()?.iterator()?.next()
-                if (qid) {
-                    def occurrenceUrl = grailsApplication.config.getProperty('biocacheService.baseURL') + "/occurrences/search?q=qid:${qid}&pageSize=${limits}&fl=id,firstLoadedDate,${layerId}"
-                    def occurrencesResp = webService.get(occurrenceUrl)
-                    //e.g.
-                    //{
-                    //    uuid: "d8b1bd1a-98b6-494d-91c0-f0a4aa636d30",
-                    //    otherProperties: {
-                    //        firstLoadedDate: "2025-11-13T03:29:22.089+00:00",
-                    //        cl11170: "Western Downs"
-                    //    }
-                    //}
-                    if (occurrencesResp.statusCode == 200) {
-                        def occurrences = occurrencesResp.resp?["occurrences"]
-                        def occMap = occurrences.collectEntries { occ ->
-                            [(occ.uuid): occ]
-                        }
-
-                        //Update each record only if a matching occurrence exists
-                        batch.each { record ->
-                            def occ = occMap[record.uuid]
-                            if (occ) {
-                                record['lgaLayer'] = layerId
-                                record['lga'] = occ.otherProperties?[layerId] ?: ""
-                                record['firstLoaded'] = occ.otherProperties?.firstLoadedDate
-                            }
-                        }
-                    }
-                }
+        def sanitized = fileName.replaceAll(pattern, '_')
+        // Truncate to 150 characters preserving extension if possible
+        if (sanitized.length() > 200) {
+            int dotIndex = sanitized.lastIndexOf('.')
+            if (dotIndex > 0 && dotIndex > sanitized.length() - 20) {
+                // keep extension
+                String ext = sanitized.substring(dotIndex)
+                sanitized = sanitized.substring(0, 150 - ext.length()) + ext
+            } else {
+                sanitized = sanitized.substring(0, 150)
             }
         }
+        return sanitized
     }
+
 
      /**
      * Main logic to create a temp CSV file from query result
@@ -134,10 +94,8 @@ abstract class BiosecurityCSVService {
      * @return File object
      */
     File createTempCSVFromQueryResult(QueryResult qs) {
-        def records = diffService.getNewRecords(qs)
+        def records = qs.newRecords
         log.info("Generating CSV for ${qs.query?.name} : [ ${records.size()}] occurrences")
-        //Batch query extra info for each occurrences
-        fetchExtraOccurrenceInfo(records)
 
         String outputFile = sanitizeFileName("${new SimpleDateFormat("yyyy-MM-dd").format(qs.lastChecked)}")
 
@@ -147,7 +105,7 @@ abstract class BiosecurityCSVService {
         // recordID:uuid  recordID is the header name, uuid is the property in the record
         String rawHeader = "recordID:uuid, recordLink:occurrenceLink, scientificName,taxonConceptID,decimalLatitude,decimalLongitude,eventDate,occurrenceStatus,dataResourceName,multimedia,mediaId:image," +
                 "vernacularName,taxonConceptID_new,kingdom,phylum,class:classs,order,family,genus,species,subspecies," +
-                "firstLoadedDate:firstLoaded,basisOfRecord,match," +
+                "firstLoadedDate,basisOfRecord,match," +
                 "searchTerm:search_term,correct name:scientificName,provided name:providedName,common name:vernacularName,state:stateProvince,lga layer:lgaLayer,lga,fq," +
                 "list id:listId,list name:listName, listLink:listLink, cw_state,shape feature:shape_feature,creator:collector," +
                 "license,mimetype," +
@@ -179,12 +137,12 @@ abstract class BiosecurityCSVService {
                     def value = record[field]
 
                     switch (field) {
-                        case ["eventDate", "firstLoaded"]:
+                        case ["eventDate"]:
                             if (value) {
                                 try {
                                     value = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss").format(value.toLong())
                                 } catch(Exception ignored) {
-                                    value = ""
+                                    //keep the original value if it cannot be parsed
                                 }
                             } else {
                                 value = ""

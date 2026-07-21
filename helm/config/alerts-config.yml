@@ -85,16 +85,6 @@ security:
     loginUrl: "{{ .Values.config.cas.auth_base_url }}/cas/login"
     logoutUrl: "{{ .Values.config.cas.auth_base_url }}/cas/logout"
 
-  apikey:
-    enabled: {{ .Values.config.apikey.apikey_check_enabled }}
-    ip:
-      whitelist: "{{ .Values.config.cas.alerts_apikey_whitelist }}"
-    auth:
-      serviceUrl: "{{ .Values.config.apikey.apikey_auth_url }}"
-    check:
-      serviceUrl: "{{ .Values.config.apikey.apikey_check_url }}"
-    userdetails:
-      serviceUrl: "{{ .Values.config.apikey.apikey_userdetails_url }}"
 
   oidc:
     logoutUrl: "{{ .Values.config.cognito.oidc.logoutUrl }}"
