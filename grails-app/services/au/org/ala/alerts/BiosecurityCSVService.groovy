@@ -73,7 +73,7 @@ abstract class BiosecurityCSVService {
         // Define a pattern for illegal characters
         def pattern = /[^a-zA-Z0-9\.\-\_]/
         def sanitized = fileName.replaceAll(pattern, '_')
-        // Truncate to 200 characters preserving extension if possible
+        // Truncate to 150 characters preserving extension if possible
         if (sanitized.length() > 200) {
             int dotIndex = sanitized.lastIndexOf('.')
             if (dotIndex > 0 && dotIndex > sanitized.length() - 20) {

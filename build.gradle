@@ -8,7 +8,7 @@ buildscript {
     }
     dependencies {
         classpath platform("org.apache.grails:grails-bom:$grailsVersion")
-        classpath "org.apache.grails:grails-gradle-plugins:7.0.0-M4"
+        classpath "org.apache.grails:grails-gradle-plugins:$grailsGradlePluginVersion"
         classpath "org.apache.grails:grails-data-hibernate5"
         //classpath "cloud.wondrify:asset-pipeline-gradle"
     }
@@ -78,7 +78,8 @@ configurations {
             }
             // Some ALA/Grails 6-era transitive deps still request org.codehaus.groovy:*.
             // Force them onto Groovy 4 (org.apache.groovy) to avoid module version conflicts.
-            if (details.requested.group == 'org.codehaus.groovy') {
+            // BUT: groovy-bom is a platform/BOM, not a jar. Do not rewrite it.
+            if (details.requested.group == 'org.codehaus.groovy' && details.requested.name != 'groovy-bom') {
                 details.useTarget("org.apache.groovy:${details.requested.name}:${groovyVersion}")
             }
             if (details.requested.group == 'org.apache.groovy') {
