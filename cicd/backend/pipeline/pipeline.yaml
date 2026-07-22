@@ -152,22 +152,13 @@ Resources:
           - Fn::ImportValue:
               Fn::Sub: ${pVpcStackName}-PriSubnets
         SecurityGroupIds:
-          - !Ref MigrateDatabaseCodeBuildSecurityGroup
+          - Fn::ImportValue:
+              Fn::Sub: ${pVpcStackName}-CodeBuildSecurityGroup
       Source:
         Type: CODEPIPELINE
         BuildSpec: !Sub cicd/${pProductComponent}/pipeline/run_liquibase_buildspec.yaml
       TimeoutInMinutes: 20
 
-  MigrateDatabaseCodeBuildSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: Security group for Liquibase migration CodeBuild job
-      VpcId:
-        Fn::ImportValue:
-          Fn::Sub: ${pVpcStackName}-Vpc
-      SecurityGroupEgress:
-        - IpProtocol: -1
-          CidrIp: 0.0.0.0/0
 
   TeardownAlerts:
     Type: AWS::CodeBuild::Project
