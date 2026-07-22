@@ -141,6 +141,7 @@ aws cloudformation deploy \
         pBootstrapStackName=$BOOTSTRAP_STACK_NAME \
         pBaseStackName=$BASE_STACK_NAME \
         pBucketsStackName=$BUCKETS_STACK_NAME \
+        pVpcStackName=$VPC_STACK_NAME \
         pCleanBranch=$clean_branch \
         pEnvironment=$environment \
         pGitHubBranch=$branch \

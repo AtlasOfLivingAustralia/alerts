@@ -14,6 +14,9 @@ Parameters:
   pBucketsStackName:
     Type: String
     Description: the name of the bucket stack
+  pVpcStackName:
+    Type: String
+    Description: the name of the VPC stack
   pCleanBranch:
     Type: String
     Description: The clean branch, can be used in resource names
@@ -123,6 +126,48 @@ Resources:
         Type: CODEPIPELINE
         BuildSpec: !Sub cicd/${pProductComponent}/pipeline/deploy_alerts_buildspec.yaml
       TimeoutInMinutes: 20
+
+  MigrateDatabase:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Sub
+        - ${pProductName}-${pProductComponent}-migrate-database-${ResourceName}
+        - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
+      Description: Run Liquibase migrations before app deployment
+      ServiceRole:
+        Fn::ImportValue:
+          Fn::Sub: ${pBootstrapStackName}-CodeBuildServiceRoleArn
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/standard:7.0
+      VpcConfig:
+        VpcId:
+          Fn::ImportValue:
+            Fn::Sub: ${pVpcStackName}-Vpc
+        Subnets: !Split
+          - ','
+          - Fn::ImportValue:
+              Fn::Sub: ${pVpcStackName}-PriSubnets
+        SecurityGroupIds:
+          - !Ref MigrateDatabaseCodeBuildSecurityGroup
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: !Sub cicd/${pProductComponent}/pipeline/run_liquibase_buildspec.yaml
+      TimeoutInMinutes: 20
+
+  MigrateDatabaseCodeBuildSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for Liquibase migration CodeBuild job
+      VpcId:
+        Fn::ImportValue:
+          Fn::Sub: ${pVpcStackName}-Vpc
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
 
   TeardownAlerts:
     Type: AWS::CodeBuild::Project
@@ -281,6 +326,29 @@ Resources:
             Namespace: BuildAlertsNS
             RunOrder: 2
 
+          - Name: MigrateDatabase
+            ActionTypeId:
+              Owner: AWS
+              Category: Build
+              Version: 1
+              Provider: CodeBuild
+            Configuration:
+              ProjectName: !Ref MigrateDatabase
+              EnvironmentVariables: !Sub
+                - |
+                  [
+                    { "name":"ENVIRONMENT", "value":"${pEnvironment}" },
+                    { "name":"PRODUCT_NAME", "value":"#{ExportConfigNS.PRODUCT_NAME}" },
+                    { "name":"DB_WRITE_ENDPOINT", "value":"#{ExportConfigNS.DB_WRITE_ENDPOINT}" },
+                    { "name":"SECRET_NAME", "value":"#{ExportConfigNS.SECRET_NAME}" },
+                    { "name":"DB_USERNAME", "value":"#{ExportConfigNS.DB_USERNAME}" }
+                  ]
+                - {}
+              PrimarySource: SourceArtifact
+            InputArtifacts:
+              - Name: 'SourceArtifact'
+            RunOrder: 3
+
           - Name: DeployAlerts
             ActionTypeId:
               Owner: AWS
@@ -317,7 +385,7 @@ Resources:
               - Name: 'SourceArtifact'
               - Name: 'ExportConfigArtifact'
               - Name: 'BuildTagArtifact'
-            RunOrder: 3
+            RunOrder: 4
 
           - Name: DeployNotification
             ActionTypeId:
@@ -344,7 +412,7 @@ Resources:
             Namespace: DeployNotificationNS
             InputArtifacts:
               - Name: 'SourceArtifact'
-            RunOrder: 4
+            RunOrder: 5
 
       - Name: Teardown
         Actions:
@@ -414,6 +482,16 @@ Resources:
     DeletionPolicy: Delete
     Properties:
       LogGroupName: !Sub /aws/codebuild/${DeployAlerts}
+      RetentionInDays: 30
+      Tags:
+        - Key: Name
+          Value: !Ref AWS::StackName
+
+  MigrateDatabaseCodeBuildLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Delete
+    Properties:
+      LogGroupName: !Sub /aws/codebuild/${MigrateDatabase}
       RetentionInDays: 30
       Tags:
         - Key: Name

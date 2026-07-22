@@ -24,7 +24,7 @@ grails:
 dataSource:
   url: "jdbc:mysql://{{ .Values.rds.name }}/{{ .Values.config.db.database_name }}?useUnicode=true&characterEncoding=UTF-8&useSSL={{ .Values.config.db.mysql_connection_ssl }}"
   username: "{{ .Values.config.db.alerts_db_username }}"
-  password: "{{ .Values.config.db.alerts_db_password }}"
+  password: '{{ .Values.config.db.alerts_db_password }}'
   driverClassName: "{{ .Values.config.db.driver_class_name }}"
   dialect: "{{ .Values.config.db.db_dialect }}"
   properties:
@@ -46,6 +46,12 @@ dataSource:
     # --- Abandoned connection cleanup ---
     removeAbandoned: true
     removeAbandonedTimeout: 3600
+
+#disable liquibase by default except in the local development environment.
+#As liquibase is run in the AWS pipeline.
+spring:
+  liquibase:
+    enabled: false
 
 biosecurity:
   csv:

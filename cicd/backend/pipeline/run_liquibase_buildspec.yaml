@@ -1,0 +1,41 @@
+version: 0.2
+
+env:
+  shell: bash
+
+phases:
+  install:
+    commands:
+      - echo Installing Liquibase CLI...
+      - apt-get update -y
+      - apt-get install -y curl jq
+      - curl -sSL -o liquibase.tar.gz https://github.com/liquibase/liquibase/releases/download/v4.27.0/liquibase-4.27.0.tar.gz
+      - mkdir -p liquibase
+      - tar -xzf liquibase.tar.gz -C liquibase
+      - chmod +x liquibase/liquibase
+      - echo Downloading MySQL JDBC driver...
+      - mkdir -p liquibase/lib
+      - curl -fL -o liquibase/lib/mysql-connector-java.jar https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/8.0.33/mysql-connector-j-8.0.33.jar
+      - file liquibase/lib/mysql-connector-java.jar
+      - unzip -t liquibase/lib/mysql-connector-java.jar | tail -3
+
+  build:
+    commands:
+      - echo Running Liquibase migration on $(date)
+      - DB_USERNAME=${DB_USERNAME:-admin}
+      - DB_NAME=${PRODUCT_NAME}${ENVIRONMENT}
+      - DB_PASSWORD=$(aws secretsmanager get-secret-value --secret-id "$SECRET_NAME" --query 'SecretString' --output text | jq -r '."db-password"')
+      - |
+        liquibase/liquibase \
+          --changelog-file=src/main/resources/db/changelog/db.changelog-master.xml \
+          --url="jdbc:mysql://${DB_WRITE_ENDPOINT}/${DB_NAME}?useUnicode=true&characterEncoding=UTF-8&useSSL=false" \
+          --driver=com.mysql.cj.jdbc.Driver \
+          --username="$DB_USERNAME" \
+          --password="$DB_PASSWORD" \
+          --log-level=info \
+          update
+
+  post_build:
+    commands:
+      - echo Liquibase migration complete on $(date)
+
