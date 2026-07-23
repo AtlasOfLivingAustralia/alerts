@@ -175,7 +175,7 @@ Resources:
               - !Sub "arn:aws:s3:::${LoadBalancerAccessLogsBucket}/*"
             Condition:
               Bool:
-                aws:SecureTransport: false
+                aws:SecureTransport: 'false'
 
   BiosecurityAlertsBucketPolicy:
     Type: AWS::S3::BucketPolicy
@@ -193,7 +193,7 @@ Resources:
               - !Sub "arn:aws:s3:::${BiosecurityAlertsBucket}/*"
             Condition:
               Bool:
-                aws:SecureTransport: false
+                aws:SecureTransport: 'false'
 
   AlertsRole:
     Type: AWS::IAM::Role
