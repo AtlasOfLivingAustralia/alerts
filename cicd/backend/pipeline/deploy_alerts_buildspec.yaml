@@ -52,6 +52,67 @@ phases:
     commands:
       - echo Post-build phase...
       - echo Build completed on $(date)
+      - |
+        # Post-deploy cleanup logic:
+        # - read Liquibase status from /tmp/liquibase-status.env
+        # - if no DB changes were pending, do nothing
+        # - if DB changes were pending and deploy succeeded, delete the snapshot
+        # - if deploy failed, restore the DB from the snapshot and rename the current DB instance to a broken name for inspection
+        
+        # Capture build status and read status variables
+        BUILD_SUCCEEDED=$( [ $? -eq 0 ] && echo "true" || echo "false" )
+        echo "Build phase status: BUILD_SUCCEEDED=$BUILD_SUCCEEDED"
+        
+        # Read Liquibase status from migration phase
+        if [ ! -f /tmp/liquibase-status.env ]; then
+          echo "No status env file found. No database changes were pending."
+          exit $( [ "$BUILD_SUCCEEDED" = "true" ] && echo 0 || echo 1 )
+        fi
+        
+        source /tmp/liquibase-status.env
+        echo "Loaded status: HAS_PENDING_CHANGES=$HAS_PENDING_CHANGES, SNAPSHOT_CREATED=$SNAPSHOT_CREATED"
+        
+        # Only proceed if changes were made
+        if [ "$HAS_PENDING_CHANGES" != "true" ]; then
+          echo "No database changes were pending. Exiting."
+          exit $( [ "$BUILD_SUCCEEDED" = "true" ] && echo 0 || echo 1 )
+        fi
+        
+        echo "Database changes were made. Proceeding with snapshot cleanup logic..."
+        
+        # Check build status and decide on snapshot
+        if [ "$BUILD_SUCCEEDED" = "true" ]; then
+          echo "Build phase succeeded. Checking if snapshot should be deleted..."
+          if [ "$SNAPSHOT_CREATED" = "true" ]; then
+            echo "Deployment succeeded with database changes. Deleting backup snapshot: $SNAPSHOT_ID"
+            aws rds delete-db-snapshot \
+              --db-snapshot-identifier "$SNAPSHOT_ID" || echo "Warning: Could not delete snapshot $SNAPSHOT_ID"
+          else
+            echo "Snapshot was not created despite pending changes."
+          fi
+        else
+          echo "Build phase failed. Starting database rollback using snapshot: $SNAPSHOT_ID"
+          BROKEN_INSTANCE_NAME="${DB_NAME}-broken-$(date +%Y%m%d%H%M%S)"
+          echo "Step 1: Renaming current (potentially broken) DB instance from $DB_NAME to $BROKEN_INSTANCE_NAME..."
+          aws rds modify-db-instance \
+            --db-instance-identifier "$DB_NAME" \
+            --new-db-instance-identifier "$BROKEN_INSTANCE_NAME" \
+            --apply-immediately
+          echo "Waiting for rename to complete..."
+          aws rds wait db-instance-available \
+            --db-instance-identifier "$BROKEN_INSTANCE_NAME"
+          echo "Step 2: Restoring DB from snapshot $SNAPSHOT_ID as $DB_NAME..."
+          aws rds restore-db-instance-from-db-snapshot \
+            --db-instance-identifier "$DB_NAME" \
+            --db-snapshot-identifier "$SNAPSHOT_ID"
+          echo "Waiting for restored DB instance to become available..."
+          aws rds wait db-instance-available \
+            --db-instance-identifier "$DB_NAME"
+          echo "Rollback complete. DB $DB_NAME has been restored from snapshot $SNAPSHOT_ID."
+          echo "The broken instance has been renamed to $BROKEN_INSTANCE_NAME for inspection."
+          echo "Once confirmed, you can delete the broken instance manually."
+          exit 1
+        fi
 
 artifacts:
   base-directory: $CODEBUILD_SRC_DIR

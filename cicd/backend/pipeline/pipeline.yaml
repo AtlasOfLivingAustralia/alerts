@@ -202,6 +202,7 @@ Resources:
         BuildSpec: !Sub cicd/${pProductComponent}/pipeline/deploy_notification_buildspec.yaml
       TimeoutInMinutes: 5
 
+
   Pipeline:
     Type: "AWS::CodePipeline::Pipeline"
     Properties:
@@ -458,6 +459,7 @@ Resources:
                      Fn::Sub: '${pBootstrapStackName}-CloudFormationServiceRoleArn'
             RunOrder: 4
 
+
   BuildAlertsCodeBuildLogGroup:
     Type: AWS::Logs::LogGroup
     DeletionPolicy: Delete
@@ -507,6 +509,7 @@ Resources:
       Tags:
         - Key: Name
           Value: !Ref AWS::StackName
+
 
 
 Outputs:

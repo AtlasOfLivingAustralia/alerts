@@ -24,18 +24,94 @@ phases:
       - echo Running Liquibase migration on $(date)
       - DB_USERNAME=${DB_USERNAME:-admin}
       - DB_NAME=${PRODUCT_NAME}${ENVIRONMENT}
+      - HAS_PENDING_CHANGES=false
+      - SNAPSHOT_ID=
+      - SNAPSHOT_CREATED=false
+      - LIQUIBASE_UPDATE_SUCCEEDED=false
       - DB_PASSWORD=$(aws secretsmanager get-secret-value --secret-id "$SECRET_NAME" --query 'SecretString' --output text | jq -r '."db-password"')
       - |
-        liquibase/liquibase \
+        set -euo pipefail
+        if ! LIQUIBASE_STATUS=$(liquibase/liquibase \
           --changelog-file=src/main/resources/db/changelog/db.changelog-master.xml \
           --url="jdbc:mysql://${DB_WRITE_ENDPOINT}/${DB_NAME}?useUnicode=true&characterEncoding=UTF-8&useSSL=false" \
           --driver=com.mysql.cj.jdbc.Driver \
           --username="$DB_USERNAME" \
           --password="$DB_PASSWORD" \
           --log-level=info \
-          update
+          status 2>&1); then
+          echo "$LIQUIBASE_STATUS"
+          echo "Liquibase status command failed."
+          exit 1
+        fi
+        echo "Liquibase status output: $LIQUIBASE_STATUS"
+        if echo "$LIQUIBASE_STATUS" | grep -q "changesets have not been applied"; then
+          HAS_PENDING_CHANGES=true
+        else
+          HAS_PENDING_CHANGES=false
+        fi
+        echo "HAS_PENDING_CHANGES=$HAS_PENDING_CHANGES"
+      - |
+        set -euo pipefail
+        if [ "$HAS_PENDING_CHANGES" = "true" ]; then
+          TIMESTAMP=$(date +%Y%m%d%H%M%S)
+          SNAPSHOT_ID="${DB_NAME}-${TIMESTAMP}-snapshot"
+          echo "Creating RDS snapshot: $SNAPSHOT_ID"
+          aws rds create-db-snapshot \
+            --db-instance-identifier "$DB_NAME" \
+            --db-snapshot-identifier "$SNAPSHOT_ID"
+          echo "Waiting for snapshot $SNAPSHOT_ID to become available..."
+          if ! aws rds wait db-snapshot-available \
+            --db-snapshot-identifier "$SNAPSHOT_ID"; then
+            echo "Snapshot $SNAPSHOT_ID did not become available. Failing migration step."
+            exit 1
+          fi
+          SNAPSHOT_CREATED=true
+          echo "Snapshot $SNAPSHOT_ID is available."
+          echo "Pending changes detected. Running Liquibase update..."
+          liquibase/liquibase \
+            --changelog-file=src/main/resources/db/changelog/db.changelog-master.xml \
+            --url="jdbc:mysql://${DB_WRITE_ENDPOINT}/${DB_NAME}?useUnicode=true&characterEncoding=UTF-8&useSSL=false" \
+            --driver=com.mysql.cj.jdbc.Driver \
+            --username="$DB_USERNAME" \
+            --password="$DB_PASSWORD" \
+            --log-level=info \
+            update
+          LIQUIBASE_UPDATE_SUCCEEDED=true
+        else
+          echo "No pending changes detected. Skipping Liquibase update."
+        fi
 
   post_build:
     commands:
       - echo Liquibase migration complete on $(date)
+      # Persist migration outcome for downstream stages (e.g. deploy alerts, determine rollback/cleanup decisions).
+      - echo "Exporting HAS_PENDING_CHANGES=$HAS_PENDING_CHANGES"
+      - echo "Exporting SNAPSHOT_CREATED=$SNAPSHOT_CREATED"
+      - echo "Exporting LIQUIBASE_UPDATE_SUCCEEDED=$LIQUIBASE_UPDATE_SUCCEEDED"
+      - export HAS_PENDING_CHANGES=$HAS_PENDING_CHANGES
+      - export SNAPSHOT_CREATED=$SNAPSHOT_CREATED
+      - export LIQUIBASE_UPDATE_SUCCEEDED=$LIQUIBASE_UPDATE_SUCCEEDED
+      - printf 'HAS_PENDING_CHANGES=%s\nSNAPSHOT_ID=%s\nSNAPSHOT_CREATED=%s\nLIQUIBASE_UPDATE_SUCCEEDED=%s\n' "$HAS_PENDING_CHANGES" "$SNAPSHOT_ID" "$SNAPSHOT_CREATED" "$LIQUIBASE_UPDATE_SUCCEEDED" > /tmp/liquibase-status.env
+      - cat /tmp/liquibase-status.env
+      - |
+        # Respect the build result: on success continue; on failure, clean up snapshot when needed and
+        # return the same failure code so CodePipeline still marks this action as failed.
+        # if liquibase update failed, since liquibase automatically rollbacks the changes, we can just delete the snapshot and exit with failure code
+        BUILD_EXIT_CODE=$( [ "$CODEBUILD_BUILD_SUCCEEDING" = "1" ] && echo 0 || echo 1 )
+        if [ "$BUILD_EXIT_CODE" -eq 0 ]; then
+          echo "Liquibase build succeeded. Continuing."
+        else
+          if [ "$HAS_PENDING_CHANGES" = "false" ]; then
+            echo "Liquibase build failed and no pending DB changes were found. Exiting with build status code $BUILD_EXIT_CODE."
+            exit "$BUILD_EXIT_CODE"
+          fi
+          echo "Liquibase build failed with pending DB changes. Checking snapshot cleanup before exit."
+          if [ "$SNAPSHOT_CREATED" = "true" ] && [ -n "$SNAPSHOT_ID" ]; then
+            echo "Deleting snapshot created during failed run: $SNAPSHOT_ID"
+            aws rds delete-db-snapshot --db-snapshot-identifier "$SNAPSHOT_ID" || echo "Warning: Could not delete snapshot $SNAPSHOT_ID"
+          else
+            echo "No snapshot to delete (SNAPSHOT_CREATED=$SNAPSHOT_CREATED, SNAPSHOT_ID=$SNAPSHOT_ID)."
+          fi
+          exit "$BUILD_EXIT_CODE"
+        fi
 
