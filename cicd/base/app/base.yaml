@@ -166,6 +166,34 @@ Resources:
               Service: "logdelivery.elasticloadbalancing.amazonaws.com"
             Action: "s3:PutObject"
             Resource: !Sub "arn:aws:s3:::${LoadBalancerAccessLogsBucket}/logs/AWSLogs/${AWS::AccountId}/*"
+          - Sid: EnforceSSLOnly
+            Effect: Deny
+            Principal: '*'
+            Action: 's3:*'
+            Resource:
+              - !Sub "arn:aws:s3:::${LoadBalancerAccessLogsBucket}"
+              - !Sub "arn:aws:s3:::${LoadBalancerAccessLogsBucket}/*"
+            Condition:
+              Bool:
+                aws:SecureTransport: false
+
+  BiosecurityAlertsBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref BiosecurityAlertsBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: EnforceSSLOnly
+            Effect: Deny
+            Principal: '*'
+            Action: 's3:*'
+            Resource:
+              - !Sub "arn:aws:s3:::${BiosecurityAlertsBucket}"
+              - !Sub "arn:aws:s3:::${BiosecurityAlertsBucket}/*"
+            Condition:
+              Bool:
+                aws:SecureTransport: false
 
   AlertsRole:
     Type: AWS::IAM::Role
