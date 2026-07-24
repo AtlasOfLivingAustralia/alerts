@@ -72,17 +72,17 @@ phases:
       - |  
         BUILD_SUCCEEDED=$( [ "$CODEBUILD_BUILD_SUCCEEDING" = "1" ] && echo "true" || echo "false" )
         echo "Build phase status: BUILD_SUCCEEDED=$BUILD_SUCCEEDED"
-        
-#         Read Liquibase status from migration phase
+
+        # Read Liquibase status from migration phase
         if [ ! -f /tmp/liquibase-status.env ]; then
           echo "No status env file found. No database changes were pending."
           exit $( [ "$BUILD_SUCCEEDED" = "true" ] && echo 0 || echo 1 )
         fi
-        
+
         source /tmp/liquibase-status.env
         echo "Loaded status: HAS_PENDING_CHANGES=$HAS_PENDING_CHANGES, SNAPSHOT_CREATED=$SNAPSHOT_CREATED"
-        
-#       Only proceed if changes were made
+
+        # Only proceed if changes were made
         if [ "$HAS_PENDING_CHANGES" != "true" ]; then
           echo "No database changes were pending. Exiting."
           exit $( [ "$BUILD_SUCCEEDED" = "true" ] && echo 0 || echo 1 )
@@ -90,13 +90,13 @@ phases:
         
         echo "Database changes were made. Proceeding with snapshot cleanup logic..."
         
- #       Check build status and decide on snapshot
+        # Check build status and decide on snapshot
         if [ "$BUILD_SUCCEEDED" = "true" ]; then
           echo "Build phase succeeded. Checking if snapshot should be deleted..."
           if [ "$SNAPSHOT_CREATED" = "true" ]; then
             echo "Deployment succeeded with database changes. Deleting backup snapshot: $SNAPSHOT_ID"
-#           aws rds delete-db-snapshot \
-#              --db-snapshot-identifier "$SNAPSHOT_ID" || echo "Warning: Could not delete snapshot $SNAPSHOT_ID"
+            # aws rds delete-db-snapshot \
+            #  --db-snapshot-identifier "$SNAPSHOT_ID" || echo "Warning: Could not delete snapshot $SNAPSHOT_ID"
             echo "The backup instance is $SNAPSHOT_ID for inspection."
             echo "Once confirmed, you can delete the instance manually."
           else

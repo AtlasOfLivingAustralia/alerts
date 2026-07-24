@@ -43,7 +43,7 @@ phases:
           exit 1
         fi
         echo "Liquibase status output: $LIQUIBASE_STATUS"
-        if echo "$LIQUIBASE_STATUS" | grep -q "changesets have not been applied"; then
+        if echo "$LIQUIBASE_STATUS" | grep -qi "has not been applied"; then
           HAS_PENDING_CHANGES=true
         else
           HAS_PENDING_CHANGES=false
