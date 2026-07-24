@@ -55,18 +55,22 @@ phases:
         if [ "$HAS_PENDING_CHANGES" = "true" ]; then
           TIMESTAMP=$(date +%Y%m%d%H%M%S)
           SNAPSHOT_ID="${DB_NAME}-${TIMESTAMP}-snapshot"
-          echo "Creating RDS snapshot: $SNAPSHOT_ID"
-          aws rds create-db-snapshot \
-            --db-instance-identifier "$DB_NAME" \
-            --db-snapshot-identifier "$SNAPSHOT_ID"
-          echo "Waiting for snapshot $SNAPSHOT_ID to become available..."
-          if ! aws rds wait db-snapshot-available \
-            --db-snapshot-identifier "$SNAPSHOT_ID"; then
-            echo "Snapshot $SNAPSHOT_ID did not become available. Failing migration step."
-            exit 1
+          if aws rds describe-db-instances --db-instance-identifier "$DB_NAME" >/dev/null 2>&1; then
+            echo "Creating RDS snapshot: $SNAPSHOT_ID"
+            aws rds create-db-snapshot \
+              --db-instance-identifier "$DB_NAME" \
+              --db-snapshot-identifier "$SNAPSHOT_ID"
+            echo "Waiting for snapshot $SNAPSHOT_ID to become available..."
+            if ! aws rds wait db-snapshot-available \
+              --db-snapshot-identifier "$SNAPSHOT_ID"; then
+              echo "Snapshot $SNAPSHOT_ID did not become available. Failing migration step."
+              exit 1
+            fi
+            SNAPSHOT_CREATED=true
+            echo "Snapshot $SNAPSHOT_ID is available."
+          else
+            echo "DB instance $DB_NAME not found. Assuming first-time deployment and skipping snapshot creation."
           fi
-          SNAPSHOT_CREATED=true
-          echo "Snapshot $SNAPSHOT_ID is available."
           echo "Pending changes detected. Running Liquibase update..."
           liquibase/liquibase \
             --changelog-file=src/main/resources/db/changelog/db.changelog-master.xml \
