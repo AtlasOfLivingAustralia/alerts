@@ -27,7 +27,6 @@ phases:
       - HAS_PENDING_CHANGES=false
       - SNAPSHOT_ID=
       - SNAPSHOT_CREATED=false
-      - LIQUIBASE_UPDATE_SUCCEEDED=false
       - DB_PASSWORD=$(aws secretsmanager get-secret-value --secret-id "$SECRET_NAME" --query 'SecretString' --output text | jq -r '."db-password"')
       - |
         set -euo pipefail
@@ -80,7 +79,6 @@ phases:
             --password="$DB_PASSWORD" \
             --log-level=info \
             update
-          LIQUIBASE_UPDATE_SUCCEEDED=true
         else
           echo "No pending changes detected. Skipping Liquibase update."
         fi
@@ -91,11 +89,9 @@ phases:
       # Persist migration outcome for downstream stages (e.g. deploy alerts, determine rollback/cleanup decisions).
       - echo "Exporting HAS_PENDING_CHANGES=$HAS_PENDING_CHANGES"
       - echo "Exporting SNAPSHOT_CREATED=$SNAPSHOT_CREATED"
-      - echo "Exporting LIQUIBASE_UPDATE_SUCCEEDED=$LIQUIBASE_UPDATE_SUCCEEDED"
       - export HAS_PENDING_CHANGES=$HAS_PENDING_CHANGES
       - export SNAPSHOT_CREATED=$SNAPSHOT_CREATED
-      - export LIQUIBASE_UPDATE_SUCCEEDED=$LIQUIBASE_UPDATE_SUCCEEDED
-      - printf 'HAS_PENDING_CHANGES=%s\nSNAPSHOT_ID=%s\nSNAPSHOT_CREATED=%s\nLIQUIBASE_UPDATE_SUCCEEDED=%s\n' "$HAS_PENDING_CHANGES" "$SNAPSHOT_ID" "$SNAPSHOT_CREATED" "$LIQUIBASE_UPDATE_SUCCEEDED" > /tmp/liquibase-status.env
+      - printf 'HAS_PENDING_CHANGES=%s\nSNAPSHOT_ID=%s\nSNAPSHOT_CREATED=%s\n' "$HAS_PENDING_CHANGES" "$SNAPSHOT_ID" "$SNAPSHOT_CREATED" > /tmp/liquibase-status.env
       - cat /tmp/liquibase-status.env
       - |
         # Respect the build result: on success continue; on failure, clean up snapshot when needed and
