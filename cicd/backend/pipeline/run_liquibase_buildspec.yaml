@@ -24,13 +24,14 @@ phases:
       - echo Running Liquibase migration on $(date)
       - DB_USERNAME=${DB_USERNAME:-admin}
       - DB_NAME=${PRODUCT_NAME}${ENVIRONMENT}
+      - DB_INSTANCE_IDENTIFIER=${DB_INSTANCE_IDENTIFIER:-$(echo "$DB_WRITE_ENDPOINT" | cut -d'.' -f1)}
       - HAS_PENDING_CHANGES=false
       - SNAPSHOT_ID=
       - SNAPSHOT_CREATED=false
       - DB_PASSWORD=$(aws secretsmanager get-secret-value --secret-id "$SECRET_NAME" --query 'SecretString' --output text | jq -r '."db-password"')
       - |
         set -euo pipefail
-        if ! LIQUIBASE_STATUS=$(liquibase/liquibase \
+        if ! STATUS_OUTPUT=$(liquibase/liquibase \
           --changelog-file=src/main/resources/db/changelog/db.changelog-master.xml \
           --url="jdbc:mysql://${DB_WRITE_ENDPOINT}/${DB_NAME}?useUnicode=true&characterEncoding=UTF-8&useSSL=false" \
           --driver=com.mysql.cj.jdbc.Driver \
@@ -38,12 +39,12 @@ phases:
           --password="$DB_PASSWORD" \
           --log-level=info \
           status 2>&1); then
-          echo "$LIQUIBASE_STATUS"
+          echo "$STATUS_OUTPUT"
           echo "Liquibase status command failed."
           exit 1
         fi
-        echo "Liquibase status output: $LIQUIBASE_STATUS"
-        if echo "$LIQUIBASE_STATUS" | grep -qi "has not been applied"; then
+        echo "Liquibase status output: $STATUS_OUTPUT"
+        if echo "$STATUS_OUTPUT" | grep -qi "has not been applied"; then
           HAS_PENDING_CHANGES=true
         else
           HAS_PENDING_CHANGES=false
@@ -54,10 +55,12 @@ phases:
         if [ "$HAS_PENDING_CHANGES" = "true" ]; then
           TIMESTAMP=$(date +%Y%m%d%H%M%S)
           SNAPSHOT_ID="${DB_NAME}-${TIMESTAMP}-snapshot"
-          if aws rds describe-db-instances --db-instance-identifier "$DB_NAME" >/dev/null 2>&1; then
+          echo "Using DB schema name: $DB_NAME"
+          echo "Using RDS instance identifier: $DB_INSTANCE_IDENTIFIER"
+          if aws rds describe-db-instances --db-instance-identifier "$DB_INSTANCE_IDENTIFIER" >/dev/null 2>&1; then
             echo "Creating RDS snapshot: $SNAPSHOT_ID"
             aws rds create-db-snapshot \
-              --db-instance-identifier "$DB_NAME" \
+              --db-instance-identifier "$DB_INSTANCE_IDENTIFIER" \
               --db-snapshot-identifier "$SNAPSHOT_ID"
             echo "Waiting for snapshot $SNAPSHOT_ID to become available..."
             if ! aws rds wait db-snapshot-available \
@@ -68,7 +71,7 @@ phases:
             SNAPSHOT_CREATED=true
             echo "Snapshot $SNAPSHOT_ID is available."
           else
-            echo "DB instance $DB_NAME not found. Assuming first-time deployment and skipping snapshot creation."
+            echo "DB instance $DB_INSTANCE_IDENTIFIER not found. Assuming first-time deployment and skipping snapshot creation."
           fi
           echo "Pending changes detected. Running Liquibase update..."
           liquibase/liquibase \

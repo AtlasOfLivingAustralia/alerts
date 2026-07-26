@@ -9,4 +9,5 @@
         <include file="alerts-schema.xml"  relativeToChangelogFile="true"/>
         <include file="frequency-preset.xml"  relativeToChangelogFile="true"/>
         <include file="test-table.xml"  relativeToChangelogFile="true"/>
+        <include file="delete-test-table.xml"  relativeToChangelogFile="true"/>
 </databaseChangeLog>
