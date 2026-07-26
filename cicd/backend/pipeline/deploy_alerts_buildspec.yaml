@@ -95,8 +95,8 @@ phases:
           echo "Build phase succeeded. Checking if snapshot should be deleted..."
           if [ "$SNAPSHOT_CREATED" = "true" ]; then
             echo "Deployment succeeded with database changes. Deleting backup snapshot: $SNAPSHOT_ID"
-            # aws rds delete-db-snapshot \
-            #  --db-snapshot-identifier "$SNAPSHOT_ID" || echo "Warning: Could not delete snapshot $SNAPSHOT_ID"
+            # aws rds delete-db-cluster-snapshot \
+            #  --db-cluster-snapshot-identifier "$SNAPSHOT_ID" || echo "Warning: Could not delete snapshot $SNAPSHOT_ID"
             echo "The backup instance is $SNAPSHOT_ID for inspection."
             echo "Once confirmed, you can delete the instance manually."
           else
@@ -104,25 +104,18 @@ phases:
           fi
         else
           echo "Build phase failed. Starting database rollback using snapshot: $SNAPSHOT_ID"
-          BROKEN_INSTANCE_NAME="${DB_NAME}-broken-$(date +%Y%m%d%H%M%S)"
-          echo "Step 1: Renaming current (potentially broken) DB instance from $DB_NAME to $BROKEN_INSTANCE_NAME..."
-          aws rds modify-db-instance \
-            --db-instance-identifier "$DB_NAME" \
-            --new-db-instance-identifier "$BROKEN_INSTANCE_NAME" \
-            --apply-immediately
-          echo "Waiting for rename to complete..."
-          aws rds wait db-instance-available \
-            --db-instance-identifier "$BROKEN_INSTANCE_NAME"
-          echo "Step 2: Restoring DB from snapshot $SNAPSHOT_ID as $DB_NAME..."
-          aws rds restore-db-instance-from-db-snapshot \
-            --db-instance-identifier "$DB_NAME" \
-            --db-snapshot-identifier "$SNAPSHOT_ID"
-          echo "Waiting for restored DB instance to become available..."
-          aws rds wait db-instance-available \
-            --db-instance-identifier "$DB_NAME"
-          echo "Rollback complete. DB $DB_NAME has been restored from snapshot $SNAPSHOT_ID."
-          echo "The broken instance has been renamed to $BROKEN_INSTANCE_NAME for inspection."
-          echo "Once confirmed, you can delete the broken instance manually."
+          DB_CLUSTER_IDENTIFIER=${DB_CLUSTER_IDENTIFIER:-$(echo "$DB_WRITE_ENDPOINT" | cut -d'.' -f1)}
+          ROLLBACK_CLUSTER_IDENTIFIER="${DB_CLUSTER_IDENTIFIER}-rollback-$(date +%Y%m%d%H%M%S)"
+          echo "Restoring Aurora DB cluster from snapshot $SNAPSHOT_ID to new cluster $ROLLBACK_CLUSTER_IDENTIFIER..."
+          aws rds restore-db-cluster-from-snapshot \
+            --db-cluster-identifier "$ROLLBACK_CLUSTER_IDENTIFIER" \
+            --snapshot-identifier "$SNAPSHOT_ID" \
+            --engine aurora-mysql
+          echo "Waiting for restored DB cluster to become available..."
+          aws rds wait db-cluster-available \
+            --db-cluster-identifier "$ROLLBACK_CLUSTER_IDENTIFIER"
+          echo "Rollback restore complete. New cluster: $ROLLBACK_CLUSTER_IDENTIFIER"
+          echo "Update application endpoint manually if you want to fail over to the rollback cluster."
           exit 1
         fi
 

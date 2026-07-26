@@ -24,7 +24,7 @@ phases:
       - echo Running Liquibase migration on $(date)
       - DB_USERNAME=${DB_USERNAME:-admin}
       - DB_NAME=${PRODUCT_NAME}${ENVIRONMENT}
-      - DB_INSTANCE_IDENTIFIER=${DB_INSTANCE_IDENTIFIER:-$(echo "$DB_WRITE_ENDPOINT" | cut -d'.' -f1)}
+      - DB_CLUSTER_IDENTIFIER=${DB_CLUSTER_IDENTIFIER:-$(echo "$DB_WRITE_ENDPOINT" | cut -d'.' -f1)}
       - HAS_PENDING_CHANGES=false
       - SNAPSHOT_ID=
       - SNAPSHOT_CREATED=false
@@ -56,22 +56,22 @@ phases:
           TIMESTAMP=$(date +%Y%m%d%H%M%S)
           SNAPSHOT_ID="${DB_NAME}-${TIMESTAMP}-snapshot"
           echo "Using DB schema name: $DB_NAME"
-          echo "Using RDS instance identifier: $DB_INSTANCE_IDENTIFIER"
-          if aws rds describe-db-instances --db-instance-identifier "$DB_INSTANCE_IDENTIFIER" >/dev/null 2>&1; then
-            echo "Creating RDS snapshot: $SNAPSHOT_ID"
-            aws rds create-db-snapshot \
-              --db-instance-identifier "$DB_INSTANCE_IDENTIFIER" \
-              --db-snapshot-identifier "$SNAPSHOT_ID"
+          echo "Using Aurora cluster identifier: $DB_CLUSTER_IDENTIFIER"
+          if aws rds describe-db-clusters --db-cluster-identifier "$DB_CLUSTER_IDENTIFIER" >/dev/null 2>&1; then
+            echo "Creating Aurora DB cluster snapshot: $SNAPSHOT_ID"
+            aws rds create-db-cluster-snapshot \
+              --db-cluster-identifier "$DB_CLUSTER_IDENTIFIER" \
+              --db-cluster-snapshot-identifier "$SNAPSHOT_ID"
             echo "Waiting for snapshot $SNAPSHOT_ID to become available..."
-            if ! aws rds wait db-snapshot-available \
-              --db-snapshot-identifier "$SNAPSHOT_ID"; then
+            if ! aws rds wait db-cluster-snapshot-available \
+              --db-cluster-snapshot-identifier "$SNAPSHOT_ID"; then
               echo "Snapshot $SNAPSHOT_ID did not become available. Failing migration step."
               exit 1
             fi
             SNAPSHOT_CREATED=true
             echo "Snapshot $SNAPSHOT_ID is available."
           else
-            echo "DB instance $DB_INSTANCE_IDENTIFIER not found. Assuming first-time deployment and skipping snapshot creation."
+            echo "DB cluster $DB_CLUSTER_IDENTIFIER not found. Assuming first-time deployment and skipping snapshot creation."
           fi
           echo "Pending changes detected. Running Liquibase update..."
           liquibase/liquibase \
@@ -111,7 +111,7 @@ phases:
           echo "Liquibase build failed with pending DB changes. Checking snapshot cleanup before exit."
           if [ "$SNAPSHOT_CREATED" = "true" ] && [ -n "$SNAPSHOT_ID" ]; then
             echo "Deleting snapshot created during failed run: $SNAPSHOT_ID"
-            aws rds delete-db-snapshot --db-snapshot-identifier "$SNAPSHOT_ID" || echo "Warning: Could not delete snapshot $SNAPSHOT_ID"
+            aws rds delete-db-cluster-snapshot --db-cluster-snapshot-identifier "$SNAPSHOT_ID" || echo "Warning: Could not delete snapshot $SNAPSHOT_ID"
           else
             echo "No snapshot to delete (SNAPSHOT_CREATED=$SNAPSHOT_CREATED, SNAPSHOT_ID=$SNAPSHOT_ID)."
           fi
