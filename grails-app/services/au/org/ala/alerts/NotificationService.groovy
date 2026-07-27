@@ -20,6 +20,7 @@ class NotificationService {
     def queryService
     def myAnnotationService
     def annotationsService
+    def biosecurityService
     def grailsApplication
     def dateFormatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
 
@@ -130,12 +131,12 @@ class NotificationService {
 
     /**
      * It has similar code with checkStatus, but not identical
+     * It is used for debugging and testing.
      *
      * @param query
      * @param frequency
      * @return
      */
-    @Deprecated
     QueryCheckResult checkStatusDontUpdate(Query query, Frequency frequency) {
 
         //get the previous result
@@ -165,7 +166,7 @@ class NotificationService {
                     // biosecurity query is handled elsewhere
                     Date since = lastQueryResult.lastChecked ?: DateUtils.addDays(new Date(), -1 * grailsApplication.config.getProperty("biosecurity.legacy.firstLoadedDateAge", Integer, 7))
                     Date to = new Date()
-                    processedJson = processQueryBiosecurity(query, since, to)
+                    processedJson = biosecurityService.processQueryBiosecurity(query, since, to)
                 }
             } else {
                 // It is works on species lists request
