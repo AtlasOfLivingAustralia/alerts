@@ -11,4 +11,5 @@
         <include file="test-table.xml"  relativeToChangelogFile="true"/>
         <include file="delete-test-table.xml"  relativeToChangelogFile="true"/>
         <include file="test1-table.xml"  relativeToChangelogFile="true"/>
+        <include file="test2-table.xml"  relativeToChangelogFile="true"/>
 </databaseChangeLog>
