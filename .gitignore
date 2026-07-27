@@ -10,3 +10,4 @@ Thumbs.db
 .settings
 .classpath
 out
+.run/alerts \[bootRun\].run.xml
