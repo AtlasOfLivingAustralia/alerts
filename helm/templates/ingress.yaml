@@ -22,7 +22,7 @@ metadata:
       {{- end }}
       alb.ingress.kubernetes.io/tags: {{ join "," $tags }}
     alb.ingress.kubernetes.io/load-balancer-attributes: >
-      idle_timeout.timeout_seconds=90,
+      idle_timeout.timeout_seconds=600,
       access_logs.s3.enabled=true,
       access_logs.s3.bucket={{ .Values.ingress.accessLogsBucket }},
       access_logs.s3.prefix={{ .Values.ingress.accessLogsPrefix }}
