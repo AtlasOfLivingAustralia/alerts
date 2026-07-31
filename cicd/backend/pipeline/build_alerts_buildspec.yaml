@@ -51,15 +51,44 @@ phases:
       - echo Tagging the Docker image...
       - BUILD_TAG=$CLEAN_BRANCH-$CODEBUILD_BUILD_NUMBER
       - echo build tag is $BUILD_TAG
-      - echo "$BUILD_TAG" > /tmp/build_tag.txt
+      - echo "$BUILD_TAG" > build_tag.txt
       - echo tagging
       - docker tag ala-alerts:latest $ECR_REPO:$BUILD_TAG
       - docker tag ala-alerts:latest $ECR_REPO:latest
       - echo Pushing the Docker image to Amazon ECR...
       - docker push $ECR_REPO:$BUILD_TAG
       - docker push $ECR_REPO:latest
+#     Check if liquibase image already exists in ECR, if not build and push it, otherwise skip the build and push.
+      - |
+        set -euo pipefail
+        LIQUIBASE_IMAGE_HASH=$(
+          {
+            sha256sum docker/liquibase/Dockerfile
+            find src/main/resources/db/changelog -type f -print0 | sort -z | xargs -0 sha256sum
+          } | sha256sum | cut -c1-16
+        )
+        LIQUIBASE_IMAGE_TAG="liquibase-4.27.0-${LIQUIBASE_IMAGE_HASH}"
+        echo "Liquibase image tag is $LIQUIBASE_IMAGE_TAG"
+        if IMAGE_LOOKUP=$(aws ecr describe-images \
+          --repository-name "${ECR_REPO##*/}" \
+          --image-ids imageTag="$LIQUIBASE_IMAGE_TAG" 2>&1); then
+          echo "Liquibase image already exists. Skipping build and push."
+        elif [[ "$IMAGE_LOOKUP" == *ImageNotFoundException* ]]; then
+          docker build \
+            --pull \
+            --file docker/liquibase/Dockerfile \
+            --tag "$ECR_REPO:$LIQUIBASE_IMAGE_TAG" \
+            .
+          docker push "$ECR_REPO:$LIQUIBASE_IMAGE_TAG"
+        else
+          echo "$IMAGE_LOOKUP"
+          echo "Unable to determine whether the Liquibase image exists."
+          exit 1
+        fi
+        printf '%s\n' "$LIQUIBASE_IMAGE_TAG" > liquibase_image_tag.txt
 
 artifacts:
   files:
-    - /tmp/build_tag.txt
+    - build_tag.txt
+    - liquibase_image_tag.txt
   discard-paths: yes

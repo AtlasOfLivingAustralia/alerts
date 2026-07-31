@@ -101,6 +101,23 @@ autoscaling:
   targetCPUUtilizationPercentage: 80
   # targetMemoryUtilizationPercentage: 80
 
+migration:
+  enabled: false
+  image:
+    repository: ""
+    tag: ""
+    pullPolicy: IfNotPresent
+  startedAt: ""
+  backoffLimit: 0
+  activeDeadlineSeconds: 900
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+
 # Additional volumes on the output Deployment definition.
 volumes: []
 

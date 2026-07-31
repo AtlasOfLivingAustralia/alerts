@@ -14,9 +14,6 @@ Parameters:
   pBucketsStackName:
     Type: String
     Description: the name of the bucket stack
-  pVpcStackName:
-    Type: String
-    Description: the name of the VPC stack
   pCleanBranch:
     Type: String
     Description: The clean branch, can be used in resource names
@@ -125,40 +122,7 @@ Resources:
       Source:
         Type: CODEPIPELINE
         BuildSpec: !Sub cicd/${pProductComponent}/pipeline/deploy_alerts_buildspec.yaml
-      TimeoutInMinutes: 20
-
-  MigrateDatabase:
-    Type: AWS::CodeBuild::Project
-    Properties:
-      Name: !Sub
-        - ${pProductName}-${pProductComponent}-migrate-database-${ResourceName}
-        - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
-      Description: Run Liquibase migrations before app deployment
-      ServiceRole:
-        Fn::ImportValue:
-          Fn::Sub: ${pBootstrapStackName}-CodeBuildServiceRoleArn
-      Artifacts:
-        Type: CODEPIPELINE
-      Environment:
-        Type: LINUX_CONTAINER
-        ComputeType: BUILD_GENERAL1_SMALL
-        Image: aws/codebuild/standard:7.0
-      VpcConfig:
-        VpcId:
-          Fn::ImportValue:
-            Fn::Sub: ${pVpcStackName}-Vpc
-        Subnets: !Split
-          - ','
-          - Fn::ImportValue:
-              Fn::Sub: ${pVpcStackName}-PriSubnets
-        SecurityGroupIds:
-          - Fn::ImportValue:
-              Fn::Sub: ${pVpcStackName}-CodeBuildSecurityGroup
-      Source:
-        Type: CODEPIPELINE
-        BuildSpec: !Sub cicd/${pProductComponent}/pipeline/run_liquibase_buildspec.yaml
-      TimeoutInMinutes: 20
-
+      TimeoutInMinutes: 60
 
   TeardownAlerts:
     Type: AWS::CodeBuild::Project
@@ -232,13 +196,13 @@ Resources:
                 FilePaths:
                   Includes:
                     - !Sub cicd/${pProductComponent}/**
+                    - docker/liquibase/**
                     - grails-app/**
                     - src/**
                     - helm/**
-                    - build.gradle
+                    - '*.gradle'
                     - Dockerfile
                     - gradle.properties
-                    - settings.gradle
             SourceActionName: CheckoutSrc
       Variables:
         - Name: SRC_BRANCH
@@ -304,42 +268,19 @@ Resources:
               EnvironmentVariables: !Sub 
                - |
                    [
-                     { "name":"ECR_REPO", "value":"${EcrRepo}" },
-                     { "name":"AWS_ACCOUNT_ID", "value":"${AWS::AccountId}" },
+                       { "name":"ECR_REPO", "value":"${EcrRepo}" },
+                       { "name":"AWS_ACCOUNT_ID", "value":"${AWS::AccountId}" },
                      { "name":"CLEAN_BRANCH", "value":"${pCleanBranch}" }
                    ]
                - EcrRepo:
-                      Fn::ImportValue:
-                        Fn::Sub: "${pBaseStackName}-AlertsRepositoryUri"
+                    Fn::ImportValue:
+                      Fn::Sub: "${pBaseStackName}-AlertsRepositoryUri"
             InputArtifacts:
               - Name: 'SourceArtifact'
             OutputArtifacts:
               - Name: 'BuildTagArtifact'
             Namespace: BuildAlertsNS
             RunOrder: 2
-
-          - Name: MigrateDatabase
-            ActionTypeId:
-              Owner: AWS
-              Category: Build
-              Version: 1
-              Provider: CodeBuild
-            Configuration:
-              ProjectName: !Ref MigrateDatabase
-              EnvironmentVariables: !Sub
-                - |
-                  [
-                    { "name":"ENVIRONMENT", "value":"${pEnvironment}" },
-                    { "name":"PRODUCT_NAME", "value":"#{ExportConfigNS.PRODUCT_NAME}" },
-                    { "name":"DB_WRITE_ENDPOINT", "value":"#{ExportConfigNS.DB_WRITE_ENDPOINT}" },
-                    { "name":"SECRET_NAME", "value":"#{ExportConfigNS.SECRET_NAME}" },
-                    { "name":"DB_USERNAME", "value":"#{ExportConfigNS.DB_USERNAME}" }
-                  ]
-                - {}
-              PrimarySource: SourceArtifact
-            InputArtifacts:
-              - Name: 'SourceArtifact'
-            RunOrder: 3
 
           - Name: DeployAlerts
             ActionTypeId:
@@ -360,8 +301,10 @@ Resources:
                     { "name":"COGNITO_STACK_NAME", "value":"#{ExportConfigNS.COGNITO_STACK_NAME}" },
                     { "name":"DB_READ_ENDPOINT", "value":"#{ExportConfigNS.DB_READ_ENDPOINT}" },
                     { "name":"DB_WRITE_ENDPOINT", "value":"#{ExportConfigNS.DB_WRITE_ENDPOINT}" },
+                    { "name":"DB_CLUSTER_IDENTIFIER", "value":"#{ExportConfigNS.DB_CLUSTER_IDENTIFIER}" },
+                    { "name":"AWS_REGION", "value":"${AWS::Region}" },
                     { "name":"DOMAIN_NAME", "value":"#{ExportConfigNS.DOMAIN_NAME}" },
-                    { "name":"ECR_REPO", "value":"${EcrRepo}" },
+                     { "name":"ECR_REPO", "value":"${EcrRepo}" },
                     { "name":"EKS_CLUSTER_NAME", "value":"#{ExportConfigNS.EKS_CLUSTER_NAME}" },
                     { "name":"HELM_RELEASE_NAME", "value":"#{ExportConfigNS.HELM_RELEASE_NAME}" },
                     { "name":"CERTIFICATE_ARN", "value":"#{ExportConfigNS.CERTIFICATE_ARN}" },
@@ -370,14 +313,15 @@ Resources:
                     { "name":"ACCESS_LOGS_S3_BUCKET_NAME", "value":"#{ExportConfigNS.ACCESS_LOGS_S3_BUCKET_NAME}" },
                     { "name":"PRODUCT_NAME", "value":"#{ExportConfigNS.PRODUCT_NAME}" }
                   ]
-                - EcrRepo: !ImportValue
-                    Fn::Sub: '${pBaseStackName}-AlertsRepositoryUri'
+                - EcrRepo:
+                    Fn::ImportValue:
+                      Fn::Sub: '${pBaseStackName}-AlertsRepositoryUri'
               PrimarySource: SourceArtifact
             InputArtifacts:
               - Name: 'SourceArtifact'
               - Name: 'ExportConfigArtifact'
               - Name: 'BuildTagArtifact'
-            RunOrder: 4
+            RunOrder: 3
 
           - Name: DeployNotification
             ActionTypeId:
@@ -404,7 +348,7 @@ Resources:
             Namespace: DeployNotificationNS
             InputArtifacts:
               - Name: 'SourceArtifact'
-            RunOrder: 5
+            RunOrder: 4
 
       - Name: Teardown
         Actions:
@@ -475,16 +419,6 @@ Resources:
     DeletionPolicy: Delete
     Properties:
       LogGroupName: !Sub /aws/codebuild/${DeployAlerts}
-      RetentionInDays: 30
-      Tags:
-        - Key: Name
-          Value: !Ref AWS::StackName
-
-  MigrateDatabaseCodeBuildLogGroup:
-    Type: AWS::Logs::LogGroup
-    DeletionPolicy: Delete
-    Properties:
-      LogGroupName: !Sub /aws/codebuild/${MigrateDatabase}
       RetentionInDays: 30
       Tags:
         - Key: Name
