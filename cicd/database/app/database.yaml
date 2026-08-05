@@ -345,9 +345,13 @@ Outputs:
     Value: !GetAtt DbCluster.Endpoint.Address
     Export:
       Name: !Sub ${AWS::StackName}-WriteEndpoint
+  ClusterIdentifier:
+    Description: The Aurora DB cluster identifier
+    Value: !Ref DbCluster
+    Export:
+      Name: !Sub ${AWS::StackName}-ClusterIdentifier
   ReadEndpoint:
     Description: The read endpoint of the database
     Value: !GetAtt DbCluster.ReadEndpoint.Address
     Export:
       Name: !Sub ${AWS::StackName}-ReadEndpoint
-

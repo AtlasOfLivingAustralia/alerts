@@ -1,0 +1,47 @@
+{{- if .Values.migration.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "ala-alerts.fullname" . }}-migration
+  labels:
+    {{- include "ala-alerts.labels" . | nindent 4 }}
+    app.kubernetes.io/component: database-migration
+  annotations:
+    helm.sh/hook: pre-install,pre-upgrade
+    helm.sh/hook-weight: "-10"
+    helm.sh/hook-delete-policy: before-hook-creation
+    ala.org.au/migration-started-at: {{ default "unset" .Values.migration.startedAt | quote }}
+spec:
+  backoffLimit: {{ .Values.migration.backoffLimit }}
+  activeDeadlineSeconds: {{ .Values.migration.activeDeadlineSeconds }}
+  template:
+    metadata:
+      labels:
+        {{- include "ala-alerts.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: database-migration
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: liquibase
+          image: "{{ .Values.migration.image.repository }}:{{ .Values.migration.image.tag }}"
+          imagePullPolicy: {{ .Values.migration.image.pullPolicy }}
+          workingDir: /liquibase/changelog
+          command: ["liquibase"]
+          args:
+            - update
+          env:
+            - name: LIQUIBASE_COMMAND_CHANGELOG_FILE
+              value: db.changelog-master.xml
+            - name: LIQUIBASE_COMMAND_URL
+              value: {{ printf "jdbc:mysql://%s/%s?useUnicode=true&characterEncoding=UTF-8&useSSL=%s" .Values.rds.externalName .Values.config.db.database_name .Values.config.db.mysql_connection_ssl | quote }}
+            - name: LIQUIBASE_COMMAND_DRIVER
+              value: com.mysql.cj.jdbc.Driver
+            - name: LIQUIBASE_COMMAND_USERNAME
+              value: {{ .Values.config.db.alerts_db_username | quote }}
+            - name: LIQUIBASE_COMMAND_PASSWORD
+              value: {{ .Values.config.db.alerts_db_password | quote }}
+            - name: LIQUIBASE_LOG_LEVEL
+              value: info
+          resources:
+            {{- toYaml .Values.migration.resources | nindent 12 }}
+{{- end }}
