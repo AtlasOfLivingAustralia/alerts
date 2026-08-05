@@ -220,4 +220,25 @@ class BiosecurityLocalCSVService  extends BiosecurityCSVService {
         }
         return foldersAndFiles.sort({ it.name }).reverse()
     }
+
+    /**
+     * Archive CSV files by year - not supported for local file storage.
+     * @param year 4-digit year to archive files for
+     * @return number of files archived
+     * @throws UnsupportedOperationException always, as this feature is only supported for S3 storage
+     */
+    @Override
+    int archiveCSVFilesByYear(int year) {
+        throw new UnsupportedOperationException("Archive by year is only supported for S3 storage implementation (BiosecurityS3CSVService)")
+    }
+
+    @Override
+    int unarchiveCSVFilesByYear(int year) {
+        throw new UnsupportedOperationException("Unarchive by year is only supported for S3 storage implementation (BiosecurityS3CSVService)")
+    }
+
+    @Override
+    String aggregateAndUploadByYear(int year) {
+        throw new UnsupportedOperationException("Annual aggregation is only supported for S3 storage implementation (BiosecurityS3CSVService)")
+    }
 }

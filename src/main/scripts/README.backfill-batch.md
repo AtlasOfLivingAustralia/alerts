@@ -69,11 +69,11 @@ Function:
 Usage:
 ```bash
 cd /Users/bai187/src/alerts
-./grailsw run-script src/main/scripts/uploadBiosecurityS3CsvByDate.groovy --args="<s3-uri> <local-folder> [region]"
+./grailsw run-script src/main/scripts/uploadBiosecurityS3Csv.groovy --args="<s3-uri> <local-folder> [region]"
 ```
 
 Example:
 ```bash
 cd /Users/bai187/src/alerts
-./grailsw run-script src/main/scripts/uploadBiosecurityS3CsvByDate.groovy --args="s3://ala-alerts-testing /data/biosecurity-download ap-southeast-2"
+./grailsw run-script src/main/scripts/uploadBiosecurityS3Csv.groovy --args="s3://ala-alerts-testing /data/biosecurity-download ap-southeast-2"
 ```

@@ -8,7 +8,6 @@ Scheduling is handled by Quartz plugin in the app. It works like RSS - it checks
 NOTES:
 Grails 7.1.1 is not compatible with Grails 6
 
-## Grails 6 updates IMPORTANT >= version 5.2.0 
 ## Grails 6 updates IMPORTANT >= version 5.2.5
 
 The custom dataSource configuration is no longer required from this version. Use the standard:
