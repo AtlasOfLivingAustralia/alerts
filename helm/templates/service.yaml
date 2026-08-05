@@ -4,6 +4,8 @@ metadata:
   name: svc-{{ include "ala-alerts.fullname" . }}
   labels:
     {{- include "ala-alerts.labels" . | nindent 4 }}
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-additional-resource-tags: {{ include "ala-alerts.resourceTags" . | quote }}
 spec:
   type: LoadBalancer
   ports:
