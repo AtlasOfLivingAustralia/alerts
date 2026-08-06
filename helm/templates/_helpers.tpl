@@ -60,3 +60,14 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{/*
+Comma-separated key=value tag string built from .Values.tags, e.g. "product=alerts,branch=main"
+*/}}
+{{- define "ala-alerts.resourceTags" -}}
+{{- $tags := list }}
+{{- range $key, $value := .Values.tags }}
+{{- $tags = append $tags (printf "%s=%s" $key $value) }}
+{{- end }}
+{{- join "," $tags }}
+{{- end }}
