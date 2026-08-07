@@ -8,6 +8,4 @@
         <include file="quartz-schema.xml"  relativeToChangelogFile="true"/>
         <include file="alerts-schema.xml"  relativeToChangelogFile="true"/>
         <include file="frequency-preset.xml"  relativeToChangelogFile="true"/>
-        <include file="test-table.xml"  relativeToChangelogFile="true"/>
-        <include file="test2-table.xml"  relativeToChangelogFile="true"/>
 </databaseChangeLog>
