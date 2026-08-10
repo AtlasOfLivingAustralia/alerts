@@ -194,7 +194,7 @@ class QueryController {
     }
 
     @Transactional
-    @AlaSecured(value = 'ROLE_ADMIN', redirectController = 'admin', redirectAction = 'index', message = "You don't have permission to update that record.")
+    @AlaSecured(value = 'ROLE_ADMIN, ROLE_BIOSECURITY_ADMIN', redirectController = 'admin', redirectAction = 'index', message = "You don't have permission to update that record.")
     def updateTitle() {
         def queryInstance = Query.get(params.id)
         if (!queryInstance) {
