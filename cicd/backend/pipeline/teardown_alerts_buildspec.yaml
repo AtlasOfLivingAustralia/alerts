@@ -20,6 +20,7 @@ phases:
       - echo Build started on $(date)
       - aws eks --region ap-southeast-2 update-kubeconfig --name $EKS_CLUSTER_NAME
       - kubectl config set-context --current --namespace=$EKS_NAMESPACE
+      - kubectl delete jobs -l app.kubernetes.io/instance=$HELM_RELEASE_NAME --namespace=$EKS_NAMESPACE --ignore-not-found
       - eksctl delete iamserviceaccount --name=alerts-service-account-$CLEAN_BRANCH --namespace=$EKS_NAMESPACE --cluster=$EKS_CLUSTER_NAME
       - |
         if helm list -n $EKS_NAMESPACE | grep -q $HELM_RELEASE_NAME; then

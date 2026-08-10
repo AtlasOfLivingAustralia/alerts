@@ -255,11 +255,7 @@ dataSource:
 
 spring:
     liquibase:
-        enabled: false  # Managed via alerts.liquibase.enabled
-
-alerts:
-    liquibase:
-        enabled: true # Disable when managed by cicd
+        enabled: false  # Disabled by default - migrations run via Liquibase CLI in CI/CD or manually in dev
 
 cron:
     daily: '0 30 8 * * ?'
@@ -316,7 +312,9 @@ environments:
                     #profile: test-ala-developer
                     s3:
                         bucket: ala-alerts-testing
-
+        spring:
+            liquibase:
+                enabled: true  # Disabled for local dev - migrations run manually via Liquibase CLI
         security:
             cas:
                 appServerName: "http://localhost:8080"

@@ -20,38 +20,223 @@ phases:
   build:
     commands:
       - echo Build started on $(date)
-      - aws eks --region ap-southeast-2 update-kubeconfig --name $EKS_CLUSTER_NAME
+      - aws eks --region "$AWS_REGION" update-kubeconfig --name "$EKS_CLUSTER_NAME"
       - kubectl config set-context --current --namespace=$EKS_NAMESPACE
       - echo "Creating service account for alerts..."
       - |
         ALERTS_ROLE_ARN=$(aws cloudformation describe-stacks --stack-name $BASE_STACK_NAME \
           --query "Stacks[0].Outputs[?OutputKey=='AlertsRoleArn'].OutputValue" --output text)
-      - printf "$(kubectl config current-context)\n"
       - |
         eksctl create iamserviceaccount --name alerts-service-account-$CLEAN_BRANCH \
           --namespace $EKS_NAMESPACE --cluster $EKS_CLUSTER_NAME --attach-role-arn $ALERTS_ROLE_ARN \
           --approve --override-existing-serviceaccounts \
-          --tags "product=alerts,environment=development,branch=${CLEAN_BRANCH}"
+          --tags "product=alerts,environment=${ENVIRONMENT},branch=${CLEAN_BRANCH}"
       - echo "Service account created."
       - echo "Deploying alerts via helm..."
       - cd helm
-      - export BUILD_TAG_FROM_ARTIFACT=$(cat "$CODEBUILD_SRC_DIR_BuildTagArtifact/build_tag.txt")
       - |
-        helm upgrade --install $HELM_RELEASE_NAME . -n $EKS_NAMESPACE \
-          --set image.repository=$ECR_REPO \
-          --set image.tag=$BUILD_TAG_FROM_ARTIFACT \
-          --set ingress.hostname=$DOMAIN_NAME \
-          --set rds.externalName=$DB_WRITE_ENDPOINT \
-          --set ingress.certificateArn=$CERTIFICATE_ARN \
-          --set secret.name=alerts-config-secret-$CLEAN_BRANCH \
-          --set serviceAccount.name=alerts-service-account-$CLEAN_BRANCH \
-          --set rds.name=mysql-rds-$CLEAN_BRANCH \
-          -f $CODEBUILD_SRC_DIR_ExportConfigArtifact/helm-values.yaml
-      - kubectl rollout restart deployment $HELM_RELEASE_NAME
-  post_build:
-    commands:
-      - echo Post-build phase...
-      - echo Build completed on $(date)
+        set -euo pipefail
+
+        BUILD_TAG_FROM_ARTIFACT=$(cat "$CODEBUILD_SRC_DIR_BuildTagArtifact/build_tag.txt")
+        LIQUIBASE_IMAGE_TAG=$(cat "$CODEBUILD_SRC_DIR_BuildTagArtifact/liquibase_image_tag.txt")
+        if [ -z "$BUILD_TAG_FROM_ARTIFACT" ] || [ -z "$LIQUIBASE_IMAGE_TAG" ]; then
+          echo "build_tag.txt or liquibase_image_tag.txt from BuildAlerts is empty."
+          exit 1
+        fi
+
+        MIGRATION_SNAPSHOT_ID="${DB_CLUSTER_IDENTIFIER}-${CODEBUILD_BUILD_NUMBER}-migration"
+        SNAPSHOT_CLEANUP_FAILED=false
+
+        scale_to_zero_and_wait() {
+          if ! kubectl get deployment "$HELM_RELEASE_NAME" -n "$EKS_NAMESPACE" >/dev/null 2>&1; then
+            return 0
+          fi
+          kubectl scale deployment "$HELM_RELEASE_NAME" -n "$EKS_NAMESPACE" --replicas=0
+          # Excludes the migration Job's pods: they share app.kubernetes.io/name and
+          # /instance with the Deployment's pods, and a completed hook Job pod is not
+          # deleted until the *next* hook fires (helm.sh/hook-delete-policy:
+          # before-hook-creation), so it lingers on the cluster and would otherwise
+          # make this check see a non-empty pod list forever after the first migration.
+          for _ in $(seq 1 60); do
+            if [ -z "$(kubectl get pods -n "$EKS_NAMESPACE" \
+              -l "app.kubernetes.io/instance=$HELM_RELEASE_NAME,app.kubernetes.io/component!=database-migration" \
+              -o name 2>/dev/null)" ]; then
+              return 0
+            fi
+            sleep 2
+          done
+          echo "Application pods did not terminate."
+          return 1
+        }
+
+        take_pre_migration_snapshot() {
+          if [ "$ENVIRONMENT" != "production" ]; then
+            return 0
+          fi
+          echo "Taking pre-migration Aurora cluster snapshot $MIGRATION_SNAPSHOT_ID"
+          local lookup
+          if lookup=$(aws rds describe-db-cluster-snapshots --region "$AWS_REGION" \
+            --db-cluster-snapshot-identifier "$MIGRATION_SNAPSHOT_ID" 2>&1); then
+            echo "Snapshot $MIGRATION_SNAPSHOT_ID already exists."
+          elif [[ "$lookup" == *DBClusterSnapshotNotFoundFault* ]]; then
+            aws rds create-db-cluster-snapshot --region "$AWS_REGION" \
+              --db-cluster-identifier "$DB_CLUSTER_IDENTIFIER" \
+              --db-cluster-snapshot-identifier "$MIGRATION_SNAPSHOT_ID"
+          else
+            echo "$lookup"
+            return 1
+          fi
+          aws rds wait db-cluster-snapshot-available --region "$AWS_REGION" \
+            --db-cluster-snapshot-identifier "$MIGRATION_SNAPSHOT_ID"
+        }
+
+        delete_pre_migration_snapshot() {
+          if [ "$ENVIRONMENT" != "production" ]; then
+            return 0
+          fi
+          echo "Deleting pre-migration snapshot $MIGRATION_SNAPSHOT_ID"
+          if ! aws rds delete-db-cluster-snapshot --region "$AWS_REGION" \
+            --db-cluster-snapshot-identifier "$MIGRATION_SNAPSHOT_ID"; then
+            echo "Warning: migration snapshot could not be deleted; it is retained for investigation."
+            SNAPSHOT_CLEANUP_FAILED=true
+          fi
+        }
+
+        run_database_migration() {
+          helm upgrade --install "$HELM_RELEASE_NAME" . \
+            -n "$EKS_NAMESPACE" \
+            --set "image.repository=$ECR_REPO" \
+            --set "image.tag=$BUILD_TAG_FROM_ARTIFACT" \
+            --set-string "migration.image.repository=$ECR_REPO" \
+            --set-string "migration.image.tag=$LIQUIBASE_IMAGE_TAG" \
+            --set "ingress.hostname=$DOMAIN_NAME" \
+            --set "rds.externalName=$DB_WRITE_ENDPOINT" \
+            --set "ingress.certificateArn=$CERTIFICATE_ARN" \
+            --set "secret.name=alerts-config-secret-$CLEAN_BRANCH" \
+            --set "serviceAccount.name=alerts-service-account-$CLEAN_BRANCH" \
+            --set "rds.name=mysql-rds-$CLEAN_BRANCH" \
+            -f "$CODEBUILD_SRC_DIR_ExportConfigArtifact/helm-values.yaml" \
+            --set replicaCount=0 \
+            --set migration.enabled=true \
+            --set-string "migration.startedAt=$MIGRATION_STARTED_AT" \
+            --wait --wait-for-jobs --timeout 30m
+        }
+
+        deploy_application() {
+          helm upgrade --install "$HELM_RELEASE_NAME" . \
+            -n "$EKS_NAMESPACE" \
+            --set "image.repository=$ECR_REPO" \
+            --set "image.tag=$BUILD_TAG_FROM_ARTIFACT" \
+            --set-string "migration.image.repository=$ECR_REPO" \
+            --set-string "migration.image.tag=$LIQUIBASE_IMAGE_TAG" \
+            --set "ingress.hostname=$DOMAIN_NAME" \
+            --set "rds.externalName=$DB_WRITE_ENDPOINT" \
+            --set "ingress.certificateArn=$CERTIFICATE_ARN" \
+            --set "secret.name=alerts-config-secret-$CLEAN_BRANCH" \
+            --set "serviceAccount.name=alerts-service-account-$CLEAN_BRANCH" \
+            --set "rds.name=mysql-rds-$CLEAN_BRANCH" \
+            -f "$CODEBUILD_SRC_DIR_ExportConfigArtifact/helm-values.yaml" \
+            --set replicaCount=1 \
+            --set migration.enabled=false \
+            --wait --wait-for-jobs --atomic --timeout 30m
+        }
+
+        backtrack_database() {
+          local backtrack_id status
+          if ! backtrack_id=$(aws rds backtrack-db-cluster --region "$AWS_REGION" \
+            --db-cluster-identifier "$DB_CLUSTER_IDENTIFIER" \
+            --backtrack-to "$MIGRATION_STARTED_AT" \
+            --query 'BacktrackIdentifier' --output text); then
+            echo "aws rds backtrack-db-cluster was rejected; the cluster was not rewound."
+            return 1
+          fi
+          for _ in $(seq 1 90); do
+            if status=$(aws rds describe-db-cluster-backtracks --region "$AWS_REGION" \
+              --db-cluster-identifier "$DB_CLUSTER_IDENTIFIER" \
+              --backtrack-identifier "$backtrack_id" \
+              --query 'DBClusterBacktracks[0].Status' --output text); then
+              echo "Backtrack status: $status"
+              if [ "$status" = "COMPLETED" ]; then
+                return 0
+              fi
+              if [ "$status" = "FAILED" ]; then
+                return 1
+              fi
+            else
+              echo "Could not read backtrack status; retrying."
+            fi
+            sleep 10
+          done
+          return 1
+        }
+
+        verify_release_deployed() {
+          local status
+          status=$(helm status "$HELM_RELEASE_NAME" -n "$EKS_NAMESPACE" --output json | jq -r '.info.status')
+          echo "Helm release status: $status"
+          if [ "$status" != "deployed" ]; then
+            echo "Helm release is not in deployed state. Current status: $status"
+            return 1
+          fi
+          echo "Helm release successfully deployed."
+        }
+
+        PREVIOUS_LIQUIBASE_TAG=""
+        PREVIOUS_HELM_REVISION=""
+        if helm status "$HELM_RELEASE_NAME" -n "$EKS_NAMESPACE" >/dev/null 2>&1; then
+          PREVIOUS_HELM_REVISION=$(helm history "$HELM_RELEASE_NAME" -n "$EKS_NAMESPACE" --output json \
+            | jq -r '[.[] | select(.status == "deployed" or .status == "superseded")] | last | .revision // empty')
+          if [ -n "$PREVIOUS_HELM_REVISION" ]; then
+            PREVIOUS_LIQUIBASE_TAG=$(helm get values "$HELM_RELEASE_NAME" -n "$EKS_NAMESPACE" \
+              --revision "$PREVIOUS_HELM_REVISION" -o json | jq -r '.migration.image.tag // empty')
+          fi
+        fi
+        echo "Liquibase tag: $LIQUIBASE_IMAGE_TAG (previously deployed: ${PREVIOUS_LIQUIBASE_TAG:-none})"
+
+        if [ "$LIQUIBASE_IMAGE_TAG" = "$PREVIOUS_LIQUIBASE_TAG" ]; then
+          echo "No Liquibase changes in this deploy; running a plain application rollout."
+          deploy_application
+          verify_release_deployed
+          exit 0
+        fi
+
+        take_pre_migration_snapshot
+
+        echo "Scaling the existing application to zero replicas before migration."
+        if ! scale_to_zero_and_wait; then
+          echo "Could not scale the application to zero; aborting before starting migration."
+          exit 1
+        fi
+
+        sleep 30
+        MIGRATION_STARTED_AT=$(date -u -d '30 seconds ago' '+%Y-%m-%dT%H:%M:%SZ')
+
+        if run_database_migration && deploy_application; then
+          delete_pre_migration_snapshot
+          if [ "$SNAPSHOT_CLEANUP_FAILED" = "true" ]; then
+            echo "Deployment succeeded but the migration snapshot was retained because cleanup failed."
+            exit 1
+          fi
+          verify_release_deployed
+          exit 0
+        fi
+
+        echo "Migration or rollout failed; recovering via Aurora Backtrack to $MIGRATION_STARTED_AT."
+        scale_to_zero_and_wait || true
+
+        if ! backtrack_database; then
+          echo "Database backtrack failed or did not complete; application remains scaled to zero."
+          exit 1
+        fi
+        echo "Database backtrack completed."
+
+        if [ -n "$PREVIOUS_HELM_REVISION" ]; then
+          echo "Rolling back to Helm revision $PREVIOUS_HELM_REVISION."
+          helm rollback "$HELM_RELEASE_NAME" "$PREVIOUS_HELM_REVISION" -n "$EKS_NAMESPACE" --wait --timeout 30m
+        else
+          echo "No previous Helm revision; leaving the application scaled to zero for investigation."
+        fi
+        exit 1
 
 artifacts:
   base-directory: $CODEBUILD_SRC_DIR
