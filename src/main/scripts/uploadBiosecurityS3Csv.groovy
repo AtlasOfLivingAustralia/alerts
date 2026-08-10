@@ -1,7 +1,7 @@
 // Upload locally downloaded Biosecurity CSV files back to S3.
 // Local file names are expected to use '~' instead of '/' in the S3 key.
 // Usage:
-//   run-script src/main/scripts/uploadBiosecurityS3CsvByDate.groovy --args="s3://ala-alerts-testing /data/biosecurity-download [ap-southeast-2]"
+//   run-script src/main/scripts/uploadBiosecurityS3Csv.groovy --args="s3://ala-alerts-testing /data/biosecurity-download [ap-southeast-2]"
 
 import software.amazon.awssdk.core.sync.RequestBody
 import software.amazon.awssdk.regions.Region
@@ -29,7 +29,7 @@ if (binding.hasVariable('args') && args instanceof String[]) {
 }
 
 if (cliArgs.size() < 2) {
-    println "Usage: uploadBiosecurityS3CsvByDate <s3-uri> <local-folder> [region]"
+    println "Usage: uploadBiosecurityS3Csv <s3-uri> <local-folder> [region]"
     return
 }
 

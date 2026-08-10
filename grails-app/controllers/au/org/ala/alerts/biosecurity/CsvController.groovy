@@ -162,6 +162,133 @@ class CsvController {
         render(status: 200, contentType: 'application/json', text: message as JSON)
     }
 
+    /**
+     * Archive all CSV files in S3 for a given year by renaming them with .archived suffix.
+     * File pattern: biosecurity/yyyy-MM-dd/*.csv -> biosecurity/yyyy-MM-dd/*.csv.archived
+     *
+     * @param year 4-digit year (required)
+     * @return JSON with status and count of archived files
+     */
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
+    def archiveByYear() {
+        if (!params.year) {
+            render(status: 400, contentType: 'application/json', text: ([status: 1, error: "Year parameter is required"] as JSON))
+            return
+        }
+
+        int year
+        try {
+            year = params.year.toInteger()
+        } catch (NumberFormatException ignored) {
+            render(status: 400, contentType: 'application/json', text: ([status: 1, error: "Invalid year format"] as JSON))
+            return
+        }
+
+        if (year < 1900 || year > 3000) {
+            render(status: 400, contentType: 'application/json', text: ([status: 1, error: "Invalid year. Expected a 4-digit year."] as JSON))
+            return
+        }
+
+        try {
+            def csvService = getCsvService()
+            int archivedCount = csvService.archiveCSVFilesByYear(year)
+            render(status: 200, contentType: 'application/json', text: ([
+                status: 0,
+                year: year,
+                archivedCount: archivedCount,
+                message: "Successfully archived ${archivedCount} CSV file(s) for year ${year}"
+            ] as JSON))
+        } catch (Exception e) {
+            log.error("Error archiving CSV files for year ${year}: ${e.message}", e)
+            render(status: 500, contentType: 'application/json', text: ([status: 1, error: "Failed to archive CSV files: ${e.message}"] as JSON))
+        }
+    }
+
+    /**
+     * Unarchive all CSV files for a given year — restores .csv.archived back to .csv
+     */
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
+    def unarchiveByYear() {
+        if (!params.year) {
+            render(status: 400, contentType: 'application/json', text: ([status: 1, error: "Year parameter is required"] as JSON))
+            return
+        }
+
+        int year
+        try {
+            year = params.year.toInteger()
+        } catch (NumberFormatException ignored) {
+            render(status: 400, contentType: 'application/json', text: ([status: 1, error: "Invalid year format"] as JSON))
+            return
+        }
+
+        if (year < 1900 || year > 3000) {
+            render(status: 400, contentType: 'application/json', text: ([status: 1, error: "Invalid year. Expected a 4-digit year."] as JSON))
+            return
+        }
+
+        try {
+            def csvService = getCsvService()
+            int unarchivedCount = csvService.unarchiveCSVFilesByYear(year)
+            render(status: 200, contentType: 'application/json', text: ([
+                status: 0,
+                year: year,
+                unarchivedCount: unarchivedCount,
+                message: "Successfully unarchived ${unarchivedCount} CSV file(s) for year ${year}"
+            ] as JSON))
+        } catch (Exception e) {
+            log.error("Error unarchiving CSV files for year ${year}: ${e.message}", e)
+            render(status: 500, contentType: 'application/json', text: ([status: 1, error: "Failed to unarchive CSV files: ${e.message}"] as JSON))
+        }
+    }
+
+    /**
+     * Aggregate all CSV files for a given year into a single merged file and upload to S3
+     * as biosecurity/<year>/full-records.csv
+     */
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
+    def aggregateByYear() {
+        if (!params.year) {
+            render(status: 400, contentType: 'application/json', text: ([status: 1, error: "Year parameter is required"] as JSON))
+            return
+        }
+
+        int year
+        try {
+            year = params.year.toInteger()
+        } catch (NumberFormatException ignored) {
+            render(status: 400, contentType: 'application/json', text: ([status: 1, error: "Invalid year format"] as JSON))
+            return
+        }
+
+        if (year < 1900 || year > 3000) {
+            render(status: 400, contentType: 'application/json', text: ([status: 1, error: "Invalid year. Expected a 4-digit year."] as JSON))
+            return
+        }
+
+        try {
+            def csvService = getCsvService()
+            String s3Key = csvService.aggregateAndUploadByYear(year)
+            if (s3Key) {
+                render(status: 200, contentType: 'application/json', text: ([
+                    status: 0,
+                    year: year,
+                    s3Key: s3Key,
+                    message: "Successfully aggregated CSV files for year ${year} → ${s3Key}"
+                ] as JSON))
+            } else {
+                render(status: 200, contentType: 'application/json', text: ([
+                    status: 1,
+                    year: year,
+                    message: "No CSV files found for year ${year} — nothing was aggregated."
+                ] as JSON))
+            }
+        } catch (Exception e) {
+            log.error("Error aggregating CSV files for year ${year}: ${e.message}", e)
+            render(status: 500, contentType: 'application/json', text: ([status: 1, error: "Failed to aggregate CSV files: ${e.message}"] as JSON))
+        }
+    }
+
     @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
     def moveLocalFilesToS3() {
         def csvService = getCsvService()

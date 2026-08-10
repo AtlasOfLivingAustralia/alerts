@@ -49,6 +49,22 @@ abstract class BiosecurityCSVService {
     abstract void generateAuditCSV(QueryResult qs)
     abstract boolean folderExists(String folderName)
 
+    /**
+     * Archive all CSV files for a given year by renaming them with .archived suffix.
+     * @param year 4-digit year to archive files for
+     * @return number of files archived
+     */
+    abstract int archiveCSVFilesByYear(int year)
+
+    abstract int unarchiveCSVFilesByYear(int year)
+
+    /**
+     * Aggregate all CSV files for a given year into a single merged file and upload to S3.
+     * @param year 4-digit year to aggregate
+     * @return S3 key of the uploaded merged file, or null on failure
+     */
+    abstract String aggregateAndUploadByYear(int year)
+
 
     static String formatSize(long size) {
         String totalSizeFormatted = ""

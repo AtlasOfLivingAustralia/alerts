@@ -9,18 +9,30 @@
 
 
 <div id="subscription_${query.id}" class="row pt-4 pb-4" style="background-color: ${(i+startIdx) % 2 == 0 ? '#f0f0f0' : '#ffffff'};">
-    <div class="col-md-4 indented-text" id="${query.listId}">
-        <g:if test ="${query.listId != null && !(query.listId instanceof String && query.listId.toLowerCase() == 'null')}">            &nbsp;&nbsp;
-            <g:link controller="query" action="show" id="${query.id}">
-                <span><i class="fa-solid fa-circle-info" aria-hidden="true" title="Show the query"></i></span>
-            </g:link>
-        </g:if>
-        <g:else>
-            &nbsp; &nbsp;<span style="color: red;"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i></span>
-        </g:else>
-
+    <div class="col-md-4" id="${query.listId}">
         <g:if test ="${query.listId != null && !(query.listId instanceof String && query.listId.toLowerCase() == 'null')}">
-            <a href="${grailsApplication.config.lists.baseURL+'/speciesListItem/list/'+query.listId}" target="_blank">${query.name}</a> &nbsp; &nbsp;
+            <%-- Inline edit title --%>
+            <span id="queryTitle_${query.id}">
+                <a href="${grailsApplication.config.lists.baseURL+'/speciesListItem/list/'+query.listId}" target="_blank" id="queryTitleText_${query.id}">${query.name}</a>
+                <button class="btn btn-link btn-sm p-0 ms-1" title="Edit title" onclick="startEditTitle(${query.id})">
+                    <i class="fa-solid fa-pencil"></i>
+                </button>
+                <g:if test ="${query.listId != null && !(query.listId instanceof String && query.listId.toLowerCase() == 'null')}">
+                    <g:link controller="query" action="show" id="${query.id}">
+                        <button class="btn btn-link p-0"><i class="fa-solid fa-circle-info p-0 ms-1" aria-hidden="true" title="Show the query"></i></button>
+                    </g:link>
+                </g:if>
+                <g:else>
+                    &nbsp; &nbsp;<span style="color: red;"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i></span>
+                </g:else>
+            </span>
+            <span id="queryTitleEdit_${query.id}" style="display:none;">
+                <textarea rows="2" id="queryTitleInput_${query.id}" class="form-control form-control-sm w-100"  style="height:auto">${query.name}</textarea>
+                <br/>
+                <button class="btn btn-primary btn-sm ms-1" onclick="saveTitle(${query.id})"><i class="fa-solid fa-check"></i></button>
+                <button class="btn btn-outline-primary btn-sm ms-1" onclick="cancelEditTitle(${query.id})"><i class="fa-solid fa-xmark"></i></button>
+            </span>
+
                 <p></p>
                 <g:if test="${query.lastChecked}">
                   Last checked on
@@ -45,7 +57,17 @@
                 </g:else>
         </g:if>
         <g:else>
-             ${query.name}
+            <span id="queryTitle_${query.id}">
+                <span id="queryTitleText_${query.id}">${query.name}</span>
+                <button class="btn btn-link btn-sm p-0 ms-1" title="Edit title" onclick="startEditTitle(${query.id})">
+                    <i class="fa-solid fa-pencil fa-xs"></i>
+                </button>
+            </span>
+            <span id="queryTitleEdit_${query.id}" style="display:none;">
+                <textarea rows="2" id="queryTitleInput_${query.id}" class="form-control form-control-sm w-100">${query.name}</textarea>
+                <button class="btn btn-success btn-sm ms-1" onclick="saveTitle(${query.id})"><i class="fa-solid fa-check"></i></button>
+                <button class="btn btn-secondary btn-sm ms-1" onclick="cancelEditTitle(${query.id})"><i class="fa-solid fa-xmark"></i></button>
+            </span>
             <p></p>
             <span style="color: red;">Warning: This query is not associated with a valid list.</span>
         </g:else>
@@ -80,3 +102,58 @@
         </form>
     </div>
 </div>
+<script>
+    function startEditTitle(queryId) {
+        var currentName = document.getElementById('queryTitleText_' + queryId).textContent.trim();
+        // Sanitise: strip HTML tags and control characters before editing
+        var sanitised = currentName
+            .replace(/<[^>]*>/g, '')           // strip any HTML tags
+            .replace(/[\x00-\x1F\x7F]/g, '')   // strip control characters
+            .trim();
+        document.getElementById('queryTitleInput_' + queryId).value = sanitised;
+        document.getElementById('queryTitle_' + queryId).style.display = 'none';
+        document.getElementById('queryTitleEdit_' + queryId).style.display = 'block';
+        document.getElementById('queryTitleInput_' + queryId).focus();
+    }
+
+    function cancelEditTitle(queryId) {
+        document.getElementById('queryTitleEdit_' + queryId).style.display = 'none';
+        document.getElementById('queryTitle_' + queryId).style.display = 'inline';
+    }
+
+    function saveTitle(queryId) {
+        var input = document.getElementById('queryTitleInput_' + queryId);
+        // Sanitise submitted value: strip HTML tags and control characters
+        var newName = input.value
+            .replace(/<[^>]*>/g, '')
+            .replace(/[\x00-\x1F\x7F]/g, '')
+            .trim();
+        var currentName = document.getElementById('queryTitleText_' + queryId).textContent.trim();
+
+        if (!newName || newName === currentName) {
+            cancelEditTitle(queryId);
+            return;
+        }
+
+        $.ajax({
+            url: '${request.contextPath}/query/updateTitle/' + queryId,
+            type: 'POST',
+            data: { name: newName },
+            success: function(response) {
+                if (response.success) {
+                    document.getElementById('queryTitleText_' + queryId).textContent = newName;
+                    var link = document.querySelector('#queryTitle_' + queryId + ' a');
+                    if (link) link.textContent = newName;
+                    cancelEditTitle(queryId);
+                } else {
+                    alert('Failed to update title: ' + (response.message || 'Unknown error'));
+                    cancelEditTitle(queryId);
+                }
+            },
+            error: function(xhr) {
+                alert('Failed to update title: ' + xhr.responseText);
+                cancelEditTitle(queryId);
+            }
+        });
+    }
+</script>
