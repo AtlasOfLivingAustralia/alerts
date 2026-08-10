@@ -5,7 +5,7 @@ import org.springframework.web.servlet.i18n.SessionLocaleResolver
 import au.org.ala.alerts.quartz.AutowiringSpringBeanJobFactory
 
 beans = {
-    if (Holders.config.getProperty('alerts.liquibase.enabled', Boolean, true)) {
+    if (Holders.config.getProperty('spring.liquibase.enabled', Boolean, true)) {
         // configure Liquibase to use GORM dataSource
         liquibase(SpringLiquibase) {
             dataSource = ref('dataSource')

@@ -11,6 +11,11 @@ spec:
       {{- include "ala-alerts.selectorLabels" . | nindent 6 }}
   template:
     metadata:
+      annotations:
+        checksum/config: {{ tpl (.Files.Get "config/alerts-config.yml") . | sha256sum | quote }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
       labels:
         {{- include "ala-alerts.selectorLabels" . | nindent 8 }}
     spec:

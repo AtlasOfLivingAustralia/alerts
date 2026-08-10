@@ -122,7 +122,7 @@ Resources:
       Source:
         Type: CODEPIPELINE
         BuildSpec: !Sub cicd/${pProductComponent}/pipeline/deploy_alerts_buildspec.yaml
-      TimeoutInMinutes: 20
+      TimeoutInMinutes: 60
 
   TeardownAlerts:
     Type: AWS::CodeBuild::Project
@@ -166,6 +166,7 @@ Resources:
         BuildSpec: !Sub cicd/${pProductComponent}/pipeline/deploy_notification_buildspec.yaml
       TimeoutInMinutes: 5
 
+
   Pipeline:
     Type: "AWS::CodePipeline::Pipeline"
     Properties:
@@ -195,13 +196,13 @@ Resources:
                 FilePaths:
                   Includes:
                     - !Sub cicd/${pProductComponent}/**
+                    - docker/liquibase/**
                     - grails-app/**
                     - src/**
                     - helm/**
-                    - build.gradle
+                    - '*.gradle'
                     - Dockerfile
                     - gradle.properties
-                    - settings.gradle
             SourceActionName: CheckoutSrc
       Variables:
         - Name: SRC_BRANCH
@@ -267,13 +268,13 @@ Resources:
               EnvironmentVariables: !Sub 
                - |
                    [
-                     { "name":"ECR_REPO", "value":"${EcrRepo}" },
-                     { "name":"AWS_ACCOUNT_ID", "value":"${AWS::AccountId}" },
+                       { "name":"ECR_REPO", "value":"${EcrRepo}" },
+                       { "name":"AWS_ACCOUNT_ID", "value":"${AWS::AccountId}" },
                      { "name":"CLEAN_BRANCH", "value":"${pCleanBranch}" }
                    ]
                - EcrRepo:
-                      Fn::ImportValue:
-                        Fn::Sub: "${pBaseStackName}-AlertsRepositoryUri"
+                    Fn::ImportValue:
+                      Fn::Sub: "${pBaseStackName}-AlertsRepositoryUri"
             InputArtifacts:
               - Name: 'SourceArtifact'
             OutputArtifacts:
@@ -300,8 +301,10 @@ Resources:
                     { "name":"COGNITO_STACK_NAME", "value":"#{ExportConfigNS.COGNITO_STACK_NAME}" },
                     { "name":"DB_READ_ENDPOINT", "value":"#{ExportConfigNS.DB_READ_ENDPOINT}" },
                     { "name":"DB_WRITE_ENDPOINT", "value":"#{ExportConfigNS.DB_WRITE_ENDPOINT}" },
+                    { "name":"DB_CLUSTER_IDENTIFIER", "value":"#{ExportConfigNS.DB_CLUSTER_IDENTIFIER}" },
+                    { "name":"AWS_REGION", "value":"${AWS::Region}" },
                     { "name":"DOMAIN_NAME", "value":"#{ExportConfigNS.DOMAIN_NAME}" },
-                    { "name":"ECR_REPO", "value":"${EcrRepo}" },
+                     { "name":"ECR_REPO", "value":"${EcrRepo}" },
                     { "name":"EKS_CLUSTER_NAME", "value":"#{ExportConfigNS.EKS_CLUSTER_NAME}" },
                     { "name":"HELM_RELEASE_NAME", "value":"#{ExportConfigNS.HELM_RELEASE_NAME}" },
                     { "name":"CERTIFICATE_ARN", "value":"#{ExportConfigNS.CERTIFICATE_ARN}" },
@@ -310,8 +313,9 @@ Resources:
                     { "name":"ACCESS_LOGS_S3_BUCKET_NAME", "value":"#{ExportConfigNS.ACCESS_LOGS_S3_BUCKET_NAME}" },
                     { "name":"PRODUCT_NAME", "value":"#{ExportConfigNS.PRODUCT_NAME}" }
                   ]
-                - EcrRepo: !ImportValue
-                    Fn::Sub: '${pBaseStackName}-AlertsRepositoryUri'
+                - EcrRepo:
+                    Fn::ImportValue:
+                      Fn::Sub: '${pBaseStackName}-AlertsRepositoryUri'
               PrimarySource: SourceArtifact
             InputArtifacts:
               - Name: 'SourceArtifact'
@@ -399,6 +403,7 @@ Resources:
                      Fn::Sub: '${pBootstrapStackName}-CloudFormationServiceRoleArn'
             RunOrder: 4
 
+
   BuildAlertsCodeBuildLogGroup:
     Type: AWS::Logs::LogGroup
     DeletionPolicy: Delete
@@ -438,6 +443,7 @@ Resources:
       Tags:
         - Key: Name
           Value: !Ref AWS::StackName
+
 
 
 Outputs:

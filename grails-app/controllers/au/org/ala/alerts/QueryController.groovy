@@ -8,7 +8,7 @@ import org.springframework.dao.DataIntegrityViolationException
 
 class QueryController {
 
-    static allowedMethods = [save: "POST", update: "POST", update: "PUT", delete: ["POST"]]
+    static allowedMethods = [save: "POST", update: ["POST", "PUT"], updateTitle: "POST", delete: ["POST"]]
     def queryService
     def userService
     def notificationService
@@ -191,6 +191,29 @@ class QueryController {
             }
         }
         redirect(action: "subscribers", params: [queryid: params.queryid])
+    }
+
+    @Transactional
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole=true,  redirectController = 'admin', redirectAction = 'index', message = "You don't have permission to update that record.")
+    def updateTitle() {
+        def queryInstance = Query.get(params.id)
+        if (!queryInstance) {
+            render([success: false, message: "Query not found: ${params.id}"] as JSON)
+            return
+        }
+
+        String newTitle = params.name?.trim()
+        if (!newTitle) {
+            render([success: false, message: "Title cannot be empty."] as JSON)
+            return
+        }
+
+        queryInstance.name = newTitle
+        if (queryInstance.save(flush: true)) {
+            render([success: true, id: queryInstance.id, name: queryInstance.name] as JSON)
+        } else {
+            render([success: false, message: queryInstance.errors.allErrors.collect { it.defaultMessage }.join(', ')] as JSON)
+        }
     }
 
     @AlaSecured(value = 'ROLE_ADMIN', redirectController = 'admin', redirectAction = 'index', message = "You don't have permission to delete that query.")

@@ -32,6 +32,8 @@ import software.amazon.awssdk.services.s3.model.S3Object;
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import java.text.SimpleDateFormat
+import java.time.LocalDate
+import java.time.format.DateTimeParseException
 
 
 /**
@@ -118,6 +120,8 @@ class BiosecurityS3CSVService extends BiosecurityCSVService{
 
         out.flush()
     }
+
+
 
     @Override
     Map asyncAggregateCSVFiles(String folderName) {
@@ -498,5 +502,232 @@ class BiosecurityS3CSVService extends BiosecurityCSVService{
         msg.message = dryRun ? "Dry run: No files were uploaded to S3, add '?dryRun=false' to URL to copy files over." : "Finished upload to S3"
 
         msg
+    }
+
+    /**
+     * Archive all CSV files in S3 for a given year by renaming them with .archived suffix.
+     * File pattern: biosecurity/yyyy-MM-dd/*.csv -> biosecurity/yyyy-MM-dd/*.csv.archived
+     *
+     * @param year 4-digit year to archive files for
+     * @return number of files archived
+     */
+    int archiveCSVFilesByYear(int year) {
+        log.info("Starting archive of CSV files for year ${year}...")
+
+        String bucketName = grailsApplication.config.getProperty("grails.plugin.awssdk.s3.bucket")
+        
+        // List all objects under biosecurity/ prefix
+        List<S3Object> allObjects = collectFilesInS3('/')
+        
+        int archivedCount = 0
+        
+        allObjects.each { s3Object ->
+            String key = s3Object.key()
+            
+            // Skip if already archived
+            if (key.endsWith('.csv.archived')) {
+                return
+            }
+            
+            // Only process .csv files
+            if (!key.endsWith('.csv')) {
+                return
+            }
+            
+            // Extract date folder from key: biosecurity/2025-01-15/file.csv -> 2025-01-15
+            String[] parts = key.split('/')
+            if (parts.length < 3) {
+                return  // Skip malformed keys
+            }
+            
+            String dateFolder = parts[1]
+            
+            // Parse date and check year
+            try {
+                LocalDate fileDate = LocalDate.parse(dateFolder)
+                if (fileDate.year != year) {
+                    return  // Skip files not in target year
+                }
+            } catch (DateTimeParseException e) {
+                log.warn("Skipping S3 object with invalid date folder: ${key}")
+                return
+            }
+            
+            // Archive: rename .csv to .csv.archived
+            String archivedKey = key + '.archived'
+            
+            log.debug("Archiving ${key} -> ${archivedKey}")
+            
+            boolean success = s3MoveObject(bucketName, key, bucketName, archivedKey)
+            if (success) {
+                archivedCount++
+                log.info("Archived: ${key}")
+            } else {
+                log.error("Failed to archive: ${key}")
+            }
+        }
+        
+        log.info("Archived ${archivedCount} CSV file(s) for year ${year}")
+        return archivedCount
+    }
+
+    /**
+     * Download all CSV files for a given year from S3, merge them in date-ascending order
+     * (header written once from the first file), then upload the merged result back to S3.
+     *
+     * S3 target key convention (mirrors mergeBiosecurityCsvByDate.groovy naming):
+     *   biosecurity/<year>/annual-records.csv
+     *
+     * @param year 4-digit year to aggregate
+     * @return S3 key of the uploaded merged file, or null on failure
+     */
+    @Override
+    String aggregateAndUploadByYear(int year) {
+        log.info("Starting aggregation of CSV files for year ${year}...")
+
+        String s3Directory = grailsApplication.config.getProperty('biosecurity.csv.s3.directory', 'biosecurity')
+        String targetKey   = "${s3Directory}/${year}/annual-records.csv"
+
+        // Collect all .csv objects for the given year, sorted by date folder then filename
+        List<S3Object> allObjects = collectFilesInS3('/')
+
+        // Build TreeMap: LocalDate -> sorted list of S3 keys (date-ascending)
+        TreeMap<LocalDate, List<String>> dateToKeys = new TreeMap<>()
+
+        allObjects.each { s3Object ->
+            String key = s3Object.key()
+
+            // Only process plain .csv files (not .csv.archived)
+            if (!key.endsWith('.csv') || key.endsWith('.csv.archived')) return
+
+            String[] parts = key.split('/')
+            if (parts.length < 3) return
+
+            String dateFolder = parts[1]
+            try {
+                LocalDate fileDate = LocalDate.parse(dateFolder)
+                if (fileDate.year != year) return
+                dateToKeys.computeIfAbsent(fileDate) { [] } << key
+            } catch (DateTimeParseException e) {
+                log.warn("Skipping S3 object with invalid date folder during aggregation: ${key}")
+            }
+        }
+
+        if (dateToKeys.isEmpty()) {
+            log.warn("No CSV files found for year ${year} — skipping aggregation.")
+            return null
+        }
+
+        // Download each file to a temp file, merge in date-ascending order
+        File tempMerged = Files.createTempFile("biosecurity_merged_${year}_", ".csv").toFile()
+        int totalRows = 0
+        boolean headerWritten = false
+
+        try {
+            tempMerged.withWriter('UTF-8') { writer ->
+                dateToKeys.each { LocalDate date, List<String> keys ->
+                    keys.sort()  // deterministic within same date
+                    keys.each { String s3Key ->
+                        File tempFile = Files.createTempFile("biosecurity_dl_", ".csv").toFile()
+                        try {
+                            s3GetFile(s3Key, tempFile.absolutePath)
+                            List<String> lines = tempFile.readLines('UTF-8')
+                            if (lines.isEmpty()) return
+
+                            // Write header only once from the very first file
+                            if (!headerWritten) {
+                                writer.writeLine(lines[0])
+                                headerWritten = true
+                            }
+
+                            // Write data rows, skipping header
+                            lines.drop(1).each { line ->
+                                if (line?.trim()) {
+                                    writer.writeLine(line)
+                                    totalRows++
+                                }
+                            }
+                            log.debug("Merged ${lines.size() - 1} row(s) from ${s3Key}")
+                        } finally {
+                            tempFile.delete()
+                        }
+                    }
+                }
+            }
+
+            // Upload merged file to S3: biosecurity/<year>/annual-records.csv
+            log.info("Uploading merged file (${totalRows} rows) to S3: ${targetKey}")
+            s3StoreFile(targetKey, tempMerged)
+            log.info("Aggregation complete for year ${year}: ${targetKey}")
+            return targetKey
+
+        } catch (Exception e) {
+            log.error("Error during aggregation for year ${year}: ${e.message}", e)
+            return null
+        } finally {
+            tempMerged.delete()
+        }
+    }
+
+    /**
+     * Unarchive all CSV files in S3 for a given year by removing the .archived suffix.
+     * File pattern: biosecurity/yyyy-MM-dd/*.csv.archived to biosecurity/yyyy-MM-dd/*.csv
+     *
+     * @param year 4-digit year to unarchive files for
+     * @return number of files unarchived
+     */
+    int unarchiveCSVFilesByYear(int year) {
+        log.info("Starting unarchive of CSV files for year ${year}...")
+
+        String bucketName = grailsApplication.config.getProperty("grails.plugin.awssdk.s3.bucket")
+
+        // List all objects under biosecurity/ prefix
+        List<S3Object> allObjects = collectFilesInS3('/')
+
+        int unarchivedCount = 0
+
+        allObjects.each { s3Object ->
+            String key = s3Object.key()
+
+            // Only process .csv.archived files
+            if (!key.endsWith('.csv.archived')) {
+                return
+            }
+
+            // Extract date folder from key: biosecurity/2025-01-15/file.csv.archived -> 2025-01-15
+            String[] parts = key.split('/')
+            if (parts.length < 3) {
+                return  // Skip malformed keys
+            }
+
+            String dateFolder = parts[1]
+
+            // Parse date and check year
+            try {
+                LocalDate fileDate = LocalDate.parse(dateFolder)
+                if (fileDate.year != year) {
+                    return  // Skip files not in target year
+                }
+            } catch (DateTimeParseException e) {
+                log.warn("Skipping S3 object with invalid date folder: ${key}")
+                return
+            }
+
+            // Unarchive: remove .archived suffix to restore original .csv key
+            String restoredKey = key.substring(0, key.length() - '.archived'.length())
+
+            log.debug("Unarchiving ${key} -> ${restoredKey}")
+
+            boolean success = s3MoveObject(bucketName, key, bucketName, restoredKey)
+            if (success) {
+                unarchivedCount++
+                log.info("Unarchived: ${key} -> ${restoredKey}")
+            } else {
+                log.error("Failed to unarchive: ${key}")
+            }
+        }
+
+        log.info("Unarchived ${unarchivedCount} CSV file(s) for year ${year}")
+        return unarchivedCount
     }
 }

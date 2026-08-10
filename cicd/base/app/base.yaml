@@ -85,6 +85,23 @@ Resources:
       RepositoryName: !Sub
                          - ${pProductName}-${ResourceName}
                          - ResourceName: !If [ IsDev, !Ref pCleanBranch, !Ref pEnvironment ]
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [
+              {
+                "rulePriority": 1,
+                "description": "Retain the latest Liquibase migration images",
+                "selection": {
+                  "tagStatus": "tagged",
+                  "tagPrefixList": ["liquibase-"],
+                  "countType": "imageCountMoreThan",
+                  "countNumber": 20
+                },
+                "action": { "type": "expire" }
+              }
+            ]
+          }
       RepositoryPolicyText:
         Version: 2012-10-17
         Statement:
