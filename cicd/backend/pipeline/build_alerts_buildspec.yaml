@@ -21,14 +21,13 @@ phases:
         && curl -s "https://get.sdkman.io" | bash
         && chmod a+x /root/.sdkman/bin/sdkman-init.sh
         && source /root/.sdkman/bin/sdkman-init.sh && sdk install grails 6.0.0 /root/.sdkman/candidates/grails/6.0.0
-        && apt-get install -y apt-transport-https ca-certificates software-properties-common
-        && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
-        && add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-        && apt-get update
-        && apt-get install -y docker-ce
       - java -version
+      - echo Registering QEMU emulators for cross-platform builds...
+      - docker run --rm --privileged public.ecr.aws/eks-distro-build-tooling/binfmt-misc:qemu-v9.2.2 --install all
+      - docker buildx version
+      - docker buildx create --use --name multiarch-builder
       - echo Logging in to Docker Hub...
-      - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+      - echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
       - echo Logging in to Amazon ECR...
       - aws ecr get-login-password | docker login -u AWS --password-stdin "https://$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
       - ./gradlew clean
@@ -46,23 +45,23 @@ phases:
       - echo Post-build phase...
       - echo Build completed on $(date)
       - rm -rf build/libs/*-plain.war
-      - echo Building the Docker image...
-      - docker build -t ala-alerts .
-      - echo Tagging the Docker image...
       - BUILD_TAG=$CLEAN_BRANCH-$CODEBUILD_BUILD_NUMBER
       - echo build tag is $BUILD_TAG
       - echo "$BUILD_TAG" > build_tag.txt
-      - echo tagging
-      - docker tag ala-alerts:latest $ECR_REPO:$BUILD_TAG
-      - docker tag ala-alerts:latest $ECR_REPO:latest
-      - echo Pushing the Docker image to Amazon ECR...
-      - docker push $ECR_REPO:$BUILD_TAG
-      - docker push $ECR_REPO:latest
+      - echo Building and pushing the multi-arch Docker image to ECR...
+      - |
+        docker buildx build --platform linux/amd64,linux/arm64 \
+                            -f Dockerfile \
+                            -t $ECR_REPO:$BUILD_TAG \
+                            -t $ECR_REPO:latest \
+                            --push \
+                            .
 #     Check if liquibase image already exists in ECR, if not build and push it, otherwise skip the build and push.
       - |
         set -euo pipefail
         LIQUIBASE_IMAGE_HASH=$(
           {
+            echo "multiarch-v1"
             sha256sum docker/liquibase/Dockerfile
             find src/main/resources/db/changelog -type f -print0 | sort -z | xargs -0 sha256sum
           } | sha256sum | cut -c1-16
@@ -74,12 +73,13 @@ phases:
           --image-ids imageTag="$LIQUIBASE_IMAGE_TAG" 2>&1); then
           echo "Liquibase image already exists. Skipping build and push."
         elif [[ "$IMAGE_LOOKUP" == *ImageNotFoundException* ]]; then
-          docker build \
+          docker buildx build \
+            --platform linux/amd64,linux/arm64 \
             --pull \
             --file docker/liquibase/Dockerfile \
             --tag "$ECR_REPO:$LIQUIBASE_IMAGE_TAG" \
+            --push \
             .
-          docker push "$ECR_REPO:$LIQUIBASE_IMAGE_TAG"
         else
           echo "$IMAGE_LOOKUP"
           echo "Unable to determine whether the Liquibase image exists."
