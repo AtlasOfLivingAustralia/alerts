@@ -96,13 +96,28 @@
                 <input type="date" name="date" value="${today}" class="form-control" /><br/>
                 <button class="btn btn-primary" name="previewSubscription" type="button" onclick="submitPreview(this)" >Preview</button>
                 <button class="btn btn-primary" name="triggerSubscription" type="button" onclick="triggerSubscriptionSince(this, ${query.id})">Notify</button>
-                <div class="mt-1">
-                    <small class="form-text text-muted">"Notify" will send alerts to the subscribers and update the last check date to today</small>
+                <a href="#" class="ms-2" onclick="toggleNotifyHelp(${query.id}); return false;"><i class="fas fa-question-circle"></i> Help</a>
+                <div id="notifyHelp_${query.id}" class="mt-2" style="display:none;">
+                    <small class="form-text text-muted d-block mt-1">
+                        The '<span class="text-primary fw-bold">Preview</span>' button is primarily for administrators to verify that a query runs correctly.It does <span class="text-primary fw-bold">NOT</span> update the last execution date, send emails, or regenerate a CSV.
+                    </small>
+                    <hr/>
+                    <small class="form-text text-muted d-block">
+                        The '<span class="text-primary fw-bold">Notify</span>' button should only be used if the server unexpectedly goes down during a scheduled run or other unexpected failures, requiring the task to be triggered manually.<br><span class="text-primary fw-bold">It will send emails and generate a corresponding CSV file</span>. Otherwise, this button should not be used.
+                    </small>
                 </div>
         </form>
     </div>
 </div>
 <script>
+    function toggleNotifyHelp(queryId) {
+        var help = document.getElementById('notifyHelp_' + queryId);
+        if (!help) {
+            return;
+        }
+        help.style.display = help.style.display === 'none' ? 'block' : 'none';
+    }
+
     function startEditTitle(queryId) {
         var currentName = document.getElementById('queryTitleText_' + queryId).textContent.trim();
         // Sanitise: strip HTML tags and control characters before editing
