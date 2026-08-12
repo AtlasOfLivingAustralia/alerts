@@ -602,12 +602,15 @@ class NotificationService {
     //select q.id, u.frequency from query q inner join notification n on n.query_id=q.id inner join user u on n.user_id=u.id;
     List<Map> execQueryForFrequency(Frequency frequency, Boolean sendEmails, Boolean dryRun = false) {
         def logs = []
-        def queries = Query.executeQuery(
-                """select q from Query q
-                  inner join q.notifications n
-                  inner join n.user u
-                  where u.frequency = :frequency
-                  group by q""", [frequency: frequency])
+        List<Query> queries = Query.createCriteria().listDistinct {
+            notifications {
+                user {
+                    eq('frequency', frequency)
+                }
+                // keep this if you only want enabled subscriptions
+                eq('enabled', true)
+            }
+        } as List<Query>
 
         queries.each { query ->
             // biosecurity queries are handled elsewhere
@@ -623,18 +626,22 @@ class NotificationService {
                 boolean hasUpdated = qr?.succeeded && qr?.hasChanged
 
                 if (hasUpdated) {
-                    def users = Query.executeQuery(
-                            """select u.email, max(u.unsubscribeToken), max(n.unsubscribeToken)
-                      from User u
-                      inner join u.notifications n
-                      where n.query = :query
-                      and u.frequency = :frequency
-                      and (u.locked is null or u.locked != 1)
-                      group by u""", [query: query, frequency: frequency])
+                    List<Notification> matchedNotifications = Notification.createCriteria().list {
+                        eq('query', query)
+                        eq('enabled', true)
+                        user {
+                            eq('frequency', frequency)
+                            or {
+                                isNull('locked')
+                                ne('locked', true)
+                            }
+                        }
+                    } as List<Notification>
 
-                    def recipients = users.collect { user ->
-                        [email: user[0], userUnsubToken: user[1], notificationUnsubToken: user[2]]
+                    def recipients = matchedNotifications.collect { Notification n ->
+                        [email: n.user.email, userUnsubToken: n.user.unsubscribeToken, notificationUnsubToken: n.unsubscribeToken]
                     }
+
                     log.debug("Sending emails to...." + recipients*.email.join(","))
                     def emails = recipients*.email
                     info['newRecords'] = qr.newRecords.size()
@@ -642,7 +649,7 @@ class NotificationService {
                             ? emails.take(3).join(", ") + ", etc"
                             : emails.join(", ")
 
-                    if (!users.isEmpty() && sendEmails) {
+                    if (!recipients.isEmpty() && sendEmails) {
                         emailService.sendGroupNotification(qr, frequency, recipients)
                     }
 
@@ -661,6 +668,140 @@ class NotificationService {
             }
         }
         logs
+    }
+
+    /**
+     * Get all alerts for a user, including enabled and disabled alerts, and mark them as the user's own alerts.
+     * Used to display the user's alerts in the UI.
+     * @param user
+     * @return
+     */
+    def myAlerts(User user) {
+        def myAlerts = getAlerts(user)
+        myAlerts["isMyOwnAlerts"] = true
+        myAlerts
+    }
+
+    /**
+     * Only get the enabled queries for a user.
+     * @param user
+     * @return
+     */
+    def getEnabledAlerts(User user) {
+        def myAlerts = Notification.createCriteria().list {
+            eq('user', user)
+            eq('enabled', true)
+        } as List<Notification>
+
+        def enabledQuries = myAlerts.collect { it.query }.findAll { it != null }.unique { it.id }
+        enabledQuries
+    }
+
+    def getAlerts(User user) {
+        def userAlertsMap = [:]
+
+        if (user) {
+            def myAlerts = []
+
+            myAlerts = Notification.createCriteria().list {
+                eq('user', user)
+            } as List<Notification>
+
+            // myAnnotationQuery is created to fillet out those myAnnotation queries which do not belong to me,
+            def myAnnotationQuerySample = queryService.createMyAnnotationQuery(user.getUserId())
+            // myAnnotation is a special case. We need to create a myAnnotation query for the user if it does not exist.
+            queryService.createQueryForUserIfNotExists(myAnnotationQuerySample, user, false, false)
+            // get all standard queries, and ONLY myAnnotation which the queryPath is same as the myAnnotationQuerySample sample
+            def standardQueries = Query.createCriteria().list {
+                eq('custom', false)
+                or {
+                    ne('emailTemplate', myAnnotationQuerySample.emailTemplate)
+                    and {
+                        eq('emailTemplate', myAnnotationQuerySample.emailTemplate)
+                        eq('queryPath', myAnnotationQuerySample.queryPath)
+                    }
+                }
+
+            } as List<Query>
+
+
+            // check if the user has all standard alerts, if not, create and add it as a disabled notification
+            Notification.withTransaction {
+                standardQueries.each { query ->
+                    def existed = myAlerts.find { it.query.id == query.id }
+                    if (!existed) {
+                        def newAlert = new Notification(query: query, user: user, enabled: false)
+                        newAlert.save()
+                        myAlerts << newAlert
+                    }
+                }
+            }
+
+            def myEnabledStandardAlerts = myAlerts.findAll { !it.query.custom && it.enabled }
+            def myDisabledStandardAlerts = myAlerts.findAll { !it.query.custom && !it.enabled }
+            def myEnabledCustomAlerts = myAlerts.findAll { it.query.custom && it.enabled }
+            def myDisabledCustomAlerts = myAlerts.findAll { it.query.custom && !it.enabled }
+
+            def myEnabledStandardQueries = myEnabledStandardAlerts.collect { it.query }.findAll { it != null }.unique { it.id }
+            def myDisabledStandardQueries= myDisabledStandardAlerts.collect { it.query }.findAll { it != null }.unique { it.id }
+            def myDisabledCustomQueries = myDisabledCustomAlerts.collect { it.query }.findAll { it != null }.unique { it.id }
+            def myEnabledCustomQueries = myEnabledCustomAlerts.collect { it.query }.findAll { it != null }.unique { it.id }
+
+//          It is an old return objects. Keep it for reference.
+//          def userConfig = [disabledQueries: allAlertTypes,   // all disabled standard queries
+//                              enabledQueries : standardQueries, // all enabled standard queries
+//                              customQueries  : customQueries,   // all enabled custom queries
+//                              frequencies    : Frequency.listOrderByPeriodInSeconds(),
+//                              user           : user]
+
+            userAlertsMap = [enabledStandardQueries: myEnabledStandardQueries,
+                          disabledStandardQueries: myDisabledStandardQueries,
+                          enabledCustomQueries  : myEnabledCustomQueries,
+                          disabledCustomQueries: myDisabledCustomQueries,
+                          frequencies    : Frequency.listOrderByPeriodInSeconds(),
+                          user           : user
+            ]
+
+        }
+
+        return userAlertsMap
+    }
+
+    def disableAlertForUser(User user, Long queryId) {
+        log.debug('disable an alert :  ' + queryId + ' for user : ' + user)
+        def notificationInstance = Notification.findByUserAndQuery(user, Query.findById(queryId))
+        if (notificationInstance) {
+            log.debug('Disabling alert for user: ' + notificationInstance.user + ', query id: ' + queryId)
+            Notification.withTransaction {
+                notificationInstance.enabled = false
+                if (!notificationInstance.save(validate: true, flush: true)) {
+                    notificationInstance.errors.allErrors.each {
+                        log.error(it)
+                    }
+                }
+            }
+        } else {
+            log.info("No alert found to disable for user: " + user + ", query id: " + queryId)
+        }
+    }
+
+    def enableAlertForUser(User user, Long queryId) {
+        def notificationInstance = Notification.findByUserAndQuery(user, Query.findById(queryId))
+        if (notificationInstance) {
+            log.debug('enable alert for user: ' + notificationInstance.user + ', query id: ' + queryId)
+            Notification.withTransaction {
+                notificationInstance.enabled = true
+                if (!notificationInstance.save(validate: true, flush: true)) {
+                    notificationInstance.errors.allErrors.each {
+                        log.error(it)
+                    }
+                }
+            }
+        } else {
+            log.info("No alert found to enable for user: " + user + ", query id: " + queryId)
+            log.info("Creating a new alert for user: " + user + ", query id: " + queryId)
+            addAlertForUser(user, queryId)
+        }
     }
 
     def addAlertForUser(User user, Long queryId) {
@@ -700,19 +841,54 @@ class NotificationService {
     }
 
     def subscribeMyAnnotation(User user) {
-        Query myAnnotationQuery = queryService.createMyAnnotationQuery(user?.userId)
-        boolean newQueryCreated = queryService.createQueryForUserIfNotExists(myAnnotationQuery, user, false)
+        Query myAnnotationSampleQuery = queryService.createMyAnnotationQuery(user?.userId)
+        boolean newQueryCreated = queryService.createQueryForUserIfNotExists(myAnnotationSampleQuery, user, false, true)
         // trigger a check for this query to generate query result
         // user could call multiple subscribeMyAnnotation, only the first one will create a new query so it's
         // triggered only once.
         if (newQueryCreated) {
-            Query savedQuery = Query.findByBaseUrlAndQueryPath(myAnnotationQuery.baseUrl, myAnnotationQuery.queryPath)
-            executeQuery(savedQuery, user.frequency)
+            Query savedQuery = Query.findByBaseUrlAndQueryPath(myAnnotationSampleQuery.baseUrl, myAnnotationSampleQuery.queryPath)
+            //todo I don't think we need to execute the query here.
+            //executeQuery(savedQuery, user.frequency)
+        } else {
+            //if it is not new created, the related notification may set to disabled, so we need to enable it
+            Query retrievedQuery = Query.findByBaseUrlAndQueryPath(myAnnotationSampleQuery.baseUrl, myAnnotationSampleQuery.queryPath)
+            def notification = Notification.findByQueryAndUser(retrievedQuery, user)
+            if (notification) {
+                notification.enabled = true
+                Notification.withTransaction {
+                    notification.save()
+                }
+            }
         }
     }
 
-
+    /**
+     * Unsubscribe the user from the "My Annotation" alert by disabling the notification associated with the user's myAnnotation query.
+     * @param user
+     * @return
+     */
     def unsubscribeMyAnnotation(User user) {
+        Query myAnnotationQuery = queryService.findMyAnnotationQuery(user?.userId)
+        if (myAnnotationQuery) {
+            def notification = Notification.findByQueryAndUser(myAnnotationQuery, user)
+            if (notification) {
+                notification.enabled = false
+                Notification.withTransaction {
+                    notification.save()
+                }
+            }
+        } else {
+            log.error("Query not found for queryPath: " + user.userId)
+        }
+    }
+
+    /**
+     * Completely delete the "My Annotation" alert for the user, including the notification, query result, and query itself.
+     * @param user
+     * @return
+     */
+    def deleteMyAnnotation(User user) {
         Query retrievedQuery = queryService.findMyAnnotationQuery(user?.userId)
         if (retrievedQuery != null) {
              Query.withTransaction {
@@ -743,7 +919,7 @@ class NotificationService {
 
     // update user to new frequency
     // there are some special work if user is subscribed to 'My Annotation' alert
-    // todo if we do this for MyAnnotation, we should also do this for others
+    // todo if we do this for MyAnnotation, we may also do this for others
     def updateFrequency(User user, String newFrequency) {
         def oldFrequency = user.frequency
         user.frequency = Frequency.findByName(newFrequency)

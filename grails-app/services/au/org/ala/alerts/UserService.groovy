@@ -28,53 +28,6 @@ class UserService {
 
     def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
 
-    Map getUserAlertsConfig(User user) {
-
-        log.debug('getUserAlertsConfig - Viewing my alerts :  ' + user)
-        //enabled alerts
-        def notificationInstanceList = Notification.findAllByUser(user)
-
-        //split into custom and non-custom...
-        //in case some queries which were removed
-        def enabledQueries = notificationInstanceList.findAll { it?.query != null }
-                .collect { it.query }
-                .findAll { query ->
-                    try {
-                        Query.get(query.id) != null
-                    } catch (Exception e) {
-                        false
-                    }
-                }
-
-        def enabledIds = enabledQueries.collect { it.id }
-
-        // all standard queries + 'my annotations' queries
-        // this might include 'my annotations' that belongs to others
-        // we need to filter those out
-        def allAlertTypes = Query.findAllByCustom(false)
-
-        def myAnnotationQuery = queryService.createMyAnnotationQuery(user.getUserId())
-        // collect standard queries + 'my annotations' belongs to current user
-        allAlertTypes = allAlertTypes.findAll { it.name != myAnnotationQuery.name || it.queryPath == myAnnotationQuery.queryPath }
-
-        allAlertTypes.removeAll { enabledIds.contains(it.id) }
-        def customQueries = enabledQueries.findAll { it.custom }
-        def standardQueries = enabledQueries.findAll { !it.custom }
-
-        def userConfig = [disabledQueries: allAlertTypes,   // all disabled standard queries
-                          enabledQueries : standardQueries, // all enabled standard queries
-                          customQueries  : customQueries,   // all enabled custom queries
-                          frequencies    : Frequency.listOrderByPeriodInSeconds(),
-                          user           : user]
-
-        if (grailsApplication.config.getProperty('myannotation.enabled', Boolean, false)) {
-            userConfig.myannotation = userConfig.enabledQueries.findAll { it.name == myAnnotationQuery.name }
-            userConfig.enabledQueries.removeAll { it.name == myAnnotationQuery.name }
-        }
-
-        userConfig
-    }
-
     /**
      * Sync User table with UserDetails app via webservice
      *

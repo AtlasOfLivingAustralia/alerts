@@ -197,13 +197,13 @@ class AdminController {
     def showUsersAlerts() {
         User user = User.findByUserId(params.userId)
         if (user) {
-            def userConfig = userService.getUserAlertsConfig(user)
+            def userConfig = notificationService.getAlerts(user)
             userConfig.put('adminUser', authService.userDetails())
 
             if (authService.userDetails()?.userId == user.userId) {
-                userConfig.put('isMyAlerts', true)
+                userConfig.put('isMyOwnAlerts', true)
             } else {
-                userConfig.put('isMyAlerts', false)
+                userConfig.put('isMyOwnAlerts', false)
             }
 
             render(view: "../notification/myAlerts", model: userConfig)
@@ -560,6 +560,10 @@ class AdminController {
         redirect(controller: "admin", action: "biosecurity")
     }
 
+    /**
+     * todo: check if it is still used
+     * @return
+     */
     @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
     def unsubscribeAlert() {
         if (!params.useremail || params.useremail.allWhitespace) {

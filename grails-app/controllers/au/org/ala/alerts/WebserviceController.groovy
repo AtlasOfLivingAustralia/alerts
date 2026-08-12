@@ -62,13 +62,6 @@ class WebserviceController {
     def listAlertsForUser = {
     }
 
-    def getUserAlerts = {
-        User user = userService.getUser()
-        log.debug('#getUserAlerts - Viewing my alerts :  ' + user)
-        def model = userService.getUserAlertsConfig(user)
-        render model as JSON
-    }
-
     /**
      * Service that returns a JSON callback response allowing consuming apps to create links
      * to create an alert or remove an alert
@@ -539,7 +532,7 @@ class WebserviceController {
     @Operation(
             method = "GET",
             tags = "alerts",
-            operationId = "Get User Alerts.",
+            operationId = "getUserAlerts",
             summary = "Get User Alerts",
             description = "Get User Alerts",
             parameters = [
@@ -567,14 +560,20 @@ class WebserviceController {
     )
     @RequireApiKey
     @Path("/api/alerts/user/{userId}")
-    def getUserAlertsWS() {
+    def getUserAlerts() {
         String resolvedUserId = resolveUserId(params.userId)
         User user = userService.getUserById(resolvedUserId)
+
         if (user == null) {
-            response.status = HttpStatus.NOT_FOUND.code
+            response.status = HttpStatus.NOT_FOUND.value()
             render ([error : "can't find a user with userId " + resolvedUserId] as JSON)
         } else {
-            render(userService.getUserAlertsConfig(user) as JSON)
+            def userAlertsMap =["enabledAlerts":notificationService.getEnabledAlerts(user)]
+            // todo check if myannotation is only used by a webservice call and consumed by Biocache
+            if (grailsApplication.config.getProperty('myannotation.enabled', Boolean, false)) {
+                userAlertsMap['myannotation'] = userAlertsMap["enabledAlerts"].findAll { it.emailTemplate == '/email/myAnnotations'}
+            }
+            render(userAlertsMap as JSON)
         }
     }
 
@@ -751,7 +750,7 @@ class WebserviceController {
                     invalidEmails.add(entry.key)
                 } else {
                     if (params.queryid) {
-                        queryService.createQueryForUserIfNotExists(Query.get(params.queryid), entry.value as User, true)
+                        queryService.createQueryForUserIfNotExists(Query.get(params.queryid), entry.value as User, true,true)
                     } else {
                         queryService.subscribeBioSecurity(entry.value as User, params.listid.trim())
                     }

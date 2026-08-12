@@ -25,11 +25,12 @@ class NotificationController {
         // Get the currently logged-in user
         User user = userService.getUser()
         if (user) {
+            Map myAlerts = notificationService.myAlerts(user)
             // Retrieve the user's alert configuration
-            Map userConfig = userService.getUserAlertsConfig(user)
-            userConfig.put('isMyAlerts', true)
+//            Map userConfig = userService.getUserAlertsConfig(user)
+//            userConfig.put('isMyAlerts', true)
 
-            render(view: "../notification/myAlerts", model: userConfig)
+            render(view: "../notification/myAlerts", model: myAlerts)
         }
     }
 
@@ -61,6 +62,33 @@ class NotificationController {
 
         // Delete the alert for this user
         notificationService.deleteAlertForUser(user, params.id as Long)
+        render([success: true] as JSON)
+    }
+
+    /*
+     * Enables an alert for the currently logged-in user
+     * @param id The ID of the QUERY
+     */
+    def enableAlert() {
+        def user = getUser()
+        if (!user) {
+            render status: HttpStatus.NOT_FOUND.value(), text: "Unrecognised user"
+            return
+        }
+        notificationService.enableAlertForUser(user, params.id as Long)
+        render([success: true] as JSON)
+    }
+    /*
+     * Enables an alert for the currently logged-in user
+     * @param id The ID of the QUERY
+     */
+    def disableAlert() {
+        def user = getUser()
+        if (!user) {
+            render status: HttpStatus.NOT_FOUND.value(), text: "Unrecognised user"
+            return
+        }
+        notificationService.disableAlertForUser(user, params.id as Long)
         render([success: true] as JSON)
     }
 

@@ -5,6 +5,7 @@ class Notification {
     Query query
     User user
     String unsubscribeToken
+    boolean enabled = true
 
     static constraints = {
         unsubscribeToken nullable: true

@@ -177,6 +177,7 @@ class QueryController {
         render view: "subscribers", model: [users: queryService.getSubscribers(queryid), queryid: queryid]
     }
 
+
     def unsubscribeAlert() {
         if (!params.useremail || params.useremail.allWhitespace) {
             flash.message = messageSource.getMessage("unsubscribeusers.controller.error.emptyemail", null, "User email can't be empty.", siteLocale)

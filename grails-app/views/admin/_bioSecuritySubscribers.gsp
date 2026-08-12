@@ -2,7 +2,10 @@
 
     <g:each in="${subscribers}" var="subscriber">
          %{-- subscriber.id is the sequence id , not the ALA user id    --}%
-        <span class="badge bg-primary-subtle text-primary">${subscriber.email} <i onclick="unsubscribe(${queryid}, ${subscriber.id},'${subscriber.email}')" class="fas fa-trash clickable"  ></i></span>
+        <span class="badge bg-primary-subtle text-primary" >
+            <span class="${subscriber.enabled ? '' : 'text-decoration-line-through'}">${subscriber.email}</span>
+            <i onclick="unsubscribe(${queryid}, ${subscriber.id},'${subscriber.email}')" class="fa fa-trash clickable"></i>
+        </span>
     </g:each>
 
     <g:if test="${subscribers.size() == 0}">

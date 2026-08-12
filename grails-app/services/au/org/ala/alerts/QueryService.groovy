@@ -152,33 +152,35 @@ class QueryService {
     }
 
     // return true if a new query is created, otherwise return false
-    @Transactional
-    boolean createQueryForUserIfNotExists(Query newQuery, User user, boolean setPropertyPath = true) {
+
+    boolean createQueryForUserIfNotExists(Query newQuery, User user, boolean setPropertyPath = true, boolean enabled = false) {
         boolean newQueryCreated = false
         //find the query
-        Query retrievedQuery = Query.findByBaseUrlAndQueryPath(newQuery.baseUrl, newQuery.queryPath)
-        if (retrievedQuery == null) {
-            log.debug("Query does not exist....")
-            //save the query
-            newQuery.save(flush: true)
-            newQueryCreated = true
-            if (setPropertyPath) {
-                PropertyPath totalRecordPP = new PropertyPath([name: "totalRecords", jsonPath: "totalRecords", query: newQuery, fireWhenNotZero: true])
-                PropertyPath lastLoadedPP = new PropertyPath([name: "last_loaded_record", jsonPath: "occurrences[0].uuid", query: newQuery])
-                newQuery.propertyPaths.add(totalRecordPP)
-                newQuery.propertyPaths.add(lastLoadedPP)
+        Query.withTransaction {
+            Query retrievedQuery = Query.findByBaseUrlAndQueryPath(newQuery.baseUrl, newQuery.queryPath)
+            if (retrievedQuery == null) {
+                log.debug("Query does not exist....")
+                //save the query
+                newQuery.save(flush: true)
+                newQueryCreated = true
+                if (setPropertyPath) {
+                    PropertyPath totalRecordPP = new PropertyPath([name: "totalRecords", jsonPath: "totalRecords", query: newQuery, fireWhenNotZero: true])
+                    PropertyPath lastLoadedPP = new PropertyPath([name: "last_loaded_record", jsonPath: "occurrences[0].uuid", query: newQuery])
+                    newQuery.propertyPaths.add(totalRecordPP)
+                    newQuery.propertyPaths.add(lastLoadedPP)
+                }
+            } else {
+                newQuery = retrievedQuery
             }
-        } else {
-            newQuery = retrievedQuery
-        }
-        //does the notification already exist?
-        def exists = Notification.findByQueryAndUser(newQuery, user)
-        if (!exists) {
-            Notification n = new Notification([query: newQuery, user: user])
-            newQuery.notifications.add(n)
-        }
+            //does the notification already exist?
+            def exists = Notification.findByQueryAndUser(newQuery, user)
+            if (!exists) {
+                Notification n = new Notification([query: newQuery, user: user, enabled: enabled])
+                newQuery.notifications.add(n)
+            }
 
-        newQuery.save(validate: true, flush: true)
+            newQuery.save(validate: true, flush: true)
+        }
         newQueryCreated
     }
 
@@ -390,7 +392,7 @@ class QueryService {
 
     def subscribeBioSecurity(User user, String listid) {
         Query query = createBioSecurityQuery(listid)
-        createQueryForUserIfNotExists(query, user, true)
+        createQueryForUserIfNotExists(query, user, true, true)
     }
 
     // remove all user notifications for the specified query
@@ -473,7 +475,7 @@ class QueryService {
                 """select u
                   from User u
                   inner join u.notifications n
-                  where n.query = :query
+                  where n.query = :query and n.enabled = true
                   group by u""", [query: query]) : []
     }
 

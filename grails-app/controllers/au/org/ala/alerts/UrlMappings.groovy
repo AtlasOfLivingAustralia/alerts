@@ -40,8 +40,6 @@ class UrlMappings {
             "/downloads"(namespace: "biosecurity",controller: "csv", action: "downloads")
         }
 
-
-        "/ws/alerts/user/$userId"(controller: 'webservice', action: 'getUserAlerts')
         "/ws/noauth/$action"(controller: 'webservice')
         "/ws/$action?/$id?"(controller: 'webservice')
 
@@ -62,8 +60,7 @@ class UrlMappings {
         // /api/* will not be protected by CAS, but all operations should be protected with @RequireApiKey
         "/api/alerts/user/$userId/unsubscribe"(controller: 'webservice', action: [POST: 'deleteAllAlertsForUser'])
         "/api/alerts/user/createAlerts"(controller: 'webservice', action: [POST: 'createUserAlerts'])
-
-        "/api/alerts/user/$userId"(controller: 'webservice', action: [GET: 'getUserAlertsWS'])
+        "/api/alerts/user/$userId"(controller: 'webservice', action: [GET: 'getUserAlerts'])
 
         "/robots.txt"(view:'/notFound')
 

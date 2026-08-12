@@ -67,6 +67,10 @@
                       <div class="nav nav-tabs" id="alertTabs" role="tablist">
                           <button class="nav-link active " id="standard-alerts-tab"  data-bs-toggle="tab" data-bs-target="#standard-alerts" role="tab" aria-controls="standard-alerts" >Standard Alerts</button>
                           <button class="nav-link" id="custom-alerts-tab" data-bs-toggle="tab" data-bs-target="#custom-alerts"  role="tab" aria-controls="custom-alerts">Custom Alerts</button>
+                          <g:set var="biosecurityAlerts" value="${((enabledCustomQueries ?: []) + (disabledCustomQueries ?: [])).findAll { it?.emailTemplate == '/email/biosecurity' }}" />
+                          <g:if test="${biosecurityAlerts.size() > 0}">
+                              <button class="nav-link" id="biosecurity-alerts-tab" data-bs-toggle="tab" data-bs-target="#biosecurity-alerts"  role="tab" aria-controls="biosecurity-alerts">Biosecurity</button>
+                          </g:if>
                       </div>
 
                       <!-- Tabs Content -->
@@ -77,10 +81,11 @@
                            <div class="row">
                             <div class="col-12 col-lg-7">
                                 <div class="pt-1">
-                                Enable alerts to have notifications sent to your email address
+                                    <i>Enable alerts to have notifications sent to your email address</i>
                                 </div>
                                 <div class="list-group mt-2">
-                                    <g:each in="${enabledQueries}" status="i" var="query">
+
+                                    <g:each in="${enabledStandardQueries}" status="i" var="query">
                                         <div class="list-group-item border-top-0  border-start-0 border-end-0 d-flex justify-content-between align-items-center px-0 py-2">
                                             <div class="flex-grow-1 me-2" >
                                                 <h5>${query.name}</h5>
@@ -88,13 +93,13 @@
                                             </div>
                                             <div class="pe-1">
                                                 <div class="form-check form-switch">
-                                                    <input class="form-check-input" type="checkbox" role="switch" id="${query.id}" checked style="transform: scale(1.4);"/>
+                                                    <input class="form-check-input" type="checkbox" role="switch" id="${query.id}" data-type="${query.emailTemplate == '/email/myAnnotations' ? 'myannotation' : ''}" checked style="transform: scale(1.4);"/>
                                                 </div>
                                             </div>
                                         </div>
                                     </g:each>
 
-                                    <g:each in="${disabledQueries}" status="i" var="query">
+                                    <g:each in="${disabledStandardQueries}" status="i" var="query">
                                         <div class="list-group-item border-top-0  border-start-0 border-end-0 d-flex justify-content-between align-items-center px-0 py-2">
                                             <div class="flex-grow-1 me-2">
                                                 <h5>${query.name}</h5>
@@ -102,13 +107,13 @@
                                             </div>
                                             <div class="pe-1">
                                                 <div class="form-check form-switch">
-                                                    <input class="form-check-input" type="checkbox" role="switch" id="${query.id}" style="transform: scale(1.4);"/>
+                                                    <input class="form-check-input" type="checkbox" role="switch" id="${query.id}" data-type="${query.emailTemplate == '/email/myAnnotations' ? 'myannotation' : ''}" style="transform: scale(1.4);"/>
                                                 </div>
                                             </div>
                                         </div>
                                     </g:each>
 
-                                    <g:if test="${myannotation != null}">
+%{--                                    <g:if test="${myannotation != null}">
                                         <g:set var="myannotationChecked" value="${myannotation.size() != 0}" />
                                         <div class="list-group-item border-top-0  border-start-0 border-end-0 d-flex justify-content-between align-items-center px-0 py-2">
                                             <div class="flex-grow-1 me-2">
@@ -121,10 +126,10 @@
                                                 </div>
                                             </div>
                                         </div>
-                                    </g:if>
+                                    </g:if>--}%
                                 </div>
                                 <div class="mt-2">
-                                    <g:if test="${isMyAlerts}">
+                                    <g:if test="${isMyOwnAlerts}">
                                         <g:link controller="unsubscribe"
                                                 action="index"
                                                 class="btn btn-outline-primary">Disable all alerts
@@ -139,18 +144,38 @@
                           <div class="tab-pane fade" id="custom-alerts" role="tabpanel" aria-labelledby="custom-alerts-tab">
                             <div class="row">
                                   <div class="col-12 col-lg-7">
-                                      <g:if test="${customQueries?.size() > 0}">
+                                      <div class="pt-1">
+                                          <i>Enable or disable notifications sent to your email address, or delete an alert</i>
+                                      </div>
+                                      <g:if test="${enabledCustomQueries?.size() > 0 || disabledCustomQueries?.size() > 0}">
+                                          <g:set var="customAlerts" value="${((enabledCustomQueries ?: []) + (disabledCustomQueries ?: [])).find { it?.emailTemplate != '/email/biosecurity' }}" />
                                           <div class="list-group">
-                                              <g:each in="${customQueries}" status="i" var="query">
+                                              <g:each in="${enabledCustomQueries.findAll { it?.emailTemplate != '/email/biosecurity' }}" status="i" var="query">
                                                   <div id="custom-${query.id}" class="list-group-item border-top-0  border-start-0 border-end-0 d-flex justify-content-between align-items-center px-0 py-2">
                                                       <div class="flex-grow-1 me-2">
                                                           <h5>${query.name}</h5>
                                                           <p class="mb-0">${query.description}</p>
                                                       </div>
-                                                      <div class="pe-1">
-                                                          <button type="button" class="btn btn-outline-primary deleteButton" id="${query.id}">
-                                                              Delete
-                                                          </button>
+                                                      <div class="form-check form-switch">
+                                                          <input class="form-check-input" type="checkbox" role="switch" id="${query.id}" checked style="transform: scale(1.4);"/>
+                                                      </div>
+
+                                                      <div class="ps-1">
+                                                          <i class="fa fa-trash deleteButton text-primary" aria-hidden="true"  id="${query.id}"></i>
+                                                      </div>
+                                                  </div>
+                                              </g:each>
+                                              <g:each in="${disabledCustomQueries.findAll { it?.emailTemplate != '/email/biosecurity' }}" status="i" var="query">
+                                                  <div id="custom-${query.id}" class="list-group-item border-top-0  border-start-0 border-end-0 d-flex justify-content-between align-items-center px-0 py-2">
+                                                      <div class="flex-grow-1 me-2">
+                                                          <h5>${query.name}</h5>
+                                                          <p class="mb-0">${query.description}</p>
+                                                      </div>
+                                                      <div class="form-check form-switch">
+                                                          <input class="form-check-input" type="checkbox" role="switch" id="${query.id}"  style="transform: scale(1.4);"/>
+                                                      </div>
+                                                      <div class="ps-1">
+                                                              <i class="fa fa-trash deleteButton text-primary" aria-hidden="true"  id="${query.id}"></i>
                                                       </div>
                                                   </div>
                                               </g:each>
@@ -190,8 +215,48 @@
                                   </div>
                             </div>
                           </div>
-                      </div>
-                </div>
+
+                      <!-- Biosecurity Alerts Tab -->
+                      <g:set var="biosecurityAlerts" value="${((enabledCustomQueries ?: []) + (disabledCustomQueries ?: [])).findAll { it?.emailTemplate == '/email/biosecurity' }}" />
+                      <g:if test="${biosecurityAlerts.size()>0}">
+                          <div class="tab-pane fade" id="biosecurity-alerts" role="tabpanel" aria-labelledby="biosecurity-alerts-tab">
+                              <div class="row">
+                                  <div class="col-12 col-lg-7">
+                                      <div class="pt-1">
+                                          <i>Enable or disable BioSecurity notifications sent to your email address</i>
+                                      </div>
+                                      <g:set var="enabledBiosecurityAlerts" value="${enabledCustomQueries.findAll { it?.emailTemplate == '/email/biosecurity' }}" />
+                                      <g:set var="disabledBiosecurityAlerts" value="${disabledCustomQueries.findAll { it?.emailTemplate == '/email/biosecurity' }}" />
+                                      <div class="list-group mt-2">
+                                          <g:each in="${enabledBiosecurityAlerts}" status="i" var="query">
+                                              <div id="custom-${query.id}" class="list-group-item border-top-0  border-start-0 border-end-0 d-flex justify-content-between align-items-center px-0 py-2">
+                                                  <div class="flex-grow-1 me-2">
+                                                      <h5>${query.name}</h5>
+                                                      <p class="mb-0">${query.description}</p>
+                                                  </div>
+                                                  <div class="form-check form-switch">
+                                                      <input class="form-check-input" type="checkbox" role="switch" id="${query.id}" checked style="transform: scale(1.4);"/>
+                                                  </div>
+                                              </div>
+                                          </g:each>
+                                          <g:each in="${disabledBiosecurityAlerts}" status="i" var="query">
+                                              <div id="custom-${query.id}" class="list-group-item border-top-0  border-start-0 border-end-0 d-flex justify-content-between align-items-center px-0 py-2">
+                                                  <div class="flex-grow-1 me-2">
+                                                      <h5>${query.name}</h5>
+                                                      <p class="mb-0">${query.description}</p>
+                                                  </div>
+                                                  <div class="form-check form-switch">
+                                                      <input class="form-check-input" type="checkbox" role="switch" id="${query.id}"  style="transform: scale(1.4);"/>
+                                                  </div>
+                                              </div>
+                                          </g:each>
+                                      </div>
+                                  </div>
+                              </div>
+                          </div>
+                      </g:if>
+                   </div>
+              </div>
           </div>
          <!-- end main content -->
       </div>
@@ -200,6 +265,9 @@
           var addMyAlertUrl = 'addMyAlert/';
           var deleteMyAlertUrl = 'deleteMyAlert/';
           var deleteMyAlertWRUrl ='deleteMyAlertWR/';
+
+          var enableMyAlertUrl = 'enableAlert/';
+          var disableMyAlertUrl = 'disableAlert/';
 
           var subscribeMyAnnotationUrl = 'subscribeMyAnnotation/'
           var unsubscribeMyAnnotationUrl = 'unsubscribeMyAnnotation/'
@@ -241,7 +309,7 @@
                   if ($(this).data("type") === "myannotation") {
                       url = (state ? subscribeMyAnnotationUrl : unsubscribeMyAnnotationUrl) + "?userId=${userId}";
                   } else {
-                      url = (state ? addMyAlertUrl : deleteMyAlertUrl) + this.id + "?userId=${userId}";
+                      url = (state ? enableMyAlertUrl : disableMyAlertUrl) + this.id + "?userId=${userId}";
                   }
 
                   // AJAX request
@@ -250,6 +318,7 @@
                           console.log("Success", resp);
                       })
                       .fail(function(err) {
+                          alert("Operation failed. Please contact the Alerts administrator.")
                           console.error("Error", err);
                       });
               });
