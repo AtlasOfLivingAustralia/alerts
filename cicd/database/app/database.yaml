@@ -497,6 +497,12 @@ Resources:
       RetentionInDays: 30
 
 Outputs:
+  ClusterIdentifier:
+    Description: The Aurora DB cluster identifier
+    Value: !Ref DbCluster
+    Export:
+      Name: !Sub ${AWS::StackName}-ClusterIdentifier
+
   WriteEndpoint:
     Description: The write endpoint of the database
     Value: !GetAtt DbCluster.Endpoint.Address
