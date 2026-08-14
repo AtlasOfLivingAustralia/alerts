@@ -98,11 +98,11 @@ Resources:
         Type: LINUX_CONTAINER
         ComputeType: BUILD_GENERAL1_MEDIUM
         Image: aws/codebuild/standard:7.0
-        PrivilegedMode: true   # required for docker buildx (BuildKit container + binfmt registration)
+        PrivilegedMode: true   # required for docker buildx
       Source:
         Type: CODEPIPELINE
         BuildSpec: !Sub cicd/${pProductComponent}/pipeline/build_alerts_buildspec.yaml
-      TimeoutInMinutes: 60
+      TimeoutInMinutes: 30
 
   DeployAlerts:
     Type: AWS::CodeBuild::Project
