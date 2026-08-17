@@ -57,25 +57,11 @@
         </div>
 
         <div class="box">
-            <div class="shadow card card-body ">
-                <div class="fw-bold fs-5"><i class="fa-regular fa-bell text-primary"></i> Manage Alerts</div>
-                <div>
-                    <small class="text-muted ps-4">View and test all alerts</small>
-                </div>
-                <div class="mt-3">
-                    <div><g:link controller="notification" action="myAlerts">View my alerts</g:link> - my subscriptions.</div>
-                    <div><g:link controller="query" action="list">View all alerts</g:link>  - list all available custom and default alerts.</div>
-                    <div><g:link controller="admin" action="notificationReport">
-                        View alerts with users</g:link> - view the user subscriptions per alert.</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="box">
             <div class="shadow card card-body">
-                <div class="fw-bold fs-5"><i class="fa-solid fa-bug text-primary"></i> Developer tools</div>
-                <div  class="mt-4"><a class="btn btn-primary" href="${request.contextPath}/admin/query">Debug and Test</a></div>
-                <hr>
+                <div class="fw-bold fs-5"><i class="fa-solid fa-bug text-primary"></i> View and test all alerts</div>
+                <div class="mt-3">
+                    <div><g:link controller="admin" action="query" class="btn btn-outline-primary">View and debug alerts</g:link>  <small class="text-muted ms-2">- list all available custom and default alerts.</small></div>
+                </div>
                 <div class="mt-2">
                     <div class="d-flex flex-wrap align-items-center">
                         Simulating a
@@ -86,7 +72,7 @@
                             <option value="monthly">Monthly</option>
                         </select>
                         Scheduled Job
-                        <a class="btn btn-primary ms-2 " id="simulatedFrequencyLink" href="${g.createLink(controller: 'admin', action: 'triggerQueriesByFrequency', params: [frequency: 'daily'])}" target="_blank">Run</a>
+                        <a class="btn btn-primary ms-2" id="simulatedFrequencyLink" href="${g.createLink(controller: 'admin', action: 'triggerQueriesByFrequency', params: [frequency: 'daily'])}" target="_blank">Run</a>
                         <label>  <g:checkBox name="testMode" class="mx-2" checked="${grailsApplication.config.testMode ?: false}" />  Email me a copy </label>
                     </div>
                     <div class="mt-2">

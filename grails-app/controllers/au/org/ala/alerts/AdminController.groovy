@@ -148,42 +148,35 @@ class AdminController {
         null
     }
 
-    def debugAlertsForUser() {
-        User user = User.findByUserId(params.userId)
-        if (user) {
-            log.debug "User id: " + user.email + ", frequency: " + user.frequency
-            //trigger this users alerts
-            response.setContentType("text/plain")
-            notificationService.debugQueriesForUser(user, response.getWriter())
-        } else {
-            log.error "user with id " + params.userId + " not found."
-            response.sendError(404)
-        }
-    }
+//    def debugAlertsForUser() {
+//        User user = User.findByUserId(params.userId)
+//        if (user) {
+//            log.debug "User id: " + user.email + ", frequency: " + user.frequency
+//            //trigger this users alerts
+//            response.setContentType("text/plain")
+//            notificationService.debugQueriesForUser(user, response.getWriter())
+//        } else {
+//            log.error "user with id " + params.userId + " not found."
+//            response.sendError(404)
+//        }
+//    }
 
-    def debugAllAlerts() {
-        response.setContentType("text/plain")
-        notificationService.checkAllQueries(response.getWriter())
-    }
-
-    def debugAlertEmail() {
-        def frequency = params.frequency ?: 'weekly'
-        def qcr = notificationService.checkQueryById(params.id, params.frequency ?: 'weekly')
-        def model = emailService.generateEmailModel(qcr.query, frequency, qcr.queryResult)
-        render(view: qcr.query.emailTemplate, model: model)
-    }
+//    def debugAllAlerts() {
+//        response.setContentType("text/plain")
+//        notificationService.checkAllQueries(response.getWriter())
+//    }
 
 
-    def debugAlert() {
-        render(
-        [alerts: [
-                hourly : notificationService.checkQueryById(params.id, params.frequency ?: 'hourly'),
-                daily  : notificationService.checkQueryById(params.id, params.frequency ?: 'daily'),
-                weekly : notificationService.checkQueryById(params.id, params.frequency ?: 'weekly'),
-                monthly: notificationService.checkQueryById(params.id, params.frequency ?: 'monthly')
-        ]
-        ] as JSON)
-    }
+//    def debugAlert() {
+//        render(
+//        [alerts: [
+//                hourly : notificationService.checkQueryById(params.id, params.frequency ?: 'hourly'),
+//                daily  : notificationService.checkQueryById(params.id, params.frequency ?: 'daily'),
+//                weekly : notificationService.checkQueryById(params.id, params.frequency ?: 'weekly'),
+//                monthly: notificationService.checkQueryById(params.id, params.frequency ?: 'monthly')
+//        ]
+//        ] as JSON)
+//    }
 
     def deleteOrphanAlerts() {
         def result = queryService.deleteOrphanedQueries()
@@ -479,67 +472,6 @@ class AdminController {
                 ])
     }
 
-    /**
-     * todo: check if it is still used
-     * @return
-     */
-    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
-    def csvAllBiosecurity() {
-        def date = params.date
-        String outputFile = "occurrence_alerts_${date}.csv"
-        log.info("Generate CSV for Biosecurity queries staring from ${date}")
-        def queries =  queryService.getALLBiosecurityQuery()
-
-        //Get all CSV files for each Biosecurity query
-        List<String> csvFiles  = []
-        queries.each { query ->
-            log.info("Generate CSV for Biosecurity query: ${query.name}")
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd")
-            def processedJson = biosecurityService.processQueryBiosecurity(query, sdf.parse(date), new Date())
-
-            def frequency = 'weekly'
-            QueryResult qr = notificationService.getQueryResult(query, Frequency.findByName(frequency))
-            qr.lastResult = qr.compress(processedJson)
-            File tempCSV = biosecurityCSVService.createTempCSVFromQueryResult(qr)
-            csvFiles.add(tempCSV.path)
-        }
-
-         //aggregate all CSV files into one
-        log.info("Aggregate CSV files into one file")
-        def tempFilePath = Files.createTempFile(outputFile, ".csv")
-        def tempFile = tempFilePath.toFile()
-        tempFile.withWriter { writer ->
-            try {
-                csvFiles.eachWithIndex {  csvFile, index ->
-                    new File(csvFile).withReader('UTF-8') { reader ->
-                        reader.eachLine { line, lineNumber ->
-                            if (index == 0 || lineNumber > 1) { // Write header from the first file and skip headers from the rest
-                                writer.writeLine(line)
-                            }
-                        }
-                    }
-                }
-
-            }catch (Exception e) {
-                log.error("Error in generating CSV file: ${e.message}")
-            }
-        }
-
-        response.setContentType("application/octet-stream")
-        response.setHeader("Content-Disposition", "attachment; filename=occurrence_alerts_${date}.csv")
-        def outputStream = response.outputStream
-
-        try {
-            BufferedReader reader = Files.newBufferedReader(tempFilePath)
-            String line
-            while ((line = reader.readLine()) != null) {
-                outputStream.println(line)
-            }
-            reader.close()
-        } finally {
-            outputStream.close()
-        }
-    }
 
     /**
      * @return
@@ -560,26 +492,26 @@ class AdminController {
         redirect(controller: "admin", action: "biosecurity")
     }
 
-    /**
-     * todo: check if it is still used
-     * @return
-     */
-    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
-    def unsubscribeAlert() {
-        if (!params.useremail || params.useremail.allWhitespace) {
-            flash.message = messageSource.getMessage("unsubscribeusers.controller.error.emptyemail", null, "User email can't be empty.", siteLocale)
-        } else if (!params.queryid || params.queryid.allWhitespace) {
-            flash.message = messageSource.getMessage("unsubscribeusers.controller.error.emptyqueryid", null, "Query Id can't be empty.", siteLocale)
-        } else {
-            User user = userService.getUserByEmail(params.useremail);
-            if (user) {
-                notificationService.deleteAlertForUser(user, Long.valueOf(params.queryid))
-            } else {
-                flash.message = messageSource.getMessage('unsubscribeusers.controller.error.emailnotfound', [params.useremail] as Object[], "User with email: {0} are not found in the system.", siteLocale)
-            }
-        }
-        redirect(controller: "admin", action: "biosecurity")
-    }
+//    /**
+//     * todo: check if it is still used
+//     * @return
+//     */
+//    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
+//    def unsubscribeAlert() {
+//        if (!params.useremail || params.useremail.allWhitespace) {
+//            flash.message = messageSource.getMessage("unsubscribeusers.controller.error.emptyemail", null, "User email can't be empty.", siteLocale)
+//        } else if (!params.queryid || params.queryid.allWhitespace) {
+//            flash.message = messageSource.getMessage("unsubscribeusers.controller.error.emptyqueryid", null, "Query Id can't be empty.", siteLocale)
+//        } else {
+//            User user = userService.getUserByEmail(params.useremail);
+//            if (user) {
+//                notificationService.deleteAlertForUser(user, Long.valueOf(params.queryid))
+//            } else {
+//                flash.message = messageSource.getMessage('unsubscribeusers.controller.error.emailnotfound', [params.useremail] as Object[], "User with email: {0} are not found in the system.", siteLocale)
+//            }
+//        }
+//        redirect(controller: "admin", action: "biosecurity")
+//    }
 
     /**
      * Page for debugging and testing all queries

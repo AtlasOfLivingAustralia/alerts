@@ -119,11 +119,6 @@
 							${message(code: 'default.button.delete.label', default: 'Delete')}
 						</button>
 					</g:if>
-
-				<!-- Debug button -->
-					<g:link class="btn btn-secondary" controller="admin" action="debugAlert" id="${queryInstance.id}">
-						Debug this query
-					</g:link>
 				</div>
 			</g:form>
 		</div>

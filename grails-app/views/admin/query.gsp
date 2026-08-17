@@ -61,7 +61,8 @@
                         <g:each var="query" in="${queries[queryType]}">
                             <li>
                                <g:link controller="query" action="wipe" params="[id: query.id]" target="_blank"><i class="fas fa-trash" aria-hidden="true"></i></g:link>
-                                <span class="badge bg-light">${query.id}</span>
+                                <g:link controller="query" action="show" params="[id: query.id]" target="_blank"> <span class="badge badge-outline-primary"><i class="fa fa-info-circle" aria-hidden="true"></i> ${query.id}</span></g:link>
+
                                 <a href="javascript:void(0);" class="toggle-more-query-details" data-target="#more-${query.id}"  title="Query ID:${query.id}">
                                  <g:if test="${query.name == 'My Annotations'}">
                                        <%
@@ -76,18 +77,6 @@
                             </li>
                             <div class="collapse" id="more-${query.id}">
                                 <div class="card card-body">
-                                    <div><p class="bg-light"><b>Query URL:</b> ${query.baseUrl+query.queryPath} </p>
-                                        <p><i class="fa fa-info-circle" aria-hidden="true" title="The URL MAY be used to build a UI link for this query."></i> <i>UI ref. ${query.baseUrlForUI}</i></p>
-                                    </div>
-%{--                                    <g:each var="propertyPath" in="${query.propertyPaths}">--}%
-%{--                                        <g:if test="${propertyPath.fireWhenNotZero}">--}%
-%{--                                            <span class="badge badge-info">New records</span> JSON path for the number of records: ${propertyPath?.jsonPath}<br>--}%
-%{--                                        </g:if>--}%
-%{--                                    </g:each>--}%
-                                    <div>
-                                      <i class="fa fa-cog" aria-hidden="true"></i> <i><b>JSON record path:</b>${query.recordJsonPath} <b>JSON ID path:</b>${query.idJsonPath}</i>
-                                    </div>
-                                    <br/>
 
                                     %{-- <div>--}%
     %{--                                    <g:if test="${query.notifications}">--}%
@@ -102,6 +91,7 @@
                                                 <g:each var="queryResult" in="${query.queryResults.sort { it.frequency?.name }}">
 
                                                     <div>
+                                                        <b><i class="fa fa-calendar-check-o" aria-hidden="true"></i> ${queryResult.frequency?.name?.toUpperCase()}</b>
                                                         <g:if test="${queryResult.hasChanged}">
                                                             <span class="badge bg-info">Changed</span>
                                                         </g:if>
@@ -110,24 +100,49 @@
                                                         </g:else>
                                                     </div>
                                                     <div>
-                                                        <g:link controller="queryResult" action="getDetails" params="[id: queryResult.id]" target="_blank"> <span class="badge bg-primary"><i class="fa fa-info-circle" aria-hidden="true"></i> ${queryResult.id}</span></g:link> &nbsp;<b><i class="fa fa-calendar-check-o" aria-hidden="true"></i> ${queryResult.frequency?.name?.toUpperCase()}</b>
+                                                        <g:link controller="queryResult" action="getDetails" params="[id: queryResult.id]" target="_blank"> <span class="badge badge-outline-primary"><i class="fa fa-database" aria-hidden="true"></i> ${queryResult.id}</span></g:link> &nbsp;
                                                         &nbsp; <label title="${query.getSubscribers(queryResult.frequency?.name)}"><span class="badge bg-info"> <i class="fa fa-user"></i> ${query.countSubscribers(queryResult.frequency?.name)}</span></label>
 
                                                         <g:if test="${queryResult?.lastChecked}">
                                                              Last checked: ${queryResult?.lastChecked}&nbsp;&nbsp;
                                                         </g:if>
-                                                        <g:link controller="ws" action="getQueryLogs" params="[id: query.id, frequency: queryResult.frequency?.name]" target="_blank">Log</g:link>
+                                                        <g:link controller="ws" action="getQueryLogs" params="[id: query.id, frequency: queryResult.frequency?.name]" target="_blank"><i class="fa fa-history" aria-hidden="true"></i> Log</g:link>
                                                                                                                &nbsp;&nbsp;
-                                                        <g:if test="${queryResult?.queryUrlUsed}">
-                                                            <a href="${queryResult?.queryUrlUsed}" target="_blank" title="URL for search">
-                                                                Query URL
-                                                            </a>
-                                                        </g:if>
-                                                        <g:if test="${grailsApplication.config.grails.env != 'production'}">
-                                                        <br/>
-                                                        <b><i class="fa fa-warning" style="color:#c44d34"></i> Resetting the previous and current results of this record to help testers identify new records.</b><button class="btn btn-primary" onclick="resetResultsInDB(${queryResult.id})">Reset</button>
-                                                        </g:if>
 
+                                                        <g:form controller="admin" action="emailAlertsOnCheckDate" method="POST" target="_blank">
+                                                            <%@ page import="java.time.LocalDate" %>
+                                                            <%
+                                                                String today = LocalDate.now().toString();  // Format: YYYY-MM-DD
+                                                            %>
+                                                            <input type="hidden" name="queryId" value="${query.id}" />
+                                                            <input type="hidden" name="frequency" value="${queryResult.frequency?.name}" />
+                                                            <div class="row my-3 align-items-start">
+                                                                <!-- Column 1: Text Description -->
+                                                                <div class="col-md-7">
+                                                                    <label class="form-label mb-2">Run the
+                                                                        <g:if test="${queryResult?.queryUrlUsed}">
+                                                                            <a href="${queryResult?.queryUrlUsed}" target="_blank" title="URL for search"><i class="fa fa-link" aria-hidden="true"></i> query</a>
+                                                                        </g:if>
+                                                                        <g:else>
+                                                                            query
+                                                                        </g:else>
+                                                                        against the given date and email new records.</label>
+                                                                    <div class="small text-muted fst-italic">The date range associated with the given date is determined by the query. It may be set as starting from that date, ending on that date, spanning a period around that date, or not used at all.</div>
+                                                                </div>
+                                                                <!-- Column 2: Date Input -->
+                                                                <div class="col-md-2">
+                                                                    <input type="date" id="checkDate" name="checkDate" value="${today}" class="form-control" />
+                                                                </div>
+                                                                <!-- Column 3: Button and Checkbox -->
+                                                                <div class="col-md-3">
+                                                                    <button type="submit" class="btn btn-outline-primary w-100 mb-2">Email me</button>
+                                                                    <label class="form-check-label">
+                                                                        <input type="checkbox" name="sendToSubscribers" class="form-check-input me-1" />
+                                                                        send a copy to subscribers
+                                                                    </label>
+                                                                </div>
+                                                            </div>
+                                                        </g:form>
                                                     </div>
                                                     <div>
 %{--                                                    <g:each var="pv" in="${queryResult.propertyValues}">--}%
@@ -158,46 +173,25 @@
 %{--                                                                    Dry run (no DB update, no emails)--}%
 %{--                                                                </g:link>--}%
 %{--                                                            </div>--}%
-                                                            <div class="row my-3">
-                                                                <g:form  class="d-flex flex-wrap align-items-center" controller="admin" action="emailAlertsOnCheckDate" method="POST" target="_blank">
-                                                                    <%@ page import="java.time.LocalDate" %>
-                                                                    <%
-                                                                        String today = LocalDate.now().toString();  // Format: YYYY-MM-DD
-                                                                    %>
-                                                                    <input type="hidden" name="queryId" value="${query.id}" />
-                                                                    <input type="hidden" name="frequency" value="${queryResult.frequency?.name}" />
-                                                                    Run the
-                                                                        <g:if test="${queryResult?.queryUrlUsed}">
-                                                                            <a href="${queryResult?.queryUrlUsed}" target="_blank" title="URL for search"><i class="fa fa-link" aria-hidden="true"></i> query</a>
-                                                                         </g:if>
-                                                                        <g:else>
-                                                                            query
-                                                                        </g:else>
-                                                                         against the given date <i class="fa fa-question-circle-o" aria-hidden="true" style="color: #c44d34;"
-                                                                                                  title="It may be set as starting from that date, ending on that date, spanning a period around that date, or not used at all."></i>
-                                                                        , and email new records. The date range associated with the given date is determined by the query.
 
-                                                                     <input type="date" id="checkDate" name="checkDate" value="${today}" class="form-control w-auto me-3" />
-                                                                     <button type="submit" class="btn btn-outline-primary mb-2">Email me</button>
-                                                                     <label class="form-check-label ms-3 mb-2">
-                                                                         <input type="checkbox" name="sendToSubscribers" class="form-check-input me-1" />
-                                                                         send a copy to subscribers
-                                                                     </label>
-
-                                                                </g:form>
-                                                            </div>
                                                             <div>
                                                                 <label>Perform the check and update the database with no emails for users..</label>
                                                                 <g:link class="btn btn-primary"  controller="admin" action="runQueryWithLastCheckDate" params="[queryId: query.id, frequency: queryResult.frequency?.name]" target="_blank">
                                                                     Update
                                                                 </g:link>
                                                             </div>
+                                                            <g:if test="${grailsApplication.config.grails.env != 'production'}">
+                                                                <div class="mt-1">
+                                                                    <b><i class="fa fa-warning" style="color:#c44d34"></i> Note: Reset the query result is only available in TEST and DEV environments.</b><button class="btn btn-primary" onclick="resetResultsInDB(${queryResult.id})">Reset</button>
+                                                                </div>
+                                                            </g:if>
                                                         </g:if>
                                                         <g:else>
                                                             <g:link class="btn btn-primary" namespace="biosecurity" controller="csv" action="downloadLastResult" params="[id:  queryResult.id]" target="_blank">
                                                                 Download CSV from the latest check result
                                                             </g:link>
                                                         </g:else>
+
                                                     </div>
                                                     <hr>
                                                 </g:each>

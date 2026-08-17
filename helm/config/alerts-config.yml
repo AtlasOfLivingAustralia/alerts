@@ -70,7 +70,7 @@ security:
     appServerName: "{{ .Values.config.base.alerts_base_url }}{{ .Values.config.base.alerts_context_path }}"
     uriFilterPattern: >-
       /,/alaAdmin/*,/testAuth/*,/query/*,/admin/*,/admin/user/*,
-      /admin/user/debug/*,/admin/debug/all,/notification/myAlerts,
+      /admin/user/debug/*,/notification/myAlerts,
       /notification/changeFrequency,/notification/addMyAlert,
       /notification/addMyAlert/*,/notification/deleteMyAlert/*,
       /notification/deleteMyAlertWR/*,/webservice/*,
