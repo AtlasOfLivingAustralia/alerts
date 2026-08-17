@@ -184,22 +184,17 @@ class AdminController {
     }
 
     /**
-     * Show other users info.
-     * @return
+     * Show/manage another user's alerts.
+     * Renders /admin/manageUserAlerts which reuses the shared /notification/_alertsPanel template.
      */
     def showUsersAlerts() {
         User user = User.findByUserId(params.userId)
         if (user) {
             def userConfig = notificationService.getAlerts(user)
             userConfig.put('adminUser', authService.userDetails())
+            userConfig.put('isMyOwnAlerts', authService.userDetails()?.userId == user.userId)
 
-            if (authService.userDetails()?.userId == user.userId) {
-                userConfig.put('isMyOwnAlerts', true)
-            } else {
-                userConfig.put('isMyOwnAlerts', false)
-            }
-
-            render(view: "../notification/myAlerts", model: userConfig)
+            render(view: "/admin/manageUserAlerts", model: userConfig)
         } else {
             log.info "user with id " + params.userId + " not found."
             response.sendError(404)

@@ -20,17 +20,13 @@ class NotificationController {
 
     def myalerts = { redirect(action: "myAlerts", params: params) }
 
-    // Main action to show the user's alerts
+    // Main action to show the logged-in user's own alerts
     def myAlerts() {
         // Get the currently logged-in user
         User user = userService.getUser()
         if (user) {
             Map myAlerts = notificationService.myAlerts(user)
-            // Retrieve the user's alert configuration
-//            Map userConfig = userService.getUserAlertsConfig(user)
-//            userConfig.put('isMyAlerts', true)
-
-            render(view: "../notification/myAlerts", model: myAlerts)
+            render(view: "/notification/myAlerts", model: myAlerts)
         }
     }
 
@@ -66,6 +62,7 @@ class NotificationController {
     }
 
     /*
+
      * Enables an alert for the currently logged-in user
      * @param id The ID of the QUERY
      */
@@ -135,13 +132,18 @@ class NotificationController {
         }
         redirect(action: 'myAlerts')
     }
-
+    /**
+     * Resolves the user a request applies to: the user identified by the 'userId' param when it is
+     * supplied (the admin managing someone else's alerts), otherwise the logged-in user.
+     *
+     * Permission to use 'userId' is enforced by NotificationInterceptor before the action runs, so
+     * this method never writes to the response - it only returns null when the user cannot be found,
+     * which each action reports as a 404.
+     *
+     * @return the user to act on, or null if no such user exists
+     */
     private User getUser() {
-        if (authService.userInRole("ROLE_ADMIN")) {
-            return userService.getUserById(params.userId)
-        } else {
-            return userService.getUser()
-        }
+        params.userId ? userService.getUserById(params.userId) : userService.getUser()
     }
 
     def changeFrequency = {

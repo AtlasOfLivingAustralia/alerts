@@ -1,19 +1,17 @@
 <%@ page contentType="text/html;charset=UTF-8" %>
 <%@ page expressionCodec="none" %>
 %{--
-    A user managing their OWN alerts. Rendered by NotificationController#myAlerts.
-    The alert lists/actions live in /notification/_alertsPanel.gsp, shared with /admin/manageUserAlerts.gsp
+    An ADMIN managing another user's alerts. Rendered by AdminController#showUsersAlerts (/admin/user/$userId).
+    The alert lists/actions live in /notification/_alertsPanel.gsp, shared with /notification/myAlerts.gsp
 --}%
 <!doctype html>
 <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
         <meta name="layout" content="${grailsApplication.config.skin.layout}" />
-
-        <meta name="breadcrumb" content="${message(code:"my.alerts.breadcrumbs")}" />
-        <meta name="breadcrumbParent" content="${grailsApplication.config.userdetails.web.url}/myprofile, ${message(code:"my.alerts.breadcrumb.parent")}" />
-        <g:set var="userPrefix" value="${message(code:'my.alerts.my')}"/>
-        <title><g:message code="my.alerts.title" args="[userPrefix]" /> | ${grailsApplication.config.skin.orgNameLong}</title>
+        <meta name="breadcrumb" content="${user.email}" />
+        <meta name="breadcrumbParent" content="${request.contextPath}/admin,Alerts admin" />
+        <title><g:message code="my.alerts.title" args="[user.email]" /> | ${grailsApplication.config.skin.orgNameLong}</title>
         <asset:stylesheet src="alerts.css"/>
         <script>
             document.addEventListener('DOMContentLoaded', function () {
@@ -28,25 +26,28 @@
       <div class="container ms-2">
           <header id="page-header">
               <div class="row align-items-center">
-                  <div class="col-6">
+                  <div class="col-8">
                       <h2>
-                          <g:message code="my.alerts.h1" args="[userPrefix]" />
+                          <g:message code="my.alerts.h1" args="[user.email]" />
                           <g:if test="${user.locked}">
                               <i class="fas fa-lock" data-bs-toggle="tooltip" data-bs-placement="bottom" title="${g.message(code:'my.alerts.user.isLocked.title')}"></i>
                           </g:if>
                       </h2>
+                      <small class="text-muted">User id: ${user.userId}</small>
                   </div>
-                  <div class="col-6 text-end">
-                      <% if (request.isUserInRole("ROLE_ADMIN")) { %>
+                  <div class="col-4 text-end">
+                      <a href="${createLink(controller: 'admin', action: 'findUser')}" class="btn btn-outline-primary">Find users</a>
                       <a href="${createLink(controller: 'admin', action: 'index')}" class="btn btn-primary">Admin</a>
-                      <% } %>
-
-                      <% if (request.isUserInRole("ROLE_BIOSECURITY_ADMIN")) { %>
-                      <a href="${createLink(controller: 'admin', action: 'biosecurity')}" class="btn btn-primary">Biosecurity Admin</a>
-                      <% } %>
                   </div>
               </div>
           </header>
+
+          <g:if test="${!isMyOwnAlerts}">
+              <div class="alert alert-warning mt-3" role="alert">
+                  <i class="fas fa-user-shield"></i>
+                  You are managing alerts on behalf of <b>${user.email}</b>. Changes are applied to that user immediately.
+              </div>
+          </g:if>
 
           <g:if test="${flash.message}">
               <div class="alert alert-info" role="alert">${flash.message}</div>
@@ -57,7 +58,7 @@
 
           <g:render template="/notification/alertsPanel"
                     model="[user                   : user,
-                            isMyOwnAlerts          : true,
+                            isMyOwnAlerts          : isMyOwnAlerts,
                             enabledStandardQueries : enabledStandardQueries,
                             disabledStandardQueries: disabledStandardQueries,
                             enabledCustomQueries   : enabledCustomQueries,
@@ -66,4 +67,5 @@
       </div>
     </body>
 </html>
+
 

@@ -87,15 +87,16 @@
                 <div>
                     <small class="text-muted ps-4">Manage user accounts and subscriptions</small>
                 </div>
-
                 <div class="mt-3">
+                    <a href="${request.contextPath}/admin/user">Manage alerts for users ( email required )</a>
+                    <small class="text-muted ms-2"> - find user(s) and manage their subscriptions.</small>
+                </div>
+
+                <div >
                     <g:link controller="admin" action="updateUserEmails">Update user emails with CAS</g:link>
                     <small class="text-muted ms-2"> - synchronise alerts user database with users from CAS.</small>
                 </div>
-                <div>
-                    <a href="${request.contextPath}/admin/user">Manage alerts for users (find user)</a>
-                    <small class="text-muted ms-2"> - find user(s) and manage their subscriptions.</small>
-                </div>
+
             </div>
         </div>
 
