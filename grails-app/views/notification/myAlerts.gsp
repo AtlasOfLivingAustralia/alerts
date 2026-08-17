@@ -67,7 +67,7 @@
                       <div class="nav nav-tabs" id="alertTabs" role="tablist">
                           <button class="nav-link active " id="standard-alerts-tab"  data-bs-toggle="tab" data-bs-target="#standard-alerts" role="tab" aria-controls="standard-alerts" >Standard Alerts</button>
                           <button class="nav-link" id="custom-alerts-tab" data-bs-toggle="tab" data-bs-target="#custom-alerts"  role="tab" aria-controls="custom-alerts">Custom Alerts</button>
-                          <g:set var="biosecurityAlerts" value="${((enabledCustomQueries ?: []) + (disabledCustomQueries ?: [])).findAll { it?.emailTemplate == '/email/biosecurity' }}" />
+                          <g:set var="biosecurityAlerts" value="${((enabledCustomQueries ?: []) + (disabledCustomQueries ?: [])).findAll { it?.biosecurity }}" />
                           <g:if test="${biosecurityAlerts.size() > 0}">
                               <button class="nav-link" id="biosecurity-alerts-tab" data-bs-toggle="tab" data-bs-target="#biosecurity-alerts"  role="tab" aria-controls="biosecurity-alerts">Biosecurity</button>
                           </g:if>
@@ -148,9 +148,9 @@
                                           <i>Enable or disable notifications sent to your email address, or delete an alert</i>
                                       </div>
                                       <g:if test="${enabledCustomQueries?.size() > 0 || disabledCustomQueries?.size() > 0}">
-                                          <g:set var="customAlerts" value="${((enabledCustomQueries ?: []) + (disabledCustomQueries ?: [])).find { it?.emailTemplate != '/email/biosecurity' }}" />
+                                          <g:set var="customAlerts" value="${((enabledCustomQueries ?: []) + (disabledCustomQueries ?: [])).find { !it?.biosecurity }}" />
                                           <div class="list-group">
-                                              <g:each in="${enabledCustomQueries.findAll { it?.emailTemplate != '/email/biosecurity' }}" status="i" var="query">
+                                              <g:each in="${enabledCustomQueries.findAll { !it?.biosecurity }}" status="i" var="query">
                                                   <div id="custom-${query.id}" class="list-group-item border-top-0  border-start-0 border-end-0 d-flex justify-content-between align-items-center px-0 py-2">
                                                       <div class="flex-grow-1 me-2">
                                                           <h5>${query.name}</h5>
@@ -165,7 +165,7 @@
                                                       </div>
                                                   </div>
                                               </g:each>
-                                              <g:each in="${disabledCustomQueries.findAll { it?.emailTemplate != '/email/biosecurity' }}" status="i" var="query">
+                                              <g:each in="${disabledCustomQueries.findAll { !it?.biosecurity }}" status="i" var="query">
                                                   <div id="custom-${query.id}" class="list-group-item border-top-0  border-start-0 border-end-0 d-flex justify-content-between align-items-center px-0 py-2">
                                                       <div class="flex-grow-1 me-2">
                                                           <h5>${query.name}</h5>
@@ -217,7 +217,7 @@
                           </div>
 
                       <!-- Biosecurity Alerts Tab -->
-                      <g:set var="biosecurityAlerts" value="${((enabledCustomQueries ?: []) + (disabledCustomQueries ?: [])).findAll { it?.emailTemplate == '/email/biosecurity' }}" />
+                      <g:set var="biosecurityAlerts" value="${((enabledCustomQueries ?: []) + (disabledCustomQueries ?: [])).findAll { it?.biosecurity }}" />
                       <g:if test="${biosecurityAlerts.size()>0}">
                           <div class="tab-pane fade" id="biosecurity-alerts" role="tabpanel" aria-labelledby="biosecurity-alerts-tab">
                               <div class="row">
@@ -225,8 +225,8 @@
                                       <div class="pt-1">
                                           <i>Enable or disable BioSecurity notifications sent to your email address</i>
                                       </div>
-                                      <g:set var="enabledBiosecurityAlerts" value="${enabledCustomQueries.findAll { it?.emailTemplate == '/email/biosecurity' }}" />
-                                      <g:set var="disabledBiosecurityAlerts" value="${disabledCustomQueries.findAll { it?.emailTemplate == '/email/biosecurity' }}" />
+                                      <g:set var="enabledBiosecurityAlerts" value="${enabledCustomQueries.findAll { it?.biosecurity }}" />
+                                      <g:set var="disabledBiosecurityAlerts" value="${disabledCustomQueries.findAll { it?.biosecurity }}" />
                                       <div class="list-group mt-2">
                                           <g:each in="${enabledBiosecurityAlerts}" status="i" var="query">
                                               <div id="custom-${query.id}" class="list-group-item border-top-0  border-start-0 border-end-0 d-flex justify-content-between align-items-center px-0 py-2">

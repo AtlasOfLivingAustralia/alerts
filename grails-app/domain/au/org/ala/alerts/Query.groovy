@@ -58,9 +58,9 @@ class Query {
 
     int countSubscribers(String frequency = null) {
         if (frequency) {
-            return notifications.collect { it.user }.count(it -> it.frequency?.name == frequency)
+            return notifications.findAll { it.enabled }.collect { it.user }.count(it -> it.frequency?.name == frequency)
         } else {
-            return notifications.collect { it.user }.count()
+            return notifications.findAll { it.enabled }.collect { it.user }.count()
         }
     }
 
@@ -69,10 +69,10 @@ class Query {
         def emailList
 
         if (frequency) {
-            def users = notifications.collect { it.user }.findAll(it -> it.frequency?.name == frequency)
+            def users = notifications.findAll { it.enabled }.collect { it.user }.findAll(it -> it.frequency?.name == frequency)
             emailList = users.collect(it -> it.email)
         } else {
-            def users = notifications.collect { it.user }
+            def users = notifications.findAll { it.enabled }.collect { it.user }
             emailList = users.collect(it -> it.email)
         }
 
@@ -117,5 +117,9 @@ class Query {
      */
     QueryResult getQueryResult(String frequency) {
         return this.queryResults.find { it.frequency.isFrequency(frequency) }
+    }
+
+    boolean isBiosecurity() {
+        return this.emailTemplate == '/email/biosecurity'
     }
 }

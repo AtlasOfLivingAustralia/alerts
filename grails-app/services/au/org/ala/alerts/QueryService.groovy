@@ -587,6 +587,7 @@ class QueryService {
     def summarize() {
         List<Query> queries =  Query.createCriteria().list {
             ne("name", "My Annotations")
+            ne("emailTemplate", "/email/biosecurity")
         }
 
         List<Query> myAnnotations =  Query.createCriteria().list {

@@ -13,10 +13,22 @@
 
     <script>
         $(document).ready(function () {
+            $('[data-bs-toggle="tooltip"]').each(function () {
+                new bootstrap.Tooltip(this);
+            });
+
             $('.toggle-more-query-details').click(function () {
                 var target = document.querySelector($(this).data('target'));
                 if (target) {
                     new bootstrap.Collapse(target).toggle();
+                }
+            });
+
+            $('.toggle-advanced').click(function (e) {
+                e.preventDefault();
+                var target = document.querySelector($(this).data('target'));
+                if (target) {
+                    target.classList.toggle('d-none');
                 }
             });
         });
@@ -60,10 +72,10 @@
                     <ul>
                         <g:each var="query" in="${queries[queryType]}">
                             <li>
-                               <g:link controller="query" action="wipe" params="[id: query.id]" target="_blank"><i class="fas fa-trash" aria-hidden="true"></i></g:link>
-                                <g:link controller="query" action="show" params="[id: query.id]" target="_blank"> <span class="badge badge-outline-primary"><i class="fa fa-info-circle" aria-hidden="true"></i> ${query.id}</span></g:link>
+                                <g:link controller="query" action="wipe" params="[id: query.id]" target="_blank"><i class="fas fa-trash" aria-hidden="true"></i></g:link>
+                                <g:link controller="query" action="show" params="[id: query.id]" target="_blank" data-bs-toggle="tooltip" data-bs-placement="top" title="View query details"> <span class="badge badge-outline-primary"><i class="fa fa-info-circle" aria-hidden="true"></i> ${query.id}</span></g:link>
 
-                                <a href="javascript:void(0);" class="toggle-more-query-details" data-target="#more-${query.id}"  title="Query ID:${query.id}">
+                                <a href="javascript:void(0);" class="toggle-more-query-details" data-target="#more-${query.id}"  data-bs-toggle="tooltip" data-bs-placement="top" title="Click to show more functions">
                                  <g:if test="${query.name == 'My Annotations'}">
                                        <%
                                                def users = query.notifications.collect { it.user?.email }.join(', ')
@@ -76,7 +88,7 @@
                                  </a>
                             </li>
                             <div class="collapse" id="more-${query.id}">
-                                <div class="card card-body">
+                                <div class="card card-body mt-2">
 
                                     %{-- <div>--}%
     %{--                                    <g:if test="${query.notifications}">--}%
@@ -98,16 +110,16 @@
                                                         <g:else>
                                                             <span class="badge bg-dark">No changes</span>
                                                         </g:else>
-                                                    </div>
-                                                    <div>
-                                                        <g:link controller="queryResult" action="getDetails" params="[id: queryResult.id]" target="_blank"> <span class="badge badge-outline-primary"><i class="fa fa-database" aria-hidden="true"></i> ${queryResult.id}</span></g:link> &nbsp;
-                                                        &nbsp; <label title="${query.getSubscribers(queryResult.frequency?.name)}"><span class="badge bg-info"> <i class="fa fa-user"></i> ${query.countSubscribers(queryResult.frequency?.name)}</span></label>
+                                                        <g:link controller="queryResult" action="getDetails" params="[id: queryResult.id]" target="_blank" data-bs-toggle="tooltip" data-bs-placement="top" title="Show the latest query result - QS ID: ${queryResult.id}"> <span class="badge badge-outline-primary"><i class="fa fa-database" aria-hidden="true"></i></span></g:link>
+                                                        <label data-bs-toggle="tooltip" data-bs-placement="top" title="${query.getSubscribers(queryResult.frequency?.name)}"><span class="badge bg-info"> <i class="fa fa-user"></i> ${query.countSubscribers(queryResult.frequency?.name)}</span></label>
+                                                        <g:link controller="ws" action="getQueryLogs" params="[id: query.id, frequency: queryResult.frequency?.name]" target="_blank"  data-bs-toggle="tooltip" data-bs-placement="top" title="Display the log "><i class="fa fa-history" aria-hidden="true"></i></g:link>
 
                                                         <g:if test="${queryResult?.lastChecked}">
-                                                             Last checked: ${queryResult?.lastChecked}&nbsp;&nbsp;
-                                                        </g:if>
-                                                        <g:link controller="ws" action="getQueryLogs" params="[id: query.id, frequency: queryResult.frequency?.name]" target="_blank"><i class="fa fa-history" aria-hidden="true"></i> Log</g:link>
-                                                                                                               &nbsp;&nbsp;
+                                                            Last checked: ${queryResult?.lastChecked}
+                                                        </g:if>&nbsp;&nbsp;
+                                                    </div>
+                                                    <div>
+
 
                                                         <g:form controller="admin" action="emailAlertsOnCheckDate" method="POST" target="_blank">
                                                             <%@ page import="java.time.LocalDate" %>
@@ -121,7 +133,7 @@
                                                                 <div class="col-md-7">
                                                                     <label class="form-label mb-2">Run the
                                                                         <g:if test="${queryResult?.queryUrlUsed}">
-                                                                            <a href="${queryResult?.queryUrlUsed}" target="_blank" title="URL for search"><i class="fa fa-link" aria-hidden="true"></i> query</a>
+                                                                            <a href="${queryResult?.queryUrlUsed}" target="_blank" data-bs-toggle="tooltip" data-bs-placement="top"  title="${queryResult?.queryUrlUsed}"><i class="fa fa-link" aria-hidden="true"></i> query</a>
                                                                         </g:if>
                                                                         <g:else>
                                                                             query
@@ -149,7 +161,8 @@
 %{--                                                        <span class="badge badge-light">${pv.id}</span> Current Value: ${pv.currentValue}; Previous Value: ${pv.previousValue} <br>--}%
 %{--                                                    </g:each>--}%
                                                     </div>
-                                                    <div class="text-end" >
+                                                    <a href="javascript:void(0);" class="toggle-advanced" data-target="#advanced-${queryResult.id}"><i class="fa-solid fa-bug"></i> Advanced tools for developers</a>
+                                                    <div id="advanced-${queryResult.id}" class="text-end d-none" >
                                                         <hr>
                                                          <div class="p-1">
                                                             <label>Evaluate the new record discovery algorithm using

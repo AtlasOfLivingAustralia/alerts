@@ -556,6 +556,7 @@ class AdminController {
     /**
      * NO Database update, Email sent to current user
      * Run the last check and email the result to current user
+     * NOT designed for Biosecurity queries
      * @return
      */
     def emailMeLastCheck(){
@@ -563,20 +564,24 @@ class AdminController {
         def frequency = params.frequency
         if (id && frequency) {
             Query query = Query.get(id)
-            Frequency fre = Frequency.findByName(frequency)
-            if (query && fre) {
-                QueryResult qs = notificationService.executeQuery(query, fre, true, true)
-                if (qs.succeeded) {
-                    def records = qs.newRecords
-                    User currentUser = userService.getUser()
-                    def recipient =
-                        [email: currentUser.email, userUnsubToken: currentUser.unsubscribeToken, notificationUnsubToken: '']
-                    emailService.sendGroupNotification(qs, fre, [recipient])
-                    def results = ["hasChanged": qs.hasChanged, "totalRecords": qs.totalRecords, "records": records, "recipient": currentUser.email, details: qs.brief()]
-                    render results as JSON
+            if(!query.isBiosecurity()) {
+                Frequency fre = Frequency.findByName(frequency)
+                if (query && fre) {
+                    QueryResult qs = notificationService.executeQuery(query, fre, true, true)
+                    if (qs.succeeded) {
+                        def records = qs.newRecords
+                        User currentUser = userService.getUser()
+                        def recipient =
+                                [email: currentUser.email, userUnsubToken: currentUser.unsubscribeToken, notificationUnsubToken: '']
+                        emailService.sendGroupNotification(qs, fre, [recipient])
+                        def results = ["hasChanged": qs.hasChanged, "totalRecords": qs.totalRecords, "records": records, "recipient": currentUser.email, details: qs.brief()]
+                        render results as JSON
+                    } else {
+                        def results = ["status": qs.succeeded, "error": qs.logs]
+                        render results as JSON
+                    }
                 } else {
-                    def results = ["status": qs.succeeded, "error": qs.logs]
-                    render results as JSON
+                     render([status: 1, message: "This function does not work with Biosecurity query: ${id}"] as JSON)
                 }
             } else {
                 render([status: 1, message: "Cannot find query: ${id}"] as JSON)

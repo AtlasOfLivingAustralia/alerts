@@ -20,7 +20,6 @@ class NotificationService {
     def queryService
     def myAnnotationService
     def annotationsService
-    def biosecurityService
     def grailsApplication
     def dateFormatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
 
@@ -126,112 +125,6 @@ class NotificationService {
         }
 
         return qr
-    }
-
-
-    /**
-     * It has similar code with checkStatus, but not identical
-     * It is used for debugging and testing.
-     *
-     * @param query
-     * @param frequency
-     * @return
-     */
-    QueryCheckResult checkStatusDontUpdate(Query query, Frequency frequency) {
-
-        //get the previous result
-        long start = System.currentTimeMillis()
-        QueryResult lastQueryResult = getQueryResult(query, frequency)
-        QueryCheckResult qcr = new QueryCheckResult()
-
-        //get the urls to query
-        def urls = buildQueryUrl(query, frequency)
-        def urlString = urls.first()
-        qcr.frequency = frequency
-        qcr.urlChecked = urlString
-        qcr.query = query
-        qcr.queryResult = lastQueryResult
-
-        log.debug("[QUERY " + query.id + "] Querying URL: " + urlString)
-
-        try {
-            def processedJson = ''
-
-            if (!urlString.contains("___MAX___")) {
-                // queries without paging
-                if (!queryService.isBioSecurityQuery(query)) {
-                    // standard query
-                    processedJson = processQuery(query, urlString)
-                } else {
-                    // biosecurity query is handled elsewhere
-                    Date since = lastQueryResult.lastChecked ?: DateUtils.addDays(new Date(), -1 * grailsApplication.config.getProperty("biosecurity.legacy.firstLoadedDateAge", Integer, 7))
-                    Date to = new Date()
-                    processedJson = biosecurityService.processQueryBiosecurity(query, since, to)
-                }
-            } else {
-                // It is works on species lists request
-                int max = PAGING_MAX
-                int offset = 0
-                def allLists = []
-                boolean finished = false
-
-                while (!finished) {
-                    // Construct the URL with max and offset values
-                    String urlWithParams = urlString.replace('___MAX___', max.toString()).replace('___OFFSET___', offset.toString())
-
-                    // Get the result from the query
-                    def result = processQuery(query, urlWithParams)
-
-                    // Check if result is not empty
-                    if (result?.size() == 0) {
-                        finished = true
-                        break
-                    }
-
-                    try {
-                        // Read latest values from JSON
-                        def latestValue = JsonPath.read(result, query.recordJsonPath)
-
-                        if (latestValue.size() == 0) {
-                            finished = true
-                        } else {
-                            processedJson = result
-                            allLists.addAll(latestValue)
-                            offset += max // Update offset for the next iteration
-                        }
-                    } catch (Exception e) {
-                        // Handle missing properties gracefully
-                        finished = true
-                    }
-                }
-
-                // only for species lists
-                def json = JSON.parse(processedJson) as JSONObject
-                if (json.lists) {
-                    // set json.lists to allLists such that json.toString() does not convert allLists items to strings
-                    json.lists = JSON.parse((allLists as JSON).toString()) as JSONArray
-                    processedJson = json.toString()
-                }
-            }
-
-            //update the stored properties
-            qcr.response = processedJson
-
-            //update the stored properties
-            def propertyPaths = compareProperties(lastQueryResult, processedJson)
-
-            //decompress the last result
-            def previousJson = diffService.decompressZipped(lastQueryResult.lastResult)
-
-            //set the has changed
-            qcr.queryResult.hasChanged = hasPropertiesChanged(query, propertyPaths, previousJson, processedJson)
-
-        } catch (Exception e) {
-            log.error("QUERY " + query.id + " URL:" + urlString + " " + e.message)
-            qcr.errored = true
-        }
-        qcr.timeTaken = System.currentTimeMillis() - start
-        qcr
     }
 
 
@@ -636,15 +529,11 @@ class NotificationService {
                 }
             }
 
-            def myEnabledStandardAlerts = myAlerts.findAll { !it.query.custom && it.enabled }
-            def myDisabledStandardAlerts = myAlerts.findAll { !it.query.custom && !it.enabled }
-            def myEnabledCustomAlerts = myAlerts.findAll { it.query.custom && it.enabled }
-            def myDisabledCustomAlerts = myAlerts.findAll { it.query.custom && !it.enabled }
-
-            def myEnabledStandardQueries = myEnabledStandardAlerts.collect { it.query }.findAll { it != null }.unique { it.id }
-            def myDisabledStandardQueries= myDisabledStandardAlerts.collect { it.query }.findAll { it != null }.unique { it.id }
-            def myDisabledCustomQueries = myDisabledCustomAlerts.collect { it.query }.findAll { it != null }.unique { it.id }
-            def myEnabledCustomQueries = myEnabledCustomAlerts.collect { it.query }.findAll { it != null }.unique { it.id }
+            // Only the queries are needed, so filter the notifications and collect their queries in one step
+            def myEnabledStandardQueries = myAlerts.findAll { it.query && !it.query.custom && it.enabled }*.query.unique { it.id }
+            def myDisabledStandardQueries = myAlerts.findAll { it.query && !it.query.custom && !it.enabled }*.query.unique { it.id }
+            def myEnabledCustomQueries = myAlerts.findAll { it.query && it.query.custom && it.enabled }*.query.unique { it.id }
+            def myDisabledCustomQueries = myAlerts.findAll { it.query && it.query.custom && !it.enabled }*.query.unique { it.id }
 
 //          It is an old return objects. Keep it for reference.
 //          def userConfig = [disabledQueries: allAlertTypes,   // all disabled standard queries

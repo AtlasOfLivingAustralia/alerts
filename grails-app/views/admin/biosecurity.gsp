@@ -643,15 +643,6 @@
                                 controller: 'csv', action: 'list')}" target="_blank">CSV Reporting</a>
                     </div>
                 </div>
-                <g:if test="${grailsApplication.config.getProperty('biosecurity.csv.s3.enabled', Boolean) == true}">
-                    <div class="row text-end mb-2 align-items-center">
-                        <div class="col-sm-10" >Generate the full CSV report and email me a download link</div>
-                        <div class="col-sm-2" > <a class = "btn btn-outline-primary" href="${createLink( namespace: 'biosecurity', controller: 'csv', action: 'asyncAggregate', absolute: true)}">
-                            Email Me CSV</a>
-                        </div>
-                      </div>
-                    </div>
-                </g:if>
             </div>
         </div>
 
