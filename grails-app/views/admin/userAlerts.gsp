@@ -10,6 +10,7 @@
 
     <title>Admin - user alerts</title>
     <asset:stylesheet href="alerts.css"/>
+    <asset:javascript src="typeahead-1.3.1.min.js"/>
 </head>
 
 <body>
@@ -28,40 +29,59 @@
                 <div class="col-lg-6 col-sm-6">
                     <label for="term" class="form-label">Email contains:</label>
                     <div class="input-group">
-                        <g:textField name="term" value="${params.term}" class="form-control" placeholder="Search for..."/>
+                        <g:textField name="term" id="term" value="${params.term}" class="form-control"
+                                     placeholder="Search for..." autocomplete="off"/>
                         <g:actionSubmit value="Find" class="btn btn-primary" action="findUser"/>
                     </div><!-- /input-group -->
+                    <div class="form-text">Start typing at least 3 characters, then pick a user to manage their alerts.</div>
                 </div><!-- /.col-lg-6 -->
             </div><!-- /.row -->
         </g:form>
-        <div class="row">
-            <div class="col-md-12">
-                <g:if test="${users}">
-                    <table class="table table-striped">
-                        <thead>
-                        <th>User Id</th>
-                        <th>Email</th>
-                        <th></th>
-                        </thead>
-                        <tbody>
-                        <g:each in="${users}" var="user">
-                            <tr>
-                                <td>${user.userId}</td>
-                                <td>${user.email}</td>
-                                <td><a href="${request.contextPath}/admin/user/${user.userId}">Manage alerts</a></td>
-                            </tr>
-                        </g:each>
-                        </tbody>
-                    </table>
-                </g:if>
-                <g:elseif test="${params.term}">
-                    <div style="margin-top:15px;">No users found for &quot;${params.term}&quot;</div>
-                </g:elseif>
-            </div><!-- /.col-md-12 -->
-        </div><!-- /.row -->
-
     </div>
 </div>
 <asset:javascript src="alerts.js"/>
+<script type="text/javascript">
+    $(document).ready(function () {
+
+        // Email autocomplete on the user search field.
+        // Selecting a suggestion goes straight to that user's alerts page.
+        $('input#term').typeahead(
+            {
+                hint: true,
+                highlight: true,
+                minLength: 3
+            },
+            {
+                name: 'users',
+                display: 'email',
+                limit: 10,
+                source: function (query, syncResults, asyncResults) {
+                    $.ajax({
+                        url: '${request.contextPath}/ws/searchUsers',
+                        data: { q: query },
+                        dataType: 'json',
+                        success: function (data) {
+                            asyncResults(data);
+                        },
+                        error: function (xhr, status, error) {
+                            if (xhr.status === 401 || xhr.status === 403) {
+                                console.error('Not authorised to search users - your session may have expired.');
+                            } else {
+                                console.error('Failed to search users:', error);
+                            }
+                            asyncResults([]);
+                        }
+                    });
+                },
+                templates: {
+                    notFound: '<div class="tt-suggestion text-muted">No matching users</div>'
+                }
+            }).bind('typeahead:select', function (ev, user) {
+                if (user && user.userId) {
+                    window.location.href = '${request.contextPath}/admin/user/' + encodeURIComponent(user.userId);
+                }
+            });
+    });
+</script>
 </body>
 </html>

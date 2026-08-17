@@ -39,8 +39,22 @@
         </div>
 
         <div class="box">
+            <div class="shadow card card-body ">
+                <div class="fw-bold fs-5"><i class="fa-solid fa-user-group text-primary"></i> Alerts Management</div>
+                <div>
+                    <small class="text-muted ps-4">Manage user accounts and subscriptions</small>
+                </div>
+                <div class="mt-3">
+                    <a href="${request.contextPath}/admin/user">Manage alerts for users ( email required )</a>
+                    <small class="text-muted ms-2"> - find user(s) and manage their subscriptions.</small>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="box">
             <div class="shadow card card-body">
-                <div class="fw-bold fs-5"><i class="fa-solid fa-bug text-primary"></i> View and test alerts</div>
+                <div class="fw-bold fs-5"><i class="fa-solid fa-bug text-primary"></i> Manage and test alerts</div>
                 <div class="mt-3">
                     <div><g:link controller="admin" action="query" class="btn btn-outline-primary">View and debug alerts</g:link>  <small class="text-muted ms-2">- list all available custom and default alerts.</small></div>
                 </div>
@@ -81,28 +95,16 @@
             </div>
         </div>
 
+
         <div class="box">
-            <div class="shadow card card-body ">
-                <div class="fw-bold fs-5"><i class="fa-solid fa-user-group text-primary"></i> Users Management</div>
-                <div>
-                    <small class="text-muted ps-4">Manage user accounts and subscriptions</small>
-                </div>
-                <div class="mt-3">
-                    <a href="${request.contextPath}/admin/user">Manage alerts for users ( email required )</a>
-                    <small class="text-muted ms-2"> - find user(s) and manage their subscriptions.</small>
-                </div>
+            <div class="shadow card card-body">
+                <div class="fw-bold fs-5"><i class="fa-solid fa-wrench text-primary"></i> Maintenance and fixes</div>
 
                 <div >
                     <g:link controller="admin" action="updateUserEmails">Update user emails with CAS</g:link>
                     <small class="text-muted ms-2"> - synchronise alerts user database with users from CAS.</small>
                 </div>
 
-            </div>
-        </div>
-
-        <div class="box">
-            <div class="shadow card card-body">
-                <div class="fw-bold fs-5"><i class="fa-solid fa-wrench text-primary"></i> Maintenance and fixes</div>
                 <div>
                     <small class="text-muted ps-4">Repair broken data</small>
                 </div>

@@ -237,6 +237,19 @@
     background-color: #e9ecef;     /* highlight on hover */
 }
 
+/* typeahead wraps the input in a span, which breaks a Bootstrap .input-group unless we
+   restore the flex sizing / rounded corners of the wrapped input */
+.input-group > .twitter-typeahead {
+    flex: 1 1 auto;
+    width: 1%;
+}
+.input-group > .twitter-typeahead .tt-input,
+.input-group > .twitter-typeahead .tt-hint {
+    width: 100%;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
 /**
 For admin page layout
  */

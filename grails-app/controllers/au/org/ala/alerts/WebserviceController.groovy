@@ -716,6 +716,29 @@ class WebserviceController {
     }
 
     /**
+     * Autocomplete source for the admin 'find users' page.
+     * Returns users whose email contains the given term.
+     *
+     * @param q the (partial) email to search for
+     * @param max maximum number of suggestions, defaults to 10
+     * @return [[userId: .., email: ..], ..]
+     */
+    @AlaSecured(value = ['ROLE_ADMIN'])
+    def searchUsers() {
+        String term = params.q?.trim()
+        if (!term || term.length() < 3) {
+            render([] as JSON)
+            return
+        }
+
+        int max = Math.min(Math.max(params.int('max') ?: 10, 1), 50)
+        def results = userService.findUsers(term, max).collect { User user ->
+            [userId: user.userId, email: user.email]
+        }
+        render results as JSON
+    }
+
+    /**
      * API call to render the biosecurity subscribers
      *
      * @param queryId

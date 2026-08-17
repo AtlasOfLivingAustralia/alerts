@@ -148,35 +148,6 @@ class AdminController {
         null
     }
 
-//    def debugAlertsForUser() {
-//        User user = User.findByUserId(params.userId)
-//        if (user) {
-//            log.debug "User id: " + user.email + ", frequency: " + user.frequency
-//            //trigger this users alerts
-//            response.setContentType("text/plain")
-//            notificationService.debugQueriesForUser(user, response.getWriter())
-//        } else {
-//            log.error "user with id " + params.userId + " not found."
-//            response.sendError(404)
-//        }
-//    }
-
-//    def debugAllAlerts() {
-//        response.setContentType("text/plain")
-//        notificationService.checkAllQueries(response.getWriter())
-//    }
-
-
-//    def debugAlert() {
-//        render(
-//        [alerts: [
-//                hourly : notificationService.checkQueryById(params.id, params.frequency ?: 'hourly'),
-//                daily  : notificationService.checkQueryById(params.id, params.frequency ?: 'daily'),
-//                weekly : notificationService.checkQueryById(params.id, params.frequency ?: 'weekly'),
-//                monthly: notificationService.checkQueryById(params.id, params.frequency ?: 'monthly')
-//        ]
-//        ] as JSON)
-//    }
 
     def deleteOrphanAlerts() {
         def result = queryService.deleteOrphanedQueries()

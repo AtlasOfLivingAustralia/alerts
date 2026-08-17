@@ -8,7 +8,7 @@
     <meta name="breadcrumb" content="Manage all alerts"/>
     <meta name="breadcrumbParent" content="${request.contextPath}/admin,Alerts admin"/>
 
-    <title>Admin - Manage alerts</title>
+    <title>Debug and manage alerts</title>
     <asset:stylesheet src="alerts.css"/>
 
     <script>

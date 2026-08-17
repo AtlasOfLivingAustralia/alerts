@@ -19,7 +19,6 @@ class UrlMappings {
 
         "/admin"(controller: 'admin', action: 'index')
         "/admin/user/$userId"(controller: 'admin', action: 'showUsersAlerts')
-        //"/admin/user/debug/$userId"(controller: 'admin', action: 'debugAlertsForUser')
         "/admin/user/deleteMyAlert/$id?"(controller: 'notification', action: 'deleteMyAlert')
         "/admin/user/deleteMyAlertWR/$id?"(controller: 'notification', action: 'deleteMyAlertWR')
         "/admin/user/addMyAlert/$id?"(controller: 'notification', action: 'addMyAlert')

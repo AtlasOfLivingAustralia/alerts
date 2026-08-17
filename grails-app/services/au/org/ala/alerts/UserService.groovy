@@ -238,6 +238,14 @@ class UserService {
         User.findAllByEmailIlike("%${term}%")
     }
 
+    /**
+     * Find users whose email contains the given term, capped to 'max' results and sorted by email.
+     * Used by the admin autocomplete.
+     */
+    List<User> findUsers(String term, int max) {
+        User.findAllByEmailIlike("%${term}%", [max: max, sort: 'email', order: 'asc'])
+    }
+
     @Cacheable("testCache")
     boolean testEhCache(String input = "not-set") {
         log.warn "Inside the testEhCache() method with ${input}... sleeping for 5 seconds"
