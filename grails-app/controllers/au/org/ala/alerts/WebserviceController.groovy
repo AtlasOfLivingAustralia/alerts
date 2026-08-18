@@ -732,10 +732,7 @@ class WebserviceController {
         }
 
         int max = Math.min(Math.max(params.int('max') ?: 10, 1), 50)
-        def results = userService.findUsers(term, max).collect { User user ->
-            [userId: user.userId, email: user.email]
-        }
-        render results as JSON
+        render userService.findUsers(term, max) as JSON
     }
 
     /**

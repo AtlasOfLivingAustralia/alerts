@@ -40,7 +40,7 @@
 
         <div class="box">
             <div class="shadow card card-body ">
-                <div class="fw-bold fs-5"><i class="fa-solid fa-user-group text-primary"></i> Alerts Management</div>
+                <div class="fw-bold fs-5"><i class="fa fa-id-card text-primary"></i> Alerts Management</div>
                 <div>
                     <small class="text-muted ps-4">Manage user accounts and subscriptions</small>
                 </div>

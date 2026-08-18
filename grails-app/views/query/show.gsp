@@ -81,7 +81,22 @@
 
 				<g:if test="${queryInstance?.queryResults}">
 					<dt class="col-sm-3"><g:message code="query.queryResults.label" default="Query Results" /></dt>
-					<dd class="col-sm-9">${queryInstance.queryResults}</dd>
+					<dd class="col-sm-9">
+						<g:each in="${queryInstance.queryResults.sort { it.frequency?.name }}" var="queryResult">
+							<div>
+								<b>${queryResult.frequency?.name?.toUpperCase()}</b>
+								<g:if test="${queryResult.hasChanged}">
+									<span class="badge bg-info">Changed</span>
+								</g:if>
+								<g:else>
+									<span class="badge bg-dark">No changes</span>
+								</g:else>
+								<g:link controller="queryResult" action="getDetails" params="[id: queryResult.id]"
+										target="_blank" title="Show the latest query result - QR ID: ${queryResult.id}">#${queryResult.id}</g:link>
+								<span class="text-muted">last checked: ${queryResult.lastChecked ?: 'never'}</span>
+							</div>
+						</g:each>
+					</dd>
 				</g:if>
 
 				<g:if test="${queryInstance?.resourceName}">

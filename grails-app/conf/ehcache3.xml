@@ -25,6 +25,15 @@
 
     <cache alias="userDetailsCache" uses-template="authTemplate"/>
     <cache alias="userDetailsByIdCache" uses-template="authTemplate"/>
+
+    <!-- admin 'find users' autocomplete: short lived, results change as users are added/renamed -->
+    <cache alias="userSearchCache" uses-template="authTemplate">
+        <expiry>
+            <ttl unit="minutes">2</ttl>
+        </expiry>
+        <heap>1000</heap>
+    </cache>
+
     <cache alias="testCache" uses-template="authTemplate">
         <expiry>
             <ttl unit="minutes">5</ttl>

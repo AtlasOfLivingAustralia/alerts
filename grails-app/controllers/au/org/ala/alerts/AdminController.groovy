@@ -42,6 +42,8 @@ class AdminController {
     def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
 
     def subscriptionsPerPage = grailsApplication.config.getProperty('biosecurity.subscriptionsPerPage', Integer, 100)
+    static allowedMethods = [deleteUser: 'POST']
+
     def index() {}
 
 
@@ -172,6 +174,46 @@ class AdminController {
         }
 
         null
+    }
+
+    /**
+     * What would be removed if this user were deleted? Used to populate the confirmation dialog on
+     * the 'manage user alerts' page - it does NOT change anything.
+     *
+     * @param userId ALA user id
+     * @return [status: 0|1, email: .., notifications: n, queries: [[id: .., name: ..], ..]]
+     */
+    def previewUserDeletion() {
+        User user = User.findByUserId(params.userId)
+        if (!user) {
+            render([status: 1, message: "User not found: ${params.userId}"] as JSON)
+            return
+        }
+
+        render([status       : 0,
+                email        : user.email,
+                queries      : userService.findQueriesRelatedToDeletedUser(user)] as JSON)
+    }
+
+    /**
+     * Delete a user, their subscriptions and any queries that exist only for them.
+     *
+     * @param userId ALA user id
+     * @return [status: 0|1, message: '..']
+     */
+    def deleteUser() {
+        User user = User.findByUserId(params.userId)
+        if (!user) {
+            render([status: 1, message: "User not found: ${params.userId}"] as JSON)
+            return
+        }
+
+        if (authService.userDetails()?.userId == user.userId) {
+            render([status: 1, message: "You cannot delete your own account here."] as JSON)
+            return
+        }
+
+        render(userService.delete(user) as JSON)
     }
 
     /**

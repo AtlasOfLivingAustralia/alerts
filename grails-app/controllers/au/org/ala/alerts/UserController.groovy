@@ -13,6 +13,15 @@ class UserController {
         redirect(action: "list", params: params)
     }
 
+    def findQueriesForUser = {
+        def user = User.findByUserId(params.userId)
+        if (user) {
+            render([response: userService.findQueriesForUser(user)] as JSON)
+        } else {
+            render([response: []] as JSON)
+        }
+    }
+
     /**
      * Test EhCache caching in UserService = check logs to see if userService.testEhCache()
      * method internals are run or not (5 min cache expiry).

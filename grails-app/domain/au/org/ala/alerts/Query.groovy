@@ -122,4 +122,20 @@ class Query {
     boolean isBiosecurity() {
         return this.emailTemplate == '/email/biosecurity'
     }
+
+    /**
+     * Is this the 'My Annotations' query belonging to the given user?
+     *
+     * The stored queryPath has more parameters after the user id
+     * (e.g. /occurrences/search?fq=assertion_user_id:1234&dir=desc&pageSize=20&...), so this is a
+     * prefix match.
+     */
+    boolean isMyAnnotation(String userId) {
+        if (!userId || !queryPath) {
+            return false
+        }
+        String prefix = '/occurrences/search?fq=assertion_user_id:' + userId
+        return queryPath.toLowerCase().startsWith(prefix.toLowerCase()) &&
+                emailTemplate?.equalsIgnoreCase('/email/myAnnotations')
+    }
 }
