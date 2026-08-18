@@ -337,6 +337,7 @@ class QueryService {
                 dateFormat    : """yyyy-MM-dd'T'HH:mm:ss'Z'""",
                 emailTemplate : '/email/myAnnotations',
                 recordJsonPath: '\$.occurrences[*]',
+                custom: false
         ])
     }
 

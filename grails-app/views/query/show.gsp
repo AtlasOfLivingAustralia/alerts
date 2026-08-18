@@ -74,11 +74,6 @@
 					<dd class="col-sm-9">${queryInstance.baseUrlForUI}</dd>
 				</g:if>
 
-				<g:if test="${queryInstance?.custom}">
-					<dt class="col-sm-3"><g:message code="query.custom.label" default="Custom" /></dt>
-					<dd class="col-sm-9">${queryInstance.custom}</dd>
-				</g:if>
-
 				<g:if test="${queryInstance?.propertyPaths}">
 					<dt class="col-sm-3"><g:message code="query.propertyPaths.label" default="Property Paths" /></dt>
 					<dd class="col-sm-9">${queryInstance.propertyPaths}</dd>
@@ -94,33 +89,91 @@
 					<dd class="col-sm-9">${queryInstance.resourceName}</dd>
 				</g:if>
 
-
+				<g:set var="subscriberEmails"
+					   value="${queryInstance.notifications?.collect { it.user?.email }?.findAll { it }?.unique()?.sort()}"/>
 				<dt class="col-sm-3"><g:message code="query.nousers.label" default="Number of users registered for alert" /></dt>
-				<dd class="col-sm-9">${queryInstance.notifications?.size()}</dd>
-
-
-				<dt class="col-sm-3">Custom</dt>
 				<dd class="col-sm-9">
-					<g:formatBoolean boolean="${queryInstance.custom}" />
+					${queryInstance.notifications?.size() ?: 0}
+					<g:if test="${subscriberEmails}">
+						-- <span class="text-muted" style="word-break: break-word;"
+								 title="${subscriberEmails.join(', ')}">${subscriberEmails.take(5).join(', ')}<g:if test="${subscriberEmails.size() > 5}"> ... and ${subscriberEmails.size() - 5} more</g:if></span>
+					</g:if>
 				</dd>
+
+				<g:if test="${queryInstance?.custom}">
+					<dt class="col-sm-3"><g:message code="query.custom.label" default="Custom" /></dt>
+					<dd class="col-sm-9">${queryInstance.custom}</dd>
+				</g:if>
 			</dl>
 
-			<g:form url="[resource:queryInstance, action:'delete']" method="POST">
-				<div class="d-flex gap-2 mt-3 justify-content-center">
-				<!-- Edit button -->
-					<g:link class="btn btn-primary" action="edit" resource="${queryInstance}">
-						<g:message code="default.button.edit.label" default="Edit" />
-					</g:link>
+			<%@ page import="java.time.LocalDate" %>
+			<%
+				String today = LocalDate.now().toString();  // Format: YYYY-MM-DD
+			%>
 
-				<!-- Delete button (only if no notifications) -->
-					<g:if test="${queryInstance?.notifications?.size() == 0}">
-						<button type="submit" class="btn btn-danger"
-								onclick="return confirm('${message(code: 'default.button.delete.confirm.message', default: 'Are you sure?')}');">
-							${message(code: 'default.button.delete.label', default: 'Delete')}
-						</button>
-					</g:if>
-				</div>
-			</g:form>
+			<div class="d-flex gap-2 mt-3 justify-content-center align-items-center flex-wrap">
+			   <!-- Edit button -->
+				<g:link class="btn btn-primary" action="edit" resource="${queryInstance}">
+					<g:message code="default.button.edit.label" default="Edit" />
+				</g:link>
+				<!-- Wipe button: deletes the query AND all of its subscriptions / results -->
+				<g:if test="${queryInstance?.custom}">
+					<button type="button" class="btn btn-outline-primary" onclick="wipeQuery(${queryInstance.id})">
+						<i class="fas fa-trash" aria-hidden="true"></i>
+						Delete
+					</button>
+				</g:if>
+				<!-- Debug: run the query against today's date and email the result -->
+				<g:form controller="admin" action="emailAlertsOnCheckDate" method="POST" target="_blank" class="m-0">
+					<input type="hidden" name="queryId" value="${queryInstance.id}" />
+					<input type="hidden" name="frequency" value="${userFrequency}" />
+					<input type="hidden" id="checkDate" name="checkDate" value="${today}" />
+					<button type="submit" class="btn btn-outline-primary">Debug and Email me</button>
+				</g:form>
+			</div>
+
+			<div class="col-md-10 mx-auto mt-2 text-center text-muted fst-italic">
+				<b>Debug and Email me</b> offers a very limited debug test function. We encourage you to use
+				<g:link controller="admin" action="query" class=" fst-normal">Alert Diagnostics &amp; Management</g:link>.
+				it provides comprehensive diagnostic functions.
+			</div>
 		</div>
+
+
+		<script type="text/javascript">
+			var wipeQueryUrl = '${createLink(controller: 'query', action: 'wipe')}';
+			var queryListUrl = '${createLink(controller: 'query', action: 'list')}';
+
+			/**
+			 * Delete a custom alert together with its notifications, results and property paths.
+			 * QueryController#wipe renders {status: 0|1, message: '..'}
+			 */
+			function wipeQuery(id) {
+				if (!confirm('This will permanently delete query ' + id + ' and all of its subscriptions. Continue?')) {
+					return;
+				}
+
+				fetch(wipeQueryUrl + '?id=' + encodeURIComponent(id), {
+					method: 'GET',
+					headers: { 'Accept': 'application/json' }
+				})
+				.then(function (response) {
+					if (!response.ok) {
+						throw new Error('HTTP ' + response.status);
+					}
+					return response.json();
+				})
+				.then(function (data) {
+					alert(data.message);
+					if (data.status === 0) {
+						// the query no longer exists - this page is gone, go back to the list
+						window.location.href = queryListUrl;
+					}
+				})
+				.catch(function (error) {
+					alert('Failed to delete query ' + id + ': ' + error.message);
+				});
+			}
+		</script>
 	</body>
 </html>

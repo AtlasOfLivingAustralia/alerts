@@ -69,7 +69,9 @@ class QueryController {
 
     @AlaSecured(value = 'ROLE_ADMIN', redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to view that page.")
     def list() {
-        params.max = Math.min(params.max ? params.int('max') : 1000, 10000)
+        // page size: 20 by default, 100 max. g:paginate only renders links when total > max
+        params.max = Math.min(params.max ? params.int('max') : 100, 1000)
+        params.offset = params.int('offset') ?: 0
         [queryInstanceList: Query.list(params), queryInstanceTotal: Query.count()]
     }
 
@@ -100,7 +102,9 @@ class QueryController {
             redirect(action: "list")
             return
         }
-        [queryInstance: queryInstance]
+        // the 'debug and email me' form runs the query against the frequency of the logged-in user
+        String userFrequency = userService.getUser()?.frequency?.name ?: 'weekly'
+        [queryInstance: queryInstance, userFrequency: userFrequency]
     }
 
     @AlaSecured(value = 'ROLE_ADMIN', redirectController = 'admin', redirectAction = 'index', message = "You don't have permission to edit that record.")
@@ -222,7 +226,16 @@ class QueryController {
         def result =[:]
         if (params.id && (!params.id.allWhitespace)) {
             def queryId = params.id as Integer
-            result = queryService.wipe(queryId)
+            Query query = Query.get(queryId)
+            if (!query) {
+                result['status'] = 1
+                result['message'] = "Query not found for id: ${queryId}"
+            } else if (!query.custom) {
+                result['status'] = 1
+                result['message'] = "Query with id: ${queryId} is not a custom query and cannot be deleted."
+            } else {
+                result = queryService.wipe(queryId)
+            }
         } else {
             result['status'] = 1
             result['message'] = "Query id can't be empty."

@@ -33,6 +33,42 @@
             });
         });
 
+        var wipeQueryUrl = '${createLink(controller: 'query', action: 'wipe')}';
+
+        /**
+         * Delete a custom alert (query + its notifications / results) and report the outcome.
+         * The 'wipe' action renders {status: 0|1, message: '..'}
+         */
+        function wipeQuery(id) {
+            if (!confirm('This will permanently delete query ' + id + ' and all of its subscriptions. Continue?')) {
+                return;
+            }
+
+            fetch(wipeQueryUrl + '?id=' + encodeURIComponent(id), {
+                method: 'GET',
+                headers: { 'Accept': 'application/json' }
+            })
+            .then(function (response) {
+                if (!response.ok) {
+                    throw new Error('HTTP ' + response.status);
+                }
+                return response.json();
+            })
+            .then(function (data) {
+                alert(data.message);
+                if (data.status === 0) {
+                    // drop the list item and its details panel from the page
+                    var item = document.getElementById('query-' + id);
+                    var details = document.getElementById('more-' + id);
+                    if (item) item.remove();
+                    if (details) details.remove();
+                }
+            })
+            .catch(function (error) {
+                alert('Failed to delete query ' + id + ': ' + error.message);
+            });
+        }
+
         function resetResultsInDB(id) {
             const userInput = prompt(`This action will reset the previous and current results in the database. Type ‘yes’ if you understand and wish to proceed. `);
             if (userInput && userInput.toLowerCase() === 'yes') {
@@ -71,8 +107,12 @@
                 <div class="tab-pane fade ${i == 0 ? 'show active' : ''}" id="tab-${queryType}-content" role="tabpanel" aria-labelledby="tab-${queryType}-content">
                     <ul>
                         <g:each var="query" in="${queries[queryType]}">
-                            <li>
-                                <g:link controller="query" action="wipe" params="[id: query.id]" target="_blank"><i class="fas fa-trash" aria-hidden="true"></i></g:link>
+                            <li id="query-${query.id}">
+                                <g:if test="${query.custom}">
+                                    <a href="javascript:void(0);" onclick="wipeQuery(${query.id})"
+                                       data-bs-toggle="tooltip" data-bs-placement="top"
+                                       title="Delete this custom alert and all of its subscriptions"><i class="fas fa-trash" aria-hidden="true"></i></a>
+                                </g:if>
                                 <g:link controller="query" action="show" params="[id: query.id]" target="_blank" data-bs-toggle="tooltip" data-bs-placement="top" title="View query details"> <span class="badge badge-outline-primary"><i class="fa fa-info-circle" aria-hidden="true"></i> ${query.id}</span></g:link>
 
                                 <a href="javascript:void(0);" class="toggle-more-query-details" data-target="#more-${query.id}"  data-bs-toggle="tooltip" data-bs-placement="top" title="Click to show more functions">

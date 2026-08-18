@@ -1,4 +1,4 @@
-<html>
+<html xmlns="http://www.w3.org/1999/html">
 <head>
     <title>Notification service | ${grailsApplication.config.skin.orgNameLong}</title>
     <meta name="layout" content="${grailsApplication.config.skin.layout}"/>
@@ -49,14 +49,22 @@
                     <small class="text-muted ms-2"> - find user(s) and manage their subscriptions.</small>
                 </div>
 
+                <div class="mt-3">
+                    <g:link controller="query" action="list" params="[max: 50]">List queries</g:link>
+                    <small class="text-muted ms-2"> - browse all queries, with basic management functions.</small>
+                </div>
+
             </div>
         </div>
 
         <div class="box">
             <div class="shadow card card-body">
-                <div class="fw-bold fs-5"><i class="fa-solid fa-bug text-primary"></i> Manage and test alerts</div>
+                <div class="fw-bold fs-5"><i class="fa-solid fa-bug text-primary"></i> Advanced Alerts Tools </div>
+                <div>
+                    <small class="text-muted ps-4">Inspect, debug and test-run alerts</small>
+                </div>
                 <div class="mt-3">
-                    <div><g:link controller="admin" action="query" class="btn btn-outline-primary">View and debug alerts</g:link>  <small class="text-muted ms-2">- list all available custom and default alerts.</small></div>
+                    <div><g:link controller="admin" action="query" class="btn btn-outline-primary">Alert Diagnostics &amp; Management</g:link>  <small class="text-muted ms-2">- manage and simulate all available alerts.</small></div>
                 </div>
                 <hr>
                 <div class="mt-2">

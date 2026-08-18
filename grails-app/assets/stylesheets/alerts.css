@@ -275,3 +275,57 @@ For admin page layout
     background-color: #f5f5f5;
 }
 
+/**
+ * g:paginate renders plain <a class="step">/<span class="currentStep"> elements, which Bootstrap 5
+ * does not style (it expects ul.pagination > li.page-item > a.page-link). Style them here using the
+ * ALA primary colour (#c44d34), as used by .badge-primary / .badge-outline-primary above.
+ */
+.pagination {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .25rem;
+    align-items: center;
+}
+
+.pagination .step,
+.pagination .currentStep,
+.pagination .prevLink,
+.pagination .nextLink {
+    display: inline-block;
+    padding: .375rem .75rem;
+    border: 1px solid #dee2e6;
+    border-radius: .25rem;
+    color: #c44d34;
+    text-decoration: none;
+    line-height: 1.25;
+}
+
+.pagination .step:hover,
+.pagination .prevLink:hover,
+.pagination .nextLink:hover {
+    background-color: #f7ece9;    /* light tint of the primary colour */
+    border-color: #c44d34;
+    color: #c44d34;
+    text-decoration: none;
+}
+
+.pagination .step:focus,
+.pagination .prevLink:focus,
+.pagination .nextLink:focus {
+    outline: none;
+    box-shadow: 0 0 0 .2rem rgba(196, 77, 52, .25);
+}
+
+.pagination .currentStep {
+    background-color: #c44d34;
+    border-color: #c44d34;
+    color: #fff;
+}
+
+.pagination .disabled {
+    color: #6c757d;
+    pointer-events: none;
+    background-color: #f8f9fa;
+    border-color: #dee2e6;
+}
+
