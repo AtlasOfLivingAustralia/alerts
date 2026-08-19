@@ -71,6 +71,14 @@
     border-radius: 10px;     /* same rounded look as .badge */
 }
 
+.badge-outline-secondary {
+    color: #c44d34;          /* text in your primary color */
+    background-color: #fff;  /* white background */
+    border: 1px solid gray;
+    padding: 3px 7px;        /* match Bootstrap badge spacing */
+    border-radius: 10px;     /* same rounded look as .badge */
+}
+
 /*#content h3 {*/
 /*    font-weight: 500;*/
 /*}*/

@@ -7,7 +7,7 @@
     <meta name="breadcrumb" content="CSV"/>
     <meta name="breadcrumbParent" content="${request.contextPath}/admin,Alerts admin"/>
     <meta name="breadcrumb" content="CSV"/>
-    <meta name="breadcrumbParent" content="${request.contextPath}/admin/biosecurity,BioSecurity"/>
+    <meta name="breadcrumbParent" content="${request.contextPath}/biosecurity,BioSecurity"/>
     <style>
     .folder {
         cursor: pointer;
@@ -52,7 +52,7 @@
                     alert(response.message);
                     location.reload();
                 },
-                error: function(xhr, status, error) {
+                failed: function(xhr, status, error) {
                     alert("Error: " + xhr.responseText);
                 }
             });
@@ -83,10 +83,10 @@
                         alert("Archived " + response.archivedCount + " file(s) for year " + year + ".");
                         location.reload();
                     } else {
-                        alert("Error: " + (response.error || "Unknown error"));
+                        alert("Error: " + (response.failed || "Unknown error"));
                     }
                 },
-                error: function(xhr) {
+                failed: function(xhr) {
                     setYearButtonsDisabled(false, '');
                     alert("Error: " + xhr.responseText);
                 }
@@ -108,10 +108,10 @@
                         alert("Unarchived " + response.unarchivedCount + " file(s) for year " + year + ".");
                         location.reload();
                     } else {
-                        alert("Error: " + (response.error || "Unknown error"));
+                        alert("Error: " + (response.failed || "Unknown error"));
                     }
                 },
-                error: function(xhr) {
+                failed: function(xhr) {
                     setYearButtonsDisabled(false, '');
                     alert("Error: " + xhr.responseText);
                 }
@@ -136,7 +136,7 @@
                         alert(response.message || "Unknown error");
                     }
                 },
-                error: function(xhr) {
+                failed: function(xhr) {
                     setYearButtonsDisabled(false, '');
                     alert("Error: " + xhr.responseText);
                 }

@@ -155,6 +155,10 @@ class QueryController {
         redirect(action: "show", id: queryInstance.id)
     }
 
+    /**
+     * todo check if it is never used.
+     * @return
+     */
     @AlaSecured(value = 'ROLE_ADMIN', redirectController = 'admin', redirectAction = 'index', message = "You don't have permission to delete that record.")
     def delete() {
         def queryInstance = Query.get(params.id)
@@ -166,7 +170,7 @@ class QueryController {
 
         try {
             if (queryInstance.notifications?.size() == 0) {
-                queryService.deleteQuery(queryInstance)
+                queryService.wipe(queryInstance)
                 flash.message = message(code: 'default.deleted.message', args: [message(code: 'query.label', default: 'Query'), params.id])
                 redirect(action: "list")
             } else {
@@ -178,6 +182,32 @@ class QueryController {
             flash.message = message(code: 'default.not.deleted.message', args: [message(code: 'query.label', default: 'Query'), params.id])
             redirect(action: "show", id: params.id)
         }
+    }
+
+    /**
+     * todo consider merging with delete() method, but this one is called from ajax and returns json.
+     * @return
+     */
+    @AlaSecured(value = 'ROLE_ADMIN', redirectController = 'admin', redirectAction = 'index', message = "You don't have permission to delete that query.")
+    def wipe() {
+        def result =[:]
+        if (params.id && (!params.id.allWhitespace)) {
+            def queryId = params.id as Integer
+            Query query = Query.get(queryId)
+            if (!query) {
+                result['status'] = 1
+                result['message'] = "Query not found for id: ${queryId}"
+            } else if (!query.custom) {
+                result['status'] = 1
+                result['message'] = "Query with id: ${queryId} is not a custom query and cannot be deleted."
+            } else {
+                result = queryService.wipe(queryId)
+            }
+        } else {
+            result['status'] = 1
+            result['message'] = "Query id can't be empty."
+        }
+        render(result as JSON)
     }
 
     def subscribers() {
@@ -225,25 +255,5 @@ class QueryController {
         }
     }
 
-    @AlaSecured(value = 'ROLE_ADMIN', redirectController = 'admin', redirectAction = 'index', message = "You don't have permission to delete that query.")
-    def wipe() {
-        def result =[:]
-        if (params.id && (!params.id.allWhitespace)) {
-            def queryId = params.id as Integer
-            Query query = Query.get(queryId)
-            if (!query) {
-                result['status'] = 1
-                result['message'] = "Query not found for id: ${queryId}"
-            } else if (!query.custom) {
-                result['status'] = 1
-                result['message'] = "Query with id: ${queryId} is not a custom query and cannot be deleted."
-            } else {
-                result = queryService.wipe(queryId)
-            }
-        } else {
-            result['status'] = 1
-            result['message'] = "Query id can't be empty."
-        }
-        render(result as JSON)
-    }
+
 }

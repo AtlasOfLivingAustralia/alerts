@@ -95,7 +95,7 @@
                     <small class="text-muted ps-4">Manage / reschedule Biosecurity alerts</small>
                 </div>
                 <div class="mt-2">
-                    <a href="${request.contextPath}/admin/biosecurity">Manage BioSecurity alerts</a><small class="text-muted ms-2"> - Add, update, remove or reschedule BioSecurity alerts and users.</small>
+                    <a href="${request.contextPath}/biosecurity">Manage BioSecurity alerts</a><small class="text-muted ms-2"> - Add, update, remove or reschedule BioSecurity alerts and users.</small>
                 </div>
                 <div class="mt-2">
                     <a href="${request.contextPath}/log">Error Logs</a><small class="text-muted ms-2"> - Check for any recent alert failures.</small>

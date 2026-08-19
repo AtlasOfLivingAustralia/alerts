@@ -29,6 +29,8 @@ class BootStrap {
 
         siteLocale = new Locale.Builder().setLanguageTag(grailsApplication.config.siteDefaultLanguage).build();
         Locale.setDefault(siteLocale)
+        TimeZone.setDefault(TimeZone.getTimeZone('UTC'))
+        log.info "Application running with timezone: ${TimeZone.default.ID}"
 
         preloadQueries()
         log.info("Done bootstrap queries.")

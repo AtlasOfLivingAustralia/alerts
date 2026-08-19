@@ -42,7 +42,7 @@
                       <% } %>
 
                       <% if (request.isUserInRole("ROLE_BIOSECURITY_ADMIN")) { %>
-                      <a href="${createLink(controller: 'admin', action: 'biosecurity')}" class="btn btn-primary">Biosecurity Admin</a>
+                      <a href="${createLink(namespace: 'biosecurity', controller: 'admin', action: 'index')}" class="btn btn-primary">Biosecurity Admin</a>
                       <% } %>
                   </div>
               </div>

@@ -267,7 +267,7 @@
                 })
                 .fail(function (err) {
                     alert("Operation failed. Please contact the Alerts administrator.");
-                    console.error("Error", err);
+                    console.failed("Error", err);
                 });
         });
     });

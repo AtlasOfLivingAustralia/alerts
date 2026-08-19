@@ -56,6 +56,11 @@ class Query {
         return name
     }
 
+    /**
+     * Count the number of ACTIVE subscribers for this query, optionally filtered by frequency.
+     * @param frequency
+     * @return
+     */
     int countSubscribers(String frequency = null) {
         if (frequency) {
             return notifications.findAll { it.enabled }.collect { it.user }.count(it -> it.frequency?.name == frequency)
@@ -64,7 +69,39 @@ class Query {
         }
     }
 
-    String getSubscribers(String frequency = null) {
+    /**
+     * return ACTIVE subscribers for this query, optionally filtered by frequency.
+     * @param frequency
+     * @return
+     */
+     def getSubscribers(String frequency = null) {
+        def subscribers
+
+        if (frequency) {
+            subscribers = notifications.findAll { it.enabled }.collect { it.user }.findAll(it -> it.frequency?.name == frequency)
+        } else {
+            subscribers= notifications.findAll { it.enabled }.collect { it.user }
+        }
+        return subscribers
+    }
+
+    /**
+     * return ACTIVE subscribers for this query, optionally filtered by frequency.
+     * @param frequency
+     * @return
+     */
+    def getInactiveSubscribers(String frequency = null) {
+        def subscribers
+
+        if (frequency) {
+            subscribers = notifications.findAll { !it.enabled }.collect { it.user }.findAll(it -> it.frequency?.name == frequency)
+        } else {
+            subscribers= notifications.findAll { !it.enabled }.collect { it.user }
+        }
+        return subscribers
+    }
+
+    String getSubscriberEmails(String frequency = null) {
         def maxEmails = 10
         def emailList
 

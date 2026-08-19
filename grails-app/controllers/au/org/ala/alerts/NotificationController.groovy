@@ -12,22 +12,21 @@ class NotificationController {
     def notificationService
     def emailService
     def userService
-    def authService
     def diffService
     def queryResultService
 
     static allowedMethods = [save: "POST", update: "POST", delete: "POST"]
 
-    def myalerts = { redirect(action: "myAlerts", params: params) }
 
-    // Main action to show the logged-in user's own alerts
+    /**
+     * Shows the logged-in user's own alerts.
+     *
+     * The returned map is used as the model and Grails renders the view matching the action name
+     * by convention (grails-app/views/notification/myAlerts.gsp), so no explicit render() is needed.
+     */
     def myAlerts() {
-        // Get the currently logged-in user
         User user = userService.getUser()
-        if (user) {
-            Map myAlerts = notificationService.myAlerts(user)
-            render(view: "/notification/myAlerts", model: myAlerts)
-        }
+        user ? notificationService.myAlerts(user) : [:]
     }
 
 
@@ -154,19 +153,6 @@ class NotificationController {
     }
 
     /**
-     * todo check if it works?
-     */
-    def checkNow = {
-        Notification notification = Notification.get(params.id)
-        // no such method
-        boolean sendUpdateEmail = notificationService.executeQuery(notification.query)?.hasChanged
-        if (sendUpdateEmail) {
-            emailService.sendNotificationEmail(notification)
-        }
-        redirect(action: "show", params: params)
-    }
-
-    /**
      * Debug the algorithm used to detect changes in the latest result / previous result
      *
      */
@@ -204,11 +190,5 @@ class NotificationController {
 
     def index(){
         redirect(action: "myAlerts")
-    }
-
-    def admin = {
-        if (!authService.userInRole("ROLE_ADMIN")) {
-            redirect(action: "myAlerts")
-        }
     }
 }

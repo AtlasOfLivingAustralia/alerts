@@ -41,7 +41,6 @@ class AdminController {
     WebService webService
     def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
 
-    def subscriptionsPerPage = grailsApplication.config.getProperty('biosecurity.subscriptionsPerPage', Integer, 100)
     static allowedMethods = [deleteUser: 'POST']
 
     def index() {}
@@ -136,18 +135,6 @@ class AdminController {
 
     def notificationReport = {
         [queryInstanceList: Query.list()]
-    }
-
-    def runChecksNow = {
-        log.info("Run checks....")
-        if (params.frequency) {
-            log.info('Manual start of ' + params.frequency + ' checks')
-            notificationService.execQueryForFrequency(params.frequency)
-        }
-        response.setContentType("text/plain")
-        response.setStatus(200)
-
-        null
     }
 
 
@@ -310,156 +297,6 @@ class AdminController {
         redirect(action: 'index')
     }
 
-    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
-    def biosecurity() {
-        int total = queryService.countBiosecurityQuery()
-        List<Query> queries = queryService.getBiosecurityQuery(0, subscriptionsPerPage)
-        Map jobStatus = biosecurityJobService.getJobInfo()
-        render view: "/admin/biosecurity", model: [total: total, queries: queries, subscriptionsPerPage: subscriptionsPerPage, jobStatus: jobStatus]
-    }
-
-    /**
-     * For Ajax call to render more biosecurity queries (subscription)
-     * @param offset
-     * @param limit
-     * @return
-     */
-    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
-    def getMoreBioSecurityQuery(int startIdx) {
-        List queries = queryService.getBiosecurityQuery(startIdx, subscriptionsPerPage)
-        render view: "/admin/_bioSecuritySubscriptions", model: [queries: queries, startIdx: startIdx ]
-    }
-
-    /**
-     * For Ajax call to render one biosecurity queries (subscription)
-     * @param id
-     * @return
-     */
-    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
-    def getBioSecurityQuery(int id) {
-        def query = queryService.findBiosecurityQueryById(id)
-       // def queryLog = queryService.getQueryLogs(query, "weekly")
-        //For be compatible with the method rendering a list of queries AKA subscriptions, we need to convert the single query to a list
-        render view: "/admin/_bioSecuritySubscriptions", model: [queries: [query], startIdx: 0 ]
-    }
-
-    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
-    def countBioSecurityQuery() {
-        int total = queryService.countBiosecurityQuery()
-        render (contentType: 'application/json') {
-            count total
-        }
-    }
-
-    /**
-     * This function is used to subscribe a user to a species list or a query (an existing subscription of a list)
-     * @return
-     */
-    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
-    def subscribeBioSecurity() {
-        if ((!params.listid || params.listid.allWhitespace) && !params.queryid) {
-            flash.message = messageSource.getMessage("biosecurity.view.error.emptyspeciesid", null, "Species list uid can't be empty.", siteLocale)
-        } else if (!params.useremails || params.useremails.allWhitespace) {
-            flash.message = messageSource.getMessage("biosecurity.view.error.emptyemails", null, "User emails can't be empty.", siteLocale)
-        } else {
-            //If params contains listid, it is for subscribing to a species list
-            if (params.listid) {
-                boolean queryExists = queryService.speciesListExists(params.listid.trim())
-                if (!queryExists) {
-                    flash.message = messageSource.getMessage("biosecurity.view.error.invalidListId", [params.listid.trim()] as Object[], "List with id: {0} is not found in the system.", siteLocale)
-                    redirect(controller: "admin", action: "biosecurity")
-                    return
-                }
-            }
-
-            String[] emails = ((String)params.useremails).split(';')
-            Map usermap = emails?.collectEntries{[it.trim(), userService.getUserByEmailOrCreate(it.trim())]}
-            def invalidEmails = []
-            usermap.each {entry ->
-                if (entry.value == null) {
-                    invalidEmails.add(entry.key)
-                } else {
-                    if (params.queryid) {
-                        queryService.createQueryForUserIfNotExists(Query.get(params.queryid), entry.value as User, true)
-                    } else {
-                        queryService.subscribeBioSecurity(entry.value as User, params.listid.trim())
-                    }
-                }
-            }
-            if (invalidEmails) {
-                flash.message = messageSource.getMessage("biosecurity.view.error.invalidemails", [invalidEmails.join(", ")] as Object[], "Users with emails: {0} are not found in the system.", siteLocale)
-            }
-        }
-        redirect(controller: "admin", action: "biosecurity")
-    }
-
-    /**
-     * It is a preview page for BioSecurity alert
-     * DO NOT update database in this function
-     * @return
-     */
-    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
-    def previewBiosecurityAlert() {
-        log.info("Building preview page for BioSecurity alert")
-        def date = params.date //only from preview
-        def query = null
-        Query.withTransaction {
-            query = Query.get(params.queryid)
-        }
-        if (!query) {
-            log.error("Query: ${params.queryid} not exists")
-            render(text: "Query: ${params.queryid} not exists", contentType: "text/plain", encoding: "UTF-8")
-        }
-
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd")
-        Date since =  sdf.parse(date)
-        Date now = new Date()
-        try {
-            def processedJson = biosecurityService.processQueryBiosecurity(query, since, now)
-
-            def frequency = 'weekly'
-            QueryResult qr = notificationService.getQueryResult(query, Frequency.findByName(frequency))
-            qr.lastResult = qr.compress(processedJson)
-            //this logic only applies on preview page
-            qr.previousCheck = qr.lastChecked
-            qr.lastChecked = since
-            query.lastChecked = since
-            def records = diffService.diff(qr)
-            biosecurityService.fetchExtraOccurrenceInfo(records)
-
-            String urlPrefix = "${grailsApplication.config.getProperty("grails.serverURL")}${grailsApplication.config.getProperty('security.cas.contextPath', '')}"
-            def localeSubject = messageSource.getMessage("emailservice.update.subject", [query.name] as Object[], siteLocale)
-
-            //Get unsubscribe token
-            def unsubscribeOneUrl
-
-            def alaUser = authService.userDetails()
-            def user = User.findByEmail(alaUser?.email)
-            def unsubscribeToken = notificationService.getUnsubscribeToken(user, query)
-            if (user && unsubscribeToken) {
-                unsubscribeOneUrl = urlPrefix + "/unsubscribe?token=${unsubscribeToken}"
-            }
-            int maxRecords = grailsApplication.config.getProperty("biosecurity.query.maxRecords", Integer, 500)
-            render(view: query.emailTemplate,
-//                plugin: "email-confirmation",
-                    model: [title           : localeSubject,
-                            message         : query.updateMessage,
-                            query           : query,
-                            moreInfo        : qr.queryUrlUIUsed,
-                            listcode        : queryService.isMyAnnotation(query) ? "biocache.view.myannotation.list" : "biocache.view.list",
-                            stopNotification: urlPrefix + '/notification/myAlerts',
-                            records         : records.take(maxRecords),
-                            frequency       : messageSource.getMessage('frequency.' + frequency, null, siteLocale),
-                            totalRecords    : records.size(),
-                            unsubscribeAll  : urlPrefix + "/unsubscribe?token=test",
-                            unsubscribeOne  : unsubscribeOneUrl
-                    ])
-        } catch (Exception e) {
-            log.error("Error in previewing Biosecurity alert: ${e.message}")
-            render(text: e.message, contentType: "text/plain", encoding: "UTF-8")
-        }
-    }
-
     /**
      * It is a preview page for Blog alert
      * DO NOT update database in this function
@@ -520,15 +357,7 @@ class AdminController {
         redirect(controller: "admin", action: "biosecurity")
     }
 
-    /**
-      * @return
-     */
 
-    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
-    def deleteQuery() {
-        queryService.deleteQuery(Long.valueOf(params.queryid))
-        redirect(controller: "admin", action: "biosecurity")
-    }
 
 //    /**
 //     * todo: check if it is still used
@@ -557,7 +386,7 @@ class AdminController {
      */
     def query(){
         def queries = queryService.summarize()
-        render view: "/admin/query", model: [queries: queries]
+        [queries: queries]
     }
 
     /**
@@ -652,7 +481,7 @@ class AdminController {
                     def recipients =
                             [[email: currentUser.email, userUnsubToken: currentUser.unsubscribeToken, notificationUnsubToken: '']]
                     if (sendToSubscribers) {
-                        def subscribers = queryService.getSubscribers(id.toLong())
+                        def subscribers = query.getSubscribers(frequency)
                         def others = subscribers.collect { subscriber ->
                             [email:subscriber.email, userUnsubToken: subscriber.unsubscribeToken, notificationUnsubToken: '']
                         }

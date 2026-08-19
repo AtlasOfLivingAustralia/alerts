@@ -13,7 +13,7 @@ import org.springframework.http.HttpStatus
  * runs - previously the check lived in NotificationController#getUser(), which committed the
  * response with sendError() and then let the action write a second response.
  *
- * Actions that never call getUser() (myAlerts, index, admin, checkNow,
+ * Actions that never call getUser() (myAlerts, index, checkNow,
  * evaluateChangeDetectionAlgorithm) are deliberately NOT matched.
  */
 class NotificationInterceptor {

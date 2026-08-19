@@ -151,7 +151,7 @@
                                                             <span class="badge bg-dark">No changes</span>
                                                         </g:else>
                                                         <g:link controller="queryResult" action="getDetails" params="[id: queryResult.id]" target="_blank" data-bs-toggle="tooltip" data-bs-placement="top" title="Show the latest query result - QS ID: ${queryResult.id}"> <span class="badge badge-outline-primary"><i class="fa fa-database" aria-hidden="true"></i></span></g:link>
-                                                        <label data-bs-toggle="tooltip" data-bs-placement="top" title="${query.getSubscribers(queryResult.frequency?.name)}"><span class="badge bg-info"> <i class="fa fa-user"></i> ${query.countSubscribers(queryResult.frequency?.name)}</span></label>
+                                                        <label data-bs-toggle="tooltip" data-bs-placement="top" title="${query.getSubscriberEmails(queryResult.frequency?.name)}"><span class="badge bg-info"> <i class="fa fa-user"></i> ${query.countSubscribers(queryResult.frequency?.name)}</span></label>
                                                         <g:link controller="ws" action="getQueryLogs" params="[id: query.id, frequency: queryResult.frequency?.name]" target="_blank"  data-bs-toggle="tooltip" data-bs-placement="top" title="Display the log "><i class="fa fa-history" aria-hidden="true"></i></g:link>
 
                                                         <g:if test="${queryResult?.lastChecked}">

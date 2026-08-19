@@ -13,7 +13,7 @@
  *   @author Qifeng Bai
  */
 
-package au.org.ala.alerts
+package au.org.ala.alerts.biosecurity
 
 import au.org.ala.web.AlaSecured
 import grails.converters.JSON
@@ -26,18 +26,24 @@ import java.time.ZonedDateTime
 import java.time.LocalTime
 import java.time.ZoneOffset
 
-
-class BiosecurityAdminController {
+@AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true, redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to schedule Biosecurity.")
+class ScheduleController {
+    static namespace = "biosecurity"
     def biosecurityJobService
 
     def pauseAlerts() {
         biosecurityJobService.pauseTrigger()
-        redirect(controller: "admin", action: "biosecurity")
+        redirect(namespace: "biosecurity", controller: "admin", action: "index")
     }
 
     def resumeAlerts() {
         biosecurityJobService.resumeTrigger()
-        redirect(controller: "admin", action: "biosecurity")
+        redirect(namespace: "biosecurity", controller: "admin", action: "index")
+    }
+
+    def runNow() {
+        biosecurityJobService.runNow()
+        redirect(namespace: "biosecurity", controller: "admin", action: "index")
     }
 
     def updateWeeklySchedule() {
@@ -72,17 +78,12 @@ class BiosecurityAdminController {
 
         int utcHour = utcDateTime.hour
         int utcMinute = utcDateTime.minute
-
         // ⚠️ Recalculate weekday in UTC
         String utcWeekday = utcDateTime.dayOfWeek.name()
-
         // Quartz cron (UTC)
         def cron = "0 ${utcMinute} ${utcHour} ? * ${utcWeekday}"
-
-        //def cron = "0 ${minute} ${hour} ? * ${weekday}"
         biosecurityJobService.updateTrigger(cron)
-
-        redirect(controller: "admin", action: "biosecurity")
+        redirect(namespace: "biosecurity", controller: "admin", action: "index")
     }
 
     /**
@@ -118,7 +119,7 @@ class BiosecurityAdminController {
     @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
     def cancelScheduledPauseResumeJob() {
         biosecurityJobService.cancelScheduledPauseResumeJob()
-        redirect(controller: "admin", action: "biosecurity")
+        redirect(namespace: "biosecurity", controller: "admin", action: "index")
     }
 
     /**

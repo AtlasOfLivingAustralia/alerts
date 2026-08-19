@@ -80,7 +80,7 @@ security:
       /webservice/createSpeciesGroupRegionAlert,/ws/*,
       /ws/createTaxonAlert,/ws/taxonAlerts,/ws/createRegionAlert,
       /ws/regionAlerts,/ws/deleteTaxonAlert/*,/ws/createTaxonRegionAlert,
-      /ws/createSpeciesGroupRegionAlert,/admin/runChecksNow,/quartz/*
+      /ws/createSpeciesGroupRegionAlert,/quartz/*
     uriExclusionFilterPattern: "/images.*,/css.*,/js.*,/less.*"
     authenticateOnlyIfLoggedInPattern: "/unsubscribe/*"
     adminRole: "ROLE_ADMIN"
