@@ -503,19 +503,15 @@ class NotificationService {
             def myAnnotationQuerySample = queryService.createMyAnnotationQuery(user.getUserId())
             // myAnnotation is a special case. We need to create a myAnnotation query for the user if it does not exist.
             queryService.createQueryForUserIfNotExists(myAnnotationQuerySample, user, false, false)
-            // get all standard queries, and ONLY myAnnotation which the queryPath is same as the myAnnotationQuerySample sample
+            // Get all standard (non-custom) queries, but exclude myAnnotation queries except the one for this user
             def standardQueries = Query.createCriteria().list {
                 eq('custom', false)
                 or {
+                    // Non-myAnnotation standard queries
                     ne('emailTemplate', myAnnotationQuerySample.emailTemplate)
-                    and {
-                        eq('emailTemplate', myAnnotationQuerySample.emailTemplate)
-                        eq('queryPath', myAnnotationQuerySample.queryPath)
-                    }
                 }
 
             } as List<Query>
-
 
             // check if the user has all standard alerts, if not, create and add it as a disabled notification
             Notification.withTransaction {
@@ -528,6 +524,12 @@ class NotificationService {
                     }
                 }
             }
+
+            def myAnnotationQueries = Query.createCriteria().list {
+                        eq('emailTemplate', myAnnotationQuerySample.emailTemplate)
+                        eq('queryPath', myAnnotationQuerySample.queryPath)
+                } as List<Query>
+            standardQueries << myAnnotationQueries
 
             // Only the queries are needed, so filter the notifications and collect their queries in one step
             def myEnabledStandardQueries = myAlerts.findAll { it.query && !it.query.custom && it.enabled }*.query.unique { it.id }

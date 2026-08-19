@@ -139,7 +139,6 @@
                     <small class="text-muted ms-2">
                         – Removes queries without notifications or subscriptions
                     </small>
-                    %{--<li><g:link controller="admin" action="dryRunAllQueriesForFrequency" params="[frequency: 'daily']" target="_blank">Debug daily alerts</g:link> - Dry-run of daily alerts to determine if emails will be triggered on the next schedule. </li>--}%
                 </div>
             </div>
         </div>

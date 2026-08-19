@@ -160,15 +160,15 @@ class QueryService {
             Query retrievedQuery = Query.findByBaseUrlAndQueryPath(newQuery.baseUrl, newQuery.queryPath)
             if (retrievedQuery == null) {
                 log.debug("Query does not exist....")
-                //save the query
-                newQuery.save(flush: true)
-                newQueryCreated = true
                 if (setPropertyPath) {
                     PropertyPath totalRecordPP = new PropertyPath([name: "totalRecords", jsonPath: "totalRecords", query: newQuery, fireWhenNotZero: true])
                     PropertyPath lastLoadedPP = new PropertyPath([name: "last_loaded_record", jsonPath: "occurrences[0].uuid", query: newQuery])
                     newQuery.propertyPaths.add(totalRecordPP)
                     newQuery.propertyPaths.add(lastLoadedPP)
                 }
+                // Persist the query first so it gets an id, enabling child objects to reference it
+                newQuery.save()
+                newQueryCreated = true
             } else {
                 newQuery = retrievedQuery
             }
@@ -530,34 +530,36 @@ class QueryService {
     }
 
     // delete a query (also remove all subscriptions)
-    @Transactional
+
     def wipe(id) {
         def result = ['status': 1, 'message': 'Runtime error, check logs']
         if (id) {
             def query = Query.findById(id)
             if (query) {
-                //Manually delete all related PropertyPath and PropertyValue, since the cascade delete does not work
-                PropertyPath.findAllByQuery(query).each { PropertyPath pp->
-                    log.debug("Deleting property path of : ${id}")
-                    PropertyValue.findAllByPropertyPath(pp).each { PropertyValue pv ->
-                        pv.delete(flush: true)
+                Query.withTransaction {
+                    //Manually delete all related PropertyPath and PropertyValue, since the cascade delete does not work
+                    PropertyPath.findAllByQuery(query).each { PropertyPath pp ->
+                        log.debug("Deleting property path of : ${id}")
+                        PropertyValue.findAllByPropertyPath(pp).each { PropertyValue pv ->
+                            pv.delete()
+                        }
+                        pp.delete()
                     }
-                    pp.delete(flush: true)
-                }
 
-                //Manually delete all related Notifications
-                Notification.findAllByQuery(query).each { Notification n ->
-                    log.debug("Deleting notification of : ${id}")
-                    n.delete(flush: true)
-                }
+                    //Manually delete all related Notifications
+                    Notification.findAllByQuery(query).each { Notification n ->
+                        log.debug("Deleting notification [${n.id}] of query: ${id} ")
+                        n.delete()
+                    }
 
-                //Manually delete all related QueryResults
-                QueryResult.findAllByQuery(query).each { QueryResult qr ->
-                    log.debug("Deleting query result of : ${id}")
-                    qr.delete(flush: true)
-                }
+                    //Manually delete all related QueryResults
+                    QueryResult.findAllByQuery(query).each { QueryResult qr ->
+                        log.debug("Deleting query result [${qr.id}] of query: ${id} ")
+                        qr.delete()
+                    }
 
-                query.delete()
+                    query.delete()
+                }
                 result['status'] = 0
                 result['message'] = "Query ${id} removed"
             } else {

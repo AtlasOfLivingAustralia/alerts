@@ -120,9 +120,10 @@
 
                   var html = '<ul class="mb-0">';
                   html += '<li>The user account <b>' + data.email + '</b></li>';
+                  html += '<li>' + data.notifications + ' active alert subscription(s)</li>';
 
                   if (data.queries && data.queries.length > 0) {
-                      html += '<li>' + data.queries.length + ' custom alert(s) that exist only for this user:<ul>';
+                      html += '<li>' + data.queries.length + ' special alert(s) that exist only for this user:<ul>';
                       data.queries.forEach(function (query) {
                           html += '<li>[' + query.id + '] ' + query.name + '</li>';
                       });

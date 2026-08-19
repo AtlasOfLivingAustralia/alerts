@@ -807,7 +807,7 @@ class WebserviceController {
                 User user
                 if (params.userid) {
                     def userId = params.userid as Long
-                    user = userService.getUserBySequeceId(userId);
+                    user = userService.getUserBySequenceId(userId);
                 } else {
                     //todo - identify why duplicate users are occasionally created
                     user = userService.getUserByEmail(params.useremail.trim())

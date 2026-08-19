@@ -17,6 +17,7 @@ import au.org.ala.web.AlaSecured
 import au.org.ala.ws.service.WebService
 import grails.converters.JSON
 import grails.gorm.transactions.Transactional
+import grails.plugin.cache.CacheEvict
 import grails.util.Environment
 import grails.util.Holders
 
@@ -30,7 +31,6 @@ class AdminController {
     def authService
     def notificationService
     def biosecurityService
-    BiosecurityCSVService biosecurityCSVService
     BiosecurityJobService biosecurityJobService
     def queryResultService
     def diffService
@@ -192,6 +192,7 @@ class AdminController {
 
         render([status       : 0,
                 email        : user.email,
+                notifications: Notification.countByUserAndEnabled(user,true),
                 queries      : userService.findQueriesRelatedToDeletedUser(user)] as JSON)
     }
 
@@ -201,6 +202,7 @@ class AdminController {
      * @param userId ALA user id
      * @return [status: 0|1, message: '..']
      */
+
     def deleteUser() {
         User user = User.findByUserId(params.userId)
         if (!user) {
@@ -214,6 +216,34 @@ class AdminController {
         }
 
         render(userService.delete(user) as JSON)
+    }
+
+    /**
+     * Add a user to the alerts database so their alerts can be managed.
+     *
+     * Users are only created in Alerts the first time they log in, so an admin may need to add
+     * someone who has never visited the site. The account must already exist in userdetails/CAS -
+     * UserService#getUserByEmailOrCreate looks it up there.
+     *
+     * @param term email address (or ALA user id) of the user to add
+     */
+    def addUser() {
+        String term = params.term?.trim()
+        if (!term) {
+            flash.errorMessage = "Please enter an email address first."
+            redirect(action: 'findUser')
+            return
+        }
+
+        User user = userService.getUserByEmailOrCreate(term)
+        if (!user) {
+            flash.errorMessage = "No account found for '${term}'. The user must be registered with ${grailsApplication.config.skin.orgNameLong ?: 'the ALA'} before their alerts can be managed."
+            redirect(action: 'findUser', params: [term: term])
+            return
+        }
+
+        flash.message = "${user.email} is now available in Alerts."
+        redirect(action: 'showUsersAlerts', params: [userId: user.userId])
     }
 
     /**
@@ -730,41 +760,6 @@ class AdminController {
         render(logs.sort { [it.succeeded ? 1 : 0, it.hasChanged ? 0 : 1] } as JSON)
     }
 
-    /**
-     * No database updated, No email sent
-     *
-     * Run a task to execute the query for a specific frequency
-     *
-     */
-    @Deprecated //Use triggerHourlyQueries instead
-    def dryRunAllQueriesForFrequency(){
-        def freq = params.frequency
-        Frequency frequency = Frequency.findByName(freq)
-        def queries = Query.executeQuery(
-                """select q from Query q
-                  inner join q.notifications n
-                  inner join n.user u
-                  where u.frequency = :frequency
-                  group by q""", [frequency: frequency])
-        int total = queries.size()
-
-        response.setContentType("text/plain")
-        def writer= response.getWriter()
-
-        queries.eachWithIndex { query, index ->
-            QueryResult queryResult = notificationService.executeQuery(query, Frequency.findByName(frequency), false, true)
-            def records = diffService.diff(queryResult)
-            def results = ["POS": "${index+1}/${total}", "status": queryResult.succeeded, "hasChanged": queryResult.hasChanged, "logs": queryResult.getLog(), "brief": queryResult.brief()]
-
-            writer.write("${results["POS"]}. ${query.id} - ${query.name} - ${frequency}\n")
-            writer.write("Status: ${results["status"]}, Changed:${results["hasChanged"]} \n")
-            writer.write("Logs: ${results["logs"]}\n")
-            writer.write("Brief: ${results["brief"]}\n")
-            writer.write(("-" * 80) + "\n")
-            writer.flush()
-            log.info("Query ${query.id} has been executed for frequency ${frequency}")
-        }
-    }
 
     /**
      * Reset the previous / current results stored in QueryResult
@@ -807,87 +802,4 @@ class AdminController {
             render([status: 1, message: "Error in sending test email: ${e.message}"] as JSON)
         }
     }
-
-//
-//    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true, redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to view that page.")
-//    def listBiosecurityAuditCSV() {
-//        def result = [:]
-//        try {
-//            result  = biosecurityCSVService.list()
-//        } catch (Exception e) {
-//            log.error("Error in listing Biosecurity CSV files: ${e.message}")
-//            result = [status: 1, message: "Error in listing Biosecurity CSV files: ${e.message}"]
-//        }
-//        render(view: 'biosecurityCSV', model: result)
-//    }
-//
-//    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true,redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to view that page.")
-//    def aggregateBiosecurityAuditCSV(String folderName) {
-//        if (!biosecurityCSVService.folderExists(folderName)) {
-//            render(status: 404, text: 'Data not found')
-//            return
-//        }
-//
-//        // Get a list of all CSV files in the folder
-//        String mergedCSVFile = biosecurityCSVService.aggregateCSVFiles(folderName)
-//        if (folderName == "/" || folderName.isEmpty()) {
-//            folderName = "biosecurity_alerts"
-//        }
-//        def saveToFile = folderName +".csv"
-//        response.contentType = 'application/octet-stream'
-//        response.setHeader('Content-Disposition', "attachment; filename=\"${saveToFile}\"")
-//        response.outputStream << new File(mergedCSVFile).bytes
-//    }
-//
-//    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true,redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to view that page.")
-//    def downloadBiosecurityAuditCSV(String filename) {
-//        String contents = biosecurityCSVService.getFile(filename)
-//        if (!contents) {
-//            render(status: 404, text: "Data not found")
-//            return
-//        }
-//        response.contentType = 'text/csv'
-//        response.setHeader("Content-disposition", "attachment; filename=\"${filename.tokenize(File.separator).last()}\"")
-//        response.outputStream.withWriter("UTF-8") { writer ->
-//            writer << contents
-//        }
-//        response.outputStream.flush()
-//    }
-//
-//    /**
-//     * params.id is the QueryResult id
-//     * @return
-//     */
-//    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
-//    def downloadLastBiosecurityResult() {
-//        // Gorm object QueryResult does not fetch Query object, so we need to fetch it manually
-//        QueryResult qs = queryResultService.get(params.id)
-//        if (qs) {
-//            File tempFile = biosecurityCSVService.createTempCSVFromQueryResult(qs)
-//            if (!tempFile.exists() || tempFile.isDirectory()) {
-//                render(status: 404, text: "File not found")
-//                return
-//            }
-//
-//            def saveToFile = biosecurityCSVService.sanitizeFileName(qs.query?.name + "-" + (qs.lastChecked?new SimpleDateFormat("yyyy-MM-dd").format(qs.lastChecked):"") + ".csv")
-//            response.contentType = 'application/octet-stream'
-//            response.setHeader('Content-Disposition', "attachment; filename=\"${saveToFile}\"")
-//            response.outputStream << tempFile.bytes
-//        } else {
-//            render(status: 200, text: "QueryResult not found")
-//        }
-//    }
-//
-//    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
-//    def deleteBiosecurityAuditCSV(String filename) {
-//        Map message = biosecurityCSVService.deleteFile(filename)
-//        render(status: 200, contentType: 'application/json', text: message as JSON)
-//    }
-//
-//    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
-//    def moveLocalFilesToS3() {
-//        Boolean dryRun = params.boolean('dryRun', true)
-//        Map message = biosecurityCSVService.moveLocalFilesToS3(dryRun)
-//        render(status: 200, contentType: 'application/json', text: message as JSON)
-//    }
 }

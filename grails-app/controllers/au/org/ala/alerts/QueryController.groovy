@@ -72,7 +72,11 @@ class QueryController {
         // page size: 20 by default, 100 max. g:paginate only renders links when total > max
         params.max = Math.min(params.max ? params.int('max') : 100, 1000)
         params.offset = params.int('offset') ?: 0
-        [queryInstanceList: Query.list(params), queryInstanceTotal: Query.count()]
+        def queryInstanceList = Query.createCriteria().list(max: params.max, offset: params.offset) {
+            order('custom', 'asc')
+            order('emailTemplate', 'asc')
+        }
+        [queryInstanceList: queryInstanceList, queryInstanceTotal: Query.count()]
     }
 
     @Transactional

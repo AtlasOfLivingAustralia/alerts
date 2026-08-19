@@ -13,9 +13,9 @@
 
 package au.org.ala.alerts
 import au.org.ala.userdetails.UserDetailsFromIdListResponse
-import au.org.ala.web.AuthService
 import au.org.ala.web.UserDetails
 import grails.converters.JSON
+import grails.plugin.cache.CacheEvict
 import grails.plugin.cache.Cacheable
 import grails.util.Holders
 import grails.util.Environment
@@ -31,9 +31,12 @@ class UserService {
     /**
      * Sync User table with UserDetails app via webservice
      *
+     * Evicts 'userSearchCache' because email addresses (what the autocomplete searches on) change here.
+     *
      * @return total number of updates
      */
 
+    @CacheEvict(value = "userSearchCache", allEntries = true)
     int updateUserEmails() {
         final int pageSize = grailsApplication.config.getProperty('alerts.user-sync.batch-size', Integer, 1000)
         def toUpdate = []
@@ -177,6 +180,8 @@ class UserService {
     }
 
     // get user via email, if not found in database create one
+    // evicts the search cache: a user added here should be findable by the admin autocomplete straight away
+    @CacheEvict(value = "userSearchCache", allEntries = true)
     User getUserByEmailOrCreate(String userEmail) {
         if (!userEmail) {
             return null
@@ -217,7 +222,7 @@ class UserService {
      * @param id
      * @return
      */
-    User getUserBySequeceId(Long id) {
+    User getUserBySequenceId(Long id) {
         User.get(id)
     }
 
@@ -309,6 +314,7 @@ class UserService {
      * @param user
      * @return [status: 0|1, message: '..', deletedQueries: [..], deletedNotifications: n]
      */
+    @CacheEvict(value = "userSearchCache", allEntries = true)
     Map delete(User user) {
         if (!user) {
             return [status: 1, message: 'User not found.']
@@ -320,18 +326,20 @@ class UserService {
 
         try {
             User.withTransaction {
-                // remove this user's subscriptions first, so the queries below are no longer referenced
+                // Notification.user is a plain many-to-one and User does not declare a delete cascade,
+                // so the subscriptions have to go first - otherwise deleting the user trips the
+                // notification.user_id foreign key.
                 Notification.findAllByUser(user).each { Notification notification ->
                     notification.delete()
                     deletedNotifications++
                 }
+                // detach them from the in-memory collection too, so Hibernate does not try to re-save
+                user.notifications?.clear()
 
-                // then the queries that only existed for this user (also clears their results / property paths)
                 queriesToDelete.each { Map query ->
                     queryService.wipe(query.id)
                 }
-
-                user.delete()
+                user.delete(flush: true)
             }
         } catch (Exception e) {
             log.error("Failed to delete user ${email}", e)
