@@ -65,7 +65,9 @@ phases:
                             .
 #     Check if liquibase image already exists in ECR, if not build and push it, otherwise skip the build and push.
       - |
-        set -euo pipefail
+        : "${BASH_VERSION:?Bash is required}"
+        (
+          set -euo pipefail
         LIQUIBASE_IMAGE_HASH=$(
           {
             echo "multiarch-v1"
@@ -112,6 +114,7 @@ phases:
           exit "$artifact_status"
         fi
         echo "Liquibase build command completed successfully."
+        )
 
 artifacts:
   files:
