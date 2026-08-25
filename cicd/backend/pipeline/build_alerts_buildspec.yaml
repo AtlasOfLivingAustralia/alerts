@@ -100,7 +100,18 @@ phases:
           echo "Unable to determine whether the Liquibase image exists."
           exit 1
         fi
+        set +e
         printf '%s\n' "$LIQUIBASE_IMAGE_TAG" > liquibase_image_tag.txt
+        echo '***'
+        cat liquibase_image_tag.txt
+        echo '***'
+        artifact_status=$?
+        set -e
+        echo "Liquibase tag artifact write exit status: $artifact_status"
+        if (( artifact_status != 0 )); then
+          exit "$artifact_status"
+        fi
+        echo "Liquibase build command completed successfully."
 
 artifacts:
   files:
