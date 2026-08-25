@@ -88,6 +88,10 @@ phases:
             --tag "$ECR_REPO:$LIQUIBASE_IMAGE_TAG" \
             --push \
             .
+          buildx_status=$?
+          set -e
+          echo "Liquibase Buildx exit status: $buildx_status"
+          exit "$buildx_status"
         else
           echo "$IMAGE_LOOKUP"
           echo "Unable to determine whether the Liquibase image exists."
