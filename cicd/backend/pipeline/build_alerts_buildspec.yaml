@@ -80,6 +80,7 @@ phases:
           --image-ids imageTag="$LIQUIBASE_IMAGE_TAG" 2>&1); then
           echo "Liquibase image already exists. Skipping build and push."
         elif [[ "$IMAGE_LOOKUP" == *ImageNotFoundException* ]]; then
+          set +e
           docker buildx build \
             --platform linux/amd64,linux/arm64 \
             --progress=plain \
@@ -91,7 +92,9 @@ phases:
           buildx_status=$?
           set -e
           echo "Liquibase Buildx exit status: $buildx_status"
-          exit "$buildx_status"
+          if (( buildx_status != 0 )); then
+            exit "$buildx_status"
+          fi
         else
           echo "$IMAGE_LOOKUP"
           echo "Unable to determine whether the Liquibase image exists."
