@@ -82,6 +82,7 @@ phases:
         elif [[ "$IMAGE_LOOKUP" == *ImageNotFoundException* ]]; then
           docker buildx build \
             --platform linux/amd64,linux/arm64 \
+            --progress=plain \
             --pull \
             --file docker/liquibase/Dockerfile \
             --tag "$ECR_REPO:$LIQUIBASE_IMAGE_TAG" \
