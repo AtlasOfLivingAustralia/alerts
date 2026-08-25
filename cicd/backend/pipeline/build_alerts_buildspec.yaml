@@ -64,6 +64,8 @@ phases:
                             --push \
                             .
 #     Check if liquibase image already exists in ECR, if not build and push it, otherwise skip the build and push.
+#     liquibase is run inside a subshell because a return code was interfering with the buildspec exit code,
+#     causing the build to fail even when liquibase was built and pushed successfully.
       - |
         : "${BASH_VERSION:?Bash is required}"
         (
@@ -102,17 +104,8 @@ phases:
           echo "Unable to determine whether the Liquibase image exists."
           exit 1
         fi
-        set +e
+
         printf '%s\n' "$LIQUIBASE_IMAGE_TAG" > liquibase_image_tag.txt
-        echo '***'
-        cat liquibase_image_tag.txt
-        echo '***'
-        artifact_status=$?
-        set -e
-        echo "Liquibase tag artifact write exit status: $artifact_status"
-        if (( artifact_status != 0 )); then
-          exit "$artifact_status"
-        fi
         echo "Liquibase build command completed successfully."
         )
 
