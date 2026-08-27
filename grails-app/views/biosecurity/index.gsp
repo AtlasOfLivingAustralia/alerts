@@ -8,7 +8,6 @@
     <meta name="breadcrumb" content="BioSecurity alerts"/>
     <meta name="breadcrumbParent" content="${request.contextPath}/notification/myAlerts, My Alerts"/>
     <asset:stylesheet href="alerts.css"/>
-    <asset:javascript src="petite-vue.es.js" type="module"/>
     <style>
         .pagination {
             list-style: none !important;
@@ -16,6 +15,9 @@
         }
         .pagination li {
             display: inline-block !important;
+        }
+        [v-cloak] {
+            display: none;
         }
     </style>
     <title>Manage BioSecurity alerts</title>
@@ -25,16 +27,16 @@
     <g:render template="/biosecurity/schedule" model="[jobStatus: jobStatus ]"/>
 </div>
 <div class="container mt-4">
-    <div v-scope="AlertList()" @vue:mounted="loadAlerts">
+    <div class="alerts-panel" v-scope="AlertList()"  @vue:mounted="loadAlerts">
         <!-- Error message -->
-        <div v-if="failed && !loading" class="alert alert-danger" style="display: none">
+        <div v-if="failed && !loading" class="alert alert-danger" v-cloak>
             Failed to load alerts: {{ failedReason }}.
             <button class="btn btn-sm btn-outline-danger ms-2" @click="loadAlerts">Try again</button>
         </div>
         <!-- Loading -->
         <div v-if="loading && alerts.length === 0" class="text-muted">Loading alerts...</div>
         <!-- No alerts -->
-        <div v-if="!loading && alerts.length === 0 && !failed" class="alert alert-info " style="display: none">
+        <div v-if="!loading && alerts.length === 0 && !failed" class="alert alert-info " >
             You don't have any alerts.
         </div>
 
@@ -94,7 +96,7 @@
                     <div class="col-md-4">
                         <div>
                             <span v-if="editingId !== query.id" >
-                                <a :href="'${createLink(controller: 'query', action: 'show')}/' + query.id"  target="_blank" class="btn btn-link p-0">{{ query.name }}</a>
+                                <a :href="'${createLink(controller: 'query', action: 'show')}/' + query.id"  target="_blank" class="btn btn-link text-wrap text-start p-0">{{ query.name }}</a>
                                 <span class="badge-outline-secondary"><a :href="'${grailsApplication.config.lists.baseURL}' + '/speciesListItem/list/' + query.listId" target="_blank" >{{query.listId}}</a></span>
                                 <button class="btn btn-link btn-sm p-0 ms-1" title="Edit title" @click="editTitle(query.id)">
                                     <i class="fa-solid fa-pencil"></i>
@@ -129,11 +131,7 @@
                         <button v-if="query.subscribers.length === 0" class="btn btn-primary" @click="deleteSubscription(query.id)">Delete this subscription</button>
 
                         <div class="mt-2">
-                            <!-- Bound explicitly rather than with v-model so the value is read from and
-                                 written back to THIS card's query object, not a shared one. -->
-                            <input class="form-control"
-                                   :value="query.newSubscribers"
-                                   @input="query.newSubscribers = $event.target.value"
+                            <input class="form-control"  v-model="query.newSubscribers"
                                    placeholder="You can input multiple user emails by separating them with ';'"/>
                             <button type="button" class="btn btn-primary mt-2"  :disabled="!query.newSubscribers || query.newSubscribers.trim().length === 0"
                                     @click="addSubscribers(query.id, query.newSubscribers)">Add</button>
@@ -159,7 +157,7 @@
             </div>
         </div>
         <!-- Pagination -->
-        <div v-if="totalPages > 1 & !isSearching" class="mt-4 d-flex col-md-12 align-items-center">
+        <div v-if="totalPages > 1 && !isSearching" class="mt-4 d-flex col-md-12 align-items-center">
             <nav>
                 <ul class="pagination mb-0">
                     <li class="page-item" :class="{ disabled: currentPage === 0 }">
@@ -358,10 +356,6 @@
                 }
             },
 
-            async getSubscribers(queryId) {
-
-            },
-
             // =========================
             // Delete
             // =========================
@@ -414,7 +408,7 @@
                     window.alert('Title cannot be empty');
                     return;
                 }
-                try {${request.contextPath}
+                try {
                     const response = await fetch(CONTEXT_PATH + '/query/updateTitle?id=' + queryId
                         + '&name=' + encodeURIComponent(this.editingTitle.trim()), {
                         method: 'POST'
@@ -435,7 +429,7 @@
                         throw new Error(result.message || 'Failed to update title');
                     }
                 } catch (e) {
-                    console.failed(e);
+                    console.error(e);
                     window.alert('Failed! ' + e.message);
                 }
             },
@@ -487,9 +481,12 @@
                             const resp = await fetch(CONTEXT_PATH + "/biosecurity/subscription/" + queryId+".json");
                             const respJson = await resp.json();
                             query = respJson.alert;
-
                             window.alert("The alerts has been executed successfully.");
+                        } else {
+                            window.alert("Failed to trigger alert: " + result.message);
                         }
+                    } else {
+                        window.alert("Failed to trigger alert: " + response.status + ' ' + response.statusText);
                     }
                 }
             },
@@ -509,7 +506,7 @@
                         const result = await response.json();
                         if (result.success) {
                             window.alert("Notification triggered successfully.");
-                            var query = this.alerts.find(a => a.id === queryId);
+                            let query = this.alerts.find(a => a.id === queryId);
                             query.lastChecked = utcDate;
                             query.logs = result.logs.join("\n");
                         } else {

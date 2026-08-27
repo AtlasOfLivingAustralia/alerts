@@ -72,7 +72,6 @@
 
         <g:form controller="schedule" action="updateWeeklySchedule" namespace="biosecurity" method="POST" class="d-flex flex-wrap align-items-center gap-3 ms-3">
             <input type="hidden" name="localTimeZone" id="localTimeZone" />
-            <input type="hidden" name="localTimeupdateWeeklyScheduleZone" id="localTimeZone" />
             <div class="mt-10">
                 <label for="weekday">Run on</label>
                 <select id="weekday" name="weekday" class="form-control">

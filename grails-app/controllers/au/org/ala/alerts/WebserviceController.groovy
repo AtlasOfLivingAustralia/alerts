@@ -29,8 +29,6 @@ import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
-import org.apache.commons.lang3.time.DateUtils
-import java.text.SimpleDateFormat
 
 import static io.swagger.v3.oas.annotations.enums.ParameterIn.PATH
 import static io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY
@@ -42,8 +40,6 @@ class WebserviceController {
     def queryService
     def userService
     def notificationService
-    def biosecurityService
-    def messageSource
     def authService
     def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
     def CUSTOM_ALERTS_URL = grailsApplication.config.grails.serverURL+"/notification/myAlerts#custom-alerts"
@@ -401,8 +397,8 @@ class WebserviceController {
     def deleteAllAlertsForUser() {
         String resolvedUserId = resolveUserId(params.userId)
         if (!resolvedUserId) {
-            response.status = HttpStatus.BAD_REQUEST.code
-            response.sendError(HttpStatus.BAD_REQUEST.code)
+            response.status = HttpStatus.BAD_REQUEST.value()
+            response.sendError(HttpStatus.BAD_REQUEST.value())
         } else {
             def user = userService.getUserById(resolvedUserId)
 
@@ -416,8 +412,8 @@ class WebserviceController {
 
                 render([success: true] as JSON)
             } else {
-                response.status = HttpStatus.NOT_FOUND.code
-                response.sendError(HttpStatus.NOT_FOUND.code, "Unable to find user with userId ${params.userId}")
+                response.status = HttpStatus.NOT_FOUND.value()
+                response.sendError(HttpStatus.NOT_FOUND.value(), "Unable to find user with userId ${params.userId}")
             }
         }
     }
@@ -463,13 +459,20 @@ class WebserviceController {
             ],
             security = [@SecurityRequirement(name = 'openIdConnect')]
     )
+    /**
+     * Creates a user if it doesn't exist and returns the list of enabled queries names for the user.
+     * If the user already exists, it returns the list of enabled queries names for the user
+     * 
+     * It is used by the biocache-service to create a user and get the list of enabled queries names for the user.
+     *
+     */
     @RequireApiKey
     @Path("/api/alerts/user/createAlerts")
     def createUserAlerts() {
         def resolvedUserId = resolveUserId(params.userId)
         if (!resolvedUserId) {
-            response.status = HttpStatus.BAD_REQUEST.code
-            response.sendError(HttpStatus.BAD_REQUEST.code)
+            response.status = HttpStatus.BAD_REQUEST.value()
+            response.sendError(HttpStatus.BAD_REQUEST.value())
         } else {
             User user = userService.getUserById(resolvedUserId)
             if (!user) {
@@ -484,9 +487,9 @@ class WebserviceController {
                     userDetails = ["userId": currentUser.userId, "email": currentUser.email, "userDisplayName": currentUser.firstName + " " + currentUser.lastName]
                 }
                 user = userService.getUser(userDetails)
-                response.status = HttpStatus.CREATED.code
+                response.status = HttpStatus.CREATED.value()
             } else {
-                response.status = HttpStatus.OK.code
+                response.status = HttpStatus.OK.value()
             }
 
             def notificationInstanceList = Notification.findAllByUser(user)
@@ -558,7 +561,7 @@ class WebserviceController {
             ],
             security = [@SecurityRequirement(name = 'openIdConnect')]
     )
-    @RequireApiKey
+    //@RequireApiKey
     @Path("/api/alerts/user/{userId}")
     def getUserAlerts() {
         String resolvedUserId = resolveUserId(params.userId)
@@ -616,14 +619,14 @@ class WebserviceController {
 
         String resolvedUserId = resolveUserId(params.userId)
         if (!resolvedUserId) {
-            response.status = HttpStatus.BAD_REQUEST.code
-            response.sendError(HttpStatus.BAD_REQUEST.code)
+            response.status = HttpStatus.BAD_REQUEST.value()
+            response.sendError(HttpStatus.BAD_REQUEST.value())
             return
         }
 
         User user = userService.getUserById(resolvedUserId)
         if (user == null) {
-            response.status = HttpStatus.NOT_FOUND.code
+            response.status = HttpStatus.NOT_FOUND.value()
             render ([error : "can't find a user with userId " + params.userId] as JSON)
 
         } else {
@@ -675,14 +678,14 @@ class WebserviceController {
 
         String resolvedUserId = resolveUserId(params.userId)
         if (!resolvedUserId) {
-            response.status = HttpStatus.BAD_REQUEST.code
-            response.sendError(HttpStatus.BAD_REQUEST.code)
+            response.status = HttpStatus.BAD_REQUEST.value()
+            response.sendError(HttpStatus.BAD_REQUEST.value())
             return
         }
 
         User user = userService.getUserById(resolvedUserId)
         if (user == null) {
-            response.status = HttpStatus.NOT_FOUND.code
+            response.status = HttpStatus.NOT_FOUND.value()
             render ([error : "can't find a user with userId " + resolvedUserId] as JSON)
         } else {
             try {

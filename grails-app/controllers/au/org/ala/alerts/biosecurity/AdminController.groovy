@@ -81,7 +81,7 @@ class AdminController {
         if (query) {
             render queryToAlertMap(query) as JSON
         } else {
-            render(status: HttpStatus.NOT_FOUND, text: "Query not found")
+            render(status: HttpStatus.NOT_FOUND.value(), text: "Query not found")
         }
     }
 
@@ -325,7 +325,7 @@ class AdminController {
                     invalidEmails.add(entry.key)
                 } else {
                     if (params.queryId) {
-                        updatedQuery = queryService.createQueryForUserIfNotExists(Query.get(params.queryId), entry.value as User, true)
+                        updatedQuery = queryService.addUserToQuery(Query.get(params.queryId), entry.value as User, true)
                     } else {
                         updatedQuery = queryService.subscribeBioSecurity(entry.value as User, params.listId.trim())
                     }

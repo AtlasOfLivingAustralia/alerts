@@ -52,7 +52,7 @@
                     alert(response.message);
                     location.reload();
                 },
-                failed: function(xhr, status, error) {
+                error: function(xhr, status, error) {
                     alert("Error: " + xhr.responseText);
                 }
             });
@@ -86,7 +86,7 @@
                         alert("Error: " + (response.failed || "Unknown error"));
                     }
                 },
-                failed: function(xhr) {
+                error: function(xhr) {
                     setYearButtonsDisabled(false, '');
                     alert("Error: " + xhr.responseText);
                 }

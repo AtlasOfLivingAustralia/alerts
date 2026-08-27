@@ -104,11 +104,11 @@
                         success: function (data) {
                             asyncResults(data);
                         },
-                        failed: function (xhr, status, error) {
+                        error: function (xhr, status, error) {
                             if (xhr.status === 401 || xhr.status === 403) {
-                                console.failed('Not authorised to search users - your session may have expired.');
+                                console.error('Not authorised to search users - your session may have expired.');
                             } else {
-                                console.failed('Failed to search users:', error);
+                                console.error('Failed to search users:', error);
                             }
                             asyncResults([]);
                         }

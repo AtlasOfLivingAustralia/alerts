@@ -170,7 +170,7 @@ class QueryController {
 
         try {
             if (queryInstance.notifications?.size() == 0) {
-                queryService.wipe(queryInstance)
+                queryService.wipe(queryInstance.id)
                 flash.message = message(code: 'default.deleted.message', args: [message(code: 'query.label', default: 'Query'), params.id])
                 redirect(action: "list")
             } else {
