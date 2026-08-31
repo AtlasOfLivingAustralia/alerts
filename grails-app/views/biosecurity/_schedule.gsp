@@ -30,7 +30,7 @@
 </div>
 <p></p>
 
-<div class="card card-body" id="rescheduleBiosecurity" style="display:none;">
+<div class="card card-body" id="rescheduleBiosecurity" x-data="scheduleInfo()" style="display:none;">
     <div class="text-center"><h3>Alerts schedule manager</h3></div>
     <div class="row mt-10" >
         <div class="col-sm-12"><h4>Pause or resume now</h4></div>
@@ -47,20 +47,31 @@
         </div>
     </div>
     <div class="mt-20"></div>
-    <g:form name="pauseResumeForm" controller="admin" action="pauseResumeBioSecurityAlerts" method="post" >
+    <g:form name="pauseResumeForm" controller="schedule" action="pauseResumeAlerts"  namespace="biosecurity" method="post" >
         <div><h4>Schedule a pause</h4></div>
         <div class="row" >
-            <div class="col-sm-12" >Set a date range to pause alerts. Dates start at midnight AEDT/AEST. You can save one scheduled pause at a time.</div>
-            <div class="col-sm-12 mt-20">Pause from <input type="date" name="pauseDate" value="${today}" />
+            <div class="col-sm-12" >Set a date range to pause alerts. Dates start at midnight in your local timezone (<span class="js-local-timezone-label"></span>). You can save one scheduled pause at a time.</div>
+            <input type="hidden" name="localTimeZone" class="js-local-timezone" />
+            <div class="col-sm-12 mt-20">
+                Pause from <input type="date" name="pauseDate" value="${today}" />
                 Resume on  <input type="date" name="resumeDate" value="${today}" />
                 &nbsp;&nbsp;
-                <button type="button" id="scheduleBtn" class="btn btn-primary">Save schedule</button>
+                <button type="submit"  class="btn btn-primary">Save schedule</button>
                 &nbsp;
                 <g:link controller="schedule" action="cancelScheduledPauseResumeJob" namespace="biosecurity" class="btn btn-outline-primary" >
                     Cancel scheduled pause
                 </g:link>
             </div>
-            <div class="col-sm-12 mt-20" name="pauseWindowInfo" ></div>
+            <div class="col-sm-12 mt-20 " >
+                <!-- Both a pause and a resume are scheduled: the normal, complete window -->
+                <div x-show="pauseWindowInfo.pause.length>0 && pauseWindowInfo.resume.length>0" class="alert alert-info align-items-start mb-0" role="alert" x-cloak>
+                    <i class="fa fa-clock-o me-2 mt-1"></i>
+                    <span>
+                        Alerts are scheduled to pause on <strong x-text="formatLocalDateTime(pauseWindowInfo.pause)"></strong>
+                        and resume on <strong x-text="formatLocalDateTime(pauseWindowInfo.resume)"></strong>.
+                    </span>
+                </div>
+            </div>
         </div>
     </g:form>
 
@@ -71,7 +82,7 @@
         </div>
 
         <g:form controller="schedule" action="updateWeeklySchedule" namespace="biosecurity" method="POST" class="d-flex flex-wrap align-items-center gap-3 ms-3">
-            <input type="hidden" name="localTimeZone" id="localTimeZone" />
+            <input type="hidden" name="localTimeZone" class="js-local-timezone" />
             <div class="mt-10">
                 <label for="weekday">Run on</label>
                 <select id="weekday" name="weekday" class="form-control">
@@ -104,6 +115,12 @@
 
 <script type="text/javascript">
     $(document).ready(function() {
+        // The server resolves the bare "yyyy-MM-dd" pause/resume dates to midnight in this zone,
+        // so it must be sent with every schedule form. Falls back to UTC on the server if blank.
+        var localTimeZone = (Intl.DateTimeFormat().resolvedOptions().timeZone) || 'UTC';
+        $('.js-local-timezone').val(localTimeZone);
+        $('.js-local-timezone-label').text(localTimeZone);
+
         $('#showScheduleBtn').click(function() {
             $('#rescheduleBiosecurity').toggle();
             $(this).toggleClass('active');
@@ -114,4 +131,45 @@
             }
         });
     });
+
+    function scheduleInfo() {
+        return {
+            nextRunDate: '',
+            planedPauseDate:'',
+            planedResumeDate:'',
+            pauseWindowInfo: {pause: '', resume: ''},
+            init() {
+                this.fetchPauseWindowInfo();
+            },
+            fetchPauseWindowInfo() {
+                $.ajax({
+                    url: "${createLink(namespace: 'biosecurity', controller: 'schedule', action: 'getAlertsPauseWindow')}",
+                    type: 'GET',
+                    success: (data) => {
+                        this.pauseWindowInfo = {
+                            pause: data.pause || '',
+                            resume: data.resume || ''
+                        };
+                    }
+                })
+            },
+
+            plannedPauseResumeDate() {
+                const today = new Date().toISOString().split('T')[0];
+                return {
+                    pauseDate: '',
+                    resumeDate: '',
+
+                    init() {
+                        this.pauseDate = this.pauseWindowInfo.pause || today;
+                        this.resumeDate = this.pauseWindowInfo.resume || today;
+                    }
+                }
+            },
+            formatLocalDateTime(dateTime) {
+                if (!dateTime) return '';
+                return new Date(dateTime).toLocaleString();
+            }
+        }
+    }
 </script>

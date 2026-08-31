@@ -174,10 +174,10 @@ class BiosecurityJobService {
         return [
                 pause : pauseTrigger?.startTime?
                         ZonedDateTime.ofInstant(pauseTrigger.startTime.toInstant(), zone).format(formatter) :
-                        null,
+                        "",
                 resume: resumeTrigger?.startTime ?
                         ZonedDateTime.ofInstant(resumeTrigger.startTime.toInstant(), zone).format(formatter) :
-                        null
+                        ""
         ]
     }
 

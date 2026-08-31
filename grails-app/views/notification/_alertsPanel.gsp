@@ -239,7 +239,7 @@
         $("#userFrequency").change(function () {
             $.get(changeFrequencyUrl + '?userId=' + encodeURIComponent(targetUserId) + '&frequency=' + $('#userFrequency').val())
                 .fail(function () {
-                    alert(<g:message code="my.alerts.problem.retry" />);
+                    alert('<g:message code="my.alerts.problem.retry" />');
                 });
         });
 

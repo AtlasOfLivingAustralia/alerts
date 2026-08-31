@@ -32,7 +32,7 @@ class AdminController {
 
     /**
      * Renders the biosecurity admin page, which shows the current job status and a list of subscriptions.
-     * Subscriptions are paginated and rendered via Petite Vue.js
+     * Subscriptions are paginated and rendered via Alpine Vue.js (a JavaScript framework)
      * @return
      */
     @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true, redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to view that page.")
@@ -316,7 +316,7 @@ class AdminController {
                 }
             }
 
-            String[] emails = ((String)params.emails).split(';')
+            String[] emails = ((String)params.emails).split(/[;,\s]+/)
             Map usermap = emails?.collectEntries{[it.trim(), userService.getUserByEmailOrCreate(it.trim())]}
             def invalidEmails = []
             Query updatedQuery = null
@@ -332,14 +332,16 @@ class AdminController {
                 }
             }
             if (invalidEmails) {
-                flash.message = messageSource.getMessage("biosecurity.view.error.invalidemails", [invalidEmails.join(", ")] as Object[], "Users with emails: {0} are not found in the system.", siteLocale)
+                String message = messageSource.getMessage("biosecurity.view.error.invalidemails", [invalidEmails.join(", ")] as Object[], "Users with emails: {0} are not found or invalid in the system.", siteLocale)
+                log.warn(message)
             }
             if (updatedQuery) {
                 def alert = queryToAlertMap(updatedQuery)
-                render([success: true, message: flash.message, alert: alert] as JSON)
+                render([success: true, message: flash.message, alert: alert, invalidEmails: invalidEmails] as JSON)
             } else {
-                flash.message = messageSource.getMessage("biosecurity.view.error.subscriptionfailed", null, "Subscription failed.", siteLocale)
-                render([success: false, message: flash.message] as JSON)
+                String message = messageSource.getMessage("biosecurity.view.error.subscriptionfailed", null, "Subscription failed.", siteLocale)
+                log.error(message)
+                render([success: false, message: message] as JSON)
             }
         }
     }

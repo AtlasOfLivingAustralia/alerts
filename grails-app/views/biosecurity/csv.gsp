@@ -111,7 +111,7 @@
                         alert("Error: " + (response.failed || "Unknown error"));
                     }
                 },
-                failed: function(xhr) {
+                error: function(xhr) {
                     setYearButtonsDisabled(false, '');
                     alert("Error: " + xhr.responseText);
                 }
@@ -136,7 +136,7 @@
                         alert(response.message || "Unknown error");
                     }
                 },
-                failed: function(xhr) {
+                error: function(xhr) {
                     setYearButtonsDisabled(false, '');
                     alert("Error: " + xhr.responseText);
                 }

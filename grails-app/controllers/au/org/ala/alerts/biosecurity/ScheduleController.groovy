@@ -19,12 +19,15 @@ import au.org.ala.web.AlaSecured
 import grails.converters.JSON
 
 import java.time.DayOfWeek
-import java.time.Instant
+import java.time.DateTimeException
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.LocalTime
 import java.time.ZoneOffset
+import java.time.format.DateTimeParseException
 
 @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true, redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to schedule Biosecurity.")
 class ScheduleController {
@@ -89,27 +92,70 @@ class ScheduleController {
     /**
      * Schedules a pause and resume window for the Biosecurity job.
      *
-     * @param pauseDate compulsory, ISO UTC Format
-     * @param resumeDate compulsory, ISO UTC Format
+     * @param pauseDate compulsory, a local date ("yyyy-MM-dd") or a full ISO-8601 instant
+     * @param resumeDate compulsory, a local date ("yyyy-MM-dd") or a full ISO-8601 instant
+     * @param localTimeZone optional IANA zone id (e.g. "Australia/Sydney"), defaults to UTC.
+     *                      Plain dates are resolved to start-of-day in this zone.
      * @return JSON containing pause and resume dates
      */
     @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
     def pauseResumeAlerts() {
-        Date pauseDate  = params.pauseDate
-                ? Date.from(Instant.parse(params.pauseDate))
-                : null
 
-        Date resumeDate = params.resumeDate
-                ? Date.from(Instant.parse(params.resumeDate))
-                : null
+        ZoneId clientZone
+        try {
+            clientZone = params.localTimeZone ? ZoneId.of(params.localTimeZone as String) : ZoneOffset.UTC
+        } catch (DateTimeException ignored) {
+            render([error: "Invalid timezone: ${params.localTimeZone}"] as JSON)
+            return
+        }
+
+        Date pauseDate
+        Date resumeDate
+        try {
+            pauseDate = toDate(params.pauseDate as String, clientZone)
+            resumeDate = toDate(params.resumeDate as String, clientZone)
+        } catch (DateTimeParseException e) {
+            render([error: "Invalid dates: ${e.message}"] as JSON)
+            return
+        }
+
         if (pauseDate && resumeDate) {
             biosecurityJobService.pauseResumeAlerts(pauseDate, resumeDate)
-            def window = biosecurityJobService.getPauseWindow()
-
-            render(window as JSON)
+            // Future enhancement: return the scheduled pause/resume window to the UI so it can be displayed immediately.
+            // def window = biosecurityJobService.getPauseWindow()
+            // render(window as JSON)
+            redirect(namespace: "biosecurity", controller: "admin", action: "index")
         } else {
             render([error: "Invalid dates"] as JSON)
         }
+    }
+
+    /**
+     * Converts a date supplied by the UI into an absolute point in time.
+     *
+     * A bare local date ("yyyy-MM-dd") is resolved to midnight in {@code zone}, so the window
+     * starts/ends when the user expects it to in their own timezone. A value that already carries
+     * an offset (e.g. "2026-08-31T00:00:00Z") is used as-is.
+     *
+     * @param value the raw request parameter, may be null/blank
+     * @param zone the client's timezone, used only for bare local dates
+     * @return the resolved Date, or null when the value is blank
+     */
+    private static Date toDate(String value, ZoneId zone) {
+        if (!value?.trim()) {
+            return null
+        }
+        String trimmed = value.trim()
+        // Bare local date, e.g. "2026-08-31" -> midnight in the client's zone.
+        if (trimmed ==~ /\d{4}-\d{2}-\d{2}/) {
+            return Date.from(LocalDate.parse(trimmed).atStartOfDay(zone).toInstant())
+        }
+        // Local date-time without a zone, e.g. "2026-08-31T09:30" -> that wall time in the client's zone.
+        if (trimmed ==~ /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?/) {
+            return Date.from(LocalDateTime.parse(trimmed).atZone(zone).toInstant())
+        }
+        // Already carries an offset/zone, e.g. "2026-08-31T00:00:00Z" or "...+10:00".
+        return Date.from(OffsetDateTime.parse(trimmed).toInstant())
     }
 
     /**
