@@ -7,7 +7,7 @@
     <meta name="breadcrumb" content="CSV"/>
     <meta name="breadcrumbParent" content="${request.contextPath}/admin,Alerts admin"/>
     <meta name="breadcrumb" content="CSV"/>
-    <meta name="breadcrumbParent" content="${request.contextPath}/admin/biosecurity,BioSecurity"/>
+    <meta name="breadcrumbParent" content="${request.contextPath}/biosecurity,BioSecurity"/>
     <style>
     .folder {
         cursor: pointer;
@@ -83,7 +83,7 @@
                         alert("Archived " + response.archivedCount + " file(s) for year " + year + ".");
                         location.reload();
                     } else {
-                        alert("Error: " + (response.error || "Unknown error"));
+                        alert("Error: " + (response.failed || "Unknown error"));
                     }
                 },
                 error: function(xhr) {
@@ -108,7 +108,7 @@
                         alert("Unarchived " + response.unarchivedCount + " file(s) for year " + year + ".");
                         location.reload();
                     } else {
-                        alert("Error: " + (response.error || "Unknown error"));
+                        alert("Error: " + (response.failed || "Unknown error"));
                     }
                 },
                 error: function(xhr) {

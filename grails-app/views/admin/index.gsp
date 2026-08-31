@@ -1,4 +1,4 @@
-<html>
+<html xmlns="http://www.w3.org/1999/html">
 <head>
     <title>Notification service | ${grailsApplication.config.skin.orgNameLong}</title>
     <meta name="layout" content="${grailsApplication.config.skin.layout}"/>
@@ -28,24 +28,6 @@
     <div class="two-col-masonry">
         <div class="box">
             <div class="shadow card card-body ">
-                <div class="fw-bold fs-5"><i class="fa-solid fa-user-group text-primary"></i> Users Management</div>
-                <div>
-                    <small class="text-muted ps-4">Manage user accounts and subscriptions</small>
-                </div>
-
-                <div class="mt-3">
-                <g:link controller="admin" action="updateUserEmails">Update user emails with CAS</g:link>
-                <small class="text-muted ms-2"> - synchronise alerts user database with users from CAS.</small>
-                </div>
-                <div>
-                <a href="${request.contextPath}/admin/user">Manage alerts for users (find user)</a>
-                <small class="text-muted ms-2"> - find user(s) and manage their subscriptions.</small>
-                </div>
-              </div>
-        </div>
-
-        <div class="box">
-            <div class="shadow card card-body ">
                 <div class="fw-bold fs-5"><i class="fa-regular fa-calendar-days text-primary"></i> Manage Scheduling</div>
                 <div>
                     <small class="text-muted ps-4">Control when alerts are sent</small>
@@ -58,23 +40,32 @@
 
         <div class="box">
             <div class="shadow card card-body ">
-                <div class="fw-bold fs-5"><i class="fa-regular fa-bell text-primary"></i> Manage Alerts</div>
+                <div class="fw-bold fs-5"><i class="fa fa-id-card text-primary"></i> Alerts Management</div>
                 <div>
-                    <small class="text-muted ps-4">View and test all alerts</small>
+                    <small class="text-muted ps-4">Manage user accounts and subscriptions</small>
                 </div>
                 <div class="mt-3">
-                    <div><g:link controller="notification" action="myAlerts">View my alerts</g:link> - my subscriptions.</div>
-                    <div><g:link controller="query" action="list">View all alerts</g:link>  - list all available custom and default alerts.</div>
-                    <div><g:link controller="admin" action="notificationReport">
-                        View alerts with users</g:link> - view the user subscriptions per alert.</div>
+                    <a href="${request.contextPath}/admin/user">Manage alerts for users ( email required )</a>
+                    <small class="text-muted ms-2"> - find user(s) and manage their subscriptions.</small>
                 </div>
+
+                <div class="mt-3">
+                    <g:link controller="query" action="list" params="[max: 50]">List queries</g:link>
+                    <small class="text-muted ms-2"> - browse all queries, with basic management functions.</small>
+                </div>
+
             </div>
         </div>
 
         <div class="box">
             <div class="shadow card card-body">
-                <div class="fw-bold fs-5"><i class="fa-solid fa-bug text-primary"></i> Developer tools</div>
-                <div  class="mt-4"><a class="btn btn-primary" href="${request.contextPath}/admin/query">Debug and Test</a></div>
+                <div class="fw-bold fs-5"><i class="fa-solid fa-bug text-primary"></i> Advanced Alerts Tools </div>
+                <div>
+                    <small class="text-muted ps-4">Inspect, debug and test-run alerts</small>
+                </div>
+                <div class="mt-3">
+                    <div><g:link controller="admin" action="query" class="btn btn-outline-primary">Alert Diagnostics &amp; Management</g:link>  <small class="text-muted ms-2">- manage and simulate all available alerts.</small></div>
+                </div>
                 <hr>
                 <div class="mt-2">
                     <div class="d-flex flex-wrap align-items-center">
@@ -86,11 +77,11 @@
                             <option value="monthly">Monthly</option>
                         </select>
                         Scheduled Job
-                        <a class="btn btn-primary ms-2 " id="simulatedFrequencyLink" href="${g.createLink(controller: 'admin', action: 'triggerQueriesByFrequency', params: [frequency: 'daily'])}" target="_blank">Run</a>
+                        <a class="btn btn-primary ms-2" id="simulatedFrequencyLink" href="${g.createLink(controller: 'admin', action: 'triggerQueriesByFrequency', params: [frequency: 'daily'])}" target="_blank">Run</a>
                         <label>  <g:checkBox name="testMode" class="mx-2" checked="${grailsApplication.config.testMode ?: false}" />  Email me a copy </label>
                     </div>
-                    <div class="mt-2">
-                        <i>- Will NOT update the database, and emails will ONLY be sent in the Development environment.</i>
+                    <div class="mt-2 text-muted">
+                        <i>- This will not update database records. Subscriber emails are <b>NOT</b> sent in Production or Test environments; they are only sent via the local SMTP server in Development. If you check "Email me a copy", a copy will be sent to you.</i>
                     </div>
                 </div>
 
@@ -104,7 +95,7 @@
                     <small class="text-muted ps-4">Manage / reschedule Biosecurity alerts</small>
                 </div>
                 <div class="mt-2">
-                    <a href="${request.contextPath}/admin/biosecurity">Manage BioSecurity alerts</a><small class="text-muted ms-2"> - Add, update, remove or reschedule BioSecurity alerts and users.</small>
+                    <a href="${request.contextPath}/biosecurity">Manage BioSecurity alerts</a><small class="text-muted ms-2"> - Add, update, remove or reschedule BioSecurity alerts and users.</small>
                 </div>
                 <div class="mt-2">
                     <a href="${request.contextPath}/log">Error Logs</a><small class="text-muted ms-2"> - Check for any recent alert failures.</small>
@@ -112,9 +103,16 @@
             </div>
         </div>
 
+
         <div class="box">
             <div class="shadow card card-body">
                 <div class="fw-bold fs-5"><i class="fa-solid fa-wrench text-primary"></i> Maintenance and fixes</div>
+
+                <div >
+                    <g:link controller="admin" action="updateUserEmails">Update user emails with CAS</g:link>
+                    <small class="text-muted ms-2"> - synchronise alerts user database with users from CAS.</small>
+                </div>
+
                 <div>
                     <small class="text-muted ps-4">Repair broken data</small>
                 </div>
@@ -141,7 +139,6 @@
                     <small class="text-muted ms-2">
                         – Removes queries without notifications or subscriptions
                     </small>
-                    %{--<li><g:link controller="admin" action="dryRunAllQueriesForFrequency" params="[frequency: 'daily']" target="_blank">Debug daily alerts</g:link> - Dry-run of daily alerts to determine if emails will be triggered on the next schedule. </li>--}%
                 </div>
             </div>
         </div>

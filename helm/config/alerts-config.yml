@@ -70,7 +70,7 @@ security:
     appServerName: "{{ .Values.config.base.alerts_base_url }}{{ .Values.config.base.alerts_context_path }}"
     uriFilterPattern: >-
       /,/alaAdmin/*,/testAuth/*,/query/*,/admin/*,/admin/user/*,
-      /admin/user/debug/*,/admin/debug/all,/notification/myAlerts,
+      /admin/user/debug/*,/notification/myAlerts,
       /notification/changeFrequency,/notification/addMyAlert,
       /notification/addMyAlert/*,/notification/deleteMyAlert/*,
       /notification/deleteMyAlertWR/*,/webservice/*,
@@ -80,7 +80,7 @@ security:
       /webservice/createSpeciesGroupRegionAlert,/ws/*,
       /ws/createTaxonAlert,/ws/taxonAlerts,/ws/createRegionAlert,
       /ws/regionAlerts,/ws/deleteTaxonAlert/*,/ws/createTaxonRegionAlert,
-      /ws/createSpeciesGroupRegionAlert,/admin/runChecksNow,/quartz/*
+      /ws/createSpeciesGroupRegionAlert,/quartz/*
     uriExclusionFilterPattern: "/images.*,/css.*,/js.*,/less.*"
     authenticateOnlyIfLoggedInPattern: "/unsubscribe/*"
     adminRole: "ROLE_ADMIN"

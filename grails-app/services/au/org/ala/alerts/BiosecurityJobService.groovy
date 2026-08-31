@@ -57,6 +57,18 @@ class BiosecurityJobService {
         }
     }
 
+    void runNow() {
+        def currentJobInfo = getJobInfo()
+        if (currentJobInfo) {
+            String jobName = currentJobInfo.jobName
+            String jobGroup = currentJobInfo.jobGroup
+
+            JobKey jobKey = new JobKey(jobName, jobGroup)
+            quartzScheduler.triggerJob(jobKey)
+            logEvent("Biosecurity has been triggered to run now.")
+        }
+    }
+
     void updateTrigger(String cron) {
         def currentJobInfo = getJobInfo()
         if (currentJobInfo) {
@@ -162,10 +174,10 @@ class BiosecurityJobService {
         return [
                 pause : pauseTrigger?.startTime?
                         ZonedDateTime.ofInstant(pauseTrigger.startTime.toInstant(), zone).format(formatter) :
-                        null,
+                        "",
                 resume: resumeTrigger?.startTime ?
                         ZonedDateTime.ofInstant(resumeTrigger.startTime.toInstant(), zone).format(formatter) :
-                        null
+                        ""
         ]
     }
 

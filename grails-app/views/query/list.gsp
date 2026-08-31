@@ -26,24 +26,31 @@
 				<thead>
 					<tr>
 					    <g:sortableColumn property="id" title="${message(code: 'query.description.label', default: 'ID')}" />
+                        <g:sortableColumn property="emailTemplate" title="${message(code: 'query.emailTemplate.label', default: 'Type')}" />
                         <g:sortableColumn property="description" title="${message(code: 'query.description.label', default: 'Query title')}" />
                         %{--<g:sortableColumn property="resourceName" title="${message(code: 'query.description.label', default: 'Resource')}" />--}%
-                        <th></th>
 					</tr>
 				</thead>
 				<tbody>
 				<g:each in="${queryInstanceList}" status="i" var="queryInstance">
 					<tr class="${(i % 2) == 0 ? 'even' : 'odd'}">
 						<td>${fieldValue(bean: queryInstance, field: "id")}</td>
+                        <td>${queryInstance.emailTemplate?.replaceFirst('^/email/', '')}</td>
                         %{--<td>${fieldValue(bean: queryInstance, field: "resourceName")}</td>--}%
 						<td><g:link action="show" id="${queryInstance.id}">${fieldValue(bean: queryInstance, field: "description")}</g:link></td>
-                        <td><g:link class="btn btn-info btn-sm" action="debugAlert" controller="admin" id="${queryInstance.id}"><g:message code="query.list.debug" /></g:link></td>
 					</tr>
 				</g:each>
 				</tbody>
 			</table>
-			<div class="pagination">
-				<g:paginate total="${queryInstanceTotal}" />
+			<g:if test="${queryInstanceTotal > params.int('max')}">
+				<nav aria-label="Query list pages" class="mt-3">
+					<div class="pagination">
+						<g:paginate total="${queryInstanceTotal}" max="${params.max}" maxsteps="10"/>
+					</div>
+				</nav>
+			</g:if>
+			<div class="text-muted small mt-2">
+				Showing ${queryInstanceList.size()} of ${queryInstanceTotal}
 			</div>
 		</div>
 	</body>

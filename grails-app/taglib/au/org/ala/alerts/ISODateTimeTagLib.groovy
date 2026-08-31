@@ -26,12 +26,44 @@ class ISODateTimeTagLib {
             return
         }
 
-        // Format the Date as ISO-8601 in UTC (e.g., 2026-01-23T03:30:00Z)
+        // Ensure date is a Date object
+        if (!(date instanceof Date)) {
+            out << ''
+            return
+        }
+
+        // Format the Date as ISO-8601 in UTC (e.g., 2026-09-01T15:00:00Z)
         def sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
         sdf.setTimeZone(TimeZone.getTimeZone("UTC"))
         def isoUtc = sdf.format(date)
 
         // Output a span with the UTC ISO string in data-time
-        out << "<span class=\"ISODateTime\" data-time=\"${isoUtc}\"></span>"
+        // Generate a unique ID for this span
+        def spanId = "localTime_${System.currentTimeMillis()}_${Math.random().toString().substring(2)}"
+        out << "<span id=\"${spanId}\" class=\"ISODateTime\" data-iso=\"${isoUtc}\"></span>"
+        // Add inline script to convert this specific span
+        out << """
+        <script type="text/javascript">
+            (function() {
+                var el = document.getElementById('${spanId}');
+                if (el) {
+                    var isoString = el.getAttribute('data-iso');
+                    var format = el.getAttribute('data-format') || 'medium';
+                    var dt = new Date(isoString); // JavaScript Date constructor handles ISO-8601 strings
+                    var options = {};
+                    
+                    if (format === 'short') {
+                        options = { year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' };
+                    } else if (format === 'long') {
+                        options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' };
+                    } else { // medium (default)
+                        options = { weekday: 'short', year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' };
+                    }
+                    
+                    el.textContent = dt.toLocaleString(undefined, options);
+                }
+            })();
+        </script>
+        """
     }
 }

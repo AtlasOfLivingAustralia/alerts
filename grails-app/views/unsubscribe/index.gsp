@@ -41,9 +41,18 @@
             <g:if test="${notifications}">
                 <g:form controller="unsubscribe" action="unsubscribe" method="post">
                     <g:hiddenField name="token" value="${params.token}"/>
+                    <g:actionSubmit value="Disable notifications" class="btn btn-primary" action="disable"/>
                     <g:actionSubmit value="Unsubscribe" class="btn btn-outline-primary" action="unsubscribe"/>
                     <g:actionSubmit value="Cancel" class="btn btn-disable-outline" action="cancel"/>
                 </g:form>
+                <div class="mt-2">
+                    <small class="text-muted d-block">
+                        "Disable notifications" only stop receiving email notifications temporarily. You can enable them again at any time.
+                    </small>
+                    <small class="text-muted d-block mt-1">
+                        "Unsubscribe" removes all subscriptions. You will need to subscribe again if you want to receive alerts later.
+                    </small>
+                </div>
             </g:if>
         </div>
     </div>
