@@ -69,8 +69,14 @@ class QueryController {
 
     @AlaSecured(value = 'ROLE_ADMIN', redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to view that page.")
     def list() {
-        params.max = Math.min(params.max ? params.int('max') : 1000, 10000)
-        [queryInstanceList: Query.list(params), queryInstanceTotal: Query.count()]
+        // page size: 20 by default, 100 max. g:paginate only renders links when total > max
+        params.max = Math.min(params.max ? params.int('max') : 100, 1000)
+        params.offset = params.int('offset') ?: 0
+        def queryInstanceList = Query.createCriteria().list(max: params.max, offset: params.offset) {
+            order('custom', 'asc')
+            order('emailTemplate', 'asc')
+        }
+        [queryInstanceList: queryInstanceList, queryInstanceTotal: Query.count()]
     }
 
     @Transactional
@@ -100,7 +106,9 @@ class QueryController {
             redirect(action: "list")
             return
         }
-        [queryInstance: queryInstance]
+        // the 'debug and email me' form runs the query against the frequency of the logged-in user
+        String userFrequency = userService.getUser()?.frequency?.name ?: 'weekly'
+        [queryInstance: queryInstance, userFrequency: userFrequency]
     }
 
     @AlaSecured(value = 'ROLE_ADMIN', redirectController = 'admin', redirectAction = 'index', message = "You don't have permission to edit that record.")
@@ -147,6 +155,10 @@ class QueryController {
         redirect(action: "show", id: queryInstance.id)
     }
 
+    /**
+     * todo check if it is never used.
+     * @return
+     */
     @AlaSecured(value = 'ROLE_ADMIN', redirectController = 'admin', redirectAction = 'index', message = "You don't have permission to delete that record.")
     def delete() {
         def queryInstance = Query.get(params.id)
@@ -158,7 +170,7 @@ class QueryController {
 
         try {
             if (queryInstance.notifications?.size() == 0) {
-                queryService.deleteQuery(queryInstance)
+                queryService.wipe(queryInstance.id)
                 flash.message = message(code: 'default.deleted.message', args: [message(code: 'query.label', default: 'Query'), params.id])
                 redirect(action: "list")
             } else {
@@ -172,10 +184,37 @@ class QueryController {
         }
     }
 
+    /**
+     * todo consider merging with delete() method, but this one is called from ajax and returns json.
+     * @return
+     */
+    @AlaSecured(value = 'ROLE_ADMIN', redirectController = 'admin', redirectAction = 'index', message = "You don't have permission to delete that query.")
+    def wipe() {
+        def result =[:]
+        if (params.id && (!params.id.allWhitespace)) {
+            def queryId = params.id as Integer
+            Query query = Query.get(queryId)
+            if (!query) {
+                result['status'] = 1
+                result['message'] = "Query not found for id: ${queryId}"
+            } else if (!query.custom) {
+                result['status'] = 1
+                result['message'] = "Query with id: ${queryId} is not a custom query and cannot be deleted."
+            } else {
+                result = queryService.wipe(queryId)
+            }
+        } else {
+            result['status'] = 1
+            result['message'] = "Query id can't be empty."
+        }
+        render(result as JSON)
+    }
+
     def subscribers() {
         def queryid = Long.valueOf(params.queryid)
         render view: "subscribers", model: [users: queryService.getSubscribers(queryid), queryid: queryid]
     }
+
 
     def unsubscribeAlert() {
         if (!params.useremail || params.useremail.allWhitespace) {
@@ -216,16 +255,5 @@ class QueryController {
         }
     }
 
-    @AlaSecured(value = 'ROLE_ADMIN', redirectController = 'admin', redirectAction = 'index', message = "You don't have permission to delete that query.")
-    def wipe() {
-        def result =[:]
-        if (params.id && (!params.id.allWhitespace)) {
-            def queryId = params.id as Integer
-            result = queryService.wipe(queryId)
-        } else {
-            result['status'] = 1
-            result['message'] = "Query id can't be empty."
-        }
-        render(result as JSON)
-    }
+
 }

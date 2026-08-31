@@ -111,14 +111,14 @@ class QueryResult {
     }
 
     Map brief() {
-        [queryId: query?.id, query: query?.name, frequency: frequency?.name, queryResultId: id, lastChecked: lastChecked, hasChanged: hasChanged, lastChanged: lastChanged,
+        [queryId: query?.id, query: query?.name, frequency: frequency?.name, queryUrl: queryUrlUsed, queryResultId: id, lastChecked: lastChecked, hasChanged: hasChanged, lastChanged: lastChanged,
          property: displayProperties(),
          sizeOfcurrentResult: lastResult ? decompress(lastResult).size() : 0, sizeOfPreviousResult: previousResult ? decompress(previousResult).size() : 0
         ]
     }
 
     Map details() {
-        [queryId: query?.id, query: query?.name, frequency: frequency?.name, queryResultId: id, lastChecked: lastChecked, hasChanged: hasChanged, lastChanged: lastChanged,
+        [queryId: query?.id, query: query?.name, frequency: frequency?.name, queryUrl: queryUrlUsed,queryResultId: id, lastChecked: lastChecked, hasChanged: hasChanged, lastChanged: lastChanged,
          property: displayProperties(),
          currentResult: lastResult ? decompress(lastResult) : null, previousResult: previousResult ? decompress(previousResult) : null
         ]

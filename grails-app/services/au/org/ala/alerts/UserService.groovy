@@ -13,9 +13,9 @@
 
 package au.org.ala.alerts
 import au.org.ala.userdetails.UserDetailsFromIdListResponse
-import au.org.ala.web.AuthService
 import au.org.ala.web.UserDetails
 import grails.converters.JSON
+import grails.plugin.cache.CacheEvict
 import grails.plugin.cache.Cacheable
 import grails.util.Holders
 import grails.util.Environment
@@ -28,59 +28,15 @@ class UserService {
 
     def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
 
-    Map getUserAlertsConfig(User user) {
-
-        log.debug('getUserAlertsConfig - Viewing my alerts :  ' + user)
-        //enabled alerts
-        def notificationInstanceList = Notification.findAllByUser(user)
-
-        //split into custom and non-custom...
-        //in case some queries which were removed
-        def enabledQueries = notificationInstanceList.findAll { it?.query != null }
-                .collect { it.query }
-                .findAll { query ->
-                    try {
-                        Query.get(query.id) != null
-                    } catch (Exception e) {
-                        false
-                    }
-                }
-
-        def enabledIds = enabledQueries.collect { it.id }
-
-        // all standard queries + 'my annotations' queries
-        // this might include 'my annotations' that belongs to others
-        // we need to filter those out
-        def allAlertTypes = Query.findAllByCustom(false)
-
-        def myAnnotationQuery = queryService.createMyAnnotationQuery(user.getUserId())
-        // collect standard queries + 'my annotations' belongs to current user
-        allAlertTypes = allAlertTypes.findAll { it.name != myAnnotationQuery.name || it.queryPath == myAnnotationQuery.queryPath }
-
-        allAlertTypes.removeAll { enabledIds.contains(it.id) }
-        def customQueries = enabledQueries.findAll { it.custom }
-        def standardQueries = enabledQueries.findAll { !it.custom }
-
-        def userConfig = [disabledQueries: allAlertTypes,   // all disabled standard queries
-                          enabledQueries : standardQueries, // all enabled standard queries
-                          customQueries  : customQueries,   // all enabled custom queries
-                          frequencies    : Frequency.listOrderByPeriodInSeconds(),
-                          user           : user]
-
-        if (grailsApplication.config.getProperty('myannotation.enabled', Boolean, false)) {
-            userConfig.myannotation = userConfig.enabledQueries.findAll { it.name == myAnnotationQuery.name }
-            userConfig.enabledQueries.removeAll { it.name == myAnnotationQuery.name }
-        }
-
-        userConfig
-    }
-
     /**
      * Sync User table with UserDetails app via webservice
+     *
+     * Evicts 'userSearchCache' because email addresses (what the autocomplete searches on) change here.
      *
      * @return total number of updates
      */
 
+    @CacheEvict(value = "userSearchCache", allEntries = true)
     int updateUserEmails() {
         final int pageSize = grailsApplication.config.getProperty('alerts.user-sync.batch-size', Integer, 1000)
         def toUpdate = []
@@ -224,6 +180,8 @@ class UserService {
     }
 
     // get user via email, if not found in database create one
+    // evicts the search cache: a user added here should be findable by the admin autocomplete straight away
+    @CacheEvict(value = "userSearchCache", allEntries = true)
     User getUserByEmailOrCreate(String userEmail) {
         if (!userEmail) {
             return null
@@ -264,7 +222,7 @@ class UserService {
      * @param id
      * @return
      */
-    User getUserBySequeceId(Long id) {
+    User getUserBySequenceId(Long id) {
         User.get(id)
     }
 
@@ -285,11 +243,113 @@ class UserService {
         User.findAllByEmailIlike("%${term}%")
     }
 
+    /**
+     * Find users whose email contains the given term, capped to 'max' results and sorted by email.
+     * Used by the admin autocomplete, so the same term is typically requested repeatedly - cached
+     * for a short time (see 'userSearchCache' in ehcache3.xml).
+     *
+     * Returns simple maps rather than User instances: cached domain objects outlive the Hibernate
+     * session they were loaded in, and touching a lazy association on one throws
+     * LazyInitializationException.
+     *
+     * @return [[userId: .., email: ..], ..]
+     */
+    @Cacheable("userSearchCache")
+    List<Map> findUsers(String term, int max) {
+        User.findAllByEmailIlike("%${term}%", [max: max, sort: 'email', order: 'asc']).collect { User user ->
+            [userId: user.userId, email: user.email]
+        }
+    }
+
     @Cacheable("testCache")
     boolean testEhCache(String input = "not-set") {
         log.warn "Inside the testEhCache() method with ${input}... sleeping for 5 seconds"
         sleep(5000)
         log.warn "Exiting testEhCache() method"
         true
+    }
+
+    /**
+     * Find the queries that would be left behind if the given user were deleted, i.e. the queries
+     * that belong to this user alone and so must be deleted with them:
+     *
+     *  - their 'My Annotations' query (always personal to one user)
+     *  - custom queries that no other user subscribes to
+     *
+     * Standard queries, and custom queries still subscribed to by somebody else, are NOT included -
+     * removing those would break other users' alerts.
+     *
+     * @param user
+     * @return [[id: .., name: ..], ..] - empty when there is nothing to clean up
+     */
+    List<Map> findQueriesRelatedToDeletedUser(User user) {
+        if (!user) {
+            return []
+        }
+
+        List<Map> queries = []
+        Notification.findAllByUser(user).each { Notification notification ->
+            Query query = notification.query
+            if (!query) {
+                return
+            }
+
+            boolean personalQuery = query.isMyAnnotation(user.userId)
+            boolean onlySubscriber = query.custom && Notification.countByQuery(query) <= 1
+
+            if (personalQuery || onlySubscriber) {
+                queries << [id: query.id, name: query.name]
+            }
+        }
+
+        queries
+    }
+
+    /**
+     * Delete a user together with everything that only exists because of them: their notifications
+     * (subscriptions) and the queries returned by #findQueriesRelatedToDeletedUser.
+     *
+     * Queries shared with other users are left alone - only this user's subscription to them goes.
+     *
+     * @param user
+     * @return [status: 0|1, message: '..', deletedQueries: [..], deletedNotifications: n]
+     */
+    @CacheEvict(value = "userSearchCache", allEntries = true)
+    Map delete(User user) {
+        if (!user) {
+            return [status: 1, message: 'User not found.']
+        }
+
+        String email = user.email
+        List<Map> queriesToDelete = findQueriesRelatedToDeletedUser(user)
+        int deletedNotifications = 0
+
+        try {
+            User.withTransaction {
+                // Notification.user is a plain many-to-one and User does not declare a delete cascade,
+                // so the subscriptions have to go first - otherwise deleting the user trips the
+                // notification.user_id foreign key.
+                Notification.findAllByUser(user).each { Notification notification ->
+                    notification.delete()
+                    deletedNotifications++
+                }
+                // detach them from the in-memory collection too, so Hibernate does not try to re-save
+                user.notifications?.clear()
+
+                queriesToDelete.each { Map query ->
+                    queryService.wipe(query.id)
+                }
+                user.delete(flush: true)
+            }
+        } catch (Exception e) {
+            log.error("Failed to delete user ${email}", e)
+            return [status: 1, message: "Failed to delete ${email}: ${e.message}"]
+        }
+
+        log.warn("Deleted user ${email}, ${deletedNotifications} subscription(s) and ${queriesToDelete.size()} query(s)")
+        [status              : 0,
+         message             : "Deleted ${email}, ${deletedNotifications} subscription(s) and ${queriesToDelete.size()} query(s).",
+         deletedQueries      : queriesToDelete,
+         deletedNotifications: deletedNotifications]
     }
 }

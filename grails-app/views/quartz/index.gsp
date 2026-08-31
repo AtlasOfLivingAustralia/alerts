@@ -7,24 +7,6 @@
     <meta name="breadcrumb" content="Quartz management" />
     <meta name="breadcrumbParent" content="${request.contextPath}/admin, Admin"/>
     <asset:stylesheet href="alerts.css"/>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-            document.querySelectorAll('.ISODateTime').forEach(el => {
-                const dt = new Date(el.dataset.time); // JS Date interprets ISO as UTC
-                el.textContent = dt.toLocaleString(undefined, {
-                    timeZone: tz,
-                    weekday: 'short',
-                    year: 'numeric',
-                    month: 'short',
-                    day: '2-digit',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
-            });
-        });
-    </script>
 </head>
 <body>
 

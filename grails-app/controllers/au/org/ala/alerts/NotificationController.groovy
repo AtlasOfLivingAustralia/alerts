@@ -12,25 +12,21 @@ class NotificationController {
     def notificationService
     def emailService
     def userService
-    def authService
     def diffService
     def queryResultService
 
     static allowedMethods = [save: "POST", update: "POST", delete: "POST"]
 
-    def myalerts = { redirect(action: "myAlerts", params: params) }
 
-    // Main action to show the user's alerts
+    /**
+     * Shows the logged-in user's own alerts.
+     *
+     * The returned map is used as the model and Grails renders the view matching the action name
+     * by convention (grails-app/views/notification/myAlerts.gsp), so no explicit render() is needed.
+     */
     def myAlerts() {
-        // Get the currently logged-in user
         User user = userService.getUser()
-        if (user) {
-            // Retrieve the user's alert configuration
-            Map userConfig = userService.getUserAlertsConfig(user)
-            userConfig.put('isMyAlerts', true)
-
-            render(view: "../notification/myAlerts", model: userConfig)
-        }
+        user ? notificationService.myAlerts(user) : [:]
     }
 
 
@@ -61,6 +57,34 @@ class NotificationController {
 
         // Delete the alert for this user
         notificationService.deleteAlertForUser(user, params.id as Long)
+        render([success: true] as JSON)
+    }
+
+    /*
+
+     * Enables an alert for the currently logged-in user
+     * @param id The ID of the QUERY
+     */
+    def enableAlert() {
+        def user = getUser()
+        if (!user) {
+            render status: HttpStatus.NOT_FOUND.value(), text: "Unrecognised user"
+            return
+        }
+        notificationService.enableAlertForUser(user, params.id as Long)
+        render([success: true] as JSON)
+    }
+    /*
+     * Enables an alert for the currently logged-in user
+     * @param id The ID of the QUERY
+     */
+    def disableAlert() {
+        def user = getUser()
+        if (!user) {
+            render status: HttpStatus.NOT_FOUND.value(), text: "Unrecognised user"
+            return
+        }
+        notificationService.disableAlertForUser(user, params.id as Long)
         render([success: true] as JSON)
     }
 
@@ -107,13 +131,18 @@ class NotificationController {
         }
         redirect(action: 'myAlerts')
     }
-
+    /**
+     * Resolves the user a request applies to: the user identified by the 'userId' param when it is
+     * supplied (the admin managing someone else's alerts), otherwise the logged-in user.
+     *
+     * Permission to use 'userId' is enforced by NotificationInterceptor before the action runs, so
+     * this method never writes to the response - it only returns null when the user cannot be found,
+     * which each action reports as a 404.
+     *
+     * @return the user to act on, or null if no such user exists
+     */
     private User getUser() {
-        if (authService.userInRole("ROLE_ADMIN")) {
-            return userService.getUserById(params.userId)
-        } else {
-            return userService.getUser()
-        }
+        params.userId ? userService.getUserById(params.userId) : userService.getUser()
     }
 
     def changeFrequency = {
@@ -121,19 +150,6 @@ class NotificationController {
         log.debug("Changing frequency to: " + params.frequency + " for user ${user}")
         notificationService.updateFrequency(user, params.frequency)
         render([success: true] as JSON)
-    }
-
-    /**
-     * todo check if it works?
-     */
-    def checkNow = {
-        Notification notification = Notification.get(params.id)
-        // no such method
-        boolean sendUpdateEmail = notificationService.executeQuery(notification.query)?.hasChanged
-        if (sendUpdateEmail) {
-            emailService.sendNotificationEmail(notification)
-        }
-        redirect(action: "show", params: params)
     }
 
     /**
@@ -174,11 +190,5 @@ class NotificationController {
 
     def index(){
         redirect(action: "myAlerts")
-    }
-
-    def admin = {
-        if (!authService.userInRole("ROLE_ADMIN")) {
-            redirect(action: "myAlerts")
-        }
     }
 }

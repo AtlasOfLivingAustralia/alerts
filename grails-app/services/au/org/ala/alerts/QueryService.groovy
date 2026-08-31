@@ -11,7 +11,7 @@ import grails.gorm.transactions.Transactional
 class QueryService {
 
     def serviceMethod() {}
-    def grailsApplication, notificationService, webService
+    def grailsApplication, notificationService, webService,utilService
     def messageSource, dataSource
     def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
 
@@ -107,6 +107,7 @@ class QueryService {
     }
 
     /**
+     * duplicate with wipe()
      * Validate the constraints, cannot delete
      * @param queryInstance
      * @return
@@ -152,34 +153,60 @@ class QueryService {
     }
 
     // return true if a new query is created, otherwise return false
-    @Transactional
-    boolean createQueryForUserIfNotExists(Query newQuery, User user, boolean setPropertyPath = true) {
-        boolean newQueryCreated = false
-        //find the query
-        Query retrievedQuery = Query.findByBaseUrlAndQueryPath(newQuery.baseUrl, newQuery.queryPath)
-        if (retrievedQuery == null) {
-            log.debug("Query does not exist....")
-            //save the query
-            newQuery.save(flush: true)
-            newQueryCreated = true
-            if (setPropertyPath) {
-                PropertyPath totalRecordPP = new PropertyPath([name: "totalRecords", jsonPath: "totalRecords", query: newQuery, fireWhenNotZero: true])
-                PropertyPath lastLoadedPP = new PropertyPath([name: "last_loaded_record", jsonPath: "occurrences[0].uuid", query: newQuery])
-                newQuery.propertyPaths.add(totalRecordPP)
-                newQuery.propertyPaths.add(lastLoadedPP)
-            }
+    /**
+     * Legacy support for other queries creation
+     * @param newQuery
+     * @param user
+     * @param setPropertyPath
+     * @param enabled
+     * @return
+     */
+    boolean createQueryForUserIfNotExists(Query newQuery, User user, boolean setPropertyPath = true, boolean enabled = false) {
+      def successOne = addUserToQuery(newQuery, user, setPropertyPath, enabled)
+        if (successOne && successOne.id) {
+            return true
         } else {
-            newQuery = retrievedQuery
+            return false
         }
-        //does the notification already exist?
-        def exists = Notification.findByQueryAndUser(newQuery, user)
-        if (!exists) {
-            Notification n = new Notification([query: newQuery, user: user])
-            newQuery.notifications.add(n)
-        }
+    }
 
-        newQuery.save(validate: true, flush: true)
-        newQueryCreated
+    /**
+     * implemented for Biosecurity.
+     * However, the method createQueryForUserIfNotExists is used in other places, e.g. for My Annotations, and it is not clear if this method is needed for those cases.
+     * We should only use this one, and remove the other.
+     *
+     * Add a user to a query, creating the query if it does not exist.
+     *
+     * @param user
+     * @param setPropertyPath
+     * @param enabled
+     * @return Query object, which may be a new query or an existing one.
+     */
+    Query addUserToQuery(Query newQuery, User user, boolean setPropertyPath = true, boolean enabled = false) {
+        Query.withTransaction {
+            Query retrievedQuery = Query.findByBaseUrlAndQueryPath(newQuery.baseUrl, newQuery.queryPath)
+            if (retrievedQuery == null) {
+                log.debug("Query does not exist....")
+                if (setPropertyPath) {
+                    PropertyPath totalRecordPP = new PropertyPath([name: "totalRecords", jsonPath: "totalRecords", query: newQuery, fireWhenNotZero: true])
+                    PropertyPath lastLoadedPP = new PropertyPath([name: "last_loaded_record", jsonPath: "occurrences[0].uuid", query: newQuery])
+                    newQuery.propertyPaths.add(totalRecordPP)
+                    newQuery.propertyPaths.add(lastLoadedPP)
+                }
+                // Persist the query first so it gets an id, enabling child objects to reference it
+                newQuery.save()
+            } else {
+                newQuery = retrievedQuery
+            }
+            //does the notification already exist?
+            def exists = Notification.findByQueryAndUser(newQuery, user)
+            if (!exists) {
+                Notification n = new Notification([query: newQuery, user: user, enabled: enabled])
+                newQuery.notifications.add(n)
+            }
+
+            newQuery.save(validate: true, flush: true)
+        }
     }
 
     /**
@@ -335,6 +362,7 @@ class QueryService {
                 dateFormat    : """yyyy-MM-dd'T'HH:mm:ss'Z'""",
                 emailTemplate : '/email/myAnnotations',
                 recordJsonPath: '\$.occurrences[*]',
+                custom: false
         ])
     }
 
@@ -390,15 +418,21 @@ class QueryService {
 
     def subscribeBioSecurity(User user, String listid) {
         Query query = createBioSecurityQuery(listid)
-        createQueryForUserIfNotExists(query, user, true)
+        query = addUserToQuery(query, user, true, true)
+        return query
     }
 
     // remove all user notifications for the specified query
     def unsubscribeAllUsers(Long queryId) {
-        def users = getSubscribers(Long.valueOf(queryId))
-        users?.forEach{user -> notificationService.deleteAlertForUser((User)user, queryId)}
+        def activeUsers = getSubscribers(Long.valueOf(queryId))
+        def inActiveUsers = getInactiveSubscribers(Long.valueOf(queryId))
+        activeUsers?.forEach{user -> notificationService.deleteAlertForUser((User)user, queryId)}
+        inActiveUsers?.forEach{user -> notificationService.deleteAlertForUser((User)user, queryId)}
     }
 
+    // todo check if we can only use one
+    // duplicate with wipe(id)
+    //
     // delete a query (also remove all subscriptions)
     def deleteQuery(Long queryId) {
         unsubscribeAllUsers(queryId)
@@ -435,7 +469,6 @@ class QueryService {
         }
 
 
-
         def results = queries.collect{ query ->
             // Bioseurity queries are weekly ONLY, so filter out the other frequencies
             def filteredQueryResults = query.queryResults.findAll { it.frequency?.name == 'weekly' }
@@ -445,9 +478,6 @@ class QueryService {
             // Update the query's lastChecked property if a QueryResult was found
             if (qr) {
                 query.lastChecked = qr.lastChecked
-                query.queryResults = [qr]
-            } else {
-                query.queryResults = []
             }
             query
         }
@@ -466,15 +496,20 @@ class QueryService {
     }
 
 
-    // get all subscribers to the specified query
+    // get all subscribers to the specified query (only enabled notifications)
+    // NOTE: Some standard queries (e.g. New records) may have a further filter on the frequency which users select (e.g. daily, weekly, monthly).
+    // This method does not filter on frequency, it returns all users who have enabled notifications for the query.
     def getSubscribers(Long queryId) {
         Query query = Query.findById(queryId)
-        return query ? Query.executeQuery(
-                """select u
-                  from User u
-                  inner join u.notifications n
-                  where n.query = :query
-                  group by u""", [query: query]) : []
+        return query ? query.getSubscribers() : []
+    }
+
+    // get all inactive subscribers to the specified query (only disabled notifications)
+    // NOTE: Some standard queries (e.g. New records) may have a further filter on the frequency which users select (e.g. daily, weekly, monthly).
+    // This method does not filter on frequency, it returns all users who have enabled notifications for the query.
+    def getInactiveSubscribers(Long queryId) {
+        Query query = Query.findById(queryId)
+        return query ? query.getInactiveSubscribers() : []
     }
 
     boolean speciesListExists(String listid) {
@@ -509,52 +544,52 @@ class QueryService {
     }
 
     def searchBiosecuritySubscriptions(keywords) {
-        def sql = new Sql(dataSource)
-        def result = null
         try {
-            // Execute a raw SQL for full-text match query
-            String query = "SELECT * FROM query WHERE name LIKE '%${keywords}%' AND email_template = '/email/biosecurity' LIMIT 10 "
-            result = sql.rows(query)
-        } catch(Exception e) {
-            // Handle any exceptions
+            List<Query> queries = Query.createCriteria().list(max: 10) {
+                or {
+                    ilike('name', "%${keywords}%")
+                    ilike('queryPath', "%${keywords}%") //contains listId
+                }
+                eq('emailTemplate', '/email/biosecurity')
+            }
+
+            return queries
+        } catch (Exception e) {
             log.error(e.message)
+            return []
         }
-        finally {
-            // Close the SQL connection
-            sql.close()
-        }
-        result
     }
 
     // delete a query (also remove all subscriptions)
-    @Transactional
     def wipe(id) {
         def result = ['status': 1, 'message': 'Runtime error, check logs']
         if (id) {
             def query = Query.findById(id)
             if (query) {
-                //Manually delete all related PropertyPath and PropertyValue, since the cascade delete does not work
-                PropertyPath.findAllByQuery(query).each { PropertyPath pp->
-                    log.debug("Deleting property path of : ${id}")
-                    PropertyValue.findAllByPropertyPath(pp).each { PropertyValue pv ->
-                        pv.delete(flush: true)
+                Query.withTransaction {
+                    //Manually delete all related PropertyPath and PropertyValue, since the cascade delete does not work
+                    PropertyPath.findAllByQuery(query).each { PropertyPath pp ->
+                        log.debug("Deleting property path of : ${id}")
+                        PropertyValue.findAllByPropertyPath(pp).each { PropertyValue pv ->
+                            pv.delete()
+                        }
+                        pp.delete()
                     }
-                    pp.delete(flush: true)
-                }
 
-                //Manually delete all related Notifications
-                Notification.findAllByQuery(query).each { Notification n ->
-                    log.debug("Deleting notification of : ${id}")
-                    n.delete(flush: true)
-                }
+                    //Manually delete all related Notifications
+                    Notification.findAllByQuery(query).each { Notification n ->
+                        log.debug("Deleting notification [${n.id}] of query: ${id} ")
+                        n.delete()
+                    }
 
-                //Manually delete all related QueryResults
-                QueryResult.findAllByQuery(query).each { QueryResult qr ->
-                    log.debug("Deleting query result of : ${id}")
-                    qr.delete(flush: true)
-                }
+                    //Manually delete all related QueryResults
+                    QueryResult.findAllByQuery(query).each { QueryResult qr ->
+                        log.debug("Deleting query result [${qr.id}] of query: ${id} ")
+                        qr.delete()
+                    }
 
-                query.delete()
+                    query.delete()
+                }
                 result['status'] = 0
                 result['message'] = "Query ${id} removed"
             } else {
@@ -585,6 +620,7 @@ class QueryService {
     def summarize() {
         List<Query> queries =  Query.createCriteria().list {
             ne("name", "My Annotations")
+            ne("emailTemplate", "/email/biosecurity")
         }
 
         List<Query> myAnnotations =  Query.createCriteria().list {

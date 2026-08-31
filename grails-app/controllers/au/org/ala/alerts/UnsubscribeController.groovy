@@ -47,6 +47,27 @@ class UnsubscribeController {
         }
     }
 
+
+    def disable() {
+        Map userAndNotifications = findUserAndNotificationsForToken(params.token)
+
+        if (!userAndNotifications?.user) {
+            response.status = HttpStatus.BAD_REQUEST.value()
+            flash.message = message(code: 'email.unsubscribe.fail.alreadyunsubscribed', default: 'Unable to unsubscribe. You may have already unsubscribed.')
+            render view: '../error'
+        } else {
+            if (userAndNotifications.notifications) {
+                Notification.withTransaction {
+                    userAndNotifications.notifications.each { notification ->
+                        notification.enabled = false
+                        notification.save()
+                    }
+                }
+            }
+            redirect(controller: "notification", action: 'myAlerts')
+        }
+    }
+
     def cancel() {
         redirect(controller: "notification", action: 'myAlerts')
     }

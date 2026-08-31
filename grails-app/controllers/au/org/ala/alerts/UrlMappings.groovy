@@ -19,33 +19,48 @@ class UrlMappings {
 
         "/admin"(controller: 'admin', action: 'index')
         "/admin/user/$userId"(controller: 'admin', action: 'showUsersAlerts')
-        "/admin/user/debug/$userId"(controller: 'admin', action: 'debugAlertsForUser')
         "/admin/user/deleteMyAlert/$id?"(controller: 'notification', action: 'deleteMyAlert')
         "/admin/user/deleteMyAlertWR/$id?"(controller: 'notification', action: 'deleteMyAlertWR')
         "/admin/user/addMyAlert/$id?"(controller: 'notification', action: 'addMyAlert')
         "/admin/user/changeFrequency/$id?"(controller: 'notification', action: 'changeFrequency')
         "/admin/user"(controller: 'admin', action: 'findUser')
-        "/admin/debug/all"(controller: 'admin', action: 'debugAllAlerts')
-        "/admin/subscribeBioSecurity"(controller: 'admin', action: 'subscribeBioSecurity')
         "/admin/unsubscribeAllUsers"(controller: 'admin', action: 'unsubscribeAllUsers')
-        "/admin/deleteQuery"(controller: 'admin', action: 'deleteQuery')
 
-        group "/biosecurity/csv", {
-            "/"(namespace: "biosecurity",controller: "csv", action: "list")
-            "/download"(namespace: "biosecurity",controller: "csv", action: "download")
-            "/delete"(namespace: "biosecurity",controller: "csv", action: "delete")
-            "/aggregate"(namespace: "biosecurity",controller: "csv", action: "aggregate")
-            "/download/async/$name?"(namespace: "biosecurity",controller: "csv", action: "asyncAggregate")
-            "/download/token/$token"(namespace: "biosecurity",controller: "csv", action: "downloadWithToken")
-            "/downloads"(namespace: "biosecurity",controller: "csv", action: "downloads")
+        "/admin/biosecurity"(namespace: "biosecurity", controller: 'admin', action: 'index')
+        group "/biosecurity", {
+            "/"(namespace: "biosecurity", controller: 'admin', action: 'index')
+            "/list(.$format)?"(namespace: "biosecurity", controller: 'admin', action: 'list')
+            get "/subscription/$id(.$format)?" (namespace: "biosecurity", controller: 'admin', action: 'get')
+            post "/subscription(.$format)?" (namespace: "biosecurity", controller: 'admin', action: 'create')
+            delete "/subscription/$id(.$format)?" (namespace: "biosecurity", controller: 'admin', action: 'delete')
+            "/unsubscribe(.$format)?"(namespace: "biosecurity", controller: 'admin', action: 'unsubscribe')
+            "/subscribe(.$format)?"(namespace: "biosecurity", controller: 'admin', action: 'addSubscribers')
+            "/subscribers(.$format)?"(namespace: "biosecurity", controller: 'admin', action: 'getSubscribers')
+            "/search"(namespace: "biosecurity", controller: 'admin', action: 'search')
+            "/trigger/$id"(namespace: "biosecurity", controller: 'admin', action: 'trigger')
+            "/triggerAlertSince/$id?"(namespace: "biosecurity", controller: 'admin', action: 'triggerAlertSince')
+            "/preview/$id?"(namespace: "biosecurity", controller: 'admin', action: 'preview')
+
+            group "/csv", {
+                "/"(namespace: "biosecurity", controller: "csv", action: "list")
+                "/download"(namespace: "biosecurity", controller: "csv", action: "download")
+                "/delete"(namespace: "biosecurity", controller: "csv", action: "delete")
+                "/aggregate"(namespace: "biosecurity", controller: "csv", action: "aggregate")
+                "/download/async/$name?"(namespace: "biosecurity", controller: "csv", action: "asyncAggregate")
+                "/download/token/$token"(namespace: "biosecurity", controller: "csv", action: "downloadWithToken")
+                "/downloads"(namespace: "biosecurity", controller: "csv", action: "downloads")
+            }
         }
 
-
-        "/ws/alerts/user/$userId"(controller: 'webservice', action: 'getUserAlerts')
         "/ws/noauth/$action"(controller: 'webservice')
         "/ws/$action?/$id?"(controller: 'webservice')
 
         "/"(controller: 'notification', action: 'index')
+
+        // Legacy lowercase alias - Grails action names are case-sensitive, so the default
+        // "/$controller/$action" mapping would 404 on this. Kept for old inbound links
+        // (emails, bookmarks, the main ALA site). 301 so clients adopt the canonical URL.
+        "/notification/myalerts"(redirect: [controller: 'notification', action: 'myAlerts', permanent: true])
 
         "/admin/log"(controller: 'log', action: 'index')
         "/admin/log/update"(controller: 'log', action: 'update', method: 'PUT')
@@ -62,8 +77,7 @@ class UrlMappings {
         // /api/* will not be protected by CAS, but all operations should be protected with @RequireApiKey
         "/api/alerts/user/$userId/unsubscribe"(controller: 'webservice', action: [POST: 'deleteAllAlertsForUser'])
         "/api/alerts/user/createAlerts"(controller: 'webservice', action: [POST: 'createUserAlerts'])
-
-        "/api/alerts/user/$userId"(controller: 'webservice', action: [GET: 'getUserAlertsWS'])
+        "/api/alerts/user/$userId"(controller: 'webservice', action: [GET: 'getUserAlerts'])
 
         "/robots.txt"(view:'/notFound')
 

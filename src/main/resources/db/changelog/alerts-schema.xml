@@ -262,6 +262,20 @@
         </createTable>
     </changeSet>
 
+    <changeSet id="31-add-notification-enabled-column" author="alert">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="notification"/>
+                <not><columnExists tableName="notification" columnName="enabled"/></not>
+            </and>
+        </preConditions>
+        <addColumn tableName="notification">
+            <column name="enabled" type="BIT(1)" defaultValueNumeric="1">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
     <!-- ===================== FOREIGN KEYS (COMMENTED OUT) ===================== -->
 
     <!--

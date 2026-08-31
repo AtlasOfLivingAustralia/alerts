@@ -109,7 +109,7 @@ class BiosecurityService {
                 def csvService =  getCsvService()
                 csvService.generateAuditCSV(qr)
                 User.withTransaction {
-                    def users = queryService.getSubscribers(query.id)
+                    def users = query.getSubscribers()
                     def recipients = users.collect { user ->
                         def notificationUnsubToken = user.notifications.find { it.query.id == query.id }?.unsubscribeToken
                         [email: user.email, userUnsubToken: user.unsubscribeToken, notificationUnsubToken: notificationUnsubToken]
