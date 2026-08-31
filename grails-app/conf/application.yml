@@ -197,7 +197,7 @@ biosecurity:
             directory: biosecurity # key prefix
             # bucket: alerts # configured via plugin config `grails.plugin.awssdk.s3.bucket`
 
-    subscriptionsPerPage: 100
+    subscriptionsPerPage: 50
     legacy:
         aus: cl927:*
         act: cl927:"Australian Capital Territory" OR cl927:"Jervis Bay Territory"

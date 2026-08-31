@@ -38,6 +38,15 @@ class BiosecurityService {
         return results
     }
 
+    def get(id) {
+        def query = Query.get(id)
+        if (query) {
+            def lastChecked = queryService.getLastCheckedDate(query)
+            query.lastChecked = lastChecked
+        }
+        query
+    }
+
     /**
      *
      * A query contains a number of independent searches depends on the number of species in the list.
