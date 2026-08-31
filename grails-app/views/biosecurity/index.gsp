@@ -30,14 +30,14 @@
 <div class="container mt-4">
     <div class="alerts-panel" x-data="AlertList">
         <!-- Error message -->
-        <div x-show="failed && !loading" class="alert alert-danger" x-cloak>
+        <div x-show.important="failed && !loading" class="alert alert-danger" x-cloak>
             Failed to load alerts: <span x-text="failedReason"></span>.
             <button class="btn btn-sm btn-outline-danger ms-2" @click="loadAlerts()">Try again</button>
         </div>
         <!-- Loading -->
-        <div x-show="loading && alerts.length === 0" class="text-muted">Loading alerts...</div>
+        <div x-show.important="loading && alerts.length === 0" class="text-muted">Loading alerts...</div>
         <!-- No alerts -->
-        <div x-show="!loading && alerts.length === 0 && !failed" class="alert alert-info " x-cloak>
+        <div x-show.important="!loading && alerts.length === 0 && !failed" class="alert alert-info " x-cloak>
             You don't have any alerts.
         </div>
 
@@ -67,7 +67,7 @@
         <!-- Alert list -->
         <div class="row ">
             <!-- Pagination -->
-            <div x-show="totalPages > 1 && !isSearching" class="mt-4 d-flex col-md-8 align-items-center mb-3" x-cloak>
+            <div x-show.important="totalPages > 1 && !isSearching" class="mt-4 d-flex col-md-8 align-items-center mb-3" x-cloak>
                 <nav>
                     <ul class="pagination mb-0">
                         <li class="page-item" :class="{ disabled: currentPage === 0 }">
@@ -99,29 +99,29 @@
                     <div class="row">
                         <div class="col-md-4">
                             <div>
-                                <span x-show="editingId !== query.id" >
+                                    <span x-show.important="editingId !== query.id" >
                                     <a :href="'${createLink(controller: 'query', action: 'show')}/' + query.id"  target="_blank" class="btn btn-link text-wrap text-start p-0" x-text="query.name"></a>
                                     <span class="badge-outline-secondary"><a :href="'${grailsApplication.config.lists.baseURL}' + '/speciesListItem/list/' + query.listId" target="_blank" x-text="query.listId"></a></span>
                                     <button class="btn btn-link btn-sm p-0 ms-1" title="Edit title" @click="editTitle(query.id)">
                                         <i class="fa-solid fa-pencil"></i>
                                     </button>
                                 </span>
-                                <div x-show="editingId === query.id" class="gap-2" x-cloak>
+                                <div x-show.important="editingId === query.id" class="gap-2" x-cloak>
                                     <textarea class="form-control form-control-sm" rows="3" x-model="editingTitle" placeholder="Enter new title"></textarea>
                                     <br>
                                     <button class="btn btn-sm btn-primary" @click="updateTitle(query.id)">Save</button>
                                     <button class="btn btn-sm btn-outline-primary" @click="cancelEditTitle()">Cancel</button>
                                 </div>
-                                <div x-show="query.lastChecked" class="mt-1" >
+                                <div x-show.important="query.lastChecked" class="mt-1" >
                                     <span class="text-muted">Last checked:</span>
                                     <span class="link-primary" @click="query.showLog = !query.showLog"  style="cursor: pointer;" x-text="formatDate(query.lastChecked)"></span>
                                     <div class="text-muted mt-1 fst-italic">Missed the last check? Would you like to <a href="#" @click.prevent="run(query.id)">check now</a>?</div>
                                 </div>
-                                <div x-show="!query.lastChecked" class="text-muted mt-1">
+                                <div x-show.important="!query.lastChecked" class="text-muted mt-1">
                                     This is the first time subscribing to this list. Please navigate to the right section to set the initial check date and click the <button class="btn btn-outline-primary" type="button">Notify</button> button.
                                 Otherwise, the check date will default to 7 days before the scheduled task's execution date.
                                 </div>
-                                <div x-show="query.showLog" class="text-muted mt-1 " style="white-space: pre-line;" x-text="query.log" x-cloak></div>
+                                <div x-show.important="query.showLog" class="text-muted mt-1 " style="white-space: pre-line;" x-text="query.log" x-cloak></div>
                             </div>
                         </div>
                         <div class="col-md-5">
@@ -131,7 +131,7 @@
                                     <i @click="unsubscribe(query.id, subscriber.id, subscriber.email)" class="fa fa-trash clickable"></i>
                                 </span>
                             </template>
-                            <button x-show="query.subscribers.length === 0" class="btn btn-primary" @click="deleteSubscription(query.id)">Delete this subscription</button>
+                            <button x-show.important="query.subscribers.length === 0" class="btn btn-primary" @click="deleteSubscription(query.id)">Delete this subscription</button>
 
                             <div class="mt-2">
                                 <input class="form-control"  x-model="query.newSubscribers"
@@ -146,7 +146,7 @@
                             <button class="btn btn-primary" name="previewSubscription" type="button" @click="submitPreview(query.id)" >Preview</button>
                             <button class="btn btn-primary" name="triggerAlertSince" type="button" @click="triggerAlertSince(query.id)">Notify</button>
                             <a href="#" class="ms-2" @click.prevent="query.showHelp = !query.showHelp"><i class="fas fa-question-circle"></i> Help</a>
-                            <div x-show="query.showHelp" x-cloak>
+                            <div x-show.important="query.showHelp" x-cloak>
                                 <small class="form-text text-muted d-block mt-1">
                                     The '<span class="text-primary fw-bold">Preview</span>' button is primarily for administrators to verify that a query runs correctly.It does <span class="text-primary fw-bold">NOT</span> update the last execution date, send emails, or regenerate a CSV.
                                 </small>
@@ -161,7 +161,7 @@
             </div>
         </template>
         <!-- Pagination -->
-        <div x-show="totalPages > 1 && !isSearching" class="mt-4 d-flex col-md-12 align-items-center" x-cloak>
+        <div x-show.important="totalPages > 1 && !isSearching" class="mt-4 d-flex col-md-12 align-items-center" x-cloak>
             <nav>
                 <ul class="pagination mb-0">
                     <li class="page-item" :class="{ disabled: currentPage === 0 }">
@@ -205,7 +205,6 @@
             //searching function
             searchKeyword: '',
             isSearching: false, // true if valid results are returned, mainly used for hide/show pagination
-            cachedAlerts: [], // store the current alerts when searching
             //add a new subscription
             newQuery: {
                 isProcessing: false,
@@ -451,33 +450,31 @@
                     if (response.ok) {
                         const result = await response.json();
                         if (result.length > 0) {
-                            this.cachedAlerts = this.alerts;
                             this.alerts = result.map(alert => ({ ...alert, showLog: false, showHelp: false,newSubscribers:'' }));
                             this.isSearching = true;
                         }
                     } else {
                        console.error('Failed to search keywords' + response.status + ' ' + response.statusText);
                     }
-                } else {
-                    if (this.isSearching) {
-                        this.alerts = this.cachedAlerts;
-                        this.isSearching = false;
-                    }
+                } else if ( this.isSearching ) {
+                    //It means it was searching before, but now the keyword is less than 3 characters, so reset the search
+                    this.resetSearch();
+                    this.isSearching = false;
                 }
             },
 
-              async resetSearch() {
+            async resetSearch() {
                 this.searchKeyword = '';
-                this.alerts = this.cachedAlerts;
                 this.isSearching = false;
-              },
+                this.refreshAlerts();
+            },
 
-              async submitPreview(queryId) {
+            async submitPreview(queryId) {
                   this.activeId = queryId;
                   var localDate = new Date(this.previewDate);
                   var utcDate = localDate.toISOString();
                   window.open(CONTEXT_PATH + '/biosecurity/preview?id=' + queryId + '&date=' + utcDate, '_blank')
-              },
+            },
 
             async run(queryId) {
                 let yes = confirm("This will run the alert immediately and send emails to all subscribers. Are you sure you want to proceed?");
