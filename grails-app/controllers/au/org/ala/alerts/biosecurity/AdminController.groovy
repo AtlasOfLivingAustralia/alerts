@@ -22,7 +22,6 @@ class AdminController {
     def userService
     def notificationService
     def biosecurityService
-    def biosecurityJobService
     def diffService
     def authService
     def messageSource
@@ -37,8 +36,7 @@ class AdminController {
      */
     @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true, redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to view that page.")
     def index() {
-        Map jobStatus = biosecurityJobService.getJobInfo()
-        render view: "/biosecurity/index", model: [jobStatus: jobStatus]
+        render(view: "/biosecurity/index")
     }
 
     /**

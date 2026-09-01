@@ -36,17 +36,17 @@ class ScheduleController {
 
     def pauseAlerts() {
         biosecurityJobService.pauseTrigger()
-        redirect(namespace: "biosecurity", controller: "admin", action: "index")
+        render biosecurityJobService.getJobInfo() as JSON
     }
 
     def resumeAlerts() {
         biosecurityJobService.resumeTrigger()
-        redirect(namespace: "biosecurity", controller: "admin", action: "index")
+        render biosecurityJobService.getJobInfo() as JSON
     }
 
     def runNow() {
         biosecurityJobService.runNow()
-        redirect(namespace: "biosecurity", controller: "admin", action: "index")
+        render ([success: true, message:"Biosecurity is triggered"] as JSON)
     }
 
     def updateWeeklySchedule() {
@@ -86,7 +86,8 @@ class ScheduleController {
         // Quartz cron (UTC)
         def cron = "0 ${utcMinute} ${utcHour} ? * ${utcWeekday}"
         biosecurityJobService.updateTrigger(cron)
-        redirect(namespace: "biosecurity", controller: "admin", action: "index")
+        def jobStatus = biosecurityJobService.getJobInfo()
+        render jobStatus as JSON
     }
 
     /**
@@ -105,7 +106,7 @@ class ScheduleController {
         try {
             clientZone = params.localTimeZone ? ZoneId.of(params.localTimeZone as String) : ZoneOffset.UTC
         } catch (DateTimeException ignored) {
-            render([error: "Invalid timezone: ${params.localTimeZone}"] as JSON)
+            render([success: false, message: "Invalid timezone: ${params.localTimeZone}"] as JSON)
             return
         }
 
@@ -115,18 +116,16 @@ class ScheduleController {
             pauseDate = toDate(params.pauseDate as String, clientZone)
             resumeDate = toDate(params.resumeDate as String, clientZone)
         } catch (DateTimeParseException e) {
-            render([error: "Invalid dates: ${e.message}"] as JSON)
+            render([success: false, message: "Invalid dates: ${e.message}"] as JSON)
             return
         }
 
         if (pauseDate && resumeDate) {
             biosecurityJobService.pauseResumeAlerts(pauseDate, resumeDate)
-            // Future enhancement: return the scheduled pause/resume window to the UI so it can be displayed immediately.
-            // def window = biosecurityJobService.getPauseWindow()
-            // render(window as JSON)
-            redirect(namespace: "biosecurity", controller: "admin", action: "index")
+            def window = biosecurityJobService.getPauseWindow()
+            render([success: true, window: window] as JSON)
         } else {
-            render([error: "Invalid dates"] as JSON)
+            render([success: false, message: "Invalid dates"] as JSON)
         }
     }
 
@@ -184,6 +183,5 @@ class ScheduleController {
     def getJobStatus() {
         render biosecurityJobService.getJobInfo() as JSON
     }
-
 }
 
