@@ -179,20 +179,20 @@
         <div class="row" >
             <div class="d-flex col-auto gap-2 mt-2">
                 <input type="number" id="archiveYear" class="form-control form-control-sm"
-                       placeholder="e.g. 2025" min="2023" max="${new Date().year + 1900 - 1}" style="width:120px;"
-                       value="${new Date().year + 1900 - 1}"
+                       placeholder="e.g. 2025" min="2023" max="${new Date().year + 1900}" style="width:120px;"
+                       value="${new Date().year + 1900}"
                        oninput="document.getElementById('archiveBtn').textContent = 'Archive ' + (this.value || '?') + ' CSV files';
                                 document.getElementById('unarchiveBtn').textContent = 'Unarchive ' + (this.value || '?') + ' CSV files';
                                 document.getElementById('aggregateBtn').textContent = 'Annual Aggregation for ' + (this.value || '?');"/>
                 <button id="aggregateBtn" class="btn btn-primary" onclick="aggregateByYear(); return false;">
-                    <i class="fas fa-layer-group"></i>&nbsp;Annual Aggregation for ${new Date().year + 1900 - 1}
+                    <i class="fas fa-layer-group"></i>&nbsp;Annual Aggregation for ${new Date().year + 1900}
                 </button>
 
                 <button id="archiveBtn" class="btn btn-outline-primary" onclick="archiveByYear(); return false;">
-                    <i class="fas fa-archive"></i>&nbsp;Archive ${new Date().year + 1900 - 1} CSV files
+                    <i class="fas fa-archive"></i>&nbsp;Archive ${new Date().year + 1900} CSV files
                 </button>
                 <button id="unarchiveBtn" class="btn btn-outline-primary" onclick="unarchiveByYear(); return false;">
-                    <i class="fas fa-box-open"></i>&nbsp;Unarchive ${new Date().year + 1900 - 1} CSV files
+                    <i class="fas fa-box-open"></i>&nbsp;Unarchive ${new Date().year + 1900} CSV files
                 </button>
                 <small class="text-muted ms-2 mt-3">
                     <a href="#" data-bs-toggle="modal" data-bs-target="#yearOpsHelpModal">

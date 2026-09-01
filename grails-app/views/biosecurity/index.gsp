@@ -485,10 +485,9 @@
                     if (response.ok) {
                         const result = await response.json();
                         if (result.success) {
-                            let query = this.alerts.find(a => a.id === queryId);
+                            const alert = this.alerts.find(a => a.id === queryId);
                             const resp = await fetch(CONTEXT_PATH + "/biosecurity/subscription/" + queryId+".json");
-                            const respJson = await resp.json();
-                            query = respJson.alert;
+                            Object.assign(alert, await resp.json());
                             window.alert("The alerts has been executed successfully.");
                         } else {
                             window.alert("Failed to trigger alert: " + result.message);
@@ -514,9 +513,10 @@
                         const result = await response.json();
                         if (result.success) {
                             window.alert("Notification triggered successfully.");
-                            let query = this.alerts.find(a => a.id === queryId);
-                            query.lastChecked = utcDate;
-                            query.logs = result.logs.join("\n");
+                            const alert = this.alerts.find(a => a.id === queryId);
+                            const resp = await fetch(CONTEXT_PATH + "/biosecurity/subscription/" + queryId+".json");
+                            Object.assign(alert, await resp.json());
+                            window.alert("The alerts has been executed successfully.");
                         } else {
                             window.alert("Failed to trigger notification: " + result.message);
                         }

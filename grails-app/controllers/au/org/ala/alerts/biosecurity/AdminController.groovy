@@ -75,7 +75,7 @@ class AdminController {
     }
 
     def get(int id) {
-        def query = Query.get(id)
+        def query = biosecurityService.get(id)
         if (query) {
             render queryToAlertMap(query) as JSON
         } else {

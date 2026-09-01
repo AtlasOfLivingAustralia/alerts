@@ -603,6 +603,13 @@ class QueryService {
         result
     }
 
+    /**
+     * Get the last checked date for a given query.
+     * todo it may only work for Biosecurity, since Biosecurity queries are weekly only, and other queries may have multiple frequencies, so the last checked date may not be unique.
+     *
+     * @param query The query for which to retrieve the last checked date.
+     * @return The last checked date, or null if not found.
+     */
     def getLastCheckedDate(Query query) {
         def lastCheckedDate = null
         QueryResult.withTransaction {
