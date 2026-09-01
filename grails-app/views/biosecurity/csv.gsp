@@ -162,7 +162,7 @@
         <div class="row" >
             <div class="col-auto">
                 <a class="btn btn-primary " href="${createLink( namespace: 'biosecurity', controller: 'csv', action: 'aggregate', params: [name:'/'])}" onclick="return confirmDownload();">
-                    <i class="fas fa-cloud-arrow-down" aria-hidden="true" ></i>&nbsp;&nbsp;Download Full CSV Report
+                    <i class="fas fa-cloud-arrow-down" aria-hidden="true" ></i>&nbsp;&nbsp;Download Full CSV Report (zipped)
                 </a>
             </div>
             <g:if test="${grailsApplication.config.getProperty('biosecurity.csv.s3.enabled', Boolean) == true}">

@@ -7,6 +7,8 @@ import grails.converters.JSON
 import grails.gorm.transactions.Transactional
 
 import java.text.SimpleDateFormat
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 
 class CsvController {
     static namespace = "biosecurity"
@@ -50,15 +52,16 @@ class CsvController {
             outputFilename = "biosecurity_alerts_before_${new SimpleDateFormat("yyyy-MM-dd").format(new Date())}"
         }
 
-        response.contentType = "text/csv"
+        response.contentType = "application/zip"
         response.setHeader(
                 "Content-Disposition",
-                "attachment; filename=\"${outputFilename}.csv\""
+                "attachment; filename=\"${outputFilename}.zip\""
         )
-
-        csvService.aggregateCSVFiles(name, response.outputStream)
-
-        response.outputStream.flush()
+        ZipOutputStream zipOut = new ZipOutputStream(response.outputStream)
+        zipOut.putNextEntry(new ZipEntry("${outputFilename}.csv"))
+        csvService.aggregateCSVFiles(name, zipOut)
+        zipOut.closeEntry()
+        zipOut.finish()
     }
 
     @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true,redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to view that page.")
@@ -98,12 +101,22 @@ class CsvController {
             render(status: 404, text: "File not found")
             return
         }
-
+        
         file.withInputStream { inputStream ->
-            response.setHeader("Content-disposition", "attachment; filename=biosecurity_alerts_before_${new SimpleDateFormat("yyyy-MM-dd").format(dt.createdAt)}.csv")
-            response.contentType = "text/csv"
-            response.outputStream << inputStream
-            response.outputStream.flush()
+            String csvFilename = "biosecurity_alerts_before_${new SimpleDateFormat('yyyy-MM-dd').format(dt.createdAt)}.csv"
+            String zipFilename = csvFilename.replace(".csv", ".zip")
+
+            response.setHeader(
+                    "Content-Disposition",
+                    "attachment; filename=${zipFilename}"
+            )
+            response.contentType = "application/zip"
+            ZipOutputStream zipOut = new ZipOutputStream(response.outputStream)
+            zipOut.putNextEntry(new ZipEntry(csvFilename))
+            inputStream.transferTo(zipOut)
+            zipOut.closeEntry()
+            zipOut.finish()
+            zipOut.flush()
         }
     }
 

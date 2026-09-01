@@ -184,7 +184,7 @@ class BiosecurityS3CSVService extends BiosecurityCSVService{
                                 <p>Your requested CSV file is ready. You can download it using the link below. 
                                 Please note that the download link will expire in 7 days.</p>
                         
-                                <p><a href="${downloadUrl}">Download CSV File</a></p>
+                                <p><a href="${downloadUrl}">Download the CSV File (zipped)</a></p>
                         
                                 <p>If you did not request this download, please ignore this email.</p>
                         
