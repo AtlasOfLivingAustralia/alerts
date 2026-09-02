@@ -141,7 +141,7 @@ collectoryService:
   baseURL: "{{ .Values.config.external.alerts_collectory_service_url }}"
 
 collection:
-  searchTitle: "={{ .Values.config.collection_searchTitle }}"
+  searchTitle: "{{ .Values.config.collection_searchTitle }}"
   searchURL: "{{ .Values.config.collection_searchUrl }}"
 
 lists:

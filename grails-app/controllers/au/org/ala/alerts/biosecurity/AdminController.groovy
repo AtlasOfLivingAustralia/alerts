@@ -137,7 +137,7 @@ class AdminController {
     @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
     def addSubscribers() {
         def result = [:]
-        if ((!params.listId || params.listId.allWhitespace) && !params.queryId) {
+        if ( !params.queryId) {
             result = [status: 1, message: messageSource.getMessage("biosecurity.view.error.emptyspeciesid", null, "Species list uid can't be empty.", siteLocale)]
         } else if (!params.userEmails || params.userEmails.allWhitespace) {
             result = [status: 1, message: messageSource.getMessage("biosecurity.view.error.emptyemails", null, "User emails can't be empty.", siteLocale)]
@@ -150,11 +150,7 @@ class AdminController {
                 if (entry.value == null) {
                     invalidEmails.add(entry.key)
                 } else {
-                    if (params.queryId) {
-                        queryService.createQueryForUserIfNotExists(Query.get(params.queryId), entry.value as User, true,true)
-                    } else {
-                        queryService.subscribeBioSecurity(entry.value as User, params.listId.trim())
-                    }
+                   queryService.createQueryForUserIfNotExists(Query.get(params.queryId), entry.value as User, true,true)
                 }
             }
             if (invalidEmails) {

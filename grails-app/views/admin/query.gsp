@@ -117,10 +117,21 @@
 
                                 <a href="javascript:void(0);" class="toggle-more-query-details" data-target="#more-${query.id}"  data-bs-toggle="tooltip" data-bs-placement="top" title="Click to show more functions">
                                  <g:if test="${query.name == 'My Annotations'}">
-                                       <%
-                                               def users = query.notifications.collect { it.user?.email }.join(', ')
-                                       %>
-                                       ${users?:"No users"}
+                                      <g:if test="${query.notifications}">
+                                         <g:each var="notification" in="${query.notifications}">
+                                             <g:link controller="notification"
+                                                     action="delete"
+                                                     params="[id: notification.id]"
+                                                     target="_blank"
+                                                     data-bs-toggle="tooltip"
+                                                     data-bs-placement="top"
+                                                     title="Delete this subscription">
+                                                      <i class="fa fa-trash" aria-hidden="true"></i>
+                                             </g:link>${notification.user?.email}</g:each>
+                                       </g:if>
+                                      <g:else>
+                                         No users
+                                     </g:else>
                                    </g:if>
                                    <g:else>
                                          ${query.name}

@@ -62,6 +62,11 @@ class UrlMappings {
         // (emails, bookmarks, the main ALA site). 301 so clients adopt the canonical URL.
         "/notification/myalerts"(redirect: [controller: 'notification', action: 'myAlerts', permanent: true])
 
+        // Admin only deletion of a single notification. Declared explicitly (rather than relying on
+        // the catch-all "/$controller/$action?/$id?" mapping below) so the id is required.
+        // The allowed HTTP methods are governed by NotificationController.allowedMethods.
+        "/notification/delete/$id"(controller: 'notification', action: 'delete')
+
         "/admin/log"(controller: 'log', action: 'index')
         "/admin/log/update"(controller: 'log', action: 'update', method: 'PUT')
         "/admin/log/delete/$id?"(controller: 'log', action: 'delete', method: 'DELETE')

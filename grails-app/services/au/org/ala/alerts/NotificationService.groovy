@@ -502,7 +502,19 @@ class NotificationService {
             // myAnnotationQuery is created to fillet out those myAnnotation queries which do not belong to me,
             def myAnnotationQuerySample = queryService.createMyAnnotationQuery(user.getUserId())
             // myAnnotation is a special case. We need to create a myAnnotation query for the user if it does not exist.
-            queryService.createQueryForUserIfNotExists(myAnnotationQuerySample, user, false, false)
+            Query.withTransaction {
+                Query retrievedQuery = Query.findByBaseUrlAndQueryPath(myAnnotationQuerySample.baseUrl, myAnnotationQuerySample.queryPath)
+                if (retrievedQuery == null) {
+                    // Persist the query first so it gets an id, enabling child objects to reference it
+                    retrievedQuery = myAnnotationQuerySample
+                    retrievedQuery.save()
+                    Notification n = new Notification([query: retrievedQuery, user: user, enabled: false])
+                    retrievedQuery.notifications.add(n)
+                    retrievedQuery.save(validate: true, flush: true)
+                }
+            }
+
+
             // Get all standard (non-custom) queries, but exclude myAnnotation queries except the one for this user
             def standardQueries = Query.createCriteria().list {
                 eq('custom', false)
@@ -632,24 +644,27 @@ class NotificationService {
 
     def subscribeMyAnnotation(User user) {
         Query myAnnotationSampleQuery = queryService.createMyAnnotationQuery(user?.userId)
-        boolean newQueryCreated = queryService.createQueryForUserIfNotExists(myAnnotationSampleQuery, user, false, true)
-        // trigger a check for this query to generate query result
-        // user could call multiple subscribeMyAnnotation, only the first one will create a new query so it's
-        // triggered only once.
-        if (newQueryCreated) {
-            Query savedQuery = Query.findByBaseUrlAndQueryPath(myAnnotationSampleQuery.baseUrl, myAnnotationSampleQuery.queryPath)
-            //todo I don't think we need to execute the query here.
-            //executeQuery(savedQuery, user.frequency)
-        } else {
-            //if it is not new created, the related notification may set to disabled, so we need to enable it
-            Query retrievedQuery = Query.findByBaseUrlAndQueryPath(myAnnotationSampleQuery.baseUrl, myAnnotationSampleQuery.queryPath)
+        Query retrievedQuery = Query.findByBaseUrlAndQueryPath(myAnnotationSampleQuery.baseUrl, myAnnotationSampleQuery.queryPath)
+        if (retrievedQuery != null) {
             def notification = Notification.findByQueryAndUser(retrievedQuery, user)
             if (notification) {
                 notification.enabled = true
                 Notification.withTransaction {
                     notification.save()
                 }
+            } else {
+                def newNotification = new Notification(query: retrievedQuery, user: user, enabled: true)
+                Notification.withTransaction {
+                    if (!newNotification.save(validate: true, flush: true)) {
+                        newNotification.errors.allErrors.each {
+                            log.error(it)
+                        }
+                    }
+                }
             }
+            return ["success": true, "message": "myAnnotation query subscribed for user: " + user.userId]
+        } else {
+            return ["success": false, "message": "myAnnotation query not found for user: " + user.userId]
         }
     }
 
@@ -704,6 +719,22 @@ class NotificationService {
         } else {
             log.error("Query not found for queryPath: " + user.userId)
             return false
+        }
+    }
+
+    /**
+     * Delete a notification by its ID. This method is used to remove a specific notification from the database.
+     * @param id
+     * @return
+     */
+    def delete(id) {
+        def notificationInstance = Notification.get(id)
+        if (notificationInstance) {
+            Notification.withTransaction {
+                notificationInstance.delete(flush: true)
+            }
+        } else {
+            log.error('*** Unable to find  my notification - no delete :  ' + id)
         }
     }
 

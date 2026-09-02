@@ -337,3 +337,7 @@ For admin page layout
     border-color: #dee2e6;
 }
 
+.form-check-input {
+    cursor: pointer;
+}
+

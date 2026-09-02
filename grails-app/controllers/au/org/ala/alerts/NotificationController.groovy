@@ -4,6 +4,7 @@
 
 package au.org.ala.alerts
 
+import au.org.ala.web.AlaSecured
 import grails.converters.JSON
 import org.springframework.http.HttpStatus
 
@@ -15,7 +16,7 @@ class NotificationController {
     def diffService
     def queryResultService
 
-    static allowedMethods = [save: "POST", update: "POST", delete: "POST"]
+    static allowedMethods = [save: "POST", update: "POST", delete: ["GET", "POST"]]
 
 
     /**
@@ -91,8 +92,8 @@ class NotificationController {
     def subscribeMyAnnotation()  {
         def user = getUser()
         try {
-            notificationService.subscribeMyAnnotation(user)
-            render ([success: true] as JSON)
+            def result = notificationService.subscribeMyAnnotation(user)
+            render (result as JSON)
         } catch (ignored) {
             response.sendError(HttpStatus.INTERNAL_SERVER_ERROR.value(), "failed to subscribe to 'my annotation' alert for user " + user?.getUserId())
         }
@@ -105,6 +106,18 @@ class NotificationController {
             render ([success: done] as JSON)
         } catch (ignored) {
             response.sendError(HttpStatus.INTERNAL_SERVER_ERROR.value(), "failed to unsubscribe 'my annotation' alert for user " + user?.getUserId())
+        }
+    }
+
+    @AlaSecured(value = ['ROLE_ADMIN'])
+    def delete(Long id) {
+        // id is data bound as a Long, so a non numeric path variable (e.g. /notification/delete/abc)
+        // arrives as null and is rejected here instead of being passed on to GORM
+        if (id) {
+            notificationService.delete(id)
+            render ([success: true] as JSON)
+        } else {
+            render([success: false, message: "No id provided"] as JSON)
         }
     }
 
