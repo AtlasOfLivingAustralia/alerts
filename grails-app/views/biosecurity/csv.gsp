@@ -162,13 +162,13 @@
         <div class="row" >
             <div class="col-auto">
                 <a class="btn btn-primary " href="${createLink( namespace: 'biosecurity', controller: 'csv', action: 'aggregate', params: [name:'/'])}" onclick="return confirmDownload();">
-                    <i class="fas fa-cloud-arrow-down" aria-hidden="true" ></i>&nbsp;&nbsp;Download Full CSV Report
+                    <i class="fas fa-cloud-arrow-down" aria-hidden="true" ></i>&nbsp;&nbsp;Download Full CSV Report (ZIP)
                 </a>
             </div>
             <g:if test="${grailsApplication.config.getProperty('biosecurity.csv.s3.enabled', Boolean) == true}">
                 <div class="col-auto ms-auto">
                     <a class = "btn btn-outline-primary" href="${createLink( namespace: 'biosecurity', controller: 'csv', action: 'asyncAggregate', absolute: true)}">
-                        <i class="fas fa-shipping-fast"></i>&nbsp;&nbsp;Email Me Full CSV Report (!Beta)</a>
+                        <i class="fas fa-shipping-fast"></i>&nbsp;&nbsp;Email Me Full CSV Report (ZIP)</a>
                     <a class="ms-3" href="${createLink( namespace: 'biosecurity', controller: 'csv', action: 'downloads', absolute: true)}" >
                         <i class="fas fa-history"></i> logs
                     </a>
