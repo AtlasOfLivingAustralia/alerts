@@ -49,8 +49,8 @@ phases:
       - echo "$BUILD_TAG" > build_tag.txt
       - echo Building and pushing the multi-arch Docker image to ECR...
       - |
-        if docker pull "$ECR_REPO:latest"; then
-          CACHE_ARGS="--cache-from $ECR_REPO:latest"
+        if docker buildx imagetools inspect "$ECR_REPO:latest"; then
+          CACHE_ARGS="--cache-from type=registry,ref=\"$ECR_REPO:latest\""
         else
           CACHE_ARGS=""
         fi
@@ -58,6 +58,7 @@ phases:
         docker buildx build --platform linux/amd64,linux/arm64 \
                             -f Dockerfile \
                             $CACHE_ARGS \
+                            --pull \
                             --build-arg BUILDKIT_INLINE_CACHE=1 \
                             -t $ECR_REPO:$BUILD_TAG \
                             -t $ECR_REPO:latest \
