@@ -50,7 +50,7 @@ phases:
       - echo Building and pushing the multi-arch Docker image to ECR...
       - |
         if docker buildx imagetools inspect "$ECR_REPO:latest"; then
-          CACHE_ARGS="--cache-from type=registry,ref=\"$ECR_REPO:latest\""
+          CACHE_ARGS="--cache-from type=registry,ref=$ECR_REPO:latest"
           echo using cache args: $CACHE_ARGS
         else
           CACHE_ARGS=""
