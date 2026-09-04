@@ -95,7 +95,7 @@
 
         <template x-for="query in alerts" :key="query.id">
             <div class="card mb-3">
-                <div class="card-body border" :class="activeId === query.id ? 'border-primary' : 'border-light'" >
+                <div class="card-body" :class="activeId === query.id ? 'border-primary' : 'border-light'" >
                     <div class="row">
                         <div class="col-md-4">
                             <div>

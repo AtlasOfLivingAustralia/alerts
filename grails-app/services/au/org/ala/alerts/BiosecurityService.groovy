@@ -40,10 +40,6 @@ class BiosecurityService {
 
     def get(id) {
         def query = Query.get(id)
-        if (query) {
-            def lastChecked = queryService.getLastCheckedDate(query)
-            query.lastChecked = lastChecked
-        }
         query
     }
 
@@ -93,8 +89,10 @@ class BiosecurityService {
 
             def newRecords = diffService.getNewRecords(qr)
             fetchExtraOccurrenceInfo(newRecords)
+            def countsByDataProvider = countByDataProvider(newRecords)
             qr.newRecords = newRecords
             qr.totalRecords = qr.newRecords?.size()
+
             if ( qr.totalRecords > 0) {
                 qr.hasChanged = true
                 qr.lastChanged = since
@@ -114,6 +112,7 @@ class BiosecurityService {
             String modifiedPath = queryPath.replaceAll('___DATEPARAM___', firstLoadedDate).replaceAll('___LASTYEARPARAM___', occurrenceDate)
             qr.queryUrlUIUsed = query.baseUrlForUI + modifiedPath
 
+
             if (qr.hasChanged) {
                 def csvService =  getCsvService()
                 csvService.generateAuditCSV(qr)
@@ -131,7 +130,7 @@ class BiosecurityService {
                     result.logs << "Sending emails to ${emails.size() <= 2 ? emails.join('; ') : emails.take(2).join('; ') + ' and ' + (emails.size() - 2) + ' other users.'}"
 
                     if (!users.isEmpty()) {
-                        def emailStatus = emailService.sendGroupNotification(qr, frequency, recipients)
+                        def emailStatus = emailService.sendGroupNotification(qr, frequency, recipients,[countByDataProvider: countsByDataProvider])
 
                         result.status = emailStatus.status
                         result.logs << emailStatus.message
@@ -412,6 +411,27 @@ class BiosecurityService {
                 }
             }
         }
+    }
+
+    /**
+     * Group the occurrence records by their data provider and count them.
+     *
+     * @param records the occurrence records
+     * @return a map of [dataProvider : count], sorted by dataProvider name in descending order
+     */
+    def countByDataProvider(def records) {
+        if (!records) {
+            return [:]
+        }
+        //sort the records by dataProviderName, dataProvider, or dataResourceName (in that order), and group them by the same criteria
+        records.sort { rec ->
+            (rec?.dataProviderName ?: rec?.dataProvider ?: rec?.dataResourceName ?: 'Unknown').toString()
+        }
+        records.groupBy { rec ->
+            (rec?.dataProviderName ?: rec?.dataProvider ?: rec?.dataResourceName ?: 'Unknown').toString()
+        }.collectEntries { provider, group ->
+            [(provider): group.size()]
+        }.sort { a, b -> b.key <=> a.key }
     }
 
     private def getCsvService() {

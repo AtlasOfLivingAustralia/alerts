@@ -24,10 +24,6 @@ class Query {
     static hasMany = [notifications: Notification, queryResults: QueryResult, propertyPaths: PropertyPath]
 
     transient String listId //species list id
-    // Date when the last execution performed.
-    // NOTE: Except Biosecurity, other queries may have 4 lastChecked dates, matching the 4 frequencies
-    // Only used for passing the checked date to the Email template
-    transient Date lastChecked
 
     static constraints = {
         description nullable: true, maxSize: 400, widget: 'textarea'

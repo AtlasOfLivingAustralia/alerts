@@ -100,7 +100,7 @@ class AdminController {
                 id         : query.id,
                 name       : query.name,
                 listId     : query.listId,
-                lastChecked: utilService.formatUtc(query.lastChecked),
+                lastChecked: query.queryResults?[0]?.lastChecked,
                 subscribers: activeSubscribers + inactiveSubscribers,
                 log        : log
         ]
@@ -380,9 +380,10 @@ class AdminController {
             //this logic only applies on preview page
             qr.previousCheck = qr.lastChecked
             qr.lastChecked = since
-            query.lastChecked = since
+
             def records = diffService.diff(qr)
             biosecurityService.fetchExtraOccurrenceInfo(records)
+            def countByDataProvider = biosecurityService.countByDataProvider(records)
 
             String urlPrefix = "${grailsApplication.config.getProperty("grails.serverURL")}${grailsApplication.config.getProperty('security.cas.contextPath', '')}"
             def localeSubject = messageSource.getMessage("emailservice.update.subject", [query.name] as Object[], siteLocale)
@@ -397,12 +398,13 @@ class AdminController {
                 unsubscribeOneUrl = urlPrefix + "/unsubscribe?token=${unsubscribeToken}"
             }
             int maxRecords = grailsApplication.config.getProperty("biosecurity.query.maxRecords", Integer, 500)
+            def moreInfo = [queryUrlUIUsed: qr.queryUrlUIUsed, countByDataProvider: countByDataProvider, lastChecked: qr.previousCheck]
             render(view: query.emailTemplate,
 //                plugin: "email-confirmation",
                     model: [title           : localeSubject,
                             message         : query.updateMessage,
                             query           : query,
-                            moreInfo        : qr.queryUrlUIUsed,
+                            moreInfo        : moreInfo,
                             listcode        : queryService.isMyAnnotation(query) ? "biocache.view.myannotation.list" : "biocache.view.list",
                             stopNotification: urlPrefix + '/notification/myAlerts',
                             records         : records.take(maxRecords),

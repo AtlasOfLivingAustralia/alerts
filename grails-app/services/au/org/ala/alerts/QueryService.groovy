@@ -498,10 +498,6 @@ class QueryService {
             // Get the last QueryResult from the filtered list, if it exists
             QueryResult qr = !filteredQueryResults.isEmpty() ? filteredQueryResults.first() : null
 
-            // Update the query's lastChecked property if a QueryResult was found
-            if (qr) {
-                query.lastChecked = qr.lastChecked
-            }
             query
         }
 

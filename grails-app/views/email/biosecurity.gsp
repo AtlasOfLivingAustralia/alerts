@@ -9,13 +9,13 @@
     <title>${title}</title>
 </head>
 <body style="background-color: #f4f4f4;margin: 0;padding: 0;font-family: 'Roboto', sans-serif;font-size: 16px;line-height: 1.5;">
-<table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f4f4f4;font-family: 'Roboto', sans-serif;font-size: 16px;line-height: 1.5;border-spacing: 0;border-collapse: collapse;">
+<table role="presentation" style="width: 100%;border: 0;background-color: #f4f4f4;font-family: 'Roboto', sans-serif;font-size: 16px;line-height: 1.5;border-spacing: 0;border-collapse: collapse;">
     <tr>
         <td align="center" style="padding: 20px;font-family: 'Roboto', sans-serif;font-size: 16px;line-height: 1.5;">
-            <table border="0" cellpadding="0" cellspacing="0" width="650" style="background-color: #ffffff;font-family: 'Roboto', sans-serif;font-size: 16px;line-height: 1.5;border-spacing: 0;border-collapse: collapse;">
+            <table role="presentation" width="650" style="width: 650px;max-width: 100%;border: 0;background-color: #ffffff;font-family: 'Roboto', sans-serif;font-size: 16px;line-height: 1.5;border-spacing: 0;border-collapse: collapse;">
                 <!-- Logo -->
                 <tr>
-                    <td align="center" style="padding: 20px; background-color: #fff;font-family: 'Roboto', sans-serif;font-size: 16px;line-height: 1.5;">
+                    <td style="text-align: center; padding: 20px; background-color: #fff;font-family: 'Roboto', sans-serif;font-size: 16px;line-height: 1.5;">
                         <a href="https://www.ala.org.au" target="_blank" style="font-family: 'Roboto', sans-serif;font-size: 16px;line-height: 1.5;">
                             <img src="${grailsApplication.config.grails.serverURL + '/assets/email/logo-dark.png'}" height="60" alt="Logo" style="display: block;border: 0;line-height: 100%;">
                         </a>
@@ -23,14 +23,15 @@
                 </tr>
                 <!-- Header -->
                 <tr>
-                    <td align="center" bgcolor="#B53929" background="${grailsApplication.config.grails.serverURL}/assets/email/biosecurity-alert-header.png" width="620" height="120" style="color:white;background-color:#B53929;padding: 20px 10px 20px 10px;text-align: center;font-family: 'Roboto', sans-serif;font-size: 16px;line-height: 1.5;background-image:url(${grailsApplication.config.grails.serverURL}/assets/email/biosecurity-alert-header.png);background-position: top center;background-size: cover;background-repeat: no-repeat">
+                    <td background="${grailsApplication.config.grails.serverURL}/assets/email/biosecurity-alert-header.png"
+                        style="width:620px ; height: 120px; text-align: center; color:white;background-color:#B53929;padding: 20px 10px 20px 10px;font-family: 'Roboto', sans-serif;font-size: 16px;line-height: 1.5;background-image:url(${grailsApplication.config.grails.serverURL}/assets/email/biosecurity-alert-header.png);background-position: top center;background-size: cover;background-repeat: no-repeat">
                         <h1 style="font-size: 24px; color: #fff;">Biosecurity Alerts</h1>
                         <p style="font-size: 16px; color: #fff;"><strong>${new SimpleDateFormat("dd MMM yyyy").format(new Date())}</strong></p>
                         <p style="font-size: 16px; color: #fff;">Alerts service for new ALA records listing potential invasive species</p>
                     </td>
                 </tr>
                 <tr>
-                    <td align="center" style="background-color: #E8E8E8;color: #000;padding: 40px 30px 40px 30px;text-align: center;font-family: 'Roboto', sans-serif;font-size: 22px;line-height: 1.5;">
+                    <td style="text-align:center; background-color: #E8E8E8;color: #000;padding: 20px 30px 20px 30px;font-family: 'Roboto', sans-serif;font-size: 22px;line-height: 1.5;">
                         <div> ${totalRecords} new ${totalRecords == 1 ? 'record' : 'records'} for
                         </div>
                         <div>
@@ -38,17 +39,39 @@
                             <g:set var="listName" value="${query.name.replaceAll('(?i)BioSecurity alert for', '').replaceAll('\"', '').trim()}" />
                             <strong>${StringUtils.abbreviate(listName, 40)}, ${query.listId}</strong>
                         </div>
-                        <div><i>since ${new SimpleDateFormat("dd MMM yyyy").format(query.lastChecked)}</i></div>
+                        <g:if test="${moreInfo?.lastChecked}">
+                            <div><i>since ${new SimpleDateFormat("dd MMM yyyy").format(moreInfo.lastChecked)}</i></div>
+                        </g:if>
                     </td>
                 </tr>
-                <!-- Records Section -->
+                <g:if test="${moreInfo.countByDataProvider}">
+                    <tr style="background-color: #E8E8E8; font-size: 12px; color: #635b5b; font-family: 'Roboto', sans-serif;line-height: 1.5;">
+                        <td style="padding-left: 20px;">
+                            <g:each in="${moreInfo.countByDataProvider}" var="entry" status="j">
+                                <g:if test="${j > 0}">/</g:if>
+                                <a href="#provider-${entry.key.replaceAll('[^a-zA-Z0-9]+', '-').toLowerCase()}"
+                                   style="color: #635b5b; text-decoration: underline;">${entry.key} (${entry.value})</a>
+                            </g:each>
+                        </td></tr>
+                </g:if>
+                   <!-- Records Section -->
+                <%-- Tracks the providers already anchored, so only the first record of each provider gets the anchor id --%>
+                <g:set var="anchoredProviders" value="${[] as Set}" />
                 <g:each status="i" in="${records}" var="oc">
                 <g:set var="link" value="${query.baseUrlForUI}/occurrences/${oc.uuid}"></g:set>
+                <g:set var="ocProvider" value="${oc.dataProviderName ?: oc.dataProvider ?: oc.dataResourceName ?: 'Unknown'}" />
+                <g:set var="isFirstRecordOfProvider" value="${anchoredProviders.add(ocProvider)}" />
+
+                <g:if test="${isFirstRecordOfProvider}">
+                    <tr id="${'provider-' + ocProvider.replaceAll('[^a-zA-Z0-9]+', '-').toLowerCase()}" >
+                        <td style="text-align: center;padding-top:20px;font-size: 12px; color: #635b5b; font-family: 'Roboto', sans-serif;line-height: 1.5;">--- ${ocProvider} ---</td>
+                    </tr>
+                </g:if>
                 <tr>
                     <td style="padding: 20px;background-color: white;font-family: 'Roboto', sans-serif;font-size: 16px;line-height: 1.5;">
-                        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="font-family: 'Roboto', sans-serif;font-size: 16px;line-height: 1.5;border-spacing: 0;border-collapse: collapse;">
+                        <table role="presentation" style="border: 0;width: 100%;font-family: 'Roboto', sans-serif;font-size: 16px;line-height: 1.5;border-spacing: 0;border-collapse: collapse;">
                             <tr>
-                                <td width="46%" valign="top" style="font-family: 'Roboto', sans-serif;font-size: 16px;line-height: 1.5;">
+                                <td width="46%" valign="top" style="width: 46%;vertical-align: top;font-family: 'Roboto', sans-serif;font-size: 16px;line-height: 1.5;">
                                     <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}" style="color: #C44D34;text-decoration: none;font-family: 'Roboto', sans-serif;font-size: 16px;line-height: 1.5;">
                                         <strong>${i+1}. <em>${oc.scientificName ?: 'N/A'}</em></strong>
                                     </a>
@@ -63,7 +86,7 @@
                                             <strong>${oc.lga}</strong><br>
                                         </g:if>
                                         <g:if test="${oc.locality && oc.stateProvince}">
-                                            <strong>${oc.locality}; ${oc.stateProvince}</strong>><br>
+                                            <strong>${oc.locality}; ${oc.stateProvince}</strong><br>
                                         </g:if>
                                         <g:elseif test="${oc.locality}">
                                             <strong>${oc.locality}</strong><br>
@@ -82,21 +105,21 @@
                                         </g:if>
                                     </p>
                                 </td>
-                                <td width="28%" valign="top" style="font-family: 'Roboto', sans-serif;font-size: 16px;line-height: 1.5;">
+                                <td width="28%" valign="top" style="width: 28%;vertical-align: top;font-family: 'Roboto', sans-serif;font-size: 16px;line-height: 1.5;">
                                     <a href="https://www.google.com/maps/place/${oc.latLong}" target="_blank" style="font-family: 'Roboto', sans-serif;font-size: 16px;line-height: 1.5;">
                                         <img src="https://maps.googleapis.com/maps/api/staticmap?center=${oc.latLong}&markers=|${oc.latLong}&zoom=12&size=150x150&maptype=roadmap&key=${grailsApplication.config.getProperty('google.apikey')}" alt="Map Image" style="width: 150px;height: 150px;display: block;border: 0;line-height: 100%;border-radius: 6px;">
                                     </a>
                                 </td>
-                                <td width="26%" valign="top" style="font-family: 'Roboto', sans-serif;font-size: 16px;line-height: 1.5;">
+                                <td width="26%" valign="top" style="width: 26%;vertical-align: top;font-family: 'Roboto', sans-serif;font-size: 16px;line-height: 1.5;">
                                     <g:set var="imageUrl" value="${oc.imageUrls?.get(0) ?: oc.thumbnailUrl ?: oc.smallImageUrl}" />
                                     <g:if test="${imageUrl}">
                                         <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}">
-                                            <img src="${imageUrl}${imageUrl.contains('?') ? '&thumbnailType=square_white' : ''}" alt="Species Image" height="150" width="150" style="width: 150px;vertical-align: top;max-width: 150px;width: 150px;height: 150px;border-radius: 6px;line-height: 100%;" />
+                                            <img src="${imageUrl}${imageUrl.contains('?') ? '&thumbnailType=square_white' : ''}" alt="Species Image" height="150" width="150" style="vertical-align: top;max-width: 150px;width: 150px;height: 150px;border-radius: 6px;line-height: 100%;" />
                                         </a>
                                     </g:if>
                                     <g:else>
                                         <a href="${query.baseUrlForUI}/occurrences/${oc.uuid}">
-                                            <img src="${grailsApplication.config.grails.serverURL}/assets/email/no-image-available.png" alt="Species Image" height="150" width="150" style="width: 150px;vertical-align: top;max-width: 150px;width: 150px;height: 150px;border-radius: 6px;line-height: 100%;" />
+                                            <img src="${grailsApplication.config.grails.serverURL}/assets/email/no-image-available.png" alt="Species Image" height="150" width="150" style="vertical-align: top;max-width: 150px;width: 150px;height: 150px;border-radius: 6px;line-height: 100%;" />
                                         </a>
                                     </g:else>
                                 </td>
