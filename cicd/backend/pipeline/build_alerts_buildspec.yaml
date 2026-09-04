@@ -4,6 +4,7 @@ env:
   shell: bash
   variables:
     JAVA_TOOL_OPTIONS: -Dhttps.protocols=TLSv1.2
+    DOCKER_BUILDKIT: "1"
   secrets-manager:
     DOCKER_USERNAME: ala-secrets-production:dockerhub-username
     DOCKER_PASSWORD: ala-secrets-production:dockerhub-password
@@ -30,8 +31,6 @@ phases:
       - printf '%s' "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
       - echo Logging in to Amazon ECR...
       - aws ecr get-login-password | docker login -u AWS --password-stdin "https://$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
-      - ./gradlew clean
-      - ./gradlew assemble
 
   build:
     commands:
@@ -50,15 +49,29 @@ phases:
       - echo "$BUILD_TAG" > build_tag.txt
       - echo Building and pushing the multi-arch Docker image to ECR...
       - |
+        if docker buildx imagetools inspect "$ECR_REPO:latest" >/dev/null 2>&1 ; then
+          CACHE_ARGS="--cache-from type=registry,ref=$ECR_REPO:latest"
+          echo using cache args: $CACHE_ARGS
+        else
+          CACHE_ARGS=""
+        fi
+      - |
         docker buildx build --platform linux/amd64,linux/arm64 \
                             -f Dockerfile \
+                            $CACHE_ARGS \
+                            --pull \
+                            --build-arg BUILDKIT_INLINE_CACHE=1 \
                             -t $ECR_REPO:$BUILD_TAG \
                             -t $ECR_REPO:latest \
                             --push \
                             .
 #     Check if liquibase image already exists in ECR, if not build and push it, otherwise skip the build and push.
+#     liquibase is run inside a subshell because a return code was interfering with the buildspec exit code,
+#     causing the build to fail even when liquibase was built and pushed successfully.
       - |
-        set -euo pipefail
+        : "${BASH_VERSION:?Bash is required}"
+        (
+          set -euo pipefail
         LIQUIBASE_IMAGE_HASH=$(
           {
             echo "multiarch-v1"
@@ -75,6 +88,7 @@ phases:
         elif [[ "$IMAGE_LOOKUP" == *ImageNotFoundException* ]]; then
           docker buildx build \
             --platform linux/amd64,linux/arm64 \
+            --progress=plain \
             --pull \
             --file docker/liquibase/Dockerfile \
             --tag "$ECR_REPO:$LIQUIBASE_IMAGE_TAG" \
@@ -85,10 +99,19 @@ phases:
           echo "Unable to determine whether the Liquibase image exists."
           exit 1
         fi
+
         printf '%s\n' "$LIQUIBASE_IMAGE_TAG" > liquibase_image_tag.txt
+        echo "Liquibase build command completed successfully."
+        )
 
 artifacts:
   files:
     - build_tag.txt
     - liquibase_image_tag.txt
   discard-paths: yes
+
+
+cache:
+  paths:
+    - '/root/.gradle/caches/**/*'
+    - '/root/.gradle/wrapper/dists/**/*'
