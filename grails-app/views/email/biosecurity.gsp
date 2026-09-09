@@ -98,7 +98,11 @@
                                             Coordinates: ${oc.latLong} <br>
                                         </g:if>
                                         <g:if test="${oc.eventDate}">
-                                            Time & date: ${new SimpleDateFormat('dd-MM-yyyy HH:mm').format(oc.eventDate)} <br>
+                                            <%
+                                                SimpleDateFormat eventDateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss z")
+                                                eventDateFormat.setTimeZone(TimeZone.getTimeZone('UTC'))
+                                            %>
+                                            Time &amp; date: ${eventDateFormat.format(oc.eventDate instanceof Number ? new Date((oc.eventDate as Number).longValue()) : oc.eventDate)} <br>
                                         </g:if>
                                         <g:if test="${oc.dataResourceName}">
                                             Source: ${oc.dataResourceName} <br>
