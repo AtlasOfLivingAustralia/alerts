@@ -3,6 +3,8 @@ package au.org.ala.alerts
 import grails.util.Environment
 import grails.util.Holders
 
+import java.util.regex.Pattern
+
 class EmailService {
     def groovyPageRenderer
     def diffService
@@ -63,13 +65,18 @@ class EmailService {
         String urlPrefix = "${grailsApplication.config.security.cas.appServerName}${grailsApplication.config.getProperty('security.cas.contextPath', '')}"
         def localeSubject = messageSource.getMessage("emailservice.update.subject", [query.name] as Object[], siteLocale)
 
+
         moreInfo = moreInfo ?: [:]
         moreInfo.queryUrlUIUsed = queryResult.queryUrlUIUsed
         moreInfo.lastChecked = queryResult.previousCheck
 
-        String title = query.name
+        String emailSubject = query.name
+        String hubName = getHubName(query.baseUrlForUI)
+        if (hubName) {
+            emailSubject = "[${hubName}] " + emailSubject
+        }
         if (Environment.current == Environment.DEVELOPMENT || Environment.current == Environment.TEST) {
-            title = "[${Environment.current}] " + query.name
+            emailSubject = "[${Environment.current}] " + emailSubject
         }
 
         String emailBody = groovyPageRenderer.render(view:  query.emailTemplate,
@@ -91,12 +98,74 @@ class EmailService {
         try {
             sendMail {
                 from grailsApplication.config.mail.details.alertAddressTitle + "<" + grailsApplication.config.mail.details.sender + ">"
-                subject title
+                subject emailSubject
                 bcc subsetOfAddresses
                 html(emailBody)
             }
         } catch (Exception e) {
             log.error("Error sending email to addresses: " + subsetOfAddresses, e)
         }
+    }
+
+    String getHubName(String urlForUI) {
+        if (!urlForUI) {
+            return ""
+        }
+        //hubPattern is a key value pair map, label: key
+        String hubPattern = grailsApplication.config.getProperty("hubs", String, "Atlas of Living Australia")
+        if (hubPattern) {
+            def hubMap = [:]
+            hubPattern.split(",").each { entry ->
+                // split on the FIRST ':' only, so hub values that are full urls
+                // (e.g. "AVH:https://avh.ala.org.au") are not broken up by the scheme separator
+                def parts = entry.split(":", 2)
+                if (parts.length == 2 && parts[0].trim() && parts[1].trim()) {
+                    hubMap[parts[0].trim()] = parts[1].trim()
+                }
+            }
+            for (entry in hubMap) {
+                if (matchesHub(urlForUI, entry.value as String)) {
+                    return entry.key
+                }
+            }
+        }
+        return ""
+    }
+
+    /**
+     * Matches a UI url against a configured hub value, ignoring the scheme.
+     *
+     * Both the url and the configured value may or may not carry "http://" / "https://"
+     * (and an optional "www." prefix), so both sides are normalised and the configured
+     * value is then matched as a case insensitive prefix of the url.
+     *
+     * e.g. "avh", "avh.ala.org.au", "http://avh.ala.org.au" and "https://www.avh.ala.org.au"
+     * all match the url "https://avh.ala.org.au/occurrences/search".
+     *
+     * @param urlForUI the url to test
+     * @param hubValue the configured hub value
+     * @return true if the url belongs to the hub
+     */
+    static boolean matchesHub(String urlForUI, String hubValue) {
+        String hub = stripScheme(hubValue)
+        if (!hub) {
+            return false
+        }
+        // both sides have already had the scheme/"www."/trailing slash removed, so the configured
+        // value only has to match the start of the url. (?i) makes the match case insensitive and
+        // Pattern.quote escapes regex metacharacters (e.g. the dots in a host name)
+        def matcher = stripScheme(urlForUI) =~ /(?i)^${Pattern.quote(hub)}/
+        return matcher.find()
+    }
+
+    /**
+     * Removes the scheme, any "www." prefix and trailing slashes from a url, so urls can be
+     * compared regardless of how they were configured.
+     */
+    private static String stripScheme(String url) {
+        url?.trim()
+                ?.replaceFirst(/(?i)^[a-z][a-z0-9+.\-]*:\/\//, '')
+                ?.replaceFirst(/(?i)^www\./, '')
+                ?.replaceFirst(/\/+$/, '')
     }
 }
