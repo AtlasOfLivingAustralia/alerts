@@ -292,7 +292,7 @@ class BiosecurityS3CSVService extends BiosecurityCSVService{
      * @param folderName - "/" for root folder, or "2024-10-01" for specific date folder
      * @return list of S3ObjectSummary
      */
-    List<S3Object> collectFilesInS3(String folderName) {
+    List<S3Object> collectFilesInS3(String folderName, fileType = 'csv') {
         if (!folderName) {
             folderName="/"
         }
@@ -312,7 +312,7 @@ class BiosecurityS3CSVService extends BiosecurityCSVService{
                 requestBuilder.continuationToken(continuationToken);
             }
             ListObjectsV2Response response = s3Client.listObjectsV2(requestBuilder.build())
-            allObjects.addAll(response.contents().findAll { it.key().endsWith('.csv') })
+            allObjects.addAll(response.contents().findAll { it.key().endsWith(".${fileType}") })
             continuationToken = response.nextContinuationToken()
         } while (continuationToken != null)
 
@@ -682,7 +682,7 @@ class BiosecurityS3CSVService extends BiosecurityCSVService{
         String bucketName = grailsApplication.config.getProperty("grails.plugin.awssdk.s3.bucket")
 
         // List all objects under biosecurity/ prefix
-        List<S3Object> allObjects = collectFilesInS3('/')
+        List<S3Object> allObjects = collectFilesInS3('/', 'csv.archived')
 
         int unarchivedCount = 0
 
