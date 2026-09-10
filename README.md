@@ -73,6 +73,19 @@ Emails will be sent on SMTP port 2525 (configure sending emails via `mail.enable
 
 You can view all sent emails via the smtp4dev UI on http://localhost:3000/, inlcuding HTML emails which are nicely displayed.
 
+### 6.2.0
+Biosecurity code restructure - improve usability and avoid silent failures
+
+### 6.1.0
+Toggle on/off on the customized alerts
+User management improvements
+
+### 6.0.0
+Grails7 update
+Liquibase is now managed by CICD
+Annually aggregate and archive Biosecurity CSVs
+Biosecurity related bug fixes
+
 ### 5.2.0 Release
 
 Change logs:

@@ -1,4 +1,3 @@
-<g:set var="today" value="${new java.text.SimpleDateFormat('yyyy-MM-dd').format(new Date())}"/>
 <div x-data="scheduleInfo()"  name="biosecurityScheduleInfo" class="container-fluid">
     <div class="row"  style="text-align: right" >
         <div name="statusInfo"  class="col-sm-8">
@@ -26,7 +25,7 @@
     <p></p>
 
     <div class="card card-body" id="rescheduleBiosecurity" x-show.important="showSchedule">
-        <div class="text-center"><h3>Alerts schedule manager</h3></div>
+        <div class="text-center"><h4>Alerts schedule manager</h4></div>
         <div class="row mt-10" >
             <div class="col-sm-12"><h4>Pause or resume now</h4></div>
             <div class="col-sm-12">Pause or resume alerts scheduling immediately. &nbsp;
@@ -50,11 +49,11 @@
                     Pause from <input type="date" name="pauseDate"  x-model="planedPauseDate" />
                     Resume on  <input type="date" name="resumeDate"  x-model="planedResumeDate" />
                     &nbsp;&nbsp;
-                    <button type="submit"  class="btn btn-primary" @click="pauseResumeAlerts()" >Save schedule</button>
+                    <button class="btn btn-primary" @click="pauseResumeAlerts()" >Save schedule</button>
                     &nbsp;
-                    <g:link controller="schedule" action="cancelScheduledPauseResumeJob" namespace="biosecurity" class="btn btn-outline-primary" >
+                    <button  class="btn btn-outline-primary"  @click="cancelScheduledPauseResumeJob()">
                         Cancel scheduled pause
-                    </g:link>
+                    </button>
                 </div>
                 <div class="col-sm-12 mt-20 " >
                     <!-- Both a pause and a resume are scheduled: the normal, complete window -->
@@ -185,6 +184,10 @@
                     type: 'GET',
                     success: (data) => {
                         this.jobStatus = data;
+                        if (this.jobStatus.nextFireTime) {
+                            this.cronWeekDay = this.getWeekDay(this.jobStatus.nextFireTime);
+                            this.cronTime = this.getHourMinute(this.jobStatus.nextFireTime);
+                        }
                     }
                 });
             },
@@ -233,6 +236,34 @@
                 })
             },
 
+            cancelScheduledPauseResumeJob() {
+                $.ajax({
+                    url: "${createLink(namespace: 'biosecurity', controller: 'schedule', action: 'cancelScheduledPauseResumeJob')}",
+                    type: 'POST',
+                    success: (data) => {
+                        if (data.success) {
+                            this.pauseWindowInfo.pause = '';
+                            this.pauseWindowInfo.resume = '';
+                        } else {
+                            alert('Error cancelling scheduled pause/resume job: ' + data.message);
+                        }
+                    }
+                })
+            },
+
+            getWeekDay(date) {
+                const days = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+                const d = new Date(date);
+                return days[d.getDay()];
+            },
+
+            getHourMinute(date) {
+                const d = new Date(date);
+                const hours = d.getHours().toString().padStart(2, '0');
+                const minutes = d.getMinutes().toString().padStart(2, '0');
+                return hours + ':' + minutes;
+            },
+
             formatLocalDateTime(dateTime) {
                 if (!dateTime) return '';
                 return new Date(dateTime).toLocaleString(undefined, {
@@ -244,6 +275,7 @@
                     minute: '2-digit'
                 });
             },
+
             getLocalDate() {
                 const parts = new Intl.DateTimeFormat(undefined, {
                     timeZone: this.localTimeZone,

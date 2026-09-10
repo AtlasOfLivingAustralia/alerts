@@ -161,7 +161,7 @@ class QueryService {
      * @param enabled
      * @return
      */
-    boolean createQueryForUserIfNotExists(Query newQuery, User user, boolean setPropertyPath = true, boolean enabled = false) {
+    boolean createQueryForUserIfNotExists(Query newQuery, User user, boolean setPropertyPath = true, boolean enabled = true) {
       def successOne = addUserToQuery(newQuery, user, setPropertyPath, enabled)
         if (successOne && successOne.id) {
             return true
@@ -195,18 +195,24 @@ class QueryService {
                 }
                 // Persist the query first so it gets an id, enabling child objects to reference it
                 newQuery.save()
-            } else {
-                newQuery = retrievedQuery
-            }
-            //does the notification already exist?
-            def exists = Notification.findByQueryAndUser(newQuery, user)
-            if (!exists) {
                 Notification n = new Notification([query: newQuery, user: user, enabled: enabled])
                 newQuery.notifications.add(n)
+            } else {
+                newQuery = retrievedQuery
+                log.debug("Query already exists...." + retrievedQuery.id)
+                //does a notification exist???
+                Notification n = Notification.findByQueryAndUser(retrievedQuery, user)
+                if (n == null) {
+                    log.debug("Notification for this user DOES NOT exist...." + user)
+                    n = new Notification([query: retrievedQuery, user: user, enabled: enabled])
+                    retrievedQuery.notifications.add(n)
+                } else {
+                   n.enabled = enabled
+                }
             }
-
             newQuery.save(validate: true, flush: true)
         }
+
     }
 
     /**

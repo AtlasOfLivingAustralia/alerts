@@ -164,7 +164,8 @@ class ScheduleController {
     @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
     def cancelScheduledPauseResumeJob() {
         biosecurityJobService.cancelScheduledPauseResumeJob()
-        redirect(namespace: "biosecurity", controller: "admin", action: "index")
+        //always successful, even if there was no scheduled job to cancel
+        render([success: true] as JSON)
     }
 
     /**

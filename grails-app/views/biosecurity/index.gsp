@@ -99,8 +99,8 @@
                     <div class="row">
                         <div class="col-md-4">
                             <div>
-                                    <span x-show.important="editingId !== query.id" >
-                                    <a :href="'${createLink(controller: 'query', action: 'show')}/' + query.id"  target="_blank" class="btn btn-link text-wrap text-start p-0" x-text="query.name"></a>
+                                <span x-show.important="editingId !== query.id" >
+                                    <a :href="'${createLink(controller: 'query', action: 'show')}/' + query.id"  target="_blank" class="btn btn-link fw-bold text-wrap text-start p-0" x-text="query.name"></a>
                                     <span class="badge-outline-secondary"><a :href="'${grailsApplication.config.lists.baseURL}' + '/speciesListItem/list/' + query.listId" target="_blank" x-text="query.listId"></a></span>
                                     <button class="btn btn-link btn-sm p-0 ms-1" title="Edit title" @click="editTitle(query.id)">
                                         <i class="fa-solid fa-pencil"></i>
@@ -114,7 +114,7 @@
                                 </div>
                                 <div x-show.important="query.lastChecked" class="mt-1" >
                                     <span class="text-muted">Last checked:</span>
-                                    <span class="link-primary" @click="query.showLog = !query.showLog"  style="cursor: pointer;" x-text="formatDate(query.lastChecked)"></span>
+                                    <a @click="query.showLog = !query.showLog"  style="cursor: pointer;" x-text="formatDate(query.lastChecked)"></a>
                                     <div class="text-muted mt-1 fst-italic">Missed the last check? Would you like to <a href="#" @click.prevent="run(query.id)">check now</a>?</div>
                                 </div>
                                 <div x-show.important="!query.lastChecked" class="text-muted mt-1">
