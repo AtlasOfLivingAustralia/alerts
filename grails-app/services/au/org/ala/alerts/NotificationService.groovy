@@ -511,6 +511,14 @@ class NotificationService {
                     Notification n = new Notification([query: retrievedQuery, user: user, enabled: false])
                     retrievedQuery.notifications.add(n)
                     retrievedQuery.save(validate: true, flush: true)
+                } else {
+                    // If the query already exists, ensure there is a notification for the user
+                    def existingNotification = Notification.findByQueryAndUser(retrievedQuery, user)
+                    if (existingNotification == null) {
+                        Notification n = new Notification([query: retrievedQuery, user: user, enabled: false])
+                        retrievedQuery.notifications.add(n)
+                        retrievedQuery.save(validate: true, flush: true)
+                    }
                 }
             }
 
