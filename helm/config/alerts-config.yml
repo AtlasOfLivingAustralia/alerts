@@ -194,6 +194,8 @@ userDetails:
   url: "{{ .Values.config.userdetails.userdetails_url }}"
   web:
     url: "{{ .Values.config.userdetails.userdetails_web_url }}"
+  api:
+    url: "{{ .Values.config.userdetails.userdetails_api_url }}"
 
 alerts:
   user-sync:
