@@ -171,4 +171,12 @@ class Query {
         return queryPath.toLowerCase().startsWith(prefix.toLowerCase()) &&
                 emailTemplate?.equalsIgnoreCase('/email/myAnnotations')
     }
+
+    /**
+     * Is this the 'My Annotations' query?
+     * @return
+     */
+    boolean isMyAnnotations() {
+        return emailTemplate?.equalsIgnoreCase('/email/myAnnotations')
+    }
 }

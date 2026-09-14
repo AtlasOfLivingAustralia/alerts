@@ -9,10 +9,10 @@ package au.org.ala.alerts
 
 import au.org.ala.ws.service.WebService;
 import grails.converters.JSON
+import grails.util.Holders
 import org.apache.commons.lang3.time.DateUtils
 import org.apache.http.entity.ContentType
 
-import jakarta.transaction.Transactional
 import java.text.SimpleDateFormat
 
 /**
@@ -21,17 +21,18 @@ import java.text.SimpleDateFormat
 class BiosecurityService {
     def notificationService
     def queryService
-    def grailsApplication
+    def grailsApplication, messageSource
     def emailService
     WebService webService
     BiosecurityLocalCSVService biosecurityLocalCSVService
     BiosecurityS3CSVService biosecurityS3CSVService
     def diffService
+    def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
 
 
-    def biosecurityAlerts() {
+    def run() {
         def results = []
-        queryService.getALLBiosecurityQuery().each { Query query ->
+        alerts().each { Query query ->
             def result = triggerBiosecuritySubscription(query)
             results.add(result)
         }
@@ -42,6 +43,97 @@ class BiosecurityService {
         def query = Query.get(id)
         query
     }
+
+    // get biosecurity queries with offset and limit
+    def list(int offset,int limit) {
+        def criteria = Query.createCriteria()
+        List<Query> queries = criteria.list(max: limit, offset: offset) {
+            eq('emailTemplate', '/email/biosecurity')
+            order('id', 'desc')
+        }
+
+
+        def results = queries.collect{ query ->
+            // Bioseurity queries are weekly ONLY, so filter out the other frequencies
+            def filteredQueryResults = query.queryResults.findAll { it.frequency?.name == 'weekly' }
+            // Get the last QueryResult from the filtered list, if it exists
+            QueryResult qr = !filteredQueryResults.isEmpty() ? filteredQueryResults.first() : null
+            query
+        }
+
+        return results.toList()
+    }
+
+    // return the number of biosecurity queries
+    def count() {
+        int count = 0
+        Query.withTransaction {
+            count = Query.countByEmailTemplate('/email/biosecurity')
+        }
+        return count
+    }
+
+
+    // get all biosecurity queries
+    def alerts () {
+        def queries
+        Query.withTransaction {
+            queries = Query.findAllByEmailTemplate('/email/biosecurity')
+        }
+        return queries
+    }
+
+    /**
+     * NOTE: Biosecurity query code does not use the queryPath stored in the database
+     * @param listid
+     * @return
+     */
+
+    Query buildQuery(String listid) {
+        def sList = queryService.getSpeciesListName(listid)
+        String speciesListName = sList.name
+        //differentiate non-authoritative / authoritative list
+        //demo purpose only, the queryPath is not used in Biosecurity query process
+        String queryPathForUITemplate = grailsApplication.config.getProperty("biosecurity.query.template.nonAuthoritativeList", String, "/occurrences/search?q=species_list:___LISTIDPARAM___&fq=decade:2020&fq=country:Australia&fq=first_loaded_date:"+"[___DATEPARAM___ TO *]".encodeAsURL()+"&fq=occurrence_date:"+"[___LASTYEARPARAM___ TO *]".encodeAsURL() +"&sort=first_loaded_date&dir=desc&disableAllQualityFilters=true")
+        if (sList.isAuthoritative) {
+            queryPathForUITemplate = grailsApplication.config.getProperty("biosecurity.query.template.authoritativeList", String, "/occurrences/search?q=species_list_uid:___LISTIDPARAM___&fq=decade:2020&fq=country:Australia&fq=first_loaded_date:"+"[___DATEPARAM___ TO *]".encodeAsURL()+"&fq=occurrence_date:"+"[___LASTYEARPARAM___ TO *]".encodeAsURL()+"&sort=first_loaded_date&dir=desc&disableAllQualityFilters=true")
+        }
+
+        String queryPathForUI = queryPathForUITemplate.replaceAll("___LISTIDPARAM___", listid)
+
+        new Query([
+                //Not used
+                baseUrl       : grailsApplication.config.biocacheService.baseURL,
+                baseUrlForUI  : grailsApplication.config.biocache.baseURL,
+                name          : messageSource.getMessage("query.biosecurity.title", null, siteLocale) + ' ' + speciesListName,
+                resourceName  : grailsApplication.config.mail.details.defaultResourceName,
+                updateMessage : 'more.biosecurity.update.message',
+                description   : messageSource.getMessage("query.biosecurity.descr", null, siteLocale) + ' ' + speciesListName,
+                //Not used
+                queryPath     : queryPathForUI + '&pageSize=20&facets=basis_of_record',
+                //Not used
+                queryPathForUI: queryPathForUI,
+                dateFormat    : """yyyy-MM-dd'T'HH:mm:ss'Z'""",
+                emailTemplate : '/email/biosecurity',
+                recordJsonPath: '\$.occurrences[*]',
+                idJsonPath    : 'uuid',
+                custom        : true
+        ])
+    }
+
+    /**
+     * Subscribe a user to a species list ID.
+     * If the query for this species list does not exist, it will be created.
+     * @param user
+     * @param listid
+     * @return
+     */
+    def subscribeToSpeciesList(User user, String listid) {
+        Query query = buildQuery(listid)
+        query = queryService.addUserToQuery(query, user, true, true)
+        return query
+    }
+
 
     /**
      *

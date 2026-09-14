@@ -111,6 +111,7 @@ class EmailService {
         if (!urlForUI) {
             return ""
         }
+
         //hubPattern is a key value pair map, label: key
         String hubPattern = grailsApplication.config.getProperty("hubs", String, "Atlas of Living Australia")
         if (hubPattern) {

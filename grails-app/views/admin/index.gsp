@@ -165,9 +165,11 @@
 
         <div class="box">
             <div class="shadow card card-body">
-                <h5><i class="fa-regular fa-envelope text-primary"></i> Email testing </h5>
+                <h5><i class="fa-regular fa-envelope text-primary"></i>Tests</h5>
                 <div>
                     <g:link controller="admin" action="sendTestEmail">Send an email to yourself</g:link> <small class="text-muted ms-2"> - Test if emails server works </small>
+                    <br/>
+                    <g:link controller="webservice" action="test">Create some Alerts examples</g:link> <small class="text-muted ms-2"> - Test if some Alerts template work </small>
                 </div>
             </div>
         </div>

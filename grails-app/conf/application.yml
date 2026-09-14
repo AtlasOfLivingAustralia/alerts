@@ -143,7 +143,7 @@ customUserAgent: 'alerts/@info.app.version@'
 # used to identify which hub an Alerts is subcribed from
 # the hub name will be shown in the email
 hubs:
-    "AVH:avh"
+    "AVH:avh,Ozcam:ozcam"
 ala:
     baseURL: "https://www.ala.org.au"
     userDetailsURL: "https://auth.ala.org.au/userdetails/userDetails/getUserListFull"

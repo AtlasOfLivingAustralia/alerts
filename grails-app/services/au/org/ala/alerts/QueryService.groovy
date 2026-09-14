@@ -2,7 +2,6 @@ package au.org.ala.alerts
 
 import grails.gorm.transactions.NotTransactional
 import grails.util.Holders
-import groovy.sql.Sql
 import org.apache.http.entity.ContentType
 import org.springframework.dao.DataIntegrityViolationException
 import grails.gorm.transactions.Transactional
@@ -10,9 +9,8 @@ import grails.gorm.transactions.Transactional
 
 class QueryService {
 
-    def serviceMethod() {}
-    def grailsApplication, notificationService, webService,utilService
-    def messageSource, dataSource
+    def grailsApplication, notificationService, webService
+    def messageSource
     def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
 
     def get(id){
@@ -152,9 +150,9 @@ class QueryService {
         [OrphanQuery: toBeRemoved.size(), OrphanNotification: ophanedNotifications]
     }
 
-    // return true if a new query is created, otherwise return false
     /**
      * Legacy support for other queries creation
+     * @obsolete replaced with addUserToQuery
      * @param newQuery
      * @param user
      * @param setPropertyPath
@@ -171,9 +169,8 @@ class QueryService {
     }
 
     /**
-     * implemented for Biosecurity.
-     * However, the method createQueryForUserIfNotExists is used in other places, e.g. for My Annotations, and it is not clear if this method is needed for those cases.
-     * We should only use this one, and remove the other.
+     * The method createQueryForUserIfNotExists is used in My Annotations, biosecurity alerts creation.
+     * It is not clear if this method is needed for those cases.
      *
      * Add a user to a query, creating the query if it does not exist.
      *
@@ -212,7 +209,6 @@ class QueryService {
             }
             newQuery.save(validate: true, flush: true)
         }
-
     }
 
     /**
@@ -384,49 +380,6 @@ class QueryService {
         }
     }
 
-    /**
-     * NOTE: Biosecurity query code does not use the queryPath stored in the database
-     * @param listid
-     * @return
-     */
-
-    Query createBioSecurityQuery(String listid) {
-        def sList = getSpeciesListName(listid)
-        String speciesListName = sList.name
-        //differentiate non-authoritative / authoritative list
-        //demo purpose only, the queryPath is not used in Biosecurity query process
-        String queryPathForUITemplate = grailsApplication.config.getProperty("biosecurity.query.template.nonAuthoritativeList", String, "/occurrences/search?q=species_list:___LISTIDPARAM___&fq=decade:2020&fq=country:Australia&fq=first_loaded_date:"+"[___DATEPARAM___ TO *]".encodeAsURL()+"&fq=occurrence_date:"+"[___LASTYEARPARAM___ TO *]".encodeAsURL() +"&sort=first_loaded_date&dir=desc&disableAllQualityFilters=true")
-        if (sList.isAuthoritative) {
-            queryPathForUITemplate = grailsApplication.config.getProperty("biosecurity.query.template.authoritativeList", String, "/occurrences/search?q=species_list_uid:___LISTIDPARAM___&fq=decade:2020&fq=country:Australia&fq=first_loaded_date:"+"[___DATEPARAM___ TO *]".encodeAsURL()+"&fq=occurrence_date:"+"[___LASTYEARPARAM___ TO *]".encodeAsURL()+"&sort=first_loaded_date&dir=desc&disableAllQualityFilters=true")
-        }
-
-        String queryPathForUI = queryPathForUITemplate.replaceAll("___LISTIDPARAM___", listid)
-
-        new Query([
-                //Not used
-                baseUrl       : grailsApplication.config.biocacheService.baseURL,
-                baseUrlForUI  : grailsApplication.config.biocache.baseURL,
-                name          : messageSource.getMessage("query.biosecurity.title", null, siteLocale) + ' ' + speciesListName,
-                resourceName  : grailsApplication.config.mail.details.defaultResourceName,
-                updateMessage : 'more.biosecurity.update.message',
-                description   : messageSource.getMessage("query.biosecurity.descr", null, siteLocale) + ' ' + speciesListName,
-                //Not used
-                queryPath     : queryPathForUI + '&pageSize=20&facets=basis_of_record',
-                //Not used
-                queryPathForUI: queryPathForUI,
-                dateFormat    : """yyyy-MM-dd'T'HH:mm:ss'Z'""",
-                emailTemplate : '/email/biosecurity',
-                recordJsonPath: '\$.occurrences[*]',
-                idJsonPath    : 'uuid',
-                custom        : true
-        ])
-    }
-
-    def subscribeBioSecurity(User user, String listid) {
-        Query query = createBioSecurityQuery(listid)
-        query = addUserToQuery(query, user, true, true)
-        return query
-    }
 
     // remove all user notifications for the specified query
     def unsubscribeAllUsers(Long queryId) {

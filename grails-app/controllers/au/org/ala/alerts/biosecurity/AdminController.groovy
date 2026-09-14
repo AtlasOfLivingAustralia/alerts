@@ -58,9 +58,9 @@ class AdminController {
         offset = Math.max(offset, 0)
         max = Math.min(Math.max(max, 1), MAX_PAGE_SIZE)
 
-        int total = queryService.countBiosecurityQuery()
+        int total = biosecurityService.count()
         // Skip the query entirely when the caller has paged past the end
-        List<Query> queries = offset >= total ? [] : queryService.getBiosecurityQuery(offset, max)
+        List<Query> queries = offset >= total ? [] : biosecurityService.list(offset, max)
         def alerts = queries.collect { queryToAlertMap(it) }
         render([offset: offset, max: max, total: total, count: alerts.size(), alerts: alerts] as JSON)
     }
@@ -150,7 +150,7 @@ class AdminController {
                 if (entry.value == null) {
                     invalidEmails.add(entry.key)
                 } else {
-                   queryService.createQueryForUserIfNotExists(Query.get(params.queryId), entry.value as User, true,true)
+                   queryService.addUserToQuery(Query.get(params.queryId), entry.value as User, true,true)
                 }
             }
             if (invalidEmails) {
@@ -321,7 +321,7 @@ class AdminController {
                     if (params.queryId) {
                         updatedQuery = queryService.addUserToQuery(Query.get(params.queryId), entry.value as User, true)
                     } else {
-                        updatedQuery = queryService.subscribeBioSecurity(entry.value as User, params.listId.trim())
+                        updatedQuery = biosecurityService.subscribeToSpeciesList(entry.value as User, params.listId.trim())
                     }
                 }
             }
