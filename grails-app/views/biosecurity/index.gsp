@@ -59,7 +59,6 @@
                             <label class="form-label invisible" >control</label>
                             <button type="submit" id="quick-submit" class="btn btn-primary" @click="newSubscription()" :disabled="newQuery.isProcessing"><g:message code="biosecurity.view.body.button.subscribe" default="Subscribe"/></button>
                         </div>
-
                     </div>
             </div>
         </div>
@@ -126,19 +125,17 @@
                         </div>
                         <div class="col-md-5">
                             <template x-for="subscriber in query.subscribers" :key="subscriber.id">
-                                <span class="badge border rounded  text-primary me-1" :class="subscriber.isActive ? 'border-primary' : 'badge-outline-secondary bg-light'">
+                                <span class="badge-outline-primary text-primary me-1" :class="subscriber.isActive ? 'border-primary' : 'badge-outline-secondary bg-light'"
+                                      style="display: inline-block; white-space: nowrap; margin-bottom: 4px;">
                                     <span :class="subscriber.isActive ? '' : 'text-decoration-line-through text-muted'" x-text="subscriber.email"></span>
-                                    <i @click="unsubscribe(query.id, subscriber.id, subscriber.email)" class="fa fa-trash clickable"></i>
+                                    <i @click="unsubscribe(query.id, subscriber.id, subscriber.email)" class="fa fa-user-times clickable cursor-pointer"></i>
                                 </span>
                             </template>
+                            <span
+                                    class="fa fa-user-plus clickable cursor-pointer badge-outline-primary"
+                                    @click="addSubscribers(query.id)"></span>
                             <button x-show.important="query.subscribers.length === 0" class="btn btn-primary" @click="deleteSubscription(query.id)">Delete this subscription</button>
 
-                            <div class="mt-2">
-                                <input class="form-control"  x-model="query.newSubscribers"
-                                       placeholder="You can input multiple user emails by separating them with ';'"/>
-                                <button type="button" class="btn btn-primary mt-2"  :disabled="!query.newSubscribers || query.newSubscribers.trim().length === 0"
-                                        @click="addSubscribers(query.id, query.newSubscribers)">Add</button>
-                            </div>
                         </div>
                         <div class="col-md-3">
                             <label >Check alerts since</label>
@@ -335,34 +332,65 @@
                 }
             },
 
-            async addSubscribers(queryId, userEmails) {
-                try {
-                    const response = await fetch(CONTEXT_PATH + '/biosecurity/subscribe?queryId='
-                        + queryId + '&userEmails=' + encodeURIComponent(userEmails.trim()), {
-                        method: 'POST'
-                    });
-                    if (!response.ok) {
-                        throw new Error('Failed to add subscriber to this alert');
-                    } else {
-                        let result = await response.json();
-                        if (result.success ) {
-                            // Add the subscriber to the local alert's subscriber list
-                            this.activeId = queryId;
-                            const alert = this.alerts.find(a => a.id === queryId);
-                            var subscribersResponse = await fetch(CONTEXT_PATH + '/biosecurity/subscribers.json?queryId=' + queryId);
-                            var subscribers = await subscribersResponse.json();
-                            if (alert) {
-                                alert.subscribers = subscribers.subscribers;
-                                alert.newSubscribers = '';
-                            }
-                        } else {
-                            throw new Error( result.message);
-                        }
+            async addSubscribers(queryId) {
+                let emailString;
+                while (true) {
+                    emailString = prompt(
+                        "Multiple user email addresses separated by ';'",
+                        emailString || ""
+                    );
+
+                    if (emailString === null) {
+                        // User clicked Cancel, exit the loop and do not proceed with adding subscribers
+                        break;
                     }
-                } catch (e) {
-                    console.error(e);
-                    // window.alert, because the 'alert' parameter shadows the global here
-                    window.alert('Failed! ' + e.message);
+
+                    const emails = emailString.split(";").map(email => email.trim()).filter(Boolean);
+                    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    const invalidEmails = emails.filter(
+                        email => !emailPattern.test(email)
+                    );
+
+                    if (invalidEmails.length > 0) {
+                        alert(
+                            "The following email address(es) are invalid:\n\n" +
+                            invalidEmails.join("\n") +
+                            "\n\nPlease correct them."
+                        );
+                        continue; // Show prompt again
+                    }
+                    break;
+                }
+
+                if (emailString) {
+                    try {
+                        const response = await fetch(CONTEXT_PATH + '/biosecurity/subscribe?queryId='
+                            + queryId + '&userEmails=' + encodeURIComponent(emailString.trim()), {
+                            method: 'POST'
+                        });
+                        if (!response.ok) {
+                            throw new Error('Failed to add subscriber to this alert');
+                        } else {
+                            let result = await response.json();
+                            if (result.success ) {
+                                // Add the subscriber to the local alert's subscriber list
+                                this.activeId = queryId;
+                                const alert = this.alerts.find(a => a.id === queryId);
+                                var subscribersResponse = await fetch(CONTEXT_PATH + '/biosecurity/subscribers.json?queryId=' + queryId);
+                                var subscribers = await subscribersResponse.json();
+                                if (alert) {
+                                    alert.subscribers = subscribers.subscribers;
+                                    alert.newSubscribers = '';
+                                }
+                            } else {
+                                throw new Error( result.message);
+                            }
+                        }
+                    } catch (e) {
+                        console.error(e);
+                        // window.alert, because the 'alert' parameter shadows the global here
+                        window.alert('Failed! ' + e.message);
+                    }
                 }
             },
 

@@ -40,6 +40,9 @@ class UrlMappings {
             "/trigger/$id"(namespace: "biosecurity", controller: 'admin', action: 'trigger')
             "/triggerAlertSince/$id?"(namespace: "biosecurity", controller: 'admin', action: 'triggerAlertSince')
             "/preview/$id?"(namespace: "biosecurity", controller: 'admin', action: 'preview')
+            get "/monitoringTeamMembers(.$format)?"(namespace: "biosecurity", controller: 'admin', action: 'getMonitoringTeamMembers')
+            delete "/monitoringTeamMembers/$id(.$format)?"(namespace: "biosecurity", controller: 'admin', action: 'deleteMonitoringTeamMember')
+            post "/monitoringTeamMembers(.$format)?"(namespace: "biosecurity", controller: 'admin', action: 'addMonitoringTeamMember')
 
             group "/csv", {
                 "/"(namespace: "biosecurity", controller: "csv", action: "list")

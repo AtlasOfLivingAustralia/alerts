@@ -97,9 +97,6 @@
                 <div class="mt-2">
                     <a href="${request.contextPath}/biosecurity">Manage BioSecurity alerts</a><small class="text-muted ms-2"> - Add, update, remove or reschedule BioSecurity alerts and users.</small>
                 </div>
-                <div class="mt-2">
-                    <a href="${request.contextPath}/log">Error Logs</a><small class="text-muted ms-2"> - Check for any recent alert failures.</small>
-                </div>
             </div>
         </div>
 
@@ -145,15 +142,6 @@
 
         <div class="box">
             <div class="shadow card card-body">
-                <div class="fw-bold fs-5"><i class="fa-regular fa-file-lines text-primary"></i> Alerts for News and Blogs</div>
-                <div class="mt-2">
-                    <a href="${request.contextPath}/admin/previewBlogAlerts">Preview alerts for the five most recent blogs</a>
-                </div>
-            </div>
-        </div>
-
-        <div class="box">
-            <div class="shadow card card-body">
                 <h5><i class="fa-solid fa-gear text-primary"></i> Application Management </h5>
                 <div>
                     <plugin:isAvailable name="alaAdminPlugin">
@@ -165,11 +153,13 @@
 
         <div class="box">
             <div class="shadow card card-body">
-                <h5><i class="fa-regular fa-envelope text-primary"></i>Tests</h5>
+                <h5><i class="fa-regular fa-table text-primary"></i> Tests</h5>
                 <div>
                     <g:link controller="admin" action="sendTestEmail">Send an email to yourself</g:link> <small class="text-muted ms-2"> - Test if emails server works </small>
                     <br/>
                     <g:link controller="webservice" action="test">Create some Alerts examples</g:link> <small class="text-muted ms-2"> - Test if some Alerts template work </small>
+                    <br/>
+                    <a href="${request.contextPath}/admin/previewBlogAlerts">Preview alerts for the five most recent blogs</a>
                 </div>
             </div>
         </div>

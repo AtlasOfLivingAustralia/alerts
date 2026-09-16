@@ -36,6 +36,20 @@ class BiosecurityService {
             def result = triggerBiosecuritySubscription(query)
             results.add(result)
         }
+        def errorLogs = results.findAll { it.status != 0 }
+        if (errorLogs.size() > 0) {
+            def message = [:]
+            // A yellow warning sign emoji
+            message["subject"] = "\u26A0\uFE0F Biosecurity alerts completed with ${errorLogs.size()} error(s) at ${new Date()}"
+            message["logs"] = errorLogs
+            emailService.notifyMonitoringTeam("BIOSECURITY", message)
+        } else {
+            def message = [:]
+            // A green check mark emoji
+            message["subject"] = "\u2705 ${results.size()} Biosecurity alert(s) completed successfully at ${new Date()}"
+            emailService.notifyMonitoringTeam("BIOSECURITY", message)
+        }
+
         return results
     }
 
@@ -238,23 +252,10 @@ class BiosecurityService {
         } catch (Exception e) {
             qr.succeeded = false
             String error = "Error: Failed to trigger subscription [ ${query?.id}  ${query?.name} ]"
-            log.error(e.message)
+            log.error(error + " - " +e.message)
             result.status = 1
-            result.message = error
-            result.logs << e.message
-            result.logs << error
-
-            ErrorLog.withTransaction {
-               new ErrorLog(
-                       stackTrace: e.stackTrace?.join('\n'),
-                       executedAt: now,
-                       context: message?.toString()?.take(255),
-                       queryType: "Biosecurity",
-                       queryId: query?.id as Long,
-                       queryName: query?.name?.take(255)
-               ).save(flush: true)
-            }
-
+            result.message = "${query?.id} : ${query?.name}"
+            result.logs << "Failed: ${e.message}"
         } finally {
             log.info(result.message)
             qr.newLogs(result.logs)
@@ -284,7 +285,7 @@ class BiosecurityService {
                     throw new RuntimeException("Failed to process the Species List: ${speciesList.statusCode} " + url)
                 }
                 speciesList.resp?.each { listItem ->
-                    processListItemBiosecurity(occurrences, listItem, since, to)
+                    processListItemBiosecurity(occurrences, query, listItem, since, to)
                 }
 
                 repeat = (max == speciesList.resp?.size())
@@ -309,12 +310,12 @@ class BiosecurityService {
     /**
      * Date will be converted to UTC
      *
-     * @param occurrences
+     * @param occurrences a reference to the map of occurrences
      * @param listItem
      * @param since
      * @return
      */
-    def processListItemBiosecurity(def occurrences, def listItem, Date since, Date to) {
+    def processListItemBiosecurity(def occurrences, def query, def listItem, Date since, Date to) {
         def names = listItem.kvpValues.find { it.key == 'synonyms' }?.value?.split(',') as List ?: []
         names.add(listItem.name)
 
@@ -348,7 +349,7 @@ class BiosecurityService {
             def searchTerm = 'q=' + URLEncoder.encode("(" + searchTerms.join(") OR (") + ")")
 
             int pageSize = grailsApplication.config.biocacheService.pageSize as int
-            String baseUrl = "${grailsApplication.config.getProperty('biocacheService.baseURL')}/occurrences/search?${searchTerm + fq + legacyFq + dateRange + firstLoadedDate}&pageSize=${pageSize}"
+            String baseUrl = "${query.baseUrl}/occurrences/search?${searchTerm + fq + legacyFq + dateRange + firstLoadedDate}&pageSize=${pageSize}"
             String userAgent = grailsApplication.config.getProperty("customUserAgent", "alerts")
 
             try {

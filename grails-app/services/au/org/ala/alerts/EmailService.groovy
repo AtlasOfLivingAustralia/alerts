@@ -7,10 +7,10 @@ import java.util.regex.Pattern
 
 class EmailService {
     def groovyPageRenderer
-    def diffService
     def queryService
     def grailsApplication
     def messageSource
+    def monitoringTeamService
     def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
 
     /**
@@ -104,6 +104,39 @@ class EmailService {
             }
         } catch (Exception e) {
             log.error("Error sending email to addresses: " + subsetOfAddresses, e)
+        }
+    }
+
+    def notifyMonitoringTeam(String teamName, Map messages) {
+        if (grailsApplication.config.getProperty("mail.enabled", Boolean, false)) {
+            String emailSubject = messages["subject"] ? messages["subject"] : "Error notification to ${teamName} team"
+            String emailBody = groovyPageRenderer.render(view:  "/email/monitorTeamNotification",
+                    plugin: "email-confirmation",
+                    model: [messages: messages]
+            )
+
+            if (Environment.current == Environment.DEVELOPMENT || Environment.current == Environment.TEST) {
+                emailSubject = "[${Environment.current}] " + emailSubject
+            }
+
+            def recipients = monitoringTeamService.getEmails(teamName)
+            if (recipients) {
+
+                try {
+                    sendMail {
+                        from grailsApplication.config.mail.details.alertAddressTitle + "<" + grailsApplication.config.mail.details.sender + ">"
+                        subject emailSubject
+                        bcc recipients
+                        html(emailBody)
+                    }
+                } catch (Exception e) {
+                    log.error("Error in sending email to monitor team: " + recipients.join(","), e)
+                }
+            } else {
+                log.warn("No recipients found for monitor team: ${teamName}. Error notification will not been sent.")
+            }
+        } else {
+            log.info("Mail service disable. Error notification will not been sent to monitor team: ${recipients?.join(",")}.")
         }
     }
 

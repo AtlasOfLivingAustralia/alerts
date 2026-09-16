@@ -18,10 +18,14 @@ class AdminController {
     /** Upper bound on the page size a caller may request from list(). */
     private static final int MAX_PAGE_SIZE = 500
 
+    /** Monitoring team whose members are notified about biosecurity alert runs. */
+    private static final String BIOSECURITY_TEAM = "BIOSECURITY"
+
     def queryService
     def userService
     def notificationService
     def biosecurityService
+    def monitoringTeamService
     def diffService
     def authService
     def messageSource
@@ -338,6 +342,63 @@ class AdminController {
                 render([success: false, message: message] as JSON)
             }
         }
+    }
+
+    /**
+     * JSON list of the BIOSECURITY monitoring team members. Renders JSON only - no view.
+     * Mapped to GET /biosecurity/monitoringTeamMembers
+     */
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
+    def getMonitoringTeamMembers() {
+        def members = monitoringTeamService.getTeamMembers(BIOSECURITY_TEAM)
+        render(members as JSON)
+    }
+
+    /**
+     * Removes a member from the BIOSECURITY monitoring team.
+     * Mapped to DELETE /biosecurity/monitoringTeamMembers/$id
+     */
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
+    def deleteMonitoringTeamMember() {
+        def result = [:]
+        if (!params.id) {
+            result = [success: false, message: messageSource.getMessage("biosecurity.view.error.emptyemail", null, "Monitoring team member id can't be empty.", siteLocale)]
+        } else {
+            try {
+                def success = monitoringTeamService.deleteTeamMember(BIOSECURITY_TEAM, params.id)
+                if (success) {
+                    result = [success: true]
+                } else {
+                    result = [success: false, message: messageSource.getMessage("biosecurity.view.error.emailnotfound", [params.id] as Object[], "Monitoring team member {0} is not found in the system.", siteLocale)]
+                }
+            } catch (Exception e) {
+                log.error("Error removing monitoring team member with id: ${params.id}", e)
+                result = [success: false, message: "Error removing monitoring team member with id: ${params.id}"]
+            }
+        }
+        render(result as JSON)
+    }
+
+    /**
+     * Adds a member to the BIOSECURITY monitoring team.
+     * Mapped to POST /biosecurity/monitoringTeamMembers
+     */
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
+    def addMonitoringTeamMember() {
+        def result = [:]
+        if (!params.email || params.email.allWhitespace) {
+            result = [success: false, message: messageSource.getMessage("biosecurity.view.error.emptyemail", null, "User email can't be empty.", siteLocale)]
+        } else {
+            try {
+                def email = params.email.trim()
+                def member = monitoringTeamService.addTeamMember(BIOSECURITY_TEAM, email)
+                result = [success: true, member: [id: member.id, team: member.team, email: member.email]]
+            } catch (Exception e) {
+                log.error("Error adding monitoring team member with email: ${params.email}", e)
+                result = [success: false, message: "Error adding monitoring team member with email: ${params.email}"]
+            }
+        }
+        render(result as JSON)
     }
 
     /**
