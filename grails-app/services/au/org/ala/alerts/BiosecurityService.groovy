@@ -118,10 +118,13 @@ class BiosecurityService {
                 def csvService =  getCsvService()
                 csvService.generateAuditCSV(qr)
                 User.withTransaction {
-                    def users = query.getSubscribers()
-                    def recipients = users.collect { user ->
-                        def notificationUnsubToken = user.notifications.find { it.query.id == query.id }?.unsubscribeToken
-                        [email: user.email, userUnsubToken: user.unsubscribeToken, notificationUnsubToken: notificationUnsubToken]
+                    // query.notifications (and notification.user) are join fetched by
+                    // queryService.getALLBiosecurityQuery(), so no lazy loading happens here.
+                    def activeNotifications = query.notifications.findAll { it.enabled }
+                    def users = activeNotifications.collect { it.user }
+                    def recipients = activeNotifications.collect { notification ->
+                        def user = notification.user
+                        [email: user.email, userUnsubToken: user.unsubscribeToken, notificationUnsubToken: notification.unsubscribeToken]
                     }
 
                     def emails = recipients.collect { it.email }

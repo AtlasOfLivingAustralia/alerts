@@ -457,11 +457,28 @@ class QueryService {
         return count
     }
 
-    // get all biosecurity queries
+    /**
+     * All biosecurity queries, with their notifications (and each notification's user + frequency)
+     * eagerly fetched.
+     *
+     * The queries become detached as soon as this method's session closes, so the associations are
+     * join fetched here. Without this, callers such as
+     * BiosecurityService#triggerBiosecuritySubscription -> query.getSubscribers() would hit a
+     * LazyInitializationException - opening a new session/transaction does NOT help, because the
+     * uninitialised collection is still bound to the original closed session.
+     */
     def getALLBiosecurityQuery() {
-        def queries
+        List<Query> queries = []
         Query.withTransaction {
-            queries = Query.findAllByEmailTemplate('/email/biosecurity')
+            queries = Query.executeQuery("""
+                select distinct q
+                from Query q
+                left join fetch q.notifications n
+                left join fetch n.user u
+                left join fetch u.frequency
+                where q.emailTemplate = :emailTemplate
+                order by q.id desc
+            """, [emailTemplate: '/email/biosecurity'])
         }
         return queries
     }
