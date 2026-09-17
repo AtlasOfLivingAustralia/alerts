@@ -29,7 +29,7 @@ apply plugin:"org.apache.grails.gradle.grails-web"
 apply plugin:"org.apache.grails.gradle.grails-gsp"
 
 
-version = "6.2.0"
+version = "6.3.0"
 group = "ala.org.au"
 
 
