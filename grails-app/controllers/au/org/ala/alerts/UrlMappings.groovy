@@ -70,10 +70,6 @@ class UrlMappings {
         // The allowed HTTP methods are governed by NotificationController.allowedMethods.
         "/notification/delete/$id"(controller: 'notification', action: 'delete')
 
-        "/admin/log"(controller: 'log', action: 'index')
-        "/admin/log/update"(controller: 'log', action: 'update', method: 'PUT')
-        "/admin/log/delete/$id?"(controller: 'log', action: 'delete', method: 'DELETE')
-
         "/$controller/$action?/$id?(.$format)?"{
             constraints {
                 // apply constraints here

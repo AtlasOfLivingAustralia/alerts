@@ -140,7 +140,7 @@ privacyPolicy: "https://www.ala.org.au/terms-of-use/privacy-policy/"
 siteDefaultLanguage: "en"
 customUserAgent: 'alerts/@info.app.version@'
 
-# used to identify which hub an Alerts is subcribed from
+# used to identify which hub an Alerts is subscribed from
 # the hub name will be shown in the email
 hubs:
     "AVH:avh,Ozcam:ozcam"

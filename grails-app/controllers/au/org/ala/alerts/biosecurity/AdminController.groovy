@@ -69,8 +69,6 @@ class AdminController {
         render([offset: offset, max: max, total: total, count: alerts.size(), alerts: alerts] as JSON)
     }
 
-
-
     @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
     def search() {
         List<Query> queries =  queryService.searchBiosecuritySubscriptions(params.q)
@@ -79,7 +77,7 @@ class AdminController {
     }
 
     def get(int id) {
-        def query = biosecurityService.get(id)
+        def query = queryService.get(id)
         if (query) {
             render queryToAlertMap(query) as JSON
         } else {
@@ -93,12 +91,14 @@ class AdminController {
      * @return
      */
     private queryToAlertMap(Query query) {
-        def activeSubscribers = queryService.getSubscribers(query.id).collect { User user ->
+        def activeSubscribers = query.getSubscribers().collect { User user ->
             [id: user.id, email: user.email, isActive: true]
         }
-        def inactiveSubscribers = queryService.getInactiveSubscribers(query.id).collect { User user ->
+
+        def inactiveSubscribers = query.getInactiveSubscribers().collect { User user ->
             [id: user.id, email: user.email, isActive: false]
         }
+
         String log = query.getLogs("weekly")?.join("\n") ?: "No logs available"
         [
                 id         : query.id,

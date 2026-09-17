@@ -228,7 +228,7 @@
                     var result = await response.json();
                     // Seed newSubscriber on every alert so the "add subscriber" input is bound to a
                     // defined value. Without it x-model reads undefined and the box can show "undefined".
-                    this.alerts = (result.alerts || []).map(alert => ({ ...alert, newSubscribers: '', showLog: false, showHelp: false }));
+                    this.alerts = (result.alerts || []).map(alert => ({ ...alert, showLog: false, showHelp: false }));
                     this.total = result.total;
                 } catch (e) {
                     console.error(e);
@@ -279,7 +279,7 @@
                     } else {
                         var result = await response.json();
                         if (result.success && result.alert) {
-                            let theAlert = {...result.alert, newSubscribers:"", showHelp:false, showLog:false,active:true};
+                            let theAlert = {...result.alert, showHelp:false, showLog:false,active:true};
                             const index = this.alerts.findIndex(a => a.id === result.alert.id);
                             if (index !== -1) {
                                 this.alerts.splice(index, 1);
@@ -540,7 +540,6 @@
                     if (response.ok) {
                         const result = await response.json();
                         if (result.success) {
-                            window.alert("Notification triggered successfully.");
                             const alert = this.alerts.find(a => a.id === queryId);
                             const resp = await fetch(CONTEXT_PATH + "/biosecurity/subscription/" + queryId+".json");
                             Object.assign(alert, await resp.json());

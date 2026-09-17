@@ -68,7 +68,7 @@ class BiosecurityService {
 
 
         def results = queries.collect{ query ->
-            // Bioseurity queries are weekly ONLY, so filter out the other frequencies
+            // Biosecurity queries are weekly ONLY, so filter out the other frequencies
             def filteredQueryResults = query.queryResults.findAll { it.frequency?.name == 'weekly' }
             // Get the last QueryResult from the filtered list, if it exists
             QueryResult qr = !filteredQueryResults.isEmpty() ? filteredQueryResults.first() : null
@@ -94,6 +94,7 @@ class BiosecurityService {
         Query.withTransaction {
             queries = Query.findAllByEmailTemplate('/email/biosecurity')
         }
+
         return queries
     }
 
@@ -223,13 +224,10 @@ class BiosecurityService {
                 def csvService =  getCsvService()
                 csvService.generateAuditCSV(qr)
                 User.withTransaction {
-                    // query.notifications (and notification.user) are join fetched by
-                    // queryService.getALLBiosecurityQuery(), so no lazy loading happens here.
-                    def activeNotifications = query.notifications.findAll { it.enabled }
-                    def users = activeNotifications.collect { it.user }
-                    def recipients = activeNotifications.collect { notification ->
-                        def user = notification.user
-                        [email: user.email, userUnsubToken: user.unsubscribeToken, notificationUnsubToken: notification.unsubscribeToken]
+                    def users = query.getSubscribers()
+                    def recipients = users.collect { user ->
+                        def notificationUnsubToken = user.notifications.find { it.query.id == query.id }?.unsubscribeToken
+                        [email: user.email, userUnsubToken: user.unsubscribeToken, notificationUnsubToken: notificationUnsubToken]
                     }
 
                     def emails = recipients.collect { it.email }

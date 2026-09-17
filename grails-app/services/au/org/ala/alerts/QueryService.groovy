@@ -359,8 +359,8 @@ class QueryService {
                 name          : messageSource.getMessage("query.myannotations.title", null, siteLocale),
                 updateMessage : messageSource.getMessage("myannotations.update.message", null, siteLocale),
                 description   : messageSource.getMessage("query.myannotations.descr", null, siteLocale),
-                queryPath     : "/occurrences/search?fq=assertion_user_id:${userId}&dir=desc&pageSize=${grailsApplication.config.biocacheService.pageSize}&fq=lastAssertionDate:[___DATEPARAM___%20TO%20*]&sort=lastAssertionDate",
-                queryPathForUI: "/occurrences/search?fq=assertion_user_id:${userId}&dir=desc&pageSize=${grailsApplication.config.biocacheService.pageSize}&fq=lastAssertionDate:[___DATEPARAM___%20TO%20*]&sort=lastAssertionDate",
+                queryPath     : "/occurrences/search?fq=assertion_user_id:${userId}&dir=desc&pageSize=${grailsApplication.config.biocacheService.pageSize}&fq=lastAssertionDate:[___DATEPARAM___%20TO%20*]&sort=lastAssertionDate&disableAllQualityFilters=true",
+                queryPathForUI: "/occurrences/search?fq=assertion_user_id:${userId}&dir=desc&pageSize=${grailsApplication.config.biocacheService.pageSize}&fq=lastAssertionDate:[___DATEPARAM___%20TO%20*]&sort=lastAssertionDate&disableAllQualityFilters=true",
                 dateFormat    : """yyyy-MM-dd'T'HH:mm:ss'Z'""",
                 emailTemplate : '/email/myAnnotations',
                 recordJsonPath: '\$.occurrences[*]',
@@ -399,72 +399,6 @@ class QueryService {
         if (queryInstance) {
             deleteQuery(queryInstance)
         }
-    }
-
-    // return the number of biosecurity queries
-    def countBiosecurityQuery() {
-        int count = 0
-        Query.withTransaction {
-            count = Query.countByEmailTemplate('/email/biosecurity')
-        }
-        return count
-    }
-
-    /**
-     * All biosecurity queries, with their notifications (and each notification's user + frequency)
-     * eagerly fetched.
-     *
-     * The queries become detached as soon as this method's session closes, so the associations are
-     * join fetched here. Without this, callers such as
-     * BiosecurityService#triggerBiosecuritySubscription -> query.getSubscribers() would hit a
-     * LazyInitializationException - opening a new session/transaction does NOT help, because the
-     * uninitialised collection is still bound to the original closed session.
-     */
-    def getALLBiosecurityQuery() {
-        List<Query> queries = []
-        Query.withTransaction {
-            queries = Query.executeQuery("""
-                select distinct q
-                from Query q
-                left join fetch q.notifications n
-                left join fetch n.user u
-                left join fetch u.frequency
-                where q.emailTemplate = :emailTemplate
-                order by q.id desc
-            """, [emailTemplate: '/email/biosecurity'])
-        }
-        return queries
-    }
-
-    // get biosecurity queries with offset and limit
-    def getBiosecurityQuery(int offset,int limit) {
-        def criteria = Query.createCriteria()
-        List<Query> queries = criteria.list(max: limit, offset: offset) {
-            eq('emailTemplate', '/email/biosecurity')
-            order('id', 'desc')
-        }
-
-
-        def results = queries.collect{ query ->
-            // Bioseurity queries are weekly ONLY, so filter out the other frequencies
-            def filteredQueryResults = query.queryResults.findAll { it.frequency?.name == 'weekly' }
-            // Get the last QueryResult from the filtered list, if it exists
-            QueryResult qr = !filteredQueryResults.isEmpty() ? filteredQueryResults.first() : null
-
-            query
-        }
-
-        return results.toList()
-    }
-
-
-    def findBiosecurityQueryById(id) {
-        Query subscription = Query.get(id)
-        QueryResult qr = QueryResult.findByQuery(subscription)
-        if (qr) {
-            subscription.lastChecked = qr.lastChecked
-        }
-        return subscription
     }
 
 

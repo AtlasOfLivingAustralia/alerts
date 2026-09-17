@@ -133,10 +133,10 @@ class EmailService {
                     log.error("Error in sending email to monitor team: " + recipients.join(","), e)
                 }
             } else {
-                log.warn("No recipients found for monitor team: ${teamName}. Error notification will not been sent.")
+                log.warn("No recipients found for monitor team: ${teamName}. Error notification will not be sent.")
             }
         } else {
-            log.info("Mail service disable. Error notification will not been sent to monitor team: ${recipients?.join(",")}.")
+            log.info("Mail service disable. Error notification will not be sent to monitor team: ${recipients?.join(",")}.")
         }
     }
 
