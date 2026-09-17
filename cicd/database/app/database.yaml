@@ -53,6 +53,7 @@ Parameters:
     Description: The database parameter group family.
     Type: String
     AllowedValues:
+      - aurora-mysql8.0
       - aurora-mysql8.4
       - aurora-postgresql16
       - aurora-postgresql17
