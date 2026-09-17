@@ -191,7 +191,7 @@ Conditions:
     - "true"
 
 Resources:
-  MysqlDbInstanceParamGrp:
+  MysqlDbInstanceParamGrp84:
     Type: AWS::RDS::DBParameterGroup
     Properties:
       Description: !Sub ${pProductName} DB instance parameter grp
@@ -400,7 +400,7 @@ Resources:
       DBInstanceIdentifier: !Sub ${pDbInstanceName}-primary
       DBParameterGroupName: !If
         - IsMysql
-        - !Ref MysqlDbInstanceParamGrp
+        - !Ref MysqlDbInstanceParamGrp84
         - !Ref PostgresDbInstanceParamGrp
       DBSubnetGroupName: !Ref DbSubnetGrp
       Engine: !Ref pDbEngine
@@ -437,7 +437,7 @@ Resources:
       DBClusterIdentifier: !Ref DbCluster
       DBParameterGroupName: !If
         - IsMysql
-        - !Ref MysqlDbInstanceParamGrp
+        - !Ref MysqlDbInstanceParamGrp84
         - !Ref PostgresDbInstanceParamGrp
       DBSubnetGroupName: !Ref DbSubnetGrp
       PubliclyAccessible: false
