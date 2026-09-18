@@ -47,7 +47,9 @@
                         <div> ${totalRecords} ${totalRecords == 1 ? 'dataset' : 'datasets'} ${totalRecords == 1 ? 'has' : 'have'} been added
                         </div>
                         <div style="padding-top: 20px;">
-                            <a class="btn info-button" href="${moreInfo}"><g:message code="datasets.view.details.of.the.added" /></a>
+                            <g:if test="${moreInfo?.queryUrlUIUsed}">
+                                <a class="btn info-button" href="${moreInfo.queryUrlUIUsed}"><g:message code="datasets.view.details.of.the.added" /></a>
+                            </g:if>
                         </div>
                     </td>
                 </tr>

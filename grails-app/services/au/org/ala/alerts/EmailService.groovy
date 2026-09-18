@@ -3,87 +3,15 @@ package au.org.ala.alerts
 import grails.util.Environment
 import grails.util.Holders
 
+import java.util.regex.Pattern
+
 class EmailService {
     def groovyPageRenderer
-    def diffService
     def queryService
     def grailsApplication
     def messageSource
+    def monitoringTeamService
     def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
-
-
-    /**
-     * Todo check if it is only for testing purpose
-     * @param notification
-     * @return
-     */
-    @Deprecated
-    def sendNotificationEmail(Notification notification) {
-
-        log.debug("Using email template: " + notification.query.emailTemplate)
-
-        def queryResult = QueryResult.findByQueryAndFrequency(notification.query, notification.user.frequency)
-
-        def emailModel = generateEmailModel(notification, queryResult)
-        def user = notification.user
-        def localeSubject = messageSource.getMessage("emailservice.update.subject", [notification.query.name] as Object[], siteLocale)
-        String emailBody = groovyPageRenderer.render(template: notification.query.emailTemplate, plugin: "email-confirmation", model: emailModel)
-
-        if (grailsApplication.config.getProperty("mail.enabled", Boolean, false) && !user.locked) {
-            log.info "Sending email to ${user.email} for ${notification.query.name}"
-            sendMail {
-                from grailsApplication.config.mail.details.alertAddressTitle + "<" + grailsApplication.config.mail.details.sender + ">"
-                subject localeSubject
-                bcc user.email
-                html emailBody
-            }
-        } else if (grailsApplication.config.getProperty("mail.enabled", Boolean, false) && user.locked) {
-            log.warn "Email not sent to locked user: ${user.email}"
-        } else {
-            log.info("Email would have been sent to: " + user.email)
-            log.info("message:" + messageSource.getMessage(notification.query.updateMessage, null, siteLocale))
-            log.debug("moreInfo:" + queryResult.queryUrlUIUsed)
-            log.debug("stopNotification:" + grailsApplication.config.security.cas.appServerName + grailsApplication.config.security.cas.contextPath + '/notification/myAlerts')
-            log.debug("records:" + emailModel.records)
-            log.debug("frequency:" + notification.user.frequency)
-            log.debug("totalRecords:" + emailModel.totalRecords)
-        }
-    }
-
-    /**
-     * Generate the email model.
-     *
-     * @param notification
-     * @param queryResult
-     * @return
-     */
-    def Map generateEmailModel(Notification notification, QueryResult queryResult) {
-        generateEmailModel(notification.query, notification.user.frequency, queryResult)
-    }
-
-    /**
-     * Generate the email model.
-     *
-     * @param notification
-     * @param queryResult
-     * @return
-     */
-    @Deprecated
-    def Map generateEmailModel(Query query, String frequency, QueryResult queryResult) {
-        def records = diffService.getNewRecords(queryResult)
-        def totalRecords = queryResult.totalRecords
-        [
-            title           : query.name,
-            message         : query.updateMessage,
-            moreInfo        : queryResult.queryUrlUIUsed,
-            listcode        : queryService.isMyAnnotation(query) ? "biocache.view.myannotation.list" : "biocache.view.list",
-            query           : query,
-            stopNotification: grailsApplication.config.security.cas.appServerName + grailsApplication.config.security.cas.contextPath + '/notification/myAlerts',
-            frequency       : frequency,
-            records         : records,
-            totalRecords    : totalRecords >= 0 ? totalRecords : records.size()
-        ]
-    }
 
     /**
      * Key method to send emails to a group of recipients.
@@ -92,7 +20,7 @@ class EmailService {
      * @param frequency
      * @param recipients
      */
-    def sendGroupNotification(QueryResult queryResult, Frequency frequency, List<Map> recipients) {
+    def sendGroupNotification(QueryResult queryResult, Frequency frequency, List<Map> recipients, Map moreInfo = [:]) {
         Query query = queryResult.query
 
         log.debug("Using email template: " + query.emailTemplate)
@@ -107,7 +35,7 @@ class EmailService {
                     log.info "Sending emails for ${query.name} to ${emails.size() <= 2 ? emails.join('; ') : emails.take(2).join('; ') + ' and ' + emails.size() + ' other users.'}"
                     recipients.each { recipient ->
                         if (!recipient.locked) {
-                            sendGroupEmail(query, [recipient.email], queryResult, records.take(maxRecords), frequency, totalRecords, recipient.userUnsubToken as String, recipient.notificationUnsubToken as String)
+                            sendGroupEmail(query, [recipient.email], queryResult, records.take(maxRecords), frequency, totalRecords, recipient.userUnsubToken as String, recipient.notificationUnsubToken as String, moreInfo)
                         } else {
                             log.warn "Email not sent to locked user: ${recipient}"
                         }
@@ -115,7 +43,6 @@ class EmailService {
                 } else {
                     log.info("Email would have been sent to: ${recipients*.email.join(',')} for ${query.name}.")
                     log.debug("message:" + query.updateMessage)
-                    log.debug("moreInfo:" + queryResult.queryUrlUIUsed)
                     log.debug("stopNotification:" + grailsApplication.config.security.cas.appServerName + grailsApplication.config.security.cas.contextPath + '/notification/myAlerts')
                     log.debug("records:" + records)
                     log.debug("frequency:" + frequency)
@@ -134,19 +61,22 @@ class EmailService {
     }
 
 
-    void sendGroupEmail(Query query, subsetOfAddresses, QueryResult queryResult, records, Frequency frequency, int totalRecords, String userUnsubToken, String notificationUnsubToken) {
+    void sendGroupEmail(Query query, subsetOfAddresses, QueryResult queryResult, records, Frequency frequency, int totalRecords, String userUnsubToken, String notificationUnsubToken, Map moreInfo) {
         String urlPrefix = "${grailsApplication.config.security.cas.appServerName}${grailsApplication.config.getProperty('security.cas.contextPath', '')}"
         def localeSubject = messageSource.getMessage("emailservice.update.subject", [query.name] as Object[], siteLocale)
-        // pass the last check date to template
 
-        // lastChecked is used into template :  records since lastChecked date
-        // That is why we need to assign the previousCheck of queryResult to query.lastChecked
-        // todo : separate the since and to with lastChecked and previousCheck in the QueryResult or query
-        query.lastChecked = queryResult.previousCheck
 
-        String title = query.name
+        moreInfo = moreInfo ?: [:]
+        moreInfo.queryUrlUIUsed = queryResult.queryUrlUIUsed
+        moreInfo.lastChecked = queryResult.previousCheck
+
+        String emailSubject = query.name
+        String hubName = getHubName(query.baseUrlForUI)
+        if (hubName) {
+            emailSubject = "[${hubName}] " + emailSubject
+        }
         if (Environment.current == Environment.DEVELOPMENT || Environment.current == Environment.TEST) {
-            title = "[${Environment.current}] " + query.name
+            emailSubject = "[${Environment.current}] " + emailSubject
         }
 
         String emailBody = groovyPageRenderer.render(view:  query.emailTemplate,
@@ -154,7 +84,7 @@ class EmailService {
                 model: [title: localeSubject,
                        message: query.updateMessage,
                        query: query,
-                       moreInfo: queryResult.queryUrlUIUsed,
+                       moreInfo: moreInfo,
                        listcode: queryService.isMyAnnotation(query) ? "biocache.view.myannotation.list" : "biocache.view.list",
                        stopNotification: urlPrefix + '/notification/myAlerts',
                        records: records,
@@ -168,12 +98,108 @@ class EmailService {
         try {
             sendMail {
                 from grailsApplication.config.mail.details.alertAddressTitle + "<" + grailsApplication.config.mail.details.sender + ">"
-                subject title
+                subject emailSubject
                 bcc subsetOfAddresses
                 html(emailBody)
             }
         } catch (Exception e) {
             log.error("Error sending email to addresses: " + subsetOfAddresses, e)
         }
+    }
+
+    def notifyMonitoringTeam(String teamName, Map messages) {
+        if (grailsApplication.config.getProperty("mail.enabled", Boolean, false)) {
+            String emailSubject = messages["subject"] ? messages["subject"] : "Error notification to ${teamName} team"
+            String emailBody = groovyPageRenderer.render(view:  "/email/monitorTeamNotification",
+                    plugin: "email-confirmation",
+                    model: [messages: messages]
+            )
+
+            if (Environment.current == Environment.DEVELOPMENT || Environment.current == Environment.TEST) {
+                emailSubject = "[${Environment.current}] " + emailSubject
+            }
+
+            def recipients = monitoringTeamService.getEmails(teamName)
+            if (recipients) {
+
+                try {
+                    sendMail {
+                        from grailsApplication.config.mail.details.alertAddressTitle + "<" + grailsApplication.config.mail.details.sender + ">"
+                        subject emailSubject
+                        bcc recipients
+                        html(emailBody)
+                    }
+                } catch (Exception e) {
+                    log.error("Error in sending email to monitor team: " + recipients.join(","), e)
+                }
+            } else {
+                log.warn("No recipients found for monitor team: ${teamName}. Error notification will not be sent.")
+            }
+        } else {
+            log.info("Mail service disable. Error notification will not be sent to monitor team: ${recipients?.join(",")}.")
+        }
+    }
+
+    String getHubName(String urlForUI) {
+        if (!urlForUI) {
+            return ""
+        }
+
+        //hubPattern is a key value pair map, label: key
+        String hubPattern = grailsApplication.config.getProperty("hubs", String, "Atlas of Living Australia")
+        if (hubPattern) {
+            def hubMap = [:]
+            hubPattern.split(",").each { entry ->
+                // split on the FIRST ':' only, so hub values that are full urls
+                // (e.g. "AVH:https://avh.ala.org.au") are not broken up by the scheme separator
+                def parts = entry.split(":", 2)
+                if (parts.length == 2 && parts[0].trim() && parts[1].trim()) {
+                    hubMap[parts[0].trim()] = parts[1].trim()
+                }
+            }
+            for (entry in hubMap) {
+                if (matchesHub(urlForUI, entry.value as String)) {
+                    return entry.key
+                }
+            }
+        }
+        return ""
+    }
+
+    /**
+     * Matches a UI url against a configured hub value, ignoring the scheme.
+     *
+     * Both the url and the configured value may or may not carry "http://" / "https://"
+     * (and an optional "www." prefix), so both sides are normalised and the configured
+     * value is then matched as a case insensitive prefix of the url.
+     *
+     * e.g. "avh", "avh.ala.org.au", "http://avh.ala.org.au" and "https://www.avh.ala.org.au"
+     * all match the url "https://avh.ala.org.au/occurrences/search".
+     *
+     * @param urlForUI the url to test
+     * @param hubValue the configured hub value
+     * @return true if the url belongs to the hub
+     */
+    static boolean matchesHub(String urlForUI, String hubValue) {
+        String hub = stripScheme(hubValue)
+        if (!hub) {
+            return false
+        }
+        // both sides have already had the scheme/"www."/trailing slash removed, so the configured
+        // value only has to match the start of the url. (?i) makes the match case insensitive and
+        // Pattern.quote escapes regex metacharacters (e.g. the dots in a host name)
+        def matcher = stripScheme(urlForUI) =~ /(?i)^${Pattern.quote(hub)}/
+        return matcher.find()
+    }
+
+    /**
+     * Removes the scheme, any "www." prefix and trailing slashes from a url, so urls can be
+     * compared regardless of how they were configured.
+     */
+    private static String stripScheme(String url) {
+        url?.trim()
+                ?.replaceFirst(/(?i)^[a-z][a-z0-9+.\-]*:\/\//, '')
+                ?.replaceFirst(/(?i)^www\./, '')
+                ?.replaceFirst(/\/+$/, '')
     }
 }

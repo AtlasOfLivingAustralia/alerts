@@ -40,6 +40,9 @@ class UrlMappings {
             "/trigger/$id"(namespace: "biosecurity", controller: 'admin', action: 'trigger')
             "/triggerAlertSince/$id?"(namespace: "biosecurity", controller: 'admin', action: 'triggerAlertSince')
             "/preview/$id?"(namespace: "biosecurity", controller: 'admin', action: 'preview')
+            get "/monitoringTeamMembers(.$format)?"(namespace: "biosecurity", controller: 'admin', action: 'getMonitoringTeamMembers')
+            delete "/monitoringTeamMembers/$id(.$format)?"(namespace: "biosecurity", controller: 'admin', action: 'deleteMonitoringTeamMember')
+            post "/monitoringTeamMembers(.$format)?"(namespace: "biosecurity", controller: 'admin', action: 'addMonitoringTeamMember')
 
             group "/csv", {
                 "/"(namespace: "biosecurity", controller: "csv", action: "list")
@@ -66,10 +69,6 @@ class UrlMappings {
         // the catch-all "/$controller/$action?/$id?" mapping below) so the id is required.
         // The allowed HTTP methods are governed by NotificationController.allowedMethods.
         "/notification/delete/$id"(controller: 'notification', action: 'delete')
-
-        "/admin/log"(controller: 'log', action: 'index')
-        "/admin/log/update"(controller: 'log', action: 'update', method: 'PUT')
-        "/admin/log/delete/$id?"(controller: 'log', action: 'delete', method: 'DELETE')
 
         "/$controller/$action?/$id?(.$format)?"{
             constraints {
