@@ -19,6 +19,7 @@ import java.text.SimpleDateFormat
  * Process Biosecurity alerts
  */
 class BiosecurityService {
+    String EMAIL_TEMPLATE = '/email/biosecurity'
     def notificationService
     def queryService
     def grailsApplication, messageSource
@@ -53,19 +54,13 @@ class BiosecurityService {
         return results
     }
 
-    def get(id) {
-        def query = Query.get(id)
-        query
-    }
-
     // get biosecurity queries with offset and limit
     def list(int offset,int limit) {
         def criteria = Query.createCriteria()
         List<Query> queries = criteria.list(max: limit, offset: offset) {
-            eq('emailTemplate', '/email/biosecurity')
+            eq('emailTemplate', EMAIL_TEMPLATE)
             order('id', 'desc')
         }
-
 
         def results = queries.collect{ query ->
             // Biosecurity queries are weekly ONLY, so filter out the other frequencies
@@ -82,7 +77,7 @@ class BiosecurityService {
     def count() {
         int count = 0
         Query.withTransaction {
-            count = Query.countByEmailTemplate('/email/biosecurity')
+            count = Query.countByEmailTemplate(EMAIL_TEMPLATE)
         }
         return count
     }
@@ -92,9 +87,8 @@ class BiosecurityService {
     def alerts () {
         def queries
         Query.withTransaction {
-            queries = Query.findAllByEmailTemplate('/email/biosecurity')
+            queries = Query.findAllByEmailTemplate(EMAIL_TEMPLATE)
         }
-
         return queries
     }
 
@@ -181,10 +175,8 @@ class BiosecurityService {
         def result = [status: 1, message: message, logs: [ "Processing at ${sdf.format(now)} ", message]]
 
         def frequency = queryService.getFrequency("weekly")
-
-
         QueryResult qr = notificationService.getQueryResult(query, frequency)
-
+        def recipients = queryService.getRecipients(query.id, "weekly")
         try {
             def processedJson = processQueryBiosecurity(query, since, now)
             // set check time
@@ -219,26 +211,16 @@ class BiosecurityService {
             String modifiedPath = queryPath.replaceAll('___DATEPARAM___', firstLoadedDate).replaceAll('___LASTYEARPARAM___', occurrenceDate)
             qr.queryUrlUIUsed = query.baseUrlForUI + modifiedPath
 
-
             if (qr.hasChanged) {
                 def csvService =  getCsvService()
                 csvService.generateAuditCSV(qr)
-                User.withTransaction {
-                    def users = query.getSubscribers()
-                    def recipients = users.collect { user ->
-                        def notificationUnsubToken = user.notifications.find { it.query.id == query.id }?.unsubscribeToken
-                        [email: user.email, userUnsubToken: user.unsubscribeToken, notificationUnsubToken: notificationUnsubToken]
-                    }
-
+                if (recipients) {
                     def emails = recipients.collect { it.email }
                     result.logs << "Sending emails to ${emails.size() <= 2 ? emails.join('; ') : emails.take(2).join('; ') + ' and ' + (emails.size() - 2) + ' other users.'}"
 
-                    if (!users.isEmpty()) {
-                        def emailStatus = emailService.sendGroupNotification(qr, frequency, recipients,[countByDataProvider: countsByDataProvider])
-
-                        result.status = emailStatus.status
-                        result.logs << emailStatus.message
-                    }
+                    def emailStatus = emailService.sendGroupNotification(qr, frequency, recipients,[countByDataProvider: countsByDataProvider])
+                    result.status = emailStatus.status
+                    result.logs << emailStatus.message
                 }
             } else {
                 result.logs << "No emails will be sent because no changes were detected."

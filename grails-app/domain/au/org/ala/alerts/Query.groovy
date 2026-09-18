@@ -66,7 +66,7 @@ class Query {
     }
 
     /**
-     * return ACTIVE subscribers for this query, optionally filtered by frequency.
+     * return ACTIVE subscribers and NOT locked user for this query, optionally filtered by frequency.
      * @param frequency
      * @return
      */
@@ -74,9 +74,9 @@ class Query {
         def subscribers
 
         if (frequency) {
-            subscribers = notifications.findAll { it.enabled }.collect { it.user }.findAll(it -> it.frequency?.name == frequency)
+            subscribers = notifications.findAll { it.enabled }.collect { it.user }.findAll(it -> it.frequency?.name == frequency && !it.locked)
         } else {
-            subscribers= notifications.findAll { it.enabled }.collect { it.user }
+            subscribers= notifications.findAll { it.enabled }.collect { it.user }.findAll(it -> !it.locked)
         }
         return subscribers
     }
