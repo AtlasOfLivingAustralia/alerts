@@ -321,8 +321,6 @@ Resources:
       DatabaseInsightsMode: !Ref pDatabaseInsightsMode
       DatabaseName: !Sub ${pProductName}${pEnvironment}
       DBClusterIdentifier: !Sub ${pDbInstanceName}-cluster
-
-      #DBClusterParameterGroupName: default.aurora-mysql8.4
       DBClusterParameterGroupName: !If
         - IsMysql
         - !Ref MysqlClusterParamGrp
@@ -404,12 +402,10 @@ Resources:
         - !Ref pInstanceClass
         - db.serverless
       DBInstanceIdentifier: !Sub ${pDbInstanceName}-primary
-      DBParameterGroupName: default.aurora-mysql8.4
-
-      #DBParameterGroupName: !If
-      #  - IsMysql
-      #  - !Ref MysqlDbInstanceParamGrp
-      #  - !Ref PostgresDbInstanceParamGrp
+      DBParameterGroupName: !If
+        - IsMysql
+        - !Ref MysqlDbInstanceParamGrp
+        - !Ref PostgresDbInstanceParamGrp
       DBSubnetGroupName: !Ref DbSubnetGrp
       Engine: !Ref pDbEngine
       DBClusterIdentifier: !Ref DbCluster
@@ -443,8 +439,6 @@ Resources:
         - db.serverless
       DBInstanceIdentifier: !Sub ${pDbInstanceName}-replica
       DBClusterIdentifier: !Ref DbCluster
-
-      #DBParameterGroupName: default.aurora-mysql8.4
       DBParameterGroupName: !If
         - IsMysql
         - !Ref MysqlDbInstanceParamGrp
