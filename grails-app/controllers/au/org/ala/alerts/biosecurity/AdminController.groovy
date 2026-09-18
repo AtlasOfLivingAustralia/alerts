@@ -76,7 +76,7 @@ class AdminController {
         render alerts as JSON
     }
 
-    def get(int id) {
+    def get(long id) {
         def query = queryService.get(id)
         if (query) {
             render queryToAlertMap(query) as JSON
