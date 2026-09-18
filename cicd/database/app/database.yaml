@@ -398,6 +398,7 @@ Resources:
         - !Ref pInstanceClass
         - db.serverless
       DBInstanceIdentifier: !Sub ${pDbInstanceName}-primary
+      DBParameterGroupName: default.aurora-mysql8.4
 
       #DBParameterGroupName: !If
       #  - IsMysql
@@ -436,6 +437,7 @@ Resources:
         - db.serverless
       DBInstanceIdentifier: !Sub ${pDbInstanceName}-replica
       DBClusterIdentifier: !Ref DbCluster
+      DBParameterGroupName: default.aurora-mysql8.4
 
       #DBParameterGroupName: !If
       #  - IsMysql
