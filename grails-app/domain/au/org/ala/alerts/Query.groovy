@@ -66,7 +66,7 @@ class Query {
     }
 
     /**
-     * return ACTIVE subscribers for this query, optionally filtered by frequency.
+     * return ACTIVE subscribers and NOT locked user for this query, optionally filtered by frequency.
      * @param frequency
      * @return
      */

@@ -13,11 +13,17 @@ class QueryService {
     def messageSource
     def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
 
-    def get(id){
-        Query.get(id)
+    def get(long id){
+        Query query = Query.createCriteria().get {
+            eq('id', id)
+            notifications {
+                eq('enabled', true)
+            }
+        }
+        query
     }
 
-    def getFrequency(name) {
+    def getFrequency(String name) {
         Frequency.withTransaction {
            return Frequency.findByName(name)
         }
@@ -406,7 +412,10 @@ class QueryService {
     // NOTE: Some standard queries (e.g. New records) may have a further filter on the frequency which users select (e.g. daily, weekly, monthly).
     // This method does not filter on frequency, it returns all users who have enabled notifications for the query.
     def getSubscribers(Long queryId) {
-        Query query = Query.findById(queryId)
+        Query query = Query.createCriteria().get {
+            eq('id', queryId)
+            fetchMode('notifications', org.hibernate.FetchMode.JOIN)
+        }
         return query ? query.getSubscribers() : []
     }
 
@@ -414,8 +423,35 @@ class QueryService {
     // NOTE: Some standard queries (e.g. New records) may have a further filter on the frequency which users select (e.g. daily, weekly, monthly).
     // This method does not filter on frequency, it returns all users who have enabled notifications for the query.
     def getInactiveSubscribers(Long queryId) {
-        Query query = Query.findById(queryId)
+        def query = Query.createCriteria().get {
+            eq('id', queryId)
+            fetchMode('notifications', org.hibernate.FetchMode.JOIN)
+        }
         return query ? query.getInactiveSubscribers() : []
+    }
+
+    /**
+     * Collect the email addresses of all ACTIVE users subscribed to a given query, optionally filtered by frequency.
+     * including the user's unsubscribe token and the notification's unsubscribe token for that query.
+     * @param queryId
+     * @param frequency
+     * @return [email, unsubscribeToken, notificationUnsubscribeToken] for each user
+     */
+    def getRecipients(Long queryId, String frequency = null) {
+        def recipients = []
+        Query.withTransaction {
+            Query query = Query.createCriteria().get {
+                eq('id', queryId)
+                fetchMode('notifications', org.hibernate.FetchMode.JOIN)
+            }
+            User[] users = query ? query.getSubscribers(frequency).findAll{!it.locked} : []
+
+            recipients = users.collect { user ->
+                def notificationUnsubToken = user.notifications.find { it.query.id == query.id }?.unsubscribeToken
+                [email: user.email, userUnsubToken: user.unsubscribeToken, notificationUnsubToken: notificationUnsubToken]
+            }
+        }
+        return recipients
     }
 
     boolean speciesListExists(String listid) {

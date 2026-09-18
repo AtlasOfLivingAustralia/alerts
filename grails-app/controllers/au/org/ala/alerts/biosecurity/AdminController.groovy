@@ -76,7 +76,7 @@ class AdminController {
         render alerts as JSON
     }
 
-    def get(int id) {
+    def get(long id) {
         def query = queryService.get(id)
         if (query) {
             render queryToAlertMap(query) as JSON
@@ -92,11 +92,11 @@ class AdminController {
      */
     private queryToAlertMap(Query query) {
         def activeSubscribers = query.getSubscribers().collect { User user ->
-            [id: user.id, email: user.email, isActive: true]
+            [id: user.id, email: user.email, locked: user.locked, isActive: true]
         }
 
         def inactiveSubscribers = query.getInactiveSubscribers().collect { User user ->
-            [id: user.id, email: user.email, isActive: false]
+            [id: user.id, email: user.email, locked: user.locked, isActive: false]
         }
 
         String log = query.getLogs("weekly")?.join("\n") ?: "No logs available"
@@ -124,10 +124,10 @@ class AdminController {
         // Combine both lists into a single list of maps with id, email, and enabled status
         def combinedSubscribers = []
         subscribers.each { user ->
-            combinedSubscribers.add([id: user.id, email: user.email, isActive: true])
+            combinedSubscribers.add([id: user.id, email: user.email, locked: user.locked, isActive: true])
         }
         inactiveSubscribers.each { user ->
-            combinedSubscribers.add([id: user.id, email: user.email, isActive: false])
+            combinedSubscribers.add([id: user.id, email: user.email, locked: user.locked, isActive: false])
         }
         render([subscribers: combinedSubscribers] as JSON)
     }

@@ -125,9 +125,10 @@
                         </div>
                         <div class="col-md-5">
                             <template x-for="subscriber in query.subscribers" :key="subscriber.id">
-                                <span class="badge-outline-primary text-primary me-1" :class="subscriber.isActive ? 'border-primary' : 'badge-outline-secondary bg-light'"
+                                <span class="badge-outline-primary text-primary me-1" :class="subscriber.isActive && !subscriber.locked ? 'border-primary' : 'badge-outline-secondary bg-light'"
                                       style="display: inline-block; white-space: nowrap; margin-bottom: 4px;">
-                                    <span :class="subscriber.isActive ? '' : 'text-decoration-line-through text-muted'" x-text="subscriber.email"></span>
+                                    <span class="fa fa-lock" x-show="subscriber.locked" aria-hidden="true"></span>
+                                    <span :class="subscriber.isActive && !subscriber.locked ? '' : 'text-decoration-line-through text-muted'" x-text="subscriber.email"></span>
                                     <i @click="unsubscribe(query.id, subscriber.id, subscriber.email)" class="fa fa-user-times clickable cursor-pointer"></i>
                                 </span>
                             </template>
@@ -377,10 +378,9 @@
                                 this.activeId = queryId;
                                 const alert = this.alerts.find(a => a.id === queryId);
                                 var subscribersResponse = await fetch(CONTEXT_PATH + '/biosecurity/subscribers.json?queryId=' + queryId);
-                                var subscribers = await subscribersResponse.json();
+                                var subscribersResult = await subscribersResponse.json();
                                 if (alert) {
-                                    alert.subscribers = subscribers.subscribers;
-                                    alert.newSubscribers = '';
+                                    alert.subscribers = subscribersResult.subscribers;
                                 }
                             } else {
                                 throw new Error( result.message);
