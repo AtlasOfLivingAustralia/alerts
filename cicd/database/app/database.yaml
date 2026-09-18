@@ -53,6 +53,7 @@ Parameters:
     Description: The database parameter group family.
     Type: String
     AllowedValues:
+      - aurora-mysql8.0
       - aurora-mysql8.4
       - aurora-postgresql16
       - aurora-postgresql17
@@ -324,6 +325,10 @@ Resources:
         - IsMysql
         - !Ref MysqlClusterParamGrp
         - !Ref PostgresClusterParamGrp
+      DBInstanceParameterGroupName: !If
+        - IsMysql
+        - !Ref MysqlDbInstanceParamGrp
+        - !Ref PostgresDbInstanceParamGrp
       DBSubnetGroupName: !Ref DbSubnetGrp
       DeletionProtection: !Ref pDeletionProtection
       EnableCloudwatchLogsExports: !If
