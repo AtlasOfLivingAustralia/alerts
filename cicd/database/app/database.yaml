@@ -321,10 +321,12 @@ Resources:
       DatabaseInsightsMode: !Ref pDatabaseInsightsMode
       DatabaseName: !Sub ${pProductName}${pEnvironment}
       DBClusterIdentifier: !Sub ${pDbInstanceName}-cluster
-      DBClusterParameterGroupName: !If
-        - IsMysql
-        - !Ref MysqlClusterParamGrp
-        - !Ref PostgresClusterParamGrp
+      DBClusterParameterGroupName: default.aurora-mysql8.4
+
+      #DBClusterParameterGroupName: !If
+      #  - IsMysql
+      #  - !Ref MysqlClusterParamGrp
+      #  - !Ref PostgresClusterParamGrp
       DBSubnetGroupName: !Ref DbSubnetGrp
       DeletionProtection: !Ref pDeletionProtection
       EnableCloudwatchLogsExports: !If
