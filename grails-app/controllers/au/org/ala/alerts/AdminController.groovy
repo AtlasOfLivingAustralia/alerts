@@ -17,28 +17,23 @@ import au.org.ala.web.AlaSecured
 import au.org.ala.ws.service.WebService
 import grails.converters.JSON
 import grails.gorm.transactions.Transactional
-import grails.plugin.cache.CacheEvict
 import grails.util.Environment
 import grails.util.Holders
-
 import java.text.SimpleDateFormat
 import groovy.json.JsonSlurper
-import java.nio.file.Files
+
 
 @AlaSecured(value = 'ROLE_ADMIN', redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to view that page.")
 class AdminController {
 
     def authService
     def notificationService
-    def biosecurityService
-    BiosecurityJobService biosecurityJobService
     def queryResultService
     def diffService
     def emailService
     def queryService
     def userService
     def messageSource
-    WebService webService
     def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
 
     static allowedMethods = [deleteUser: 'POST']

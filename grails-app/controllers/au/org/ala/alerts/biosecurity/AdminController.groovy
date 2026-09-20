@@ -18,10 +18,14 @@ class AdminController {
     /** Upper bound on the page size a caller may request from list(). */
     private static final int MAX_PAGE_SIZE = 500
 
+    /** Monitoring team whose members are notified about biosecurity alert runs. */
+    private static final String BIOSECURITY_TEAM = "BIOSECURITY"
+
     def queryService
     def userService
     def notificationService
     def biosecurityService
+    def monitoringTeamService
     def diffService
     def authService
     def messageSource
@@ -58,14 +62,12 @@ class AdminController {
         offset = Math.max(offset, 0)
         max = Math.min(Math.max(max, 1), MAX_PAGE_SIZE)
 
-        int total = queryService.countBiosecurityQuery()
+        int total = biosecurityService.count()
         // Skip the query entirely when the caller has paged past the end
-        List<Query> queries = offset >= total ? [] : queryService.getBiosecurityQuery(offset, max)
+        List<Query> queries = offset >= total ? [] : biosecurityService.list(offset, max)
         def alerts = queries.collect { queryToAlertMap(it) }
         render([offset: offset, max: max, total: total, count: alerts.size(), alerts: alerts] as JSON)
     }
-
-
 
     @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
     def search() {
@@ -74,8 +76,8 @@ class AdminController {
         render alerts as JSON
     }
 
-    def get(int id) {
-        def query = biosecurityService.get(id)
+    def get(long id) {
+        def query = queryService.get(id)
         if (query) {
             render queryToAlertMap(query) as JSON
         } else {
@@ -89,18 +91,20 @@ class AdminController {
      * @return
      */
     private queryToAlertMap(Query query) {
-        def activeSubscribers = queryService.getSubscribers(query.id).collect { User user ->
-            [id: user.id, email: user.email, isActive: true]
+        def activeSubscribers = query.getSubscribers().collect { User user ->
+            [id: user.id, email: user.email, locked: user.locked, isActive: true]
         }
-        def inactiveSubscribers = queryService.getInactiveSubscribers(query.id).collect { User user ->
-            [id: user.id, email: user.email, isActive: false]
+
+        def inactiveSubscribers = query.getInactiveSubscribers().collect { User user ->
+            [id: user.id, email: user.email, locked: user.locked, isActive: false]
         }
+
         String log = query.getLogs("weekly")?.join("\n") ?: "No logs available"
         [
                 id         : query.id,
                 name       : query.name,
                 listId     : query.listId,
-                lastChecked: utilService.formatUtc(query.lastChecked),
+                lastChecked: query.queryResults?[0]?.lastChecked,
                 subscribers: activeSubscribers + inactiveSubscribers,
                 log        : log
         ]
@@ -120,10 +124,10 @@ class AdminController {
         // Combine both lists into a single list of maps with id, email, and enabled status
         def combinedSubscribers = []
         subscribers.each { user ->
-            combinedSubscribers.add([id: user.id, email: user.email, isActive: true])
+            combinedSubscribers.add([id: user.id, email: user.email, locked: user.locked, isActive: true])
         }
         inactiveSubscribers.each { user ->
-            combinedSubscribers.add([id: user.id, email: user.email, isActive: false])
+            combinedSubscribers.add([id: user.id, email: user.email, locked: user.locked, isActive: false])
         }
         render([subscribers: combinedSubscribers] as JSON)
     }
@@ -150,7 +154,7 @@ class AdminController {
                 if (entry.value == null) {
                     invalidEmails.add(entry.key)
                 } else {
-                   queryService.createQueryForUserIfNotExists(Query.get(params.queryId), entry.value as User, true,true)
+                   queryService.addUserToQuery(Query.get(params.queryId), entry.value as User, true,true)
                 }
             }
             if (invalidEmails) {
@@ -321,7 +325,7 @@ class AdminController {
                     if (params.queryId) {
                         updatedQuery = queryService.addUserToQuery(Query.get(params.queryId), entry.value as User, true)
                     } else {
-                        updatedQuery = queryService.subscribeBioSecurity(entry.value as User, params.listId.trim())
+                        updatedQuery = biosecurityService.subscribeToSpeciesList(entry.value as User, params.listId.trim())
                     }
                 }
             }
@@ -338,6 +342,63 @@ class AdminController {
                 render([success: false, message: message] as JSON)
             }
         }
+    }
+
+    /**
+     * JSON list of the BIOSECURITY monitoring team members. Renders JSON only - no view.
+     * Mapped to GET /biosecurity/monitoringTeamMembers
+     */
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
+    def getMonitoringTeamMembers() {
+        def members = monitoringTeamService.getTeamMembers(BIOSECURITY_TEAM)
+        render(members as JSON)
+    }
+
+    /**
+     * Removes a member from the BIOSECURITY monitoring team.
+     * Mapped to DELETE /biosecurity/monitoringTeamMembers/$id
+     */
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
+    def deleteMonitoringTeamMember() {
+        def result = [:]
+        if (!params.id) {
+            result = [success: false, message: messageSource.getMessage("biosecurity.view.error.emptyemail", null, "Monitoring team member id can't be empty.", siteLocale)]
+        } else {
+            try {
+                def success = monitoringTeamService.deleteTeamMember(BIOSECURITY_TEAM, params.id)
+                if (success) {
+                    result = [success: true]
+                } else {
+                    result = [success: false, message: messageSource.getMessage("biosecurity.view.error.emailnotfound", [params.id] as Object[], "Monitoring team member {0} is not found in the system.", siteLocale)]
+                }
+            } catch (Exception e) {
+                log.error("Error removing monitoring team member with id: ${params.id}", e)
+                result = [success: false, message: "Error removing monitoring team member with id: ${params.id}"]
+            }
+        }
+        render(result as JSON)
+    }
+
+    /**
+     * Adds a member to the BIOSECURITY monitoring team.
+     * Mapped to POST /biosecurity/monitoringTeamMembers
+     */
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
+    def addMonitoringTeamMember() {
+        def result = [:]
+        if (!params.email || params.email.allWhitespace) {
+            result = [success: false, message: messageSource.getMessage("biosecurity.view.error.emptyemail", null, "User email can't be empty.", siteLocale)]
+        } else {
+            try {
+                def email = params.email.trim()
+                def member = monitoringTeamService.addTeamMember(BIOSECURITY_TEAM, email)
+                result = [success: true, member: [id: member.id, team: member.team, email: member.email]]
+            } catch (Exception e) {
+                log.error("Error adding monitoring team member with email: ${params.email}", e)
+                result = [success: false, message: "Error adding monitoring team member with email: ${params.email}"]
+            }
+        }
+        render(result as JSON)
     }
 
     /**
@@ -380,9 +441,10 @@ class AdminController {
             //this logic only applies on preview page
             qr.previousCheck = qr.lastChecked
             qr.lastChecked = since
-            query.lastChecked = since
+
             def records = diffService.diff(qr)
             biosecurityService.fetchExtraOccurrenceInfo(records)
+            def countByDataProvider = biosecurityService.countByDataProvider(records)
 
             String urlPrefix = "${grailsApplication.config.getProperty("grails.serverURL")}${grailsApplication.config.getProperty('security.cas.contextPath', '')}"
             def localeSubject = messageSource.getMessage("emailservice.update.subject", [query.name] as Object[], siteLocale)
@@ -397,12 +459,13 @@ class AdminController {
                 unsubscribeOneUrl = urlPrefix + "/unsubscribe?token=${unsubscribeToken}"
             }
             int maxRecords = grailsApplication.config.getProperty("biosecurity.query.maxRecords", Integer, 500)
+            def moreInfo = [queryUrlUIUsed: qr.queryUrlUIUsed, countByDataProvider: countByDataProvider, lastChecked: qr.previousCheck]
             render(view: query.emailTemplate,
 //                plugin: "email-confirmation",
                     model: [title           : localeSubject,
                             message         : query.updateMessage,
                             query           : query,
-                            moreInfo        : qr.queryUrlUIUsed,
+                            moreInfo        : moreInfo,
                             listcode        : queryService.isMyAnnotation(query) ? "biocache.view.myannotation.list" : "biocache.view.list",
                             stopNotification: urlPrefix + '/notification/myAlerts',
                             records         : records.take(maxRecords),

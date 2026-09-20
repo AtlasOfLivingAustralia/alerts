@@ -22,6 +22,16 @@
 			<g:if test="${flash.message}">
 			<div class="alert alert-danger" role="status">${flash.message}</div>
 			</g:if>
+			<g:if test="${queryInstanceTotal > params.int('max')}">
+				<nav aria-label="Query list pages" class="mt-3">
+					<div class="pagination">
+						<g:paginate total="${queryInstanceTotal}" max="${params.max}" maxsteps="10"/>
+					</div>
+				</nav>
+			</g:if>
+			<div class="text-muted small mt-2">
+				Showing ${queryInstanceList.size()} of ${queryInstanceTotal}
+			</div>
 			<table class="table table-bordered table-striped">
 				<thead>
 					<tr>

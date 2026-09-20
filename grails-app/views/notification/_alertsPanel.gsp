@@ -123,7 +123,7 @@
                                             <input class="form-check-input" type="checkbox" role="switch" id="${query.id}" checked style="transform: scale(1.4);"/>
                                         </div>
                                         <div class="ps-1">
-                                            <i class="fa fa-trash deleteButton text-primary form-check-input" aria-hidden="true" id="${query.id}"></i>
+                                            <i class="fa fa-trash deleteButton text-primary cursor-pointer" aria-hidden="true" id="${query.id}"></i>
                                         </div>
                                     </div>
                                 </g:each>
@@ -137,7 +137,7 @@
                                             <input class="form-check-input" type="checkbox" role="switch" id="${query.id}" style="transform: scale(1.4);"/>
                                         </div>
                                         <div class="ps-1">
-                                            <i class="fa fa-trash deleteButton text-primary form-check-input" aria-hidden="true" id="${query.id}"></i>
+                                            <i class="fa fa-trash deleteButton text-primary cursor-pointer" aria-hidden="true" id="${query.id}"></i>
                                         </div>
                                     </div>
                                 </g:each>

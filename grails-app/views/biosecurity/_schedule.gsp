@@ -27,30 +27,31 @@
     <div class="card card-body" id="rescheduleBiosecurity" x-show.important="showSchedule">
         <div class="text-center"><h4>Alerts schedule manager</h4></div>
         <div class="row mt-10" >
-            <div class="col-sm-12"><h4>Pause or resume now</h4></div>
-            <div class="col-sm-12">Pause or resume alerts scheduling immediately. &nbsp;
+            <div class="col-sm-12"><h4>Pause or resume the schedule</h4></div>
+            <div class="col-sm-12">Pause or resume schedules, or run Biosecurity alerts immediately. &nbsp;
             <button type="button" class="btn btn-outline-primary" @click="pause()">
                 Pause now
             </button> &nbsp;
             <button type="button" class="btn btn-outline-primary" @click="resume()">
                 Resume now
             </button>
-            <button  class="btn btn-primary ms-2" @click="confirm('Are you sure you want to run the biosecurity alerts now?') && runNow()">
-                Run now
-            </button>
+            </div>
+            <div class="col-sm-12">Run Biosecurity alerts immediately.
+                <button  class="btn btn-primary ms-2" @click="confirm('Are you sure you want to run the biosecurity alerts now?') && runNow()">
+                    Run now
+                </button>
             </div>
         </div>
-        <div class="mt-20"></div>
-        <div name="pauseResumeForm">
+        <div name="pauseResumeForm" class="mt-20">
             <div><h4>Schedule a pause</h4></div>
             <div class="row" >
-                <div class="col-sm-12" >Set a date range to pause alerts. Dates start at midnight in your local timezone (<span class="js-local-timezone-label"></span>). You can save one scheduled pause at a time.</div>
+                <div class="col-sm-12" >Set a date range to pause alerts. Dates start at midnight in your local timezone. You can save one scheduled pause at a time.</div>
                 <div class="col-sm-12 mt-20">
                     Pause from <input type="date" name="pauseDate"  x-model="planedPauseDate" />
                     Resume on  <input type="date" name="resumeDate"  x-model="planedResumeDate" />
                     &nbsp;&nbsp;
                     <button class="btn btn-primary" @click="pauseResumeAlerts()" >Save schedule</button>
-                    &nbsp;
+                    &nbsp
                     <button  class="btn btn-outline-primary"  @click="cancelScheduledPauseResumeJob()">
                         Cancel scheduled pause
                     </button>
@@ -103,6 +104,19 @@
                 </div>
             </div>
         </div>
+
+        <div class="col-sm-12 mt-20">
+            <h4>Monitoring team</h4>
+            A completion summary email, including any successes or failures, will be sent to:
+            <template x-for="member in monitoringMembers">
+                <span class="badge-outline-primary">
+                    <span x-text="member?.email"></span>&nbsp;
+                    <span class="fa fa-user-times cursor-pointer" @click="removeMonitoringTeamMember(member)"></span>
+                </span>
+            </template>
+            &nbsp; <span class="fa fa-user-plus badge-outline-primary cursor-pointer" @click="addMonitoringTeamMember()"></span>
+        </div>
+
     </div>
 </div>
 
@@ -119,6 +133,7 @@
 
             pauseWindowInfo: {pause: '', resume: ''},
             jobStatus: {},
+            monitoringMembers: [],
 
             init() {
                 const today = this.getLocalDate();
@@ -126,6 +141,62 @@
                 this.planedResumeDate = today;
                 this.fetchPauseWindowInfo();
                 this.fetchJobStatus();
+                this.getMonitoringMembers();
+            },
+
+            async getMonitoringMembers() {
+                $.ajax({
+                    url: "${createLink(namespace: 'biosecurity', controller: 'admin', action: 'getMonitoringTeamMembers')}",
+                    type: 'GET',
+                    success: (data) => {
+                        this.monitoringMembers = data;
+                    }
+                });
+            },
+
+            addMonitoringTeamMember() {
+                const email = prompt("Enter the email address of the new monitoring team member:");
+                if (email) {
+                    //email validation
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (!emailRegex.test(email)) {
+                        alert('Invalid email address. Please enter a valid email.');
+                        return;
+                    }
+                    $.ajax({
+                        url: "${createLink(namespace: 'biosecurity', controller: 'admin', action: 'addMonitoringTeamMember')}",
+                        type: 'POST',
+                        data: { email: email },
+                        success: (data) => {
+                            if(data.success){
+                                this.monitoringMembers.push(data.member);
+                            } else {
+                                alert('Error adding monitoring team member: ' + data.message);
+                            }
+                        },
+                        error: (xhr, status, error) => {
+                            alert('Error adding monitoring team member: ' + xhr.responseText);
+                        }
+                    });
+                }
+            },
+            removeMonitoringTeamMember(member) {
+                if (confirm('Are you sure you want to remove ' + member.email + ' from the monitoring team?')) {
+                    $.ajax({
+                        url: "${createLink(namespace: 'biosecurity', controller: 'admin', action: 'getMonitoringTeamMembers')}" + '/' + member.id,
+                        type: 'DELETE',
+                        success: (data) => {
+                            if(data.success){
+                                this.monitoringMembers = this.monitoringMembers.filter(m => m.id !== member.id);
+                            } else {
+                                alert('Error removing monitoring team member: ' + data.message);
+                            }
+                        },
+                        error: (xhr, status, error) => {
+                            alert('Error removing monitoring team member: ' + xhr.responseText);
+                        }
+                    });
+                }
             },
 
             pause() {
