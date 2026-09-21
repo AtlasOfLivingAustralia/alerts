@@ -93,7 +93,7 @@
         </div>
 
         <template x-for="query in alerts" :key="query.id">
-            <div class="card mb-3">
+            <div class="card mb-3" :id="query.id">
                 <div class="card-body" :class="activeId === query.id ? 'border-primary' : 'border-light'" >
                     <div class="row">
                         <div class="col-md-4">
@@ -213,7 +213,13 @@
             previewDate: new Date().toISOString().split('T')[0],
 
             init() {
-                this.loadAlerts();
+                const params = new URLSearchParams(window.location.search);
+                if (params.has('id')){
+                    id = params.get('id');
+                    this.get(id)
+                } else {
+                    this.loadAlerts();
+                }
             },
 
             async loadAlerts(page = 0) {
@@ -488,6 +494,24 @@
                     //It means it was searching before, but now the keyword is less than 3 characters, so reset the search
                     this.resetSearch();
                     this.isSearching = false;
+                }
+            },
+
+            async get(id) {
+                const response = await fetch(CONTEXT_PATH + '/biosecurity/subscription/' + id);
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result) {
+                        this.alerts = [
+                            {...result,
+                            showLog: false,
+                            showHelp: false }
+                            ];
+                        this.isSearching = true;
+                        this.searchKeyword = result.name;
+                    }
+                } else {
+                    console.error('Failed to find the Biosecurity Alerts for id ' + id + ': ' + response.status + ' ' + response.statusText);
                 }
             },
 
