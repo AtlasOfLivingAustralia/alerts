@@ -39,7 +39,7 @@ class BiosecurityService {
         Query.withTransaction {
             queries = Query.findAllByEmailTemplate(EMAIL_TEMPLATE)
         }
-        
+
         queries.each { Query query ->
             def result = triggerBiosecuritySubscription(query)
             results.add(result)
