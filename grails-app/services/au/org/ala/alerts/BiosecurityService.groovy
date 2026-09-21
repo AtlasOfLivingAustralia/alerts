@@ -10,6 +10,7 @@ package au.org.ala.alerts
 import au.org.ala.ws.service.WebService;
 import grails.converters.JSON
 import grails.util.Holders
+import grails.web.mapping.LinkGenerator
 import org.apache.commons.lang3.time.DateUtils
 import org.apache.http.entity.ContentType
 
@@ -20,6 +21,7 @@ import java.text.SimpleDateFormat
  */
 class BiosecurityService {
     String EMAIL_TEMPLATE = '/email/biosecurity'
+    LinkGenerator grailsLinkGenerator
     def notificationService
     def queryService
     def grailsApplication, messageSource
@@ -37,7 +39,7 @@ class BiosecurityService {
         Query.withTransaction {
             queries = Query.findAllByEmailTemplate(EMAIL_TEMPLATE)
         }
-        
+
         queries.each { Query query ->
             def result = triggerBiosecuritySubscription(query)
             results.add(result)
@@ -230,7 +232,8 @@ class BiosecurityService {
             String error = "Error: Failed to trigger subscription [ ${query?.id}  ${query?.name} ]"
             log.error(error + " - " +e.message)
             result.status = 1
-            result.message = "${query?.id} : ${query?.name}"
+            result.message = "${query?.name}"
+            result.url = grailsLinkGenerator.link( controller: 'admin', action: 'index', namespace: 'biosecurity',params: [id: query?.id], absolute: true)
             result.logs << "Failed: ${e.message}"
         } finally {
             log.info(result.message)
