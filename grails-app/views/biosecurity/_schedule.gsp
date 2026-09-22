@@ -109,7 +109,7 @@
             <h4>Monitoring team</h4>
             A completion summary email, including any successes or failures, will be sent to:
             <template x-for="member in monitoringMembers">
-                <span class="badge-outline-primary">
+                <span class="badge-outline-primary me-2">
                     <span x-text="member?.email"></span>&nbsp;
                     <span class="fa fa-user-times cursor-pointer" @click="removeMonitoringTeamMember(member)"></span>
                 </span>
