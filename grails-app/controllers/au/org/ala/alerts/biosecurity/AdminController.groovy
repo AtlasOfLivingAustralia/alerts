@@ -76,6 +76,7 @@ class AdminController {
         render alerts as JSON
     }
 
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
     def get(long id) {
         def query = queryService.get(id)
         if (query) {

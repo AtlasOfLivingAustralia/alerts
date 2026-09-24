@@ -47,14 +47,16 @@ class BiosecurityService {
         def errorLogs = results.findAll { it.status != 0 }
         if (errorLogs.size() > 0) {
             def message = [:]
+            message["title"] = "Biosecurity alerts completed with ${errorLogs.size()} error(s) at ${new Date()}"
             // A yellow warning sign emoji
-            message["subject"] = "\u26A0\uFE0F Biosecurity alerts completed with ${errorLogs.size()} error(s) at ${new Date()}"
+            message["subject"] = "\u26A0\uFE0F "+ message["title"]
             message["logs"] = errorLogs
             emailService.notifyMonitoringTeam("BIOSECURITY", message)
         } else {
             def message = [:]
+            message["title"] = "${results.size()} Biosecurity alerts completed successfully at ${new Date()}"
             // A green check mark emoji
-            message["subject"] = "\u2705 ${results.size()} Biosecurity alert(s) completed successfully at ${new Date()}"
+            message["subject"] = "\u2705 "+ message["title"]
             emailService.notifyMonitoringTeam("BIOSECURITY", message)
         }
 

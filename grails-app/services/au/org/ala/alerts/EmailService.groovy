@@ -100,6 +100,9 @@ class EmailService {
                 from grailsApplication.config.mail.details.alertAddressTitle + "<" + grailsApplication.config.mail.details.sender + ">"
                 subject emailSubject
                 bcc subsetOfAddresses
+                headers([
+                        'X-SES-CONFIGURATION-SET': 'alerts'
+                ])
                 html(emailBody)
             }
         } catch (Exception e) {
@@ -121,12 +124,16 @@ class EmailService {
 
             def recipients = monitoringTeamService.getEmails(teamName)
             if (recipients) {
-
+                log.info ("Sending Alerts complete notification to monitor team: ${teamName} at ${recipients.join(",")}")
                 try {
                     sendMail {
                         from grailsApplication.config.mail.details.alertAddressTitle + "<" + grailsApplication.config.mail.details.sender + ">"
                         subject emailSubject
                         bcc recipients
+                        headers([
+                                'X-SES-CONFIGURATION-SET': 'biosecurity',
+                                'X-SES-MESSAGE-TAGS': 'application=Biosecurity'
+                        ])
                         html(emailBody)
                     }
                 } catch (Exception e) {

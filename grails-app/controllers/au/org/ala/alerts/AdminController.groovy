@@ -44,7 +44,10 @@ class AdminController {
     def findUser() {
         List users = []
         if (params.term) {
-            users = userService.findUsers(params.term)
+            users = userService.findUsers(params.term.trim())
+            if (users) {
+               redirect (action: 'showUsersAlerts', params: [userId: users[0].userId])
+            }
         }
         render view: "/admin/userAlerts", model: [users: users]
     }

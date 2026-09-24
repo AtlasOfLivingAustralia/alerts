@@ -38,7 +38,7 @@
         <div x-show.important="loading && alerts.length === 0" class="text-muted">Loading alerts...</div>
         <!-- No alerts -->
         <div x-show.important="!loading && alerts.length === 0 && !failed" class="alert alert-info " x-cloak>
-            You don't have any alerts.
+        No alerts match your search criteria.
         </div>
 
         <div class="card card-body mt-20">
@@ -486,6 +486,7 @@
                         if (result.length > 0) {
                             this.alerts = result.map(alert => ({ ...alert, showLog: false, showHelp: false,newSubscribers:'' }));
                             this.isSearching = true;
+                            this.loading = false;
                         }
                     } else {
                        console.error('Failed to search keywords' + response.status + ' ' + response.statusText);
@@ -494,6 +495,7 @@
                     //It means it was searching before, but now the keyword is less than 3 characters, so reset the search
                     this.resetSearch();
                     this.isSearching = false;
+                    this.loading = false;
                 }
             },
 
@@ -509,8 +511,10 @@
                             ];
                         this.isSearching = true;
                         this.searchKeyword = result.name;
+                        this.loading = false;
                     }
                 } else {
+                    this.loading = false;
                     console.error('Failed to find the Biosecurity Alerts for id ' + id + ': ' + response.status + ' ' + response.statusText);
                 }
             },
