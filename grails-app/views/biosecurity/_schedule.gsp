@@ -29,10 +29,10 @@
         <div class="row mt-10" >
             <div class="col-sm-12"><h4>Pause or resume the schedule</h4></div>
             <div class="col-sm-12">Pause or resume schedules, or run Biosecurity alerts immediately. &nbsp;
-            <button type="button" class="btn btn-outline-primary" @click="pause()">
+            <button type="button" class="btn btn-outline-primary" @click="pause()" name="pauseBtn">
                 Pause now
             </button> &nbsp;
-            <button type="button" class="btn btn-outline-primary" @click="resume()">
+            <button type="button" class="btn btn-outline-primary" @click="resume()" name="resumeBtn">
                 Resume now
             </button>
             </div>
@@ -50,15 +50,15 @@
                     Pause from <input type="date" name="pauseDate"  x-model="planedPauseDate" />
                     Resume on  <input type="date" name="resumeDate"  x-model="planedResumeDate" />
                     &nbsp;&nbsp;
-                    <button class="btn btn-primary" @click="pauseResumeAlerts()" >Save schedule</button>
+                    <button class="btn btn-primary" @click="pauseResumeAlerts()" name="saveScheduleBtn">Save schedule</button>
                     &nbsp
-                    <button  class="btn btn-outline-primary"  @click="cancelScheduledPauseResumeJob()">
+                    <button  class="btn btn-outline-primary"  @click="cancelScheduledPauseResumeJob()" name="cancelScheduleBtn">
                         Cancel scheduled pause
                     </button>
                 </div>
                 <div class="col-sm-12 mt-20 " >
                     <!-- Both a pause and a resume are scheduled: the normal, complete window -->
-                    <div x-show.important="pauseWindowInfo.pause.length>0 && pauseWindowInfo.resume.length>0" class="alert alert-info align-items-start mb-0" role="alert" x-cloak>
+                    <div x-show.important="pauseWindowInfo.pause.length>0 && pauseWindowInfo.resume.length>0" class="alert alert-info align-items-start mb-0" role="alert" x-cloak name="pauseResumeInfo">
                         <i class="fa fa-clock-o me-2 mt-1"></i>
                         <span>
                             Alerts are scheduled to pause on <strong x-text="formatLocalDateTime(pauseWindowInfo.pause)"></strong>
@@ -98,7 +98,7 @@
                 <!-- Save button -->
                 <div class="mt-10">
                     <label>&nbsp;</label>
-                    <button type="button" class="btn btn-primary form-control" @click="updateWeeklySchedule()">
+                    <button type="button" class="btn btn-primary form-control" @click="updateWeeklySchedule()" name="updateScheduleBtn">
                         Update Weekly Schedule
                     </button>
                 </div>
@@ -109,12 +109,12 @@
             <h4>Monitoring team</h4>
             A completion summary email, including any successes or failures, will be sent to:
             <template x-for="member in monitoringMembers">
-                <span class="badge-outline-primary me-2">
+                <span class="badge-outline-primary me-2" data-name="monitoringTeamMember">
                     <span x-text="member?.email"></span>&nbsp;
-                    <span class="fa fa-user-times cursor-pointer" @click="removeMonitoringTeamMember(member)"></span>
+                    <span class="fa fa-user-times cursor-pointer" @click="removeMonitoringTeamMember(member)" data-name="remove-monitoring-team-member-btn"></span>
                 </span>
             </template>
-            &nbsp; <span class="fa fa-user-plus badge-outline-primary cursor-pointer" @click="addMonitoringTeamMember()"></span>
+            &nbsp; <span class="fa fa-user-plus badge-outline-primary cursor-pointer" @click="addMonitoringTeamMember()" data-name="add-monitoring-team-member-btn"></span>
         </div>
 
     </div>
@@ -169,7 +169,7 @@
                         data: { email: email },
                         success: (data) => {
                             if(data.success){
-                                this.monitoringMembers.push(data.member);
+                                this.getMonitoringMembers();
                             } else {
                                 alert('Error adding monitoring team member: ' + data.message);
                             }

@@ -69,7 +69,7 @@
                                     </div>
                                     <div class="pe-1">
                                         <div class="form-check form-switch">
-                                            <input class="form-check-input" type="checkbox" role="switch" id="${query.id}" data-type="${query.emailTemplate == '/email/myAnnotations' ? 'myannotation' : ''}" checked style="transform: scale(1.4);"/>
+                                            <input class="form-check-input" type="checkbox" role="switch" id="${query.id}" name="${query.name.replace(" ", "_")}" data-type="${query.emailTemplate == '/email/myAnnotations' ? 'myannotation' : ''}" checked style="transform: scale(1.4);"/>
                                         </div>
                                     </div>
                                 </div>
@@ -83,7 +83,7 @@
                                     </div>
                                     <div class="pe-1">
                                         <div class="form-check form-switch">
-                                            <input class="form-check-input" type="checkbox" role="switch" id="${query.id}" data-type="${query.emailTemplate == '/email/myAnnotations' ? 'myannotation' : ''}" style="transform: scale(1.4);"/>
+                                            <input class="form-check-input" type="checkbox" role="switch" id="${query.id}" name="${query.name.replace(" ", "_")}" data-type="${query.emailTemplate == '/email/myAnnotations' ? 'myannotation' : ''}" style="transform: scale(1.4);"/>
                                         </div>
                                     </div>
                                 </div>

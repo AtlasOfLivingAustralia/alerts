@@ -147,7 +147,7 @@
 <body>
     <div>
         <h4 class="float-end">
-            <span class="badge bg-info">
+            <span class="badge bg-info" data-name="csv-stats">
                 <g:if test="${totalFiles}">${totalFiles} files </g:if>
                 <g:if test="${totalSize}">, ${totalSize} in total, </g:if>
                 %{-- Indicate the storage type being used with a BS label --}%
@@ -259,7 +259,7 @@
     </div>
 
     <g:if test="${status == 0}">
-        <div>
+        <div data-name="csv-folders-files">
             <h2>Individual Biosecurity Alerts Data</h2>
             Download individual CSV files for each biosecurity alert email, detailing all occurrence records. Files are sorted by the date the alert was sent.
             <g:each in="${foldersAndFiles}" var="folder">

@@ -45,7 +45,7 @@
                     <small class="text-muted ps-4">Manage user accounts and subscriptions</small>
                 </div>
                 <div class="mt-3">
-                    <a href="${request.contextPath}/admin/user">Manage alerts for users ( email required )</a>
+                    <a href="${request.contextPath}/admin/user" id="user-management">Manage alerts for users ( email required )</a>
                     <small class="text-muted ms-2"> - find user(s) and manage their subscriptions.</small>
                 </div>
 

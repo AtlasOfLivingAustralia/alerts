@@ -32,7 +32,7 @@
 			<div class="text-muted small mt-2">
 				Showing ${queryInstanceList.size()} of ${queryInstanceTotal}
 			</div>
-			<table class="table table-bordered table-striped">
+			<table class="table table-bordered table-striped" id="queries">
 				<thead>
 					<tr>
 					    <g:sortableColumn property="id" title="${message(code: 'query.description.label', default: 'ID')}" />
