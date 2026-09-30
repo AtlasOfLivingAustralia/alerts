@@ -127,9 +127,21 @@
                             <template x-for="subscriber in query.subscribers" :key="subscriber.id">
                                 <span class="badge-outline-primary text-primary me-1" :class="subscriber.isActive && !subscriber.locked ? 'border-primary' : 'badge-outline-secondary bg-light'"
                                       style="display: inline-block; white-space: nowrap; margin-bottom: 4px;">
-                                    <span class="fa fa-lock" x-show="subscriber.locked" aria-hidden="true"></span>
-                                    <span :class="subscriber.isActive && !subscriber.locked ? '' : 'text-decoration-line-through text-muted'" x-text="subscriber.email"></span>
-                                    <i @click="unsubscribe(query.id, subscriber.id, subscriber.email)" class="fa fa-user-times clickable cursor-pointer"></i>
+                                    <span class="fa fa-lock text-muted" x-show="subscriber.locked"
+                                          aria-hidden="true"
+                                          data-bs-toggle="tooltip"
+                                          data-bs-placement="top"
+                                          title="This user is locked. Alert emails will not be sent to this email address."
+                                          x-init="$nextTick(() => new bootstrap.Tooltip($el))">
+                                    </span>
+                                    <span :class="subscriber.isActive && !subscriber.locked ? '' : 'text-decoration-line-through text-muted'" x-text="subscriber.email"
+                                          :title="!subscriber.isActive ? 'This user has opted out of receiving this alert.' : subscriber.locked ? 'This user is locked. Alert emails will not be sent to this email address.' : ''"
+                                    ></span>
+                                    <i @click="unsubscribe(query.id, subscriber.id, subscriber.email)" class="fa fa-user-times clickable cursor-pointer"
+                                       data-bs-toggle="tooltip"
+                                       data-bs-placement="top"
+                                       title="Unsubscribe this user"
+                                       x-init="$nextTick(() => new bootstrap.Tooltip($el))"></i>
                                 </span>
                             </template>
                             <span
