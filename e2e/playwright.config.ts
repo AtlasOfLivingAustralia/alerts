@@ -10,6 +10,7 @@ dotenv.config({ path: path.join(__dirname, '.env') });
  * http://localhost:8080. Override with BASE_URL=... npm test
  */
 export default defineConfig({
+  workers: 1,
   testDir: './tests',
   timeout: 60_000,
   expect: { timeout: 10_000 },

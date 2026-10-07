@@ -192,9 +192,28 @@ test ('add user to a random alert', async ({ page }) => {
     const randomAlertIndex = Math.floor(Math.random() * numOfAlerts);
     let alertDiv = alertDivs.nth(randomAlertIndex);
     await expect(alertDiv).toBeVisible();
+    let alertNameLink = alertDiv.locator('a[data-name="alert-name"]').first();
+    const alertName = await alertNameLink.innerText();
+    console.log('Adding user to alert: ' + alertName + ' with email: ' + memberEmail);
 
-    const subscriberEmails = alertDiv.locator('span[data-name="subscriber-email-address"]');
-    const numberOfSubscriberEmails = await subscriberEmails.count();
+    let subscriberEmails = alertDiv.locator('span[data-name="subscriber-email-address"]');
+    let originalNumberOfSubscriberEmails = await subscriberEmails.count();
+    // Remove the user if the user is already in the alert
+    if ( await subscriberEmails.filter({ hasText: memberEmail }).count() > 0 ) {
+        const removeSubscriberBtn = alertDiv.locator('[data-name="remove-subscriber"]').first();
+        await removeSubscriberBtn.scrollIntoViewIfNeeded();
+        await removeSubscriberBtn.click();
+        await page.waitForTimeout(1000);
+
+        const finalNumberOfSubscriberEmails = await subscriberEmails.count();
+        expect(finalNumberOfSubscriberEmails).toEqual(originalNumberOfSubscriberEmails-1);
+        await expect(subscriberEmails.filter({ hasText: memberEmail })).not.toBeVisible();
+        // if the user is already in the alert, we need to update the originalNumberOfSubscriberEmails
+        // we need to remove the user from the alert, and update the originalNumberOfSubscriberEmails
+        originalNumberOfSubscriberEmails = finalNumberOfSubscriberEmails;
+    }
+
+    //add the user to the alert
     page.once('dialog', async dialog => {
         expect(dialog.type()).toBe('prompt');
         expect(dialog.message()).toBe(
@@ -205,8 +224,9 @@ test ('add user to a random alert', async ({ page }) => {
 
     await alertDiv.locator('[data-name="add-subscriber"]').click();
     await page.waitForTimeout(1000);
-    const currentNumberOfSubscriberEmails = await subscriberEmails.count();
-    expect(currentNumberOfSubscriberEmails).toEqual(numberOfSubscriberEmails + 1);
+
+    let currentNumberOfSubscriberEmails = await subscriberEmails.count();
+    expect(currentNumberOfSubscriberEmails).toEqual(originalNumberOfSubscriberEmails + 1);
     await expect(subscriberEmails.filter({ hasText: memberEmail })).toBeVisible();
 
     //remove the user from the alert
@@ -214,8 +234,8 @@ test ('add user to a random alert', async ({ page }) => {
     await removeSubscriberBtn.scrollIntoViewIfNeeded();
     await removeSubscriberBtn.click();
     await page.waitForTimeout(1000);
-    const finalNumberOfSubscriberEmails = await subscriberEmails.count();
-    expect(finalNumberOfSubscriberEmails).toEqual(numberOfSubscriberEmails);
+    currentNumberOfSubscriberEmails = await subscriberEmails.count();
+    expect(currentNumberOfSubscriberEmails).toEqual(originalNumberOfSubscriberEmails);
     await expect(subscriberEmails.filter({ hasText: memberEmail })).not.toBeVisible();
 })
 
