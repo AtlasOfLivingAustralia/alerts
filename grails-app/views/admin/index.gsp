@@ -88,14 +88,38 @@
             </div>
         </div>
 
-        <div class="box">
+        <div class="box" data-name="biosecurity">
             <div class="shadow card card-body">
                 <div class="fw-bold fs-5"><i class="fa-solid fa-shield-halved text-primary"></i> BioSecurity</div>
                 <div>
-                    <small class="text-muted ps-4">Manage / reschedule Biosecurity alerts</small>
+                    <small class="text-muted ps-4">Manage Biosecurity alerts</small>
                 </div>
+
                 <div class="mt-2">
                     <a href="${request.contextPath}/biosecurity">Manage BioSecurity alerts</a><small class="text-muted ms-2"> - Add, update, remove or reschedule BioSecurity alerts and users.</small>
+                </div>
+                <hr/>
+                <div class="mt-2">
+                    <div class="d-flex flex-wrap align-items-center">
+                        Simulate Biosecurity alerts from
+                        <label for="daysBefore" class="visually-hidden">Days before the current date</label>
+                        <select id="daysBefore" class="form-select w-auto mx-2">
+                            <option value="7">1 week</option>
+                            <option value="14" selected>2 weeks</option>
+                            <option value="30">1 month</option>
+                            <option value="180">6 months</option>
+                        </select>
+                        before the current date.
+
+                        <a class="btn btn-primary ms-2" id="dryRunBiosecurityLink"
+                           href="${g.createLink(namespace: 'biosecurity', controller: 'admin', action: 'dryRun', params: [daysBefore: 14])}"
+                           target="_blank">Run</a>
+                    </div>
+
+                    <div class="mt-2 text-muted">
+                        <i>- This is a dry run. It will not update the Alerts database or send emails to subscribers. A copy of the generated results will be sent only to you.</i>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -206,6 +230,18 @@
         }
 
         $('#frequencySimulated, [name=testMode]').change(updateSimulationQueryLink);
+
+        // Keep the Biosecurity dry run link in sync with the selected period.
+        let $daysBefore = $('#daysBefore');
+        let $dryRunLink = $('#dryRunBiosecurityLink');
+
+        function updateDryRunBiosecurityLink() {
+            let url = "${g.createLink(namespace: 'biosecurity', controller: 'admin', action: 'dryRun')}";
+            $dryRunLink.attr('href', url + "?daysBefore=" + $daysBefore.val());
+        }
+
+        $daysBefore.change(updateDryRunBiosecurityLink);
+        updateDryRunBiosecurityLink();
     });
 </script>
 </body>

@@ -43,6 +43,7 @@ class UrlMappings {
             get "/monitoringTeamMembers(.$format)?"(namespace: "biosecurity", controller: 'admin', action: 'getMonitoringTeamMembers')
             delete "/monitoringTeamMembers/$id(.$format)?"(namespace: "biosecurity", controller: 'admin', action: 'deleteMonitoringTeamMember')
             post "/monitoringTeamMembers(.$format)?"(namespace: "biosecurity", controller: 'admin', action: 'addMonitoringTeamMember')
+            "/dryRun"(namespace: "biosecurity", controller: "admin", action: "dryRun")
 
             group "/csv", {
                 "/"(namespace: "biosecurity", controller: "csv", action: "list")

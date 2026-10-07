@@ -2,7 +2,8 @@
 <html>
   <head><title><g:message code="alert.title" args="[grailsApplication.config.skin.orgNameLong]" /></title></head>
   <body>
-    <h2>${messages?.title}</h2>
+    <h3>${messages?.title}</h3>
+    <h4>${messages?.subtitle}</h4>
     <g:if test="${messages?.logs}">
       <g:set var="logs" value="${messages.logs}" />
       <g:each in="${logs}" var="log">

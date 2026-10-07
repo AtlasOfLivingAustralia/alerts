@@ -18,6 +18,7 @@ export default defineConfig({
   reporter: [['list'], ['html', { open: 'never' }]],
   use: {
     baseURL: process.env.BASE_URL ?? 'http://localhost:8080',
+    // Headless by default (npm test). Use `npm run test:headed` to watch the browser.
     // Traces can capture typed credentials, so keep them off unless retrying.
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',

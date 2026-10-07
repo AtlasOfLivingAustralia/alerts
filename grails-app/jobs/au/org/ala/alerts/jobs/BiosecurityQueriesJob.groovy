@@ -39,10 +39,8 @@ class BiosecurityQueriesJob implements Job {
             log.info("****** Scheduled Biosecurity update ****** " + new Date())
             biosecurityService.run()
             log.info("****** Scheduled Biosecurity update finished ******" + new Date())
-            quartzService.clearError(jobName)
         } catch (Exception e) {
             log.error("Biosecurity job failed", e)
-            quartzService.recordError(jobName, e)
         }
     }
 }

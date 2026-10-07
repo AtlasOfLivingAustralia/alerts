@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { login } from '../login';
+import fs from 'fs/promises';
+import AdmZip from 'adm-zip';
 
 const memberEmail = "alerts-test-c@example.org";
 const listId = "dr22916";
@@ -217,7 +219,7 @@ test ('add user to a random alert', async ({ page }) => {
     await expect(subscriberEmails.filter({ hasText: memberEmail })).not.toBeVisible();
 })
 
-test ('test biosecurity csv display', async ({ page }) => {
+test ('test biosecurity csv display and daily zip csv download', async ({ page }) => {
     await login(page);
     await page.goto('/biosecurity/csv');
     await page.waitForURL('**/biosecurity/csv');
@@ -265,4 +267,104 @@ test ('test biosecurity csv display', async ({ page }) => {
     //<div class="file-list" id="files-2026-09-29" style="display: block;">
     const fileList = foldersFilesDiv.locator(`div#files-${dataFolder}.file-list`);
     await expect(fileList).toBeVisible();
+    const expectedSize = await fileList
+        .locator('span[data-name="file-size"]')
+        .evaluateAll(elements =>
+            elements.reduce(
+                (sum, el) => sum + Number(el.getAttribute('data-file-size')),
+                0
+            )
+        );
+
+    //test aggregated download
+    const downloadCSVInFolderLink = randomFolder.locator('a[data-name="download-aggregated-csv"]');
+    await downloadCSVInFolderLink.scrollIntoViewIfNeeded();
+
+    let downloadPromise = page.waitForEvent('download');
+    await downloadCSVInFolderLink.click();
+    let download = await downloadPromise;
+
+    const zipfilePath = await download.path();
+    const zipDownloadStats = await fs.stat(zipfilePath);
+    const zipSize = zipDownloadStats.size;
+    expect(zipSize).toBeGreaterThan(0);
+    const zip = new AdmZip(zipfilePath);
+    const entries = zip.getEntries();
+    expect(entries).toHaveLength(1);
+    const entry = entries[0];
+    expect(entry.isDirectory).toBe(false);
+    expect(entry.entryName).toMatch(/\.csv$/i);
+    const content = entry.getData().toString('utf8');
+    const expectedLineCount = content.split(/\r?\n/).filter(line => line.length > 0).length;
+    const unzippedFileSize = entry.header.size;
+
+    // download the csv file in the folder
+    await folderIcon.click(); //make sure the folder is open
+    const fileListInFolder = foldersFilesDiv.locator(`div#files-${dataFolder}.file-list`);
+    await fileListInFolder.scrollIntoViewIfNeeded();
+    const csvDownloadLinks = fileListInFolder.locator('a[data-name="download-file-csv"]');
+    let numOfCsvFiles = await csvDownloadLinks.count();
+    let totalLineCount = 0;
+    for (const csvDownloadLink of await csvDownloadLinks.all()) {
+        const downloadPromise = page.waitForEvent('download');
+        await csvDownloadLink.click();
+        const download = await downloadPromise;
+        const csvPath = await download.path();
+        const content: string = await fs.readFile(csvPath, 'utf8');
+        const csvLineCount = content
+            .split(/\r?\n/)
+            .filter(line => line.length > 0)
+            .length;
+        totalLineCount += csvLineCount;
+    }
+    totalLineCount = totalLineCount - numOfCsvFiles + 1;
+    expect(totalLineCount).toEqual(expectedLineCount);
+})
+
+test ('test biosecurity full csv zip download', async ({ page }) => {
+    await login(page);
+    await page.goto('/biosecurity/csv');
+    await page.waitForURL('**/biosecurity/csv');
+    await page.waitForTimeout(1000);
+
+    const h2 = page.locator('h2').filter({hasText: 'Biosecurity Alerts Reports'});
+    await expect(h2).toBeVisible();
+    const stats = page.locator('span[data-name="csv-stats"]');
+    await expect(stats).toBeVisible();
+    await stats.scrollIntoViewIfNeeded();
+    await expect(stats).toContainText(/\d+ files\s*,\s*.+ in total/);
+    const rawTotalSize = await page
+        .locator('span[data-name="raw-total-size"]')
+        .getAttribute('data-raw-total-size');
+    const expectedTotalSize = Number(rawTotalSize);
+
+    const fullDownloadBtn = page.locator('a#download-full-zipped-csv');
+    await fullDownloadBtn.scrollIntoViewIfNeeded();
+    //build confirm dialog
+    page.once('dialog', async dialog => {
+        expect(dialog.type()).toBe('confirm');
+        expect(dialog.message()).toContain(
+            'This download may take some time.'
+        );
+        await dialog.accept();
+    })
+
+    const downloadPromise = page.waitForEvent('download');
+    await fullDownloadBtn.click();
+    const download = await downloadPromise;
+
+    const zipfilePath = await download.path();
+    const zipDownloadStats = await fs.stat(zipfilePath);
+    const zipSize = zipDownloadStats.size;
+    expect(zipSize).toBeGreaterThan(0);
+    const zip = new AdmZip(zipfilePath);
+
+    let unzippedFileSize = 0;
+    for (const entry of zip.getEntries()) {
+        if (!entry.isDirectory) {
+            unzippedFileSize += entry.header.size;
+        }
+    }
+
+    expect(unzippedFileSize).toBeGreaterThanOrEqual(expectedTotalSize * 0.9);
 })
