@@ -107,7 +107,7 @@ class EmailService {
         }
     }
 
-    def notifyMonitoringTeam(String teamName, Map messages) {
+    def notifyMonitoringTeam(String teamName, Map messages, List recipients = []) {
         if (grailsApplication.config.getProperty("mail.enabled", Boolean, false)) {
             String emailSubject = messages["subject"] ? messages["subject"] : "Error notification to ${teamName} team"
             String emailBody = groovyPageRenderer.render(view:  "/email/monitorTeamNotification",
@@ -118,8 +118,11 @@ class EmailService {
             if (Environment.current == Environment.DEVELOPMENT || Environment.current == Environment.TEST) {
                 emailSubject = "[${Environment.current}] " + emailSubject
             }
+            //If recipients are not provided, get the emails from the monitoring team service
+            if (!recipients) {
+                recipients = monitoringTeamService.getEmails(teamName)
+            }
 
-            def recipients = monitoringTeamService.getEmails(teamName)
             if (recipients) {
                 log.info ("Sending Alerts complete notification to monitor team: ${teamName} at ${recipients.join(",")}")
                 try {

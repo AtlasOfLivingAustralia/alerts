@@ -22,14 +22,12 @@ import java.text.SimpleDateFormat
 class BiosecurityService {
     String EMAIL_TEMPLATE = '/email/biosecurity'
     LinkGenerator grailsLinkGenerator
-    def notificationService
-    def queryService
+    def notificationService, queryService, userService, emailService,diffService
     def grailsApplication, messageSource
-    def emailService
     WebService webService
     BiosecurityLocalCSVService biosecurityLocalCSVService
     BiosecurityS3CSVService biosecurityS3CSVService
-    def diffService
+    def sessionFactory
     def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
 
 
@@ -55,9 +53,53 @@ class BiosecurityService {
         } else {
             def message = [:]
             message["title"] = "${results.size()} Biosecurity alerts completed successfully at ${new Date()}"
+            def newRecordsCount = results.sum { it.hasNewRecords ? 1 : 0 }
+            if (newRecordsCount > 0) {
+                message["subtitle"] = "${newRecordsCount} alert(s) found new records."
+            } else {
+                message["subtitle"] = "No new records were found."
+            }
             // A green check mark emoji
             message["subject"] = "\u2705 "+ message["title"]
             emailService.notifyMonitoringTeam("BIOSECURITY", message)
+        }
+
+        return results
+    }
+
+    def dryRun(Date since) {
+        def results = []
+        def queries = []
+        def user = userService.getUser()
+
+        Query.withTransaction {
+            queries = Query.findAllByEmailTemplate(EMAIL_TEMPLATE)
+        }
+
+        queries.each { Query query ->
+            def result = triggerBiosecuritySubscription(query, since, true)
+            results.add(result)
+        }
+        def errorLogs = results.findAll { it.status != 0 }
+        if (errorLogs.size() > 0) {
+            def message = [:]
+            message["title"] = "[DryRun]Biosecurity alerts completed with ${errorLogs.size()} error(s) at ${new Date()}"
+            // A yellow warning sign emoji
+            message["subject"] = "\u26A0\uFE0F "+ message["title"]
+            message["logs"] = errorLogs
+            emailService.notifyMonitoringTeam("BIOSECURITY", message,[user.email])
+        } else {
+            def message = [:]
+            message["title"] = "[DryRun] ${results.size()} Biosecurity alerts completed successfully at ${new Date()}"
+            // A green check mark emoji
+            message["subject"] = "\u2705 "+ message["title"]
+            def newRecordsCount = results.sum { it.hasNewRecords ? 1 : 0 }
+            if (newRecordsCount > 0) {
+                message["subtitle"] = "${newRecordsCount} alert(s) found new records."
+            } else {
+                message["subtitle"] = "No new records were found."
+            }
+            emailService.notifyMonitoringTeam("BIOSECURITY", message,[user.email])
         }
 
         return results
@@ -165,8 +207,9 @@ class BiosecurityService {
      *
      * @param query
      * @param since The local date to check the subscription since
+     * @param dryRun If true, it will not send emails and update the database, but will still process the query and return the results
      */
-    def triggerBiosecuritySubscription(Query query, Date since) {
+    def triggerBiosecuritySubscription(Query query, Date since, boolean dryRun = false) {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
         Date now = new Date()
 
@@ -177,6 +220,7 @@ class BiosecurityService {
         def frequency = queryService.getFrequency("weekly")
         QueryResult qr = notificationService.getQueryResult(query, frequency)
         def recipients = queryService.getRecipients(query.id, "weekly")
+
         try {
             def processedJson = processQueryBiosecurity(query, since, now)
             // set check time
@@ -211,19 +255,29 @@ class BiosecurityService {
             String modifiedPath = queryPath.replaceAll('___DATEPARAM___', firstLoadedDate).replaceAll('___LASTYEARPARAM___', occurrenceDate)
             qr.queryUrlUIUsed = query.baseUrlForUI + modifiedPath
 
+            result["hasNewRecords"] = qr.hasChanged
             if (qr.hasChanged) {
-                def csvService =  getCsvService()
-                csvService.generateAuditCSV(qr)
-                if (recipients) {
-                    def emails = recipients.collect { it.email }
-                    result.logs << "Sending emails to ${emails.size() <= 2 ? emails.join('; ') : emails.take(2).join('; ') + ' and ' + (emails.size() - 2) + ' other users.'}"
 
-                    def emailStatus = emailService.sendGroupNotification(qr, frequency, recipients,[countByDataProvider: countsByDataProvider])
-                    result.status = emailStatus.status
-                    result.logs << emailStatus.message
+                if (dryRun) {
+                    //only send email to the user who triggered the dry run, not to all recipients
+                    def user = userService.getUser()
+                    def recipient =
+                        [email: user.email, userUnsubToken: user.unsubscribeToken, notificationUnsubToken: "INVALID"]
+                    emailService.sendGroupNotification(qr, frequency, [recipient],[countByDataProvider: countsByDataProvider])
+                } else {
+                    def csvService =  getCsvService()
+                    csvService.generateAuditCSV(qr)
+                    if (recipients) {
+                        def emails = recipients.collect { it.email }
+                        result.logs << "Sending emails to ${emails.size() <= 2 ? emails.join('; ') : emails.take(2).join('; ') + ' and ' + (emails.size() - 2) + ' other users.'}"
+
+                        def emailStatus = emailService.sendGroupNotification(qr, frequency, recipients,[countByDataProvider: countsByDataProvider])
+                        result.status = emailStatus.status
+                        result.logs << emailStatus.message
+                    }
                 }
             } else {
-                result.logs << "No emails will be sent because no changes were detected."
+                result.logs << "No emails will be sent because no changes were detected or dry run is enabled."
             }
 
             result.logs << "Completed!"
@@ -240,8 +294,12 @@ class BiosecurityService {
         } finally {
             log.info(result.message)
             qr.newLogs(result.logs)
-            QueryResult.withTransaction {
-                qr.save(flush: true, failOnError: true)
+            if (dryRun) {
+                sessionFactory.currentSession.evict(qr)
+            } else {
+                QueryResult.withTransaction {
+                    qr.save(flush: true, failOnError: true)
+                }
             }
         }
         return result

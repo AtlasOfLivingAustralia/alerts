@@ -43,7 +43,7 @@ class BiosecurityLocalCSVService  extends BiosecurityCSVService {
         def foldersAndFiles = listFilesRecursively(dir)
         long totalFiles = foldersAndFiles.sum { it.files.size() }
         long totalSize  = foldersAndFiles.sum { it.size }
-        return [status:0, foldersAndFiles: foldersAndFiles, totalFiles: totalFiles, totalSize: formatSize(totalSize)]
+        return [status:0, foldersAndFiles: foldersAndFiles, totalFiles: totalFiles, totalSize: formatSize(totalSize), rawTotalSize: totalSize]
     }
 
 

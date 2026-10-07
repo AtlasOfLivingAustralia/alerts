@@ -29,7 +29,6 @@ class AdminController {
     def diffService
     def authService
     def messageSource
-    def utilService
     def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
     def subscriptionsPerPage = grailsApplication.config.getProperty('biosecurity.subscriptionsPerPage', Integer, 100)
 
@@ -109,6 +108,14 @@ class AdminController {
                 subscribers: activeSubscribers + inactiveSubscribers,
                 log        : log
         ]
+    }
+
+    @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true)
+    def dryRun() {
+        int daysBefore = params.int('daysBefore', 0)
+        Date sinceDate = DateUtils.addDays(new Date(), -daysBefore)
+        def result = biosecurityService.dryRun(sinceDate)
+        render([success: true, result: result] as JSON)
     }
 
     /**

@@ -90,12 +90,16 @@ Start the app from the project root first (`./gradlew bootRun`), then:
 cd e2e
 npm test                                   # all tests
 npx playwright test tests/alerts.spec.ts   # one file
+# or headless:
+# npm run test:headless tests/alerts.spec.ts 
 npm run report                             # last HTML report
 npm test                                   #run all tests against the local host with headless Chrome
 # or use a different base URL:
 # BASE_URL=https://alerts.test.ala.org.au npm test
 # or with headed Chrome:
 # BASE_URL=https://alerts.test.ala.org.au npm run test:headed 
+
+
 ```
 
 ## Debugging

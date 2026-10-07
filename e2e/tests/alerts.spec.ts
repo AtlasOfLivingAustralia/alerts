@@ -73,8 +73,8 @@ test('test custom alerts (on/off/create/delete)', async ({ page }) => {
     const title = await link.getAttribute('title');
     await link.click();
     await page.waitForURL('**/notification/myAlerts#custom-alerts');
-    await expect(page.locator('#custom-alerts h5').filter({hasText: title})).toBeVisible();
-    const alertInput = page.locator('#custom-alerts .list-group-item').filter({ hasText: title }).locator('input[type="checkbox"][role="switch"]');
+    await expect(page.locator('#custom-alerts h5').filter({hasText: title!})).toBeVisible();
+    const alertInput = page.locator('#custom-alerts .list-group-item').filter({ hasText: title! }).locator('input[type="checkbox"][role="switch"]');
     await alertInput.scrollIntoViewIfNeeded();
     let currentAlertValue =await alertInput.isChecked();
     await alertInput.click();
@@ -90,11 +90,11 @@ test('test custom alerts (on/off/create/delete)', async ({ page }) => {
         `Unexpected value for ${title} switch: expected ${!currentAlertValue}, but got ${expectedValue}`
     ).toBe(!currentAlertValue);
     //delete the alert
-    const deleteButton = page.locator('#custom-alerts .list-group-item').filter({ hasText: title }).locator('.fa.fa-trash');
+    const deleteButton = page.locator('#custom-alerts .list-group-item').filter({ hasText: title! }).locator('.fa.fa-trash');
     await deleteButton.scrollIntoViewIfNeeded();
     await deleteButton.click();
     await page.waitForURL('**/notification/myAlerts#custom-alerts');
     await page.waitForTimeout(1000);
-    await expect(page.locator('#custom-alerts h5').filter({ hasText: title })).not.toBeVisible();
+    await expect(page.locator('#custom-alerts h5').filter({ hasText: title! })).not.toBeVisible();
   }
 });

@@ -43,7 +43,6 @@ class EmailUpdateJob implements Job {
             log.info("****** User emails update completed ******" + new Date())
         } catch (Exception e) {
             log.error("Email updates job failed", e)
-            quartzService.recordError(jobName, e)
         }
 
     }

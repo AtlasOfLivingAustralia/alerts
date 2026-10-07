@@ -10,6 +10,7 @@ dotenv.config({ path: path.join(__dirname, '.env') });
  * http://localhost:8080. Override with BASE_URL=... npm test
  */
 export default defineConfig({
+  workers: 1,
   testDir: './tests',
   timeout: 60_000,
   expect: { timeout: 10_000 },
@@ -18,6 +19,7 @@ export default defineConfig({
   reporter: [['list'], ['html', { open: 'never' }]],
   use: {
     baseURL: process.env.BASE_URL ?? 'http://localhost:8080',
+    // Headless by default (npm test). Use `npm run test:headed` to watch the browser.
     // Traces can capture typed credentials, so keep them off unless retrying.
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
