@@ -37,11 +37,11 @@
                   </div>
                   <div class="col-4 text-end">
                       <g:if test="${!isMyOwnAlerts}">
-                          <button type="button" class="btn btn-outline-primary" onclick="previewUserDeletion()">
+                          <button type="button" class="btn btn-outline-primary" onclick="previewUserDeletion()" name="delete-user-btn">
                               <i class="fas fa-trash" aria-hidden="true"></i> Delete this user
                           </button>
                       </g:if>
-                      <a href="${createLink(controller: 'admin', action: 'findUser')}" class="btn btn-outline-primary">Find users</a>
+                      <a href="${createLink(controller: 'admin', action: 'findUser')}" class="btn btn-outline-primary" >Find users</a>
                   </div>
               </div>
           </header>

@@ -44,7 +44,7 @@
         <div class="card card-body mt-20">
             <div class="container-fluid">
                 <h4>Quick entry for adding subscribers</h4>
-                    <div class="row align-items-center mb-2" >
+                    <div class="row align-items-center mb-2" data-name="quick-entry">
                         <div class="col-sm-3">
                             <label class="form-label"> <g:message code="biosecurity.view.body.label.specieslistid" default="Species list uid"/></label>
                             <input type="text" name="listid" class="form-control" x-model="newQuery.listId" placeholder='Species list ID, AKA drid'/>
@@ -93,15 +93,15 @@
         </div>
 
         <template x-for="query in alerts" :key="query.id">
-            <div class="card mb-3" :id="query.id">
+            <div class="card mb-3" :id="query.id" data-name="alert-card">
                 <div class="card-body" :class="activeId === query.id ? 'border-primary' : 'border-light'" >
                     <div class="row">
                         <div class="col-md-4">
                             <div>
                                 <span x-show.important="editingId !== query.id" >
-                                    <a :href="'${createLink(controller: 'query', action: 'show')}/' + query.id"  target="_blank" class="btn btn-link fw-bold text-wrap text-start p-0" x-text="query.name"></a>
+                                    <a :href="'${createLink(controller: 'query', action: 'show')}/' + query.id"  target="_blank" class="btn btn-link fw-bold text-wrap text-start p-0" x-text="query.name" data-name="alert-name"></a>
                                     <span class="badge-outline-secondary"><a :href="'${grailsApplication.config.lists.baseURL}' + '/speciesListItem/list/' + query.listId" target="_blank" x-text="query.listId"></a></span>
-                                    <button class="btn btn-link btn-sm p-0 ms-1" title="Edit title" @click="editTitle(query.id)">
+                                    <button class="btn btn-link btn-sm p-0 ms-1" title="Edit title" @click="editTitle(query.id)" name="edit-title">
                                         <i class="fa-solid fa-pencil"></i>
                                     </button>
                                 </span>
@@ -126,16 +126,31 @@
                         <div class="col-md-5">
                             <template x-for="subscriber in query.subscribers" :key="subscriber.id">
                                 <span class="badge-outline-primary text-primary me-1" :class="subscriber.isActive && !subscriber.locked ? 'border-primary' : 'badge-outline-secondary bg-light'"
+                                    data-name="subscriber-email"
                                       style="display: inline-block; white-space: nowrap; margin-bottom: 4px;">
-                                    <span class="fa fa-lock" x-show="subscriber.locked" aria-hidden="true"></span>
-                                    <span :class="subscriber.isActive && !subscriber.locked ? '' : 'text-decoration-line-through text-muted'" x-text="subscriber.email"></span>
-                                    <i @click="unsubscribe(query.id, subscriber.id, subscriber.email)" class="fa fa-user-times clickable cursor-pointer"></i>
+                                    <span class="fa fa-lock text-muted" x-show="subscriber.locked"
+                                          aria-hidden="true"
+                                          data-bs-toggle="tooltip"
+                                          data-bs-placement="top"
+                                          title="This user is locked. Alert emails will not be sent to this email address."
+                                          x-init="$nextTick(() => new bootstrap.Tooltip($el))">
+                                    </span>
+                                    <span  :class="subscriber.isActive && !subscriber.locked ? '' : 'text-decoration-line-through text-muted'" x-text="subscriber.email"
+                                           data-name="subscriber-email-address"
+                                          :title="!subscriber.isActive ? 'This user has opted out of receiving this alert.' : subscriber.locked ? 'This user is locked. Alert emails will not be sent to this email address.' : ''"
+                                    ></span>
+                                    <i @click="unsubscribe(query.id, subscriber.id, subscriber.email)" class="fa fa-user-times clickable cursor-pointer"
+                                       data-name="remove-subscriber"
+                                       data-bs-toggle="tooltip"
+                                       data-bs-placement="top"
+                                       title="Unsubscribe this user"
+                                       x-init="$nextTick(() => new bootstrap.Tooltip($el))"></i>
                                 </span>
                             </template>
-                            <span
+                            <span   data-name="add-subscriber"
                                     class="fa fa-user-plus clickable cursor-pointer badge-outline-primary"
                                     @click="addSubscribers(query.id)"></span>
-                            <button x-show.important="query.subscribers.length === 0" class="btn btn-primary" @click="deleteSubscription(query.id)">Delete this subscription</button>
+                            <button x-show.important="query.subscribers.length === 0" class="btn btn-primary" @click="deleteSubscription(query.id)" name="delete-subscription">Delete this subscription</button>
 
                         </div>
                         <div class="col-md-3">

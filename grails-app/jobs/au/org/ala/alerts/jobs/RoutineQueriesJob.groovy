@@ -42,7 +42,6 @@ class RoutineQueriesJob implements Job {
             log.info("****** Scheduled ${frequency} update finished ****** ${new Date()}")
         } catch (Exception e) {
             log.error("${frequency} job failed", e)
-            quartzService.recordError(jobName, e)
         }
     }
 }

@@ -40,19 +40,19 @@
 
         <tbody>
         <g:each in="${jobs}" var="job">
-            <tr>
+            <tr id="${job.jobName}">
                 <td>${job.jobName}</td>
                 <td>${job.jobGroup}</td>
                 <td>${job.triggerName}</td>
                 <td>${job.triggerGroup}</td>
                 <td><alerts:ISODateTime date="${job.nextFireTime}" /></td>
                 <td><alerts:ISODateTime date="${job.previousFire}" /></td>
-                <td>
+                <td data-name="state">
                     <span class="badge ${job.state == 'NORMAL' ? 'badge-success' : job.state == 'PAUSED' ? 'badge-warning' : 'badge-danger'}">
                         ${job.state}
                     </span>
                 </td>
-                <td>
+                <td data-name="action">
                     <g:link controller="quartz" action="pause" params="[jobName: job.jobName, jobGroup: job.jobGroup]">Pause</g:link> |
                     <g:link controller="quartz" action="resume" params="[jobName: job.jobName, jobGroup: job.jobGroup]">Resume</g:link>
                 </td>

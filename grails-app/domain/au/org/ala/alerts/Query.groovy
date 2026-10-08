@@ -74,9 +74,9 @@ class Query {
         def subscribers
 
         if (frequency) {
-            subscribers = notifications.findAll { it.enabled }.collect { it.user }.findAll(it -> it.frequency?.name == frequency && !it.locked)
+            subscribers = notifications.findAll { it.enabled }.collect { it.user }.findAll(it -> it.frequency?.name == frequency)
         } else {
-            subscribers= notifications.findAll { it.enabled }.collect { it.user }.findAll(it -> !it.locked)
+            subscribers= notifications.findAll { it.enabled }.collect { it.user }
         }
         return subscribers
     }
@@ -90,7 +90,7 @@ class Query {
         def subscribers
 
         if (frequency) {
-            subscribers = notifications.findAll { !it.enabled }.collect { it.user }.findAll(it -> it.frequency?.name == frequency)
+            subscribers = notifications.findAll { !it.enabled }.collect { it.user }.findAll(it -> it.frequency?.name )
         } else {
             subscribers= notifications.findAll { !it.enabled }.collect { it.user }
         }
