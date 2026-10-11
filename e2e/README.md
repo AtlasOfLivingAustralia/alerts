@@ -73,6 +73,49 @@ Two caveats:
 - **AWS CodeBuild** (`cicd/`): Secrets Manager or SSM Parameter Store via `env/secrets-manager`
   in the buildspec.
 
+## Running in the AWS pipeline (post-deployment gate)
+
+`cicd/backend/pipeline/deploy_alerts_buildspec.yaml` runs this suite as a release gate in the
+`DeployAlerts` action, *after* the new pod is live:
+
+1. `deploy_application` — `helm upgrade --set replicaCount=1 --atomic`, new pod serves traffic
+2. `verify_release_deployed` — Helm release must report `deployed`
+3. `run_e2e_tests` — `npm ci`, `npx playwright install --with-deps chromium`, then
+   `npx playwright test --retries=1` with `BASE_URL=https://$DOMAIN_NAME`
+4. On failure, `rollback_release` — `helm rollback <release> <previous revision> --wait`, which
+   tears the new pod down and brings the previously deployed one back. If the deploy also ran a
+   Liquibase migration, the database is first rewound with Aurora Backtrack.
+
+There is no blue/green slot in the Helm chart (single Deployment, single Service and Ingress on
+`$DOMAIN_NAME`), so the tests necessarily run against live traffic; the rollback is what bounds
+the blast radius. `--retries=1` stops a single flaky run from triggering a rollback.
+
+### When it runs
+
+The gate is tied to the git branch, not to a per-environment switch. `SRC_BRANCH` is checked in
+`cicd/backend/pipeline/export_config_buildspec.yaml`:
+
+| Branch | Environment | Gate |
+| --- | --- | --- |
+| `testing` | testing | **runs** |
+| feature branches | development | skipped |
+| `main` / `master` | staging | skipped |
+| `main` / `master` (`--env prod`) | production | skipped |
+
+So only a deploy of the `testing` branch can be rolled back automatically by a failing test.
+
+### Credentials
+
+`E2E_USERNAME` is in `cicd/backend/config.ini` (a dedicated Cognito test account for the testing
+environment — not a personal or admin login). The password is **not** in config: it is read at
+deploy time from the `e2e-password` key of the Secrets Manager secret named by the base stack's
+`AlertsSecret` output, so it never appears in CodePipeline variables or build logs. If the
+username or the secret key is missing while the gate is enabled, the deploy fails rather than
+silently skipping it.
+
+The Playwright HTML report is published in the `DeployAlerts` build artifacts under
+`e2e/playwright-report/`.
+
 A CI job runs the suite with:
 
 ```bash
@@ -98,8 +141,8 @@ npm test                                   #run all tests against the local host
 # BASE_URL=https://alerts.test.ala.org.au npm test
 # or with headed Chrome:
 # BASE_URL=https://alerts.test.ala.org.au npm run test:headed 
-
-
+# or run a single test:
+# BASE_URL=https://alerts.test.ala.org.au npm run test -- biosecurity.spec.ts --grep "add user to a random alert"
 ```
 
 ## Debugging

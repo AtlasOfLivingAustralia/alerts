@@ -30,6 +30,8 @@ env:
     - ACCESS_LOGS_S3_BUCKET_NAME
     - SLACK_ALERT_CHANNEL
     - SLACK_DEPLOY_NOTIFICATION
+    - E2E_TESTS_ENABLED
+    - E2E_USERNAME
 
 phases:
 
@@ -70,6 +72,18 @@ phases:
       - cicd/gen_env_vars.py --env $ENVIRONMENT --clean-branch $CLEAN_BRANCH --conf cicd/$PRODUCT_COMPONENT/config.ini > env.txt
       - echo loading config..
       - set -a ; source env.txt ; set +a
+      # The post-deployment Playwright gate in deploy_alerts_buildspec.yaml only runs
+      # on the "testing" branch. That is the single branch branch_2_env.py maps to the
+      # "testing" environment, so every other branch (feature branches -> development,
+      # main/master -> staging/production) deploys without the gate and without the
+      # automatic helm rollback it triggers.
+      - |
+        if [[ "$SRC_BRANCH" == "testing" ]]; then
+          export E2E_TESTS_ENABLED=true
+        else
+          export E2E_TESTS_ENABLED=false
+        fi
+        echo "E2E_TESTS_ENABLED=$E2E_TESTS_ENABLED (branch: $SRC_BRANCH)"
       # import stack export from the base cloudformation stack
       - echo importing stack output...
       - DB_READ_ENDPOINT=$(aws cloudformation describe-stacks --stack-name $DATABASE_STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='ReadEndpoint'].OutputValue" --output text)
