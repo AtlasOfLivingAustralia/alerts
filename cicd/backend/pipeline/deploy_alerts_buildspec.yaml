@@ -7,6 +7,9 @@ env:
 
 phases:
   install:
+    runtime-versions:
+      # Node is used by the post-deployment Playwright smoke tests in e2e/.
+      nodejs: 20
     commands:
       - echo Installing dependencies...
       - cat /etc/lsb-release
@@ -181,6 +184,62 @@ phases:
           echo "Helm release successfully deployed."
         }
 
+        # Post-deployment smoke test, enabled only on the "testing" branch (see
+        # E2E_TESTS_ENABLED in export_config_buildspec.yaml). The new pod is already
+        # serving traffic on $DOMAIN_NAME by this point (single Deployment, single
+        # Service/Ingress -- there is no blue/green slot to test against first), so a
+        # failure here is recovered by rolling the Helm release back to the previous
+        # revision.
+        run_e2e_tests() {
+          if [ "${E2E_TESTS_ENABLED:-false}" != "true" ]; then
+            echo "E2E_TESTS_ENABLED is not 'true' (gate only runs on the testing branch); skipping post-deployment tests."
+            return 0
+          fi
+
+          local username password
+          username="${E2E_USERNAME:-}"
+          password=$(aws secretsmanager get-secret-value --secret-id "$SECRET_NAME" \
+            --query 'SecretString' --output text | jq -r '.["e2e-password"] // empty')
+          if [ -z "$username" ] || [ -z "$password" ]; then
+            echo "E2E_USERNAME or the 'e2e-password' key in secret $SECRET_NAME is missing."
+            echo "Set E2E_USERNAME in cicd/backend/config.ini and add the password to the secret; see e2e/README.md."
+            return 1
+          fi
+
+          # Without this an unset DOMAIN_NAME would give BASE_URL="https://", and the
+          # resulting test failures would trigger a rollback for the wrong reason.
+          # On the testing branch this resolves to alerts.test.ala.org.au, which is the
+          # same host deploy_application passes to --set ingress.hostname.
+          if [ -z "${DOMAIN_NAME:-}" ]; then
+            echo "DOMAIN_NAME is empty; cannot determine the base URL to test against."
+            return 1
+          fi
+
+          echo "Running Playwright tests against https://${DOMAIN_NAME}"
+          # Explicit && chaining: this function is always called from an `if` or `&&`
+          # context, which disables `set -e` for its whole body, so a failing npm ci
+          # would otherwise fall through to the test run.
+          (
+            cd "$CODEBUILD_SRC_DIR/e2e" \
+              && npm ci \
+              && npx playwright install --with-deps chromium \
+              && BASE_URL="https://${DOMAIN_NAME}" \
+                 E2E_USERNAME="$username" \
+                 E2E_PASSWORD="$password" \
+                 npx playwright test --retries=1
+          )
+        }
+
+        rollback_release() {
+          if [ -z "$PREVIOUS_HELM_REVISION" ]; then
+            echo "No previous Helm revision to roll back to; the new version is left running for investigation."
+            return 1
+          fi
+          echo "Rolling back to Helm revision $PREVIOUS_HELM_REVISION (restores the previous image and pod)."
+          helm rollback "$HELM_RELEASE_NAME" "$PREVIOUS_HELM_REVISION" -n "$EKS_NAMESPACE" --wait --timeout 30m
+          echo "Rollback to revision $PREVIOUS_HELM_REVISION complete."
+        }
+
         PREVIOUS_LIQUIBASE_TAG=""
         PREVIOUS_HELM_REVISION=""
         if helm status "$HELM_RELEASE_NAME" -n "$EKS_NAMESPACE" >/dev/null 2>&1; then
@@ -197,7 +256,15 @@ phases:
           echo "No Liquibase changes in this deploy; running a plain application rollout."
           deploy_application
           verify_release_deployed
-          exit 0
+          if run_e2e_tests; then
+            echo "Post-deployment tests passed; keeping the new version."
+            exit 0
+          fi
+          # No schema change was applied on this path, so the previous image can be
+          # restored on its own -- no Aurora Backtrack is needed.
+          echo "Post-deployment tests failed; restoring the previously deployed version."
+          rollback_release || true
+          exit 1
         fi
 
         take_pre_migration_snapshot
@@ -211,17 +278,17 @@ phases:
         sleep 30
         MIGRATION_STARTED_AT=$(date -u -d '30 seconds ago' '+%Y-%m-%dT%H:%M:%SZ')
 
-        if run_database_migration && deploy_application; then
+        if run_database_migration && deploy_application && verify_release_deployed && run_e2e_tests; then
+          echo "Migration, rollout and post-deployment tests all succeeded."
           delete_pre_migration_snapshot
           if [ "$SNAPSHOT_CLEANUP_FAILED" = "true" ]; then
             echo "Deployment succeeded but the migration snapshot was retained because cleanup failed."
             exit 1
           fi
-          verify_release_deployed
           exit 0
         fi
 
-        echo "Migration or rollout failed; recovering via Aurora Backtrack to $MIGRATION_STARTED_AT."
+        echo "Migration, rollout or post-deployment tests failed; recovering via Aurora Backtrack to $MIGRATION_STARTED_AT."
         scale_to_zero_and_wait || true
 
         if ! backtrack_database; then
@@ -230,12 +297,9 @@ phases:
         fi
         echo "Database backtrack completed."
 
-        if [ -n "$PREVIOUS_HELM_REVISION" ]; then
-          echo "Rolling back to Helm revision $PREVIOUS_HELM_REVISION."
-          helm rollback "$HELM_RELEASE_NAME" "$PREVIOUS_HELM_REVISION" -n "$EKS_NAMESPACE" --wait --timeout 30m
-        else
-          echo "No previous Helm revision; leaving the application scaled to zero for investigation."
-        fi
+        # Restores the previous image AND the previous replica count, bringing the
+        # old pod back up now that the schema has been rewound to match it.
+        rollback_release || true
         exit 1
 
 artifacts:

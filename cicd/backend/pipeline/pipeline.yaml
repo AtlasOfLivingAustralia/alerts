@@ -145,7 +145,8 @@ Resources:
       Source:
         Type: CODEPIPELINE
         BuildSpec: !Sub cicd/${pProductComponent}/pipeline/deploy_alerts_buildspec.yaml
-      TimeoutInMinutes: 60
+      # Worst case: 30m migration + 30m rollout + Playwright run + 30m rollback.
+      TimeoutInMinutes: 120
 
   TeardownAlerts:
     Type: AWS::CodeBuild::Project
@@ -337,7 +338,10 @@ Resources:
                       { "name":"EKS_NAMESPACE", "value":"#{ExportConfigNS.EKS_NAMESPACE}" },
                       { "name":"HOSTED_ZONE", "value":"#{ExportConfigNS.HOSTED_ZONE}" },
                       { "name":"ACCESS_LOGS_S3_BUCKET_NAME", "value":"#{ExportConfigNS.ACCESS_LOGS_S3_BUCKET_NAME}" },
-                      { "name":"PRODUCT_NAME", "value":"#{ExportConfigNS.PRODUCT_NAME}" }
+                      { "name":"PRODUCT_NAME", "value":"#{ExportConfigNS.PRODUCT_NAME}" },
+                      { "name":"SECRET_NAME", "value":"#{ExportConfigNS.SECRET_NAME}" },
+                      { "name":"E2E_TESTS_ENABLED", "value":"#{ExportConfigNS.E2E_TESTS_ENABLED}" },
+                      { "name":"E2E_USERNAME", "value":"#{ExportConfigNS.E2E_USERNAME}" }
                     ]
                   - EcrRepo: !ImportValue
                       Fn::Sub: ${pBaseStackName}-AlertsRepositoryUri

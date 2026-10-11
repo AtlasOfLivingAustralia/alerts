@@ -48,7 +48,8 @@ function getCredentials(): { username: string; password: string } {
     throw new Error(
       `No password for "${username}". Set E2E_PASSWORD in e2e/.env, store it in the macOS Keychain:\n` +
         `  security add-generic-password -U -s alerts-e2e -a "${username}" -w\n` +
-        `or, on Travis, define ALERTS_TEST_PASSWORD in the repository settings.`,
+        `or, in CI, supply it via E2E_PASSWORD (the alerts pipeline reads the "e2e-password"\n` +
+        `key from Secrets Manager in cicd/backend/pipeline/deploy_alerts_buildspec.yaml).`,
     );
   }
   return { username, password };
@@ -57,6 +58,12 @@ function getCredentials(): { username: string; password: string } {
 function getPassword(account: string): string | undefined {
   if (process.env.TRAVIS === 'true') {
     return process.env.ALERTS_TEST_PASSWORD;
+  }
+
+  // In CodeBuild (and other CI) the password is injected as E2E_PASSWORD, which is
+  // handled by the caller; there is no Keychain to fall back to.
+  if (process.env.CODEBUILD_BUILD_ID || process.env.CI === 'true') {
+    return undefined;
   }
 
   if (process.platform === 'darwin') {
