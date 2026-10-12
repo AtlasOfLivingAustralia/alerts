@@ -184,7 +184,7 @@ test ('add user to a random alert', async ({ page }) => {
     await login(page);
     await page.goto('/biosecurity');
     await page.waitForURL('**/biosecurity');
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(2000);
 
     let alertDivs = page.locator('div[data-name="alert-card"]');
     await expect(alertDivs.first()).toBeVisible();
@@ -199,8 +199,10 @@ test ('add user to a random alert', async ({ page }) => {
     let subscriberEmails = alertDiv.locator('span[data-name="subscriber-email-address"]');
     let originalNumberOfSubscriberEmails = await subscriberEmails.count();
     // Remove the user if the user is already in the alert
-    if ( await subscriberEmails.filter({ hasText: memberEmail }).count() > 0 ) {
-        const removeSubscriberBtn = alertDiv.locator('[data-name="remove-subscriber"]').first();
+    const expectedEmailSpan = subscriberEmails.filter({ hasText: memberEmail });
+    if ( await expectedEmailSpan.count() > 0 ) {
+        // Removing button is the sibling of the expectedEmailSpan [data-name="subscriber-email-address"]
+        const removeSubscriberBtn = expectedEmailSpan.locator('..').locator('[data-name="remove-subscriber"]').first();
         await removeSubscriberBtn.scrollIntoViewIfNeeded();
         await removeSubscriberBtn.click();
         await page.waitForTimeout(1000);
@@ -230,7 +232,7 @@ test ('add user to a random alert', async ({ page }) => {
     await expect(subscriberEmails.filter({ hasText: memberEmail })).toBeVisible();
 
     //remove the user from the alert
-    const removeSubscriberBtn = alertDiv.locator('[data-name="remove-subscriber"]').first();
+    const removeSubscriberBtn = expectedEmailSpan.locator('..').locator('[data-name="remove-subscriber"]').first();
     await removeSubscriberBtn.scrollIntoViewIfNeeded();
     await removeSubscriberBtn.click();
     await page.waitForTimeout(1000);
