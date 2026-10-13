@@ -75,16 +75,22 @@ Two caveats:
 
 ## Running in the AWS pipeline (post-deployment gate)
 
-`cicd/backend/pipeline/deploy_alerts_buildspec.yaml` runs this suite as a release gate in the
-`DeployAlerts` action, *after* the new pod is live:
+The suite runs as a release gate in its own pipeline stage, `Post_Deployment_Tests`
+(action `RunE2ETests`, buildspec `cicd/backend/pipeline/e2e_tests_buildspec.yaml`), *after*
+the `DeployAlerts` action has rolled the new version out:
 
-1. `deploy_application` — `helm upgrade --set replicaCount=1 --atomic`, new pod serves traffic
-2. `verify_release_deployed` — Helm release must report `deployed`
-3. `run_e2e_tests` — `npm ci`, `npx playwright install --with-deps chromium`, then
+1. `DeployAlerts` — `helm upgrade --set replicaCount=1 --atomic` (preceded by the Liquibase
+   migration when there is one), then `verify_release_deployed`; the Helm release must report
+   `deployed`. It writes `deploy_state.env` (`MIGRATION_PERFORMED`, `MIGRATION_STARTED_AT`,
+   `MIGRATION_SNAPSHOT_ID`, `PREVIOUS_HELM_REVISION`) to the `DeployStateArtifact` artifact.
+2. `RunE2ETests` — `npm ci`, `npx playwright install --with-deps chromium`, then
    `npx playwright test --retries=1` with `BASE_URL=https://$DOMAIN_NAME`
-4. On failure, `rollback_release` — `helm rollback <release> <previous revision> --wait`, which
-   tears the new pod down and brings the previously deployed one back. If the deploy also ran a
-   Liquibase migration, the database is first rewound with Aurora Backtrack.
+3. On failure, the same action rolls back — `helm rollback <release> <previous revision> --wait`,
+   which tears the new pod down and brings the previously deployed one back. If the deploy also
+   ran a Liquibase migration (`MIGRATION_PERFORMED=true`), the database is first rewound with
+   Aurora Backtrack to `MIGRATION_STARTED_AT`.
+4. On success (or when the gate is skipped), the pre-migration Aurora snapshot taken by the
+   deploy is deleted; it is kept until then as the safety net for that Backtrack.
 
 There is no blue/green slot in the Helm chart (single Deployment, single Service and Ingress on
 `$DOMAIN_NAME`), so the tests necessarily run against live traffic; the rollback is what bounds
@@ -113,8 +119,8 @@ deploy time from the `e2e-password` key of the Secrets Manager secret named by t
 username or the secret key is missing while the gate is enabled, the deploy fails rather than
 silently skipping it.
 
-The Playwright HTML report is published in the `DeployAlerts` build artifacts under
-`e2e/playwright-report/`.
+The Playwright HTML report is published in the `RunE2ETests` build artifacts under
+`playwright-report/`.
 
 A CI job runs the suite with:
 

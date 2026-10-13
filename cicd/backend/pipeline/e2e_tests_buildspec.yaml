@@ -1,0 +1,213 @@
+version: 0.2
+###
+# Post-deployment Playwright gate.
+#
+# This runs in its own pipeline stage (RunE2ETests), after DeployAlerts has rolled the
+# new version out. The new pod is already serving traffic on $DOMAIN_NAME by this point
+# (single Deployment, single Service/Ingress -- there is no blue/green slot to test
+# against first), so a failing gate is recovered here by rolling the Helm release back
+# to the previous revision, preceded by an Aurora Backtrack when the deploy also ran a
+# Liquibase migration.
+#
+# The recovery details come from deploy_state.env, produced by DeployAlerts:
+#   MIGRATION_PERFORMED, MIGRATION_STARTED_AT, MIGRATION_SNAPSHOT_ID, PREVIOUS_HELM_REVISION
+
+env:
+  shell: bash
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 20
+    commands:
+      - echo Installing dependencies...
+      # Created up front so the artifact upload still succeeds when the gate is
+      # skipped or Playwright never gets as far as writing a report.
+      - mkdir -p "$CODEBUILD_SRC_DIR/e2e/playwright-report" "$CODEBUILD_SRC_DIR/e2e/test-results"
+      - |
+        curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 \
+          && chmod 700 get_helm.sh \
+          && ./get_helm.sh
+
+  build:
+    commands:
+      - echo Post-deployment tests started on $(date)
+      - |
+        set -euo pipefail
+
+        DEPLOY_STATE_FILE="$CODEBUILD_SRC_DIR_DeployStateArtifact/deploy_state.env"
+        MIGRATION_PERFORMED=false
+        MIGRATION_STARTED_AT=""
+        MIGRATION_SNAPSHOT_ID=""
+        PREVIOUS_HELM_REVISION=""
+        if [ -f "$DEPLOY_STATE_FILE" ]; then
+          set -a
+          # shellcheck disable=SC1090
+          source "$DEPLOY_STATE_FILE"
+          set +a
+          echo "Loaded deploy state from DeployAlerts:"
+          cat "$DEPLOY_STATE_FILE"
+        else
+          echo "$DEPLOY_STATE_FILE not found; cannot determine how to recover from a failing test run."
+          exit 1
+        fi
+
+        delete_pre_migration_snapshot() {
+          if [ "$ENVIRONMENT" != "production" ] || [ "$MIGRATION_PERFORMED" != "true" ] \
+            || [ -z "$MIGRATION_SNAPSHOT_ID" ]; then
+            return 0
+          fi
+          echo "Deleting pre-migration snapshot $MIGRATION_SNAPSHOT_ID"
+          aws rds delete-db-cluster-snapshot --region "$AWS_REGION" \
+            --db-cluster-snapshot-identifier "$MIGRATION_SNAPSHOT_ID" \
+            || echo "Warning: migration snapshot could not be deleted; it is retained for investigation."
+        }
+
+        run_e2e_tests() {
+          local username password
+          username="${E2E_USERNAME:-}"
+          password=$(aws secretsmanager get-secret-value --secret-id "$SECRET_NAME" \
+            --query 'SecretString' --output text | jq -r '.["e2e-password"] // empty')
+          if [ -z "$username" ] || [ -z "$password" ]; then
+            echo "E2E_USERNAME or the 'e2e-password' key in secret $SECRET_NAME is missing."
+            echo "Set E2E_USERNAME in cicd/backend/config.ini and add the password to the secret; see e2e/README.md."
+            return 1
+          fi
+
+          # Without this an unset DOMAIN_NAME would give BASE_URL="https://", and the
+          # resulting test failures would trigger a rollback for the wrong reason.
+          # On the testing branch this resolves to alerts.test.ala.org.au, which is the
+          # same host the deploy passes to --set ingress.hostname.
+          if [ -z "${DOMAIN_NAME:-}" ]; then
+            echo "DOMAIN_NAME is empty; cannot determine the base URL to test against."
+            return 1
+          fi
+
+          echo "Running Playwright tests against https://${DOMAIN_NAME}"
+          # Explicit && chaining: this function is always called from an `if` context,
+          # which disables `set -e` for its whole body, so a failing npm ci would
+          # otherwise fall through to the test run.
+          (
+            cd "$CODEBUILD_SRC_DIR/e2e" \
+              && npm ci \
+              && npx playwright install --with-deps chromium \
+              && BASE_URL="https://${DOMAIN_NAME}" \
+                 E2E_USERNAME="$username" \
+                 E2E_PASSWORD="$password" \
+                 npx playwright test --retries=1
+          )
+        }
+
+        scale_to_zero_and_wait() {
+          if ! kubectl get deployment "$HELM_RELEASE_NAME" -n "$EKS_NAMESPACE" >/dev/null 2>&1; then
+            return 0
+          fi
+          kubectl scale deployment "$HELM_RELEASE_NAME" -n "$EKS_NAMESPACE" --replicas=0
+          # Excludes the migration Job's pods, which linger on the cluster after a
+          # completed migration and would otherwise make this check never see an
+          # empty pod list.
+          for _ in $(seq 1 60); do
+            if [ -z "$(kubectl get pods -n "$EKS_NAMESPACE" \
+              -l "app.kubernetes.io/instance=$HELM_RELEASE_NAME,app.kubernetes.io/component!=database-migration" \
+              -o name 2>/dev/null)" ]; then
+              return 0
+            fi
+            sleep 2
+          done
+          echo "Application pods did not terminate."
+          return 1
+        }
+
+        backtrack_database() {
+          local backtrack_id status
+          if [ -z "$MIGRATION_STARTED_AT" ]; then
+            echo "No migration start time recorded; cannot rewind the database."
+            return 1
+          fi
+          if ! backtrack_id=$(aws rds backtrack-db-cluster --region "$AWS_REGION" \
+            --db-cluster-identifier "$DB_CLUSTER_IDENTIFIER" \
+            --backtrack-to "$MIGRATION_STARTED_AT" \
+            --query 'BacktrackIdentifier' --output text); then
+            echo "aws rds backtrack-db-cluster was rejected; the cluster was not rewound."
+            return 1
+          fi
+          for _ in $(seq 1 90); do
+            if status=$(aws rds describe-db-cluster-backtracks --region "$AWS_REGION" \
+              --db-cluster-identifier "$DB_CLUSTER_IDENTIFIER" \
+              --backtrack-identifier "$backtrack_id" \
+              --query 'DBClusterBacktracks[0].Status' --output text); then
+              echo "Backtrack status: $status"
+              if [ "$status" = "COMPLETED" ]; then
+                return 0
+              fi
+              if [ "$status" = "FAILED" ]; then
+                return 1
+              fi
+            else
+              echo "Could not read backtrack status; retrying."
+            fi
+            sleep 10
+          done
+          return 1
+        }
+
+        rollback_release() {
+          if [ -z "$PREVIOUS_HELM_REVISION" ]; then
+            echo "No previous Helm revision to roll back to; the new version is left running for investigation."
+            return 1
+          fi
+          echo "Rolling back to Helm revision $PREVIOUS_HELM_REVISION (restores the previous image and pod)."
+          helm rollback "$HELM_RELEASE_NAME" "$PREVIOUS_HELM_REVISION" -n "$EKS_NAMESPACE" --wait --timeout 30m
+          echo "Rollback to revision $PREVIOUS_HELM_REVISION complete."
+        }
+
+        # Enabled only on the "testing" branch, see E2E_TESTS_ENABLED in
+        # export_config_buildspec.yaml.
+        if [ "${E2E_TESTS_ENABLED:-false}" != "true" ]; then
+          echo "E2E_TESTS_ENABLED is not 'true' (gate only runs on the testing branch); skipping post-deployment tests."
+          delete_pre_migration_snapshot
+          exit 0
+        fi
+
+        aws eks --region "$AWS_REGION" update-kubeconfig --name "$EKS_CLUSTER_NAME"
+        kubectl config set-context --current --namespace="$EKS_NAMESPACE"
+
+        if run_e2e_tests; then
+          echo "Post-deployment tests passed; keeping the new version."
+          delete_pre_migration_snapshot
+          exit 0
+        fi
+
+        if [ "$MIGRATION_PERFORMED" != "true" ]; then
+          # No schema change was applied by this deploy, so the previous image can be
+          # restored on its own -- no Aurora Backtrack is needed.
+          echo "Post-deployment tests failed; restoring the previously deployed version."
+          rollback_release || true
+          exit 1
+        fi
+
+        echo "Post-deployment tests failed; recovering via Aurora Backtrack to $MIGRATION_STARTED_AT."
+        scale_to_zero_and_wait || true
+
+        if ! backtrack_database; then
+          echo "Database backtrack failed or did not complete; application remains scaled to zero."
+          exit 1
+        fi
+        echo "Database backtrack completed."
+
+        # Restores the previous image AND the previous replica count, bringing the
+        # old pod back up now that the schema has been rewound to match it.
+        rollback_release || true
+        exit 1
+
+artifacts:
+  # The whole e2e directory, so the Playwright HTML report and traces
+  # (e2e/playwright-report, e2e/test-results) are published for the run.
+  base-directory: $CODEBUILD_SRC_DIR/e2e
+  files:
+    - '**/*'
+  exclude-paths:
+    - 'node_modules/**/*'
+
+
+
