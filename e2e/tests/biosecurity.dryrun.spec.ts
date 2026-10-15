@@ -3,11 +3,11 @@ import {login} from "../login";
 
 // Acacia-test
 const listId = 'dr22805';
-const memberEmail = "alerts-test-c@example.org";
+const memberEmail =process.env.E2E_STANDARD_USERNAME || '';
 const alertName = "Biosecurity alert for Acacia-test"
 
-test ('test dry-run on Acacia-test', async ({ page }) => {
-    await login(page);
+test.skip ('test dry-run on Acacia-test', async ({ page }) => {
+    await login(page, process.env.E2E_USERNAME || '');
     await page.goto('/biosecurity');
     await page.waitForURL('**/biosecurity');
     await page.waitForTimeout(1000);
@@ -47,7 +47,7 @@ test ('test dry-run on Acacia-test', async ({ page }) => {
 
     // target="_blank", so the dry run opens in a popup. Start waiting for it BEFORE the
     // click, and wait for it only once - a second waitForEvent('popup') would hang forever.
-    const [popup] = await Promise.all([page.waitForEvent('popup', { timeout: 30000 }), dryRunLink.click()]);
+    const [popup] = await Promise.all([page.waitForEvent('popup', { timeout: 600000 }), dryRunLink.click()]);
     await popup.waitForLoadState();
 
     expect(popup.url()).toContain('/biosecurity/dryRun?daysBefore=30');

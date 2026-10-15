@@ -3,12 +3,16 @@ import { login } from '../login';
 import fs from 'fs/promises';
 import AdmZip from 'adm-zip';
 
-const memberEmail = "alerts-test-c@example.org";
+const memberEmail = process.env.E2E_STANDARD_USERNAME || ''
 const listId = "dr22916";
 const alertName = "Biosecurity alert for IPA-test"
 
 test ('biosecurity schedule tests', async ({ page }) => {
-    await login(page);
+    if (!memberEmail.trim() || !process.env.E2E_BIOSECURITY_USERNAME?.trim()) {
+        throw new Error('E2E_STANDARD_USERNAME and E2E_BIOSECURITY_USERNAME must not be empty');
+    }
+
+    await login(page, process.env.E2E_BIOSECURITY_USERNAME || '');
     await page.goto('/biosecurity');
     await page.waitForURL('**/biosecurity');
     await page.waitForTimeout(1000);
@@ -112,7 +116,7 @@ test ('biosecurity schedule tests', async ({ page }) => {
 });
 
 test ('test quick entry to add and remove users to biosecurity', async ({ page }) => {
-    await login(page);
+    await login(page, process.env.E2E_BIOSECURITY_USERNAME || '');
     await page.goto('/biosecurity');
     await page.waitForURL('**/biosecurity');
     await page.waitForTimeout(1000);
@@ -181,10 +185,10 @@ test ('test quick entry to add and remove users to biosecurity', async ({ page }
 })
 
 test ('add user to a random alert', async ({ page }) => {
-    await login(page);
+    await login(page, process.env.E2E_BIOSECURITY_USERNAME || '');
     await page.goto('/biosecurity');
     await page.waitForURL('**/biosecurity');
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(2000);
 
     let alertDivs = page.locator('div[data-name="alert-card"]');
     await expect(alertDivs.first()).toBeVisible();
@@ -192,9 +196,30 @@ test ('add user to a random alert', async ({ page }) => {
     const randomAlertIndex = Math.floor(Math.random() * numOfAlerts);
     let alertDiv = alertDivs.nth(randomAlertIndex);
     await expect(alertDiv).toBeVisible();
+    let alertNameLink = alertDiv.locator('a[data-name="alert-name"]').first();
+    const alertName = await alertNameLink.innerText();
+    console.log('Adding user to alert: ' + alertName + ' with email: ' + memberEmail);
 
-    const subscriberEmails = alertDiv.locator('span[data-name="subscriber-email-address"]');
-    const numberOfSubscriberEmails = await subscriberEmails.count();
+    let subscriberEmails = alertDiv.locator('span[data-name="subscriber-email-address"]');
+    let originalNumberOfSubscriberEmails = await subscriberEmails.count();
+    // Remove the user if the user is already in the alert
+    const expectedEmailSpan = subscriberEmails.filter({ hasText: memberEmail });
+    if ( await expectedEmailSpan.count() > 0 ) {
+        // Removing button is the sibling of the expectedEmailSpan [data-name="subscriber-email-address"]
+        const removeSubscriberBtn = expectedEmailSpan.locator('..').locator('[data-name="remove-subscriber"]').first();
+        await removeSubscriberBtn.scrollIntoViewIfNeeded();
+        await removeSubscriberBtn.click();
+        await page.waitForTimeout(1000);
+
+        const finalNumberOfSubscriberEmails = await subscriberEmails.count();
+        expect(finalNumberOfSubscriberEmails).toEqual(originalNumberOfSubscriberEmails-1);
+        await expect(subscriberEmails.filter({ hasText: memberEmail })).not.toBeVisible();
+        // if the user is already in the alert, we need to update the originalNumberOfSubscriberEmails
+        // we need to remove the user from the alert, and update the originalNumberOfSubscriberEmails
+        originalNumberOfSubscriberEmails = finalNumberOfSubscriberEmails;
+    }
+
+    //add the user to the alert
     page.once('dialog', async dialog => {
         expect(dialog.type()).toBe('prompt');
         expect(dialog.message()).toBe(
@@ -205,22 +230,23 @@ test ('add user to a random alert', async ({ page }) => {
 
     await alertDiv.locator('[data-name="add-subscriber"]').click();
     await page.waitForTimeout(1000);
-    const currentNumberOfSubscriberEmails = await subscriberEmails.count();
-    expect(currentNumberOfSubscriberEmails).toEqual(numberOfSubscriberEmails + 1);
+
+    let currentNumberOfSubscriberEmails = await subscriberEmails.count();
+    expect(currentNumberOfSubscriberEmails).toEqual(originalNumberOfSubscriberEmails + 1);
     await expect(subscriberEmails.filter({ hasText: memberEmail })).toBeVisible();
 
     //remove the user from the alert
-    const removeSubscriberBtn = alertDiv.locator('[data-name="remove-subscriber"]').first();
+    const removeSubscriberBtn = expectedEmailSpan.locator('..').locator('[data-name="remove-subscriber"]').first();
     await removeSubscriberBtn.scrollIntoViewIfNeeded();
     await removeSubscriberBtn.click();
     await page.waitForTimeout(1000);
-    const finalNumberOfSubscriberEmails = await subscriberEmails.count();
-    expect(finalNumberOfSubscriberEmails).toEqual(numberOfSubscriberEmails);
+    currentNumberOfSubscriberEmails = await subscriberEmails.count();
+    expect(currentNumberOfSubscriberEmails).toEqual(originalNumberOfSubscriberEmails);
     await expect(subscriberEmails.filter({ hasText: memberEmail })).not.toBeVisible();
 })
 
 test ('test biosecurity csv display and daily zip csv download', async ({ page }) => {
-    await login(page);
+    await login(page, process.env.E2E_BIOSECURITY_USERNAME ||'');
     await page.goto('/biosecurity/csv');
     await page.waitForURL('**/biosecurity/csv');
     await page.waitForTimeout(1000);
@@ -322,7 +348,7 @@ test ('test biosecurity csv display and daily zip csv download', async ({ page }
 })
 
 test ('test biosecurity full csv zip download', async ({ page }) => {
-    await login(page);
+    await login(page, process.env.E2E_BIOSECURITY_USERNAME || '');
     await page.goto('/biosecurity/csv');
     await page.waitForURL('**/biosecurity/csv');
     await page.waitForTimeout(1000);

@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { login } from '../login';
 
-const memberEmail = "alerts-test-c@example.org";
+const memberEmail = process.env.E2E_STANDARD_USERNAME ?? '';
 
 const STANDARD_ALERTS = [
     { name: 'Blogs and News', description: 'Notify me when ALA Blog items are added.' },
@@ -15,7 +15,7 @@ const STANDARD_ALERTS = [
 ];
 
 test ("admin function - schedule test", async ({ page }) => {
-    await login(page);
+    await login(page, process.env.E2E_USERNAME ?? '');
     const adminLink = page.locator('a.btn').filter({ hasText: 'Admin' }).first();
     await adminLink.click();
     await page.waitForURL('**/admin');
@@ -46,7 +46,7 @@ test ("admin function - schedule test", async ({ page }) => {
  * make sure the user is already created in the system before running this test.
  */
 test ("admin function - user management (view and deletion)", async ({ page }) => {
-    await login(page);
+    await login(page, process.env.E2E_USERNAME ?? '');
     const adminLink = page.locator('a.btn').filter({ hasText: 'Admin' }).first();
     await adminLink.click();
     await page.waitForURL('**/admin');
@@ -130,7 +130,7 @@ test ("admin function - user management (view and deletion)", async ({ page }) =
 })
 
 test ("admin function - query updates", async ({ page }) => {
-    await login(page);
+    await login(page, process.env.E2E_USERNAME ?? '');
     await page.goto('/query');
     const title = page.locator('h3').filter({ hasText: 'Query List' });
     expect(title).toBeVisible();

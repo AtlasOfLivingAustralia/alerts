@@ -164,7 +164,7 @@
                         return;
                     }
                     $.ajax({
-                        url: "${createLink(namespace: 'biosecurity', controller: 'admin', action: 'addMonitoringTeamMember')}",
+                        url: "${createLink(uri: '/biosecurity/monitoringTeamMembers')}",
                         type: 'POST',
                         data: { email: email },
                         success: (data) => {
