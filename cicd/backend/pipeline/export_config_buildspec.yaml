@@ -31,7 +31,12 @@ env:
     - SLACK_ALERT_CHANNEL
     - SLACK_DEPLOY_NOTIFICATION
     - E2E_TESTS_ENABLED
+    - E2E_AWS_SECRET_ID
+    - E2E_BASE_URL
     - E2E_USERNAME
+    - E2E_BIOSECURITY_USERNAME
+    - E2E_STANDARD_USERNAME
+
 
 phases:
 
@@ -76,7 +81,7 @@ phases:
       # (e2e_tests_buildspec.yaml) only runs on the "testing" branch. That is the single
       # branch branch_2_env.py maps to the "testing" environment, so every other branch
       # (feature branches -> development, main/master -> staging/production) deploys
-      # without the gate and without the automatic helm rollback it triggers.
+      # without running the post-deployment tests.
       - |
         if [[ "$SRC_BRANCH" == "testing" ]]; then
           export E2E_TESTS_ENABLED=true

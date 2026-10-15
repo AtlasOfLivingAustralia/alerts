@@ -7,7 +7,7 @@ dotenv.config({ path: path.join(__dirname, '.env') });
 
 /**
  * The app must already be running: `./gradlew bootRun` from the project root serves
- * http://localhost:8080. Override with BASE_URL=... npm test
+ * http://localhost:8080. Override with E2E_BASE_URL=... npm test
  */
 export default defineConfig({
   workers: 1,
@@ -18,7 +18,7 @@ export default defineConfig({
   retries: 0,
   reporter: [['list'], ['html', { open: 'never' }]],
   use: {
-    baseURL: process.env.BASE_URL ?? 'http://localhost:8080',
+    baseURL: process.env.E2E_BASE_URL ?? 'http://localhost:8080',
     // Headless by default (npm test). Use `npm run test:headed` to watch the browser.
     // Traces can capture typed credentials, so keep them off unless retrying.
     trace: 'on-first-retry',

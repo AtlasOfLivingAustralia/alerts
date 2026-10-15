@@ -45,21 +45,7 @@ phases:
         fi
 
         MIGRATION_SNAPSHOT_ID="${DB_CLUSTER_IDENTIFIER}-${CODEBUILD_BUILD_NUMBER}-migration"
-        DEPLOY_STATE_FILE="$CODEBUILD_SRC_DIR/deploy_state.env"
-
-        # Hand the recovery details to the RunE2ETests action, which owns the
-        # post-deployment gate and the rollback/backtrack that a failing gate triggers.
-        write_deploy_state() {
-          local migration_performed="$1"
-          cat > "$DEPLOY_STATE_FILE" <<EOF
-        MIGRATION_PERFORMED=${migration_performed}
-        MIGRATION_STARTED_AT=${MIGRATION_STARTED_AT:-}
-        MIGRATION_SNAPSHOT_ID=${MIGRATION_SNAPSHOT_ID}
-        PREVIOUS_HELM_REVISION=${PREVIOUS_HELM_REVISION:-}
-        EOF
-          echo "Wrote deploy state:"
-          cat "$DEPLOY_STATE_FILE"
-        }
+        SNAPSHOT_CLEANUP_FAILED=false
 
         scale_to_zero_and_wait() {
           if ! kubectl get deployment "$HELM_RELEASE_NAME" -n "$EKS_NAMESPACE" >/dev/null 2>&1; then
@@ -104,6 +90,17 @@ phases:
             --db-cluster-snapshot-identifier "$MIGRATION_SNAPSHOT_ID"
         }
 
+        delete_pre_migration_snapshot() {
+          if [ "$ENVIRONMENT" != "production" ]; then
+            return 0
+          fi
+          echo "Deleting pre-migration snapshot $MIGRATION_SNAPSHOT_ID"
+          if ! aws rds delete-db-cluster-snapshot --region "$AWS_REGION" \
+            --db-cluster-snapshot-identifier "$MIGRATION_SNAPSHOT_ID"; then
+            echo "Warning: migration snapshot could not be deleted; it is retained for investigation."
+            SNAPSHOT_CLEANUP_FAILED=true
+          fi
+        }
 
         run_database_migration() {
           helm upgrade --install "$HELM_RELEASE_NAME" . \
@@ -184,21 +181,6 @@ phases:
           echo "Helm release successfully deployed."
         }
 
-        # Post-deployment Playwright tests used to run here; they now live in their
-        # own pipeline stage (RunE2ETests / e2e_tests_buildspec.yaml), which also owns
-        # the rollback and Aurora Backtrack that a failing gate triggers. The recovery
-        # details that stage needs are handed over in deploy_state.env.
-
-        rollback_release() {
-          if [ -z "$PREVIOUS_HELM_REVISION" ]; then
-            echo "No previous Helm revision to roll back to; the new version is left running for investigation."
-            return 1
-          fi
-          echo "Rolling back to Helm revision $PREVIOUS_HELM_REVISION (restores the previous image and pod)."
-          helm rollback "$HELM_RELEASE_NAME" "$PREVIOUS_HELM_REVISION" -n "$EKS_NAMESPACE" --wait --timeout 30m
-          echo "Rollback to revision $PREVIOUS_HELM_REVISION complete."
-        }
-
         PREVIOUS_LIQUIBASE_TAG=""
         PREVIOUS_HELM_REVISION=""
         if helm status "$HELM_RELEASE_NAME" -n "$EKS_NAMESPACE" >/dev/null 2>&1; then
@@ -215,10 +197,6 @@ phases:
           echo "No Liquibase changes in this deploy; running a plain application rollout."
           deploy_application
           verify_release_deployed
-          # No schema change was applied on this path, so a failing post-deployment test
-          # can be recovered by restoring the previous image alone -- no Backtrack needed.
-          write_deploy_state false
-          echo "Rollout complete; the post-deployment tests run in the next stage."
           exit 0
         fi
 
@@ -233,12 +211,13 @@ phases:
         sleep 30
         MIGRATION_STARTED_AT=$(date -u -d '30 seconds ago' '+%Y-%m-%dT%H:%M:%SZ')
 
-        if run_database_migration && deploy_application && verify_release_deployed; then
-          echo "Migration and rollout succeeded; the post-deployment tests run in the next stage."
-          # The pre-migration snapshot is kept until the tests pass: it is the safety net
-          # for the Aurora Backtrack the test stage performs if the gate fails. The test
-          # stage deletes it once the gate is green.
-          write_deploy_state true
+        if run_database_migration && deploy_application; then
+          delete_pre_migration_snapshot
+          if [ "$SNAPSHOT_CLEANUP_FAILED" = "true" ]; then
+            echo "Deployment succeeded but the migration snapshot was retained because cleanup failed."
+            exit 1
+          fi
+          verify_release_deployed
           exit 0
         fi
 
@@ -251,13 +230,15 @@ phases:
         fi
         echo "Database backtrack completed."
 
-        # Restores the previous image AND the previous replica count, bringing the
-        # old pod back up now that the schema has been rewound to match it.
-        rollback_release || true
+        if [ -n "$PREVIOUS_HELM_REVISION" ]; then
+          echo "Rolling back to Helm revision $PREVIOUS_HELM_REVISION."
+          helm rollback "$HELM_RELEASE_NAME" "$PREVIOUS_HELM_REVISION" -n "$EKS_NAMESPACE" --wait --timeout 30m
+        else
+          echo "No previous Helm revision; leaving the application scaled to zero for investigation."
+        fi
         exit 1
 
 artifacts:
   base-directory: $CODEBUILD_SRC_DIR
   files:
-    # Consumed by the RunE2ETests action, which needs the rollback/backtrack details.
-    - deploy_state.env
+    - '**/*'

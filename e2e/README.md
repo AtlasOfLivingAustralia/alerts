@@ -1,7 +1,7 @@
 # Playwright end-to-end tests
 
-Browser tests for the alerts app. Every test calls `login()` first, so a test account is
-required before anything can run.
+Browser tests for the alerts app. Tests that need authentication call
+`login(page, username)`, so a test account is required before they can run.
 
 ## Setup
 
@@ -9,92 +9,46 @@ required before anything can run.
 cd e2e
 npm install
 npm run install:browsers
-cp .env.example .env      # gitignored - put the test account details here
+cp .env.example .env      # gitignored - configure explicit test usernames
 ```
 
 ### Credentials
 
-Never commit a username/password. `login.ts` reads `E2E_USERNAME` / `E2E_PASSWORD` from:
+Every test passes its username explicitly to `login(page, username)`. `.env` contains only
+non-secret usernames and `E2E_BASE_URL`; it never contains a password.
 
-- **`e2e/.env`** locally (gitignored; `.env.example` is the tracked template), or
-- the **macOS Keychain** when `E2E_PASSWORD` is empty:
+`login.ts` obtains the matching password at login time:
+
+- **Local macOS:** from the Keychain item with service `alerts-e2e` and account equal to the
+  username passed by the test. Store each account's password with:
   ```bash
-  security add-generic-password -U -s alerts-e2e -a "<username>" -w   # prompts, nothing echoed
+  security add-generic-password -U -s alerts-e2e -a "<username>" -w
   ```
-- **CI secrets** - on Travis the password comes from `ALERTS_TEST_PASSWORD` (see below).
+- **AWS CodeBuild:** directly from the field matching the username in the Secrets Manager
+  secret identified by `E2E_AWS_SECRET_ID`. The buildspec passes the secret ID, not the
+  password; `login.ts` calls AWS CLI when a test needs the password.
 
-Use a dedicated, low-privilege test account.
-
-#### Storing them in Travis
-
-Nothing secret goes into the repository. `login.ts` detects Travis (`TRAVIS === 'true'`) and
-reads the password from **`ALERTS_TEST_PASSWORD`**, which is defined in the Travis settings:
-
-1. Travis → the repository → **More options → Settings**
-2. **Environment Variables** → Name: `ALERTS_TEST_PASSWORD`, Value: the test account password
-3. Leave **Display value in build log** switched **OFF**, and limit it to the branch that runs
-   the tests if you don't need it everywhere.
-
-Same thing from the command line:
-
-```bash
-gem install travis                 # or: brew install travis
-travis login --com                 # --org for legacy travis-ci.org
-
-travis env set ALERTS_TEST_PASSWORD '<the password>' --private --com   # --private = hidden in logs
-travis env list --com                                                  # names only, values stay hidden
-```
-
-The username is not a secret, so it can live in `.travis.yml` (or alongside the password in
-Settings):
-
-```yaml
-env:
-  global:
-    - E2E_USERNAME=alerts-test@example.org
-```
-
-To rotate the password, set the variable again - the new value replaces the old one and no
-commit is required.
-
-Two caveats:
-
-- Settings variables are **not** exposed to builds from forked pull requests, so e2e tests
-  there will fail on the missing password - guard the job with `if: fork = false`, or skip it
-  when `ALERTS_TEST_PASSWORD` is empty.
-- Travis masks the value in the build log, but anything your own code prints is not masked -
-  never `echo "$ALERTS_TEST_PASSWORD"`.
-
-#### Other CI systems
-
-## Not implemented or will not be implemented
-- Our current CI/CD pipeline needs Travis build and pass tests ahead and then deploy to AWS. However, Travis cannot run the tests before the new code is deployed to AWS.
-
-- **AWS CodeBuild** (`cicd/`): Secrets Manager or SSM Parameter Store via `env/secrets-manager`
-  in the buildspec.
+In CI, `E2E_USERNAME`, `E2E_BIOSECURITY_USERNAME`, and `E2E_STANDARD_USERNAME` are
+passed to Playwright from `cicd/backend/config.ini`. The admin tests use `E2E_USERNAME`,
+biosecurity tests use `E2E_BIOSECURITY_USERNAME`, and standard-user tests use
+`E2E_STANDARD_USERNAME`. Local `.env` can provide the same three values.
 
 ## Running in the AWS pipeline (post-deployment gate)
 
-The suite runs as a release gate in its own pipeline stage, `Post_Deployment_Tests`
-(action `RunE2ETests`, buildspec `cicd/backend/pipeline/e2e_tests_buildspec.yaml`), *after*
-the `DeployAlerts` action has rolled the new version out:
+The suite runs in its own pipeline stage, `Post_Deployment_Tests` (action `RunE2ETests`,
+buildspec `cicd/backend/pipeline/e2e_tests_buildspec.yaml`), *after* the `DeployAlerts`
+action has deployed the new version:
 
 1. `DeployAlerts` — `helm upgrade --set replicaCount=1 --atomic` (preceded by the Liquibase
    migration when there is one), then `verify_release_deployed`; the Helm release must report
-   `deployed`. It writes `deploy_state.env` (`MIGRATION_PERFORMED`, `MIGRATION_STARTED_AT`,
-   `MIGRATION_SNAPSHOT_ID`, `PREVIOUS_HELM_REVISION`) to the `DeployStateArtifact` artifact.
+   `deployed`.
 2. `RunE2ETests` — `npm ci`, `npx playwright install --with-deps chromium`, then
-   `npx playwright test --retries=1` with `BASE_URL=https://$DOMAIN_NAME`
-3. On failure, the same action rolls back — `helm rollback <release> <previous revision> --wait`,
-   which tears the new pod down and brings the previously deployed one back. If the deploy also
-   ran a Liquibase migration (`MIGRATION_PERFORMED=true`), the database is first rewound with
-   Aurora Backtrack to `MIGRATION_STARTED_AT`.
-4. On success (or when the gate is skipped), the pre-migration Aurora snapshot taken by the
-   deploy is deleted; it is kept until then as the safety net for that Backtrack.
+   `npx playwright test --retries=1` with `E2E_BASE_URL=https://$DOMAIN_NAME`
+3. A failing test fails the `RunE2ETests` CodeBuild action; this stage does not tear down,
+   roll back, or otherwise modify the deployment.
 
 There is no blue/green slot in the Helm chart (single Deployment, single Service and Ingress on
-`$DOMAIN_NAME`), so the tests necessarily run against live traffic; the rollback is what bounds
-the blast radius. `--retries=1` stops a single flaky run from triggering a rollback.
+`$DOMAIN_NAME`), so the tests run against the deployed version receiving live traffic.
 
 ### When it runs
 
@@ -108,16 +62,16 @@ The gate is tied to the git branch, not to a per-environment switch. `SRC_BRANCH
 | `main` / `master` | staging | skipped |
 | `main` / `master` (`--env prod`) | production | skipped |
 
-So only a deploy of the `testing` branch can be rolled back automatically by a failing test.
+So only a deploy of the `testing` branch runs the tests.
 
 ### Credentials
 
 `E2E_USERNAME` is in `cicd/backend/config.ini` (a dedicated Cognito test account for the testing
-environment — not a personal or admin login). The password is **not** in config: it is read at
-deploy time from the `e2e-password` key of the Secrets Manager secret named by the base stack's
-`AlertsSecret` output, so it never appears in CodePipeline variables or build logs. If the
-username or the secret key is missing while the gate is enabled, the deploy fails rather than
-silently skipping it.
+environment — not a personal or admin login). `SECRET_NAME` comes from the base stack's
+`AlertsSecret` output and is passed to Playwright as `E2E_AWS_SECRET_ID`. Each test passes
+its username to `login`; the login code fetches that username's key directly from Secrets
+Manager. The password is not passed through CodePipeline variables or a process environment
+variable. A missing username, AWS permission, or secret key makes the test action fail.
 
 The Playwright HTML report is published in the `RunE2ETests` build artifacts under
 `playwright-report/`.
@@ -144,11 +98,11 @@ npx playwright test tests/alerts.spec.ts   # one file
 npm run report                             # last HTML report
 npm test                                   #run all tests against the local host with headless Chrome
 # or use a different base URL:
-# BASE_URL=https://alerts.test.ala.org.au npm test
+# E2E_BASE_URL=https://alerts.test.ala.org.au npm test
 # or with headed Chrome:
-# BASE_URL=https://alerts.test.ala.org.au npm run test:headed 
+# E2E_BASE_URL=https://alerts.test.ala.org.au npm run test:headed 
 # or run a single test:
-# BASE_URL=https://alerts.test.ala.org.au npm run test -- biosecurity.spec.ts --grep "add user to a random alert"
+# E2E_BASE_URL=https://alerts.test.ala.org.au npm run test -- biosecurity.spec.ts --grep "add user to a random alert"
 ```
 
 ## Debugging
@@ -165,7 +119,7 @@ In IntelliJ, click the gutter ▶/🐞 next to a test; breakpoints work in both 
 ## Layout
 
 - `playwright.config.ts` – base URL, `.env` loading, one `chromium` project.
-- `login.ts` – `login(page)`: resolves the credentials and signs in through the Cognito hosted UI.
+- `login.ts` – `login(page, username)`: retrieves that account's password and signs in through the Cognito hosted UI.
 - `tests/alerts.spec.ts` – standard and custom alerts on /notification/myAlerts.
 - `tests/admin.spec.ts` – admin pages.
 - `tests/biosecurity.spec.ts` – biosecurity pages.

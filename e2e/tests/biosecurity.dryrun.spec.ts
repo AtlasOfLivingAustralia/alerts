@@ -3,11 +3,11 @@ import {login} from "../login";
 
 // Acacia-test
 const listId = 'dr22805';
-const memberEmail = "alerts-test-c@example.org";
+const memberEmail =process.env.E2E_STANDARD_USERNAME || '';
 const alertName = "Biosecurity alert for Acacia-test"
 
 test.skip ('test dry-run on Acacia-test', async ({ page }) => {
-    await login(page);
+    await login(page, process.env.E2E_USERNAME || '');
     await page.goto('/biosecurity');
     await page.waitForURL('**/biosecurity');
     await page.waitForTimeout(1000);

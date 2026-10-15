@@ -1,0 +1,239 @@
+# Helm values for running the alerts chart on a local minikube cluster.
+#
+# These mirror the *testing* environment -- i.e. what
+# cicd/backend/pipeline/export_config_buildspec.yaml produces for
+# `gen_env_vars.py --env testing` (cicd/backend/config.ini [testing] merged over
+# [DEFAULT]), which is what https://alerts.test.ala.org.au runs with. Every external
+# service therefore points at the *.test.ala.org.au stack, so the local pod talks to the
+# same backends the Playwright gate exercises.
+#
+# Regenerate the reference list with:
+#   python3 cicd/gen_env_vars.py --env testing --clean-branch testing \
+#     --conf cicd/backend/config.ini
+#
+# Only the values that cannot work on a laptop deviate from [testing]; each is marked
+# "LOCAL DELTA" below:
+#   ALB ingress + ACM cert + S3 access logs -> ingress.enabled=false (use port-forward)
+#   IRSA service account (eksctl)           -> serviceAccount.name=default
+#   Aurora writer endpoint                  -> mysql-local service (cicd/local/mysql.yaml)
+#   ECR images                              -> images built into minikube's image store
+#   SES mail, S3 CSV upload                 -> disabled (no IRSA credentials)
+#   auth cookie on .ala.org.au              -> disabled (cannot be set from localhost)
+#   1 CPU / 4Gi + 3g heap                   -> smaller, to fit a laptop
+#
+# cicd/local/run_pipeline.sh overrides image.*, migration.image.*, rds.externalName and
+# (optionally) the OIDC client on the command line.
+
+replicaCount: 1
+
+image:
+  repository: alerts
+  tag: local
+  # LOCAL DELTA: the images live only in minikube's image store, so never pull them.
+  pullPolicy: IfNotPresent
+
+secret:
+  name: alerts-config-secret-local
+
+serviceAccount:
+  # LOCAL DELTA: no IRSA, so the pod runs as the namespace's default service account.
+  name: default
+
+ingress:
+  # LOCAL DELTA: the chart's ingress is ALB-only (class alb, certificate ARN, S3 access
+  # logs, external-dns). Reach the app through a port-forward instead.
+  enabled: false
+
+service:
+  port: 80
+  targetPort: 8000
+
+# LOCAL DELTA: [testing] requests 1 CPU / 4096Mi, which usually leaves the pod Pending on
+# a default minikube (2 CPUs / 4GB).
+resources:
+  requests:
+    cpu: "250m"
+    memory: "1Gi"
+  limits:
+    cpu: "2"
+    memory: "3Gi"
+
+# LOCAL DELTA: a cold start on a laptop is slower than on EKS.
+startupProbe:
+  enabled: true
+  httpGet:
+    path: /actuator/health
+    port: 8000
+    scheme: HTTP
+  initialDelaySeconds: 60
+  periodSeconds: 5
+  timeoutSeconds: 15
+  successThreshold: 1
+  failureThreshold: 60
+
+migration:
+  enabled: true
+  image:
+    repository: alerts-liquibase
+    tag: local
+    pullPolicy: IfNotPresent
+  backoffLimit: 0
+  activeDeadlineSeconds: 900
+
+rds:
+  # LOCAL DELTA: in testing this is the Aurora writer endpoint; here the ExternalName
+  # service points at the in-cluster MySQL. run_pipeline.sh sets the namespace-qualified
+  # name (mysql-local.<namespace>.svc.cluster.local).
+  name: mysql-rds
+  externalName: mysql-local.alerts-local.svc.cluster.local
+
+tags:
+  product: alerts
+  component: backend
+  environment: testing
+  branch: local
+  Name: ala-alerts-local
+  version: local
+
+config:
+  base:
+    # LOCAL DELTA: in testing this is https://alerts.test.ala.org.au; locally the app is
+    # reached through the port-forward.
+    alerts_base_url: "http://localhost:8080"
+    alerts_context_path: ""
+  cas:
+    auth_base_url: "https://auth-test.ala.org.au"
+    alerts_apikey_whitelist: ""
+  db:
+    # LOCAL DELTA: the whole block. Testing uses the Aurora cluster (admin + Secrets
+    # Manager password, database "alertstesting", SSL on); this is the MySQL in
+    # cicd/local/mysql.yaml, with the same credentials as docker/docker-compose.yml.
+    # The driver is the non-deprecated cj one ([DEFAULT] still has com.mysql.jdbc.Driver).
+    driver_class_name: "com.mysql.cj.jdbc.Driver"
+    alerts_db_hostname: "mysql-rds"
+    database_name: "alerts"
+    alerts_db_username: "alerts_user"
+    alerts_db_password: "password"
+    mysql_connection_ssl: "false"
+    dataSource_dbCreate: "none"
+    validation_query: "select 1"
+    db_dialect: "org.hibernate.dialect.MySQL8Dialect"
+  enable_myannotation: "true"
+  enable_specieslists_alerts: "true"
+  enable_spatial_alerts: "true"
+  enable_blogs_alerts: "true"
+  enable_citizen_science_alerts: "false"
+  external:
+    biocache_url: "https://biocache.test.ala.org.au"
+    biocache_service_url: "https://biocache-ws.test.ala.org.au/ws"
+    spatial_url: "https://spatial.ala.org.au"
+    collectory_url: "https://collections-test.ala.org.au"
+    alerts_collectory_service_url: "https://api.test.ala.org.au/metadata"
+    alerts_userdetails_url: "https://api.test.ala.org.au/userdetails/cognito//userDetails/getUserListFull"
+    lists_url: "https://lists-test.ala.org.au"
+  mail:
+    # LOCAL DELTA: testing has all three true and sends through SES via IRSA. There are no
+    # AWS credentials in the local pod, so mail is off. For a local SMTP sink run
+    # docker/docker-compose.yml (smtp4dev on 2525) and re-enable.
+    enabled: "false"
+    enable_email: "false"
+    mail_ses_enabled: "false"
+  header_and_footer_baseurl: "https://www.test.ala.org.au/commonui-bs5-2019"
+  header_and_footer_version: "2"
+  ala_base_url: "https://www-test.ala.org.au"
+  bie_base_url: "https://bie-test.ala.org.au"
+  bie_search_path: "/search"
+  alerts_skin_layout: "ala-main"
+  skin_home_url: "http://www.ala.org.au"
+  skin_orgNameLong: "Atlas of Living Australia"
+  orgNameShort: "ALA"
+  orgSupportEmail: "support@ala.org.au"
+  alerts_site_default_language: "en"
+  skin_favicon: "https://www.ala.org.au/app/uploads/2019/01/cropped-favicon-32x32.png"
+  privacy_policy_url: "https://www.ala.org.au/about/terms-of-use/privacy-policy/"
+  occurrence_searchTitle: "occurrence search"
+  occurrence_searchUrl: "https://biocache.test.ala.org.au/occurrences/search?q=passer"
+  regions_searchTitle: "ACT"
+  regions_searchUrl: "https://regions.ala.org.au/States%20and%20territories/AUSTRALIAN%2520CAPITAL%2520TERRITORY?pid=8832857#group=ALL_SPECIES&subgroup=&guid=&from=1850&to=2025&tab=speciesTab&fq="
+  speciesPages_searchTitle: "Shingle-back"
+  speciesPages_searchUrl: "https://bie.ala.org.au/species/Tiliqua+rugosa"
+  collection_searchTitle: "ANIC"
+  collection_searchUrl: "https://collections.ala.org.au/public/show/co13"
+  # Supplied from Secrets Manager ("google-api-key") in the pipeline.
+  google_apikey: ""
+  biosecurity:
+    biosecurity_more_info: ""
+    biosecurity_query_url: "/occurrences/search?q=species_list_uid:___LISTIDPARAM___&fq=decade:2020&fq=country:Australia&fq=first_loaded_date:[___DATEPARAM___%20TO%20*]&fq=occurrence_date:[___LASTYEARPARAM___%20TO%20*]&sort=first_loaded_date&dir=desc&disableAllQualityFilters=true"
+    biosecurity_lga: "cl11170"
+  species_list_server: "https://lists-test.ala.org.au"
+  csv:
+    # LOCAL DELTA: testing writes the biosecurity CSV to S3 (local=false, s3=true), which
+    # needs IRSA. Locally it goes to the pod filesystem instead.
+    biosecurity_csv_local_enabled: "true"
+    biosecurity_csv_s3_enabled: "false"
+  s3:
+    grails_plugin_awssdk_region: "ap-southeast-2"
+    # In the pipeline this comes from the base stack's BiosecurityAlertsBucket output.
+    # Unused locally because biosecurity_csv_s3_enabled is false.
+    grails_plugin_awssdk_s3_bucket: "ala-alerts-testing"
+    grails_plugin_awssdk_s3_profile: ""
+  cognito:
+    # The same Cognito user pool as testing. pac4j initialises at boot and aborts with
+    # "clientId cannot be blank", so the client id/secret cannot be empty: the pipeline
+    # reads the real ones from the Cognito stack, here they are placeholders that let the
+    # application context start. To actually log in to the local pod, pass a client whose
+    # callback list includes http://localhost:8080/... :
+    #   OIDC_CLIENT_ID=... OIDC_CLIENT_SECRET=... cicd/local/run_pipeline.sh deploy
+    oidc:
+      alerts_client_id: "local-placeholder"
+      alerts_client_secret: "local-placeholder"
+      discoveryUri: "https://cognito-idp.ap-southeast-2.amazonaws.com/ap-southeast-2_OOXU9GW39/.well-known/openid-configuration"
+      logoutUrl: "https://auth-secure.auth.ap-southeast-2.amazoncognito.com/logout"
+      alaUseridClaim: "username"
+      logoutAction: "cognito"
+      scope: "openid profile email ala/attrs ala/roles"
+    core:
+      roleAttribute: "ala:role"
+      affiliation_survey_enabled: "true"
+      auth_cookie_name: "ALA-Auth-Test"
+    cookie:
+      # LOCAL DELTA: testing sets the shared cookie on .ala.org.au, which a page served
+      # from localhost cannot do.
+      auth_cookie_enabled: "false"
+      auth_cookie_domain: "localhost"
+    jwt:
+      rolesFromAccessToken: "true"
+      userIdClaim: "username"
+      roleClaims: "cognito:groups"
+      discoveryUri: "https://cognito-idp.ap-southeast-2.amazonaws.com/ap-southeast-2_OOXU9GW39/.well-known/openid-configuration"
+  apikey:
+    apikey_check_enabled: "true"
+    apikey_auth_url: "https://auth-test.ala.org.au/apikey/"
+    apikey_check_url: "https://auth-test.ala.org.au/apikey/ws/check?apikey="
+    apikey_userdetails_url: "https://auth-test.ala.org.au/userdetails/"
+  webservice:
+    webservice_jwt: "true"
+    alerts_webservice_jwt_scopes: "ala/internal users/read ala/attrs"
+    # Server-to-server client; read from the Cognito stack in the pipeline.
+    alerts_client_id: ""
+    alerts_client_secret: ""
+  usersync_batchsize: "1000"
+  userdetails:
+    userdetails_url: "https://api.test.ala.org.au/userdetails/cognito/"
+    userdetails_web_url: "https://userdetails.test.ala.org.au/"
+    userdetails_api_url: "https://api.test.ala.org.au/userdetails/cognito/"
+  cors:
+    allowed_origin_patterns: "https://*.ala.org.au,http://localhost:5173"
+  openapi:
+    openapi_oauth_url: "https://auth-secure.auth.ap-southeast-2.amazoncognito.com/oauth2"
+    terms_url: "https://www.ala.org.au/terms-of-use/"
+    support_email: "support@ala.org.au"
+  # LOCAL DELTA: testing runs with grails.env=test, and that block in
+  # grails-app/conf/application.yml hardcodes serverURL to http://alerts.test.ala.org.au,
+  # which would redirect every local request away from the port-forward. The development
+  # block sets serverURL to http://localhost:8080, which is what a local run needs.
+  podEnvironment: "development"
+  # LOCAL DELTA: testing uses 3g/3g.
+  xms: "512m"
+  xmx: "2048m"
+

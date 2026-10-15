@@ -3,12 +3,16 @@ import { login } from '../login';
 import fs from 'fs/promises';
 import AdmZip from 'adm-zip';
 
-const memberEmail = "alerts-test-c@example.org";
+const memberEmail = process.env.E2E_STANDARD_USERNAME || ''
 const listId = "dr22916";
 const alertName = "Biosecurity alert for IPA-test"
 
 test ('biosecurity schedule tests', async ({ page }) => {
-    await login(page);
+    if (!memberEmail.trim() || !process.env.E2E_BIOSECURITY_USERNAME?.trim()) {
+        throw new Error('E2E_STANDARD_USERNAME and E2E_BIOSECURITY_USERNAME must not be empty');
+    }
+
+    await login(page, process.env.E2E_BIOSECURITY_USERNAME || '');
     await page.goto('/biosecurity');
     await page.waitForURL('**/biosecurity');
     await page.waitForTimeout(1000);
@@ -112,7 +116,7 @@ test ('biosecurity schedule tests', async ({ page }) => {
 });
 
 test ('test quick entry to add and remove users to biosecurity', async ({ page }) => {
-    await login(page);
+    await login(page, process.env.E2E_BIOSECURITY_USERNAME || '');
     await page.goto('/biosecurity');
     await page.waitForURL('**/biosecurity');
     await page.waitForTimeout(1000);
@@ -181,7 +185,7 @@ test ('test quick entry to add and remove users to biosecurity', async ({ page }
 })
 
 test ('add user to a random alert', async ({ page }) => {
-    await login(page);
+    await login(page, process.env.E2E_BIOSECURITY_USERNAME || '');
     await page.goto('/biosecurity');
     await page.waitForURL('**/biosecurity');
     await page.waitForTimeout(2000);
@@ -242,7 +246,7 @@ test ('add user to a random alert', async ({ page }) => {
 })
 
 test ('test biosecurity csv display and daily zip csv download', async ({ page }) => {
-    await login(page);
+    await login(page, process.env.E2E_BIOSECURITY_USERNAME ||'');
     await page.goto('/biosecurity/csv');
     await page.waitForURL('**/biosecurity/csv');
     await page.waitForTimeout(1000);
@@ -344,7 +348,7 @@ test ('test biosecurity csv display and daily zip csv download', async ({ page }
 })
 
 test ('test biosecurity full csv zip download', async ({ page }) => {
-    await login(page);
+    await login(page, process.env.E2E_BIOSECURITY_USERNAME || '');
     await page.goto('/biosecurity/csv');
     await page.waitForURL('**/biosecurity/csv');
     await page.waitForTimeout(1000);
