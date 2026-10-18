@@ -1,0 +1,62 @@
+version: 0.2
+###
+# Post-deployment Playwright tests. DeployAlerts has already deployed the new version;
+# this buildspec only runs the tests against that deployment. A failing test fails this
+# CodeBuild action naturally; it does not perform teardown, rollback, or database recovery.
+
+env:
+  shell: bash
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 20
+    commands:
+      - echo Installing dependencies...
+      # Ensure artifact upload succeeds if the gate is skipped or Playwright writes no report.
+      - mkdir -p "$CODEBUILD_SRC_DIR/e2e/playwright-report" "$CODEBUILD_SRC_DIR/e2e/test-results"
+
+  build:
+    commands:
+      - echo Post-deployment tests started on $(date)
+      - |
+        set -euo pipefail
+
+        # The post-deploy tests are enabled only on the testing branch.
+        if [ "${E2E_TESTS_ENABLED:-false}" != "true" ]; then
+          echo "E2E_TESTS_ENABLED is not 'true'; skipping post-deployment tests."
+          exit 0
+        fi
+
+        if [ -z "${E2E_USERNAME:-}" ] || [ -z "${E2E_BIOSECURITY_USERNAME:-}" ] || [ -z "${E2E_STANDARD_USERNAME:-}" ] || [ -z "${SECRET_NAME:-}" ]; then
+          echo "E2E_USERNAME, E2E_BIOSECURITY_USERNAME, E2E_STANDARD_USERNAME, or SECRET_NAME is missing."
+          echo "Set the E2E usernames in cicd/backend/config.ini and configure the AlertsSecret output; see e2e/README.md."
+          exit 1
+        fi
+        if [ -z "${DOMAIN_NAME:-}" ]; then
+          echo "DOMAIN_NAME is empty; cannot determine the base URL to test against."
+          exit 1
+        fi
+
+        echo "Running Playwright tests against https://${DOMAIN_NAME}"
+        cd "$CODEBUILD_SRC_DIR/e2e"
+        npm ci
+        npx playwright install --with-deps chromium
+        E2E_BASE_URL="https://${DOMAIN_NAME}" \
+          E2E_USERNAME="$E2E_USERNAME" \
+          E2E_BIOSECURITY_USERNAME="$E2E_BIOSECURITY_USERNAME" \
+          E2E_STANDARD_USERNAME="$E2E_STANDARD_USERNAME" \
+          E2E_AWS_SECRET_ID="$SECRET_NAME" \
+          npx playwright test --retries=1
+
+artifacts:
+  # The whole e2e directory, so the Playwright HTML report and traces
+  # (e2e/playwright-report, e2e/test-results) are published for the run.
+  base-directory: $CODEBUILD_SRC_DIR/e2e
+  files:
+    - '**/*'
+  exclude-paths:
+    - 'node_modules/**/*'
+
+
+

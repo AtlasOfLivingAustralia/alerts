@@ -19,7 +19,7 @@ const STANDARD_ALERTS = [
 ];
 
 test('test standard alerts (on/off)', async ({ page }) => {
-  await login(page);
+  await login(page, process.env.E2E_USERNAME || '');
 
   const items = page.locator('#standard-alerts .list-group-item');
 
@@ -61,7 +61,7 @@ test('test standard alerts (on/off)', async ({ page }) => {
  * The custom alerts are created in the api testset, and then we check if they are displayed in the custom alerts tab.
  */
 test('test custom alerts (on/off/create/delete)', async ({ page }) => {
-  await login(page);
+  await login(page, process.env.E2E_USERNAME || '');
   // go to /ws/test, find links of alerts creation and click
   await page.goto('/ws/test');
   const links = page.locator('ul[name="createAlerts"] a');
