@@ -255,9 +255,8 @@ Resources:
                     - grails-app/**
                     - src/**
                     - helm/**
-                    - '*.gradle'
+                    - '*gradle*'
                     - Dockerfile
-                    - gradle.properties
             SourceActionName: CheckoutSrc
       Variables:
         - Name: SRC_BRANCH
