@@ -18,7 +18,7 @@ phases:
   pre_build:
     commands:
       - echo "Waiting for Alerts server to start..."
-      - sleep 180
+      - sleep 300
 
   build:
     commands:
