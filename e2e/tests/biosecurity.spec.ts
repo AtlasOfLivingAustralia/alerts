@@ -198,14 +198,14 @@ test ('add user to a random alert', async ({ page }) => {
     await expect(alertDiv).toBeVisible();
     let alertNameLink = alertDiv.locator('a[data-name="alert-name"]').first();
     const alertName = await alertNameLink.innerText();
-    console.log('Adding user to alert: ' + alertName + ' with email: ' + memberEmail);
-
+    console.log('Selected alert: ' + alertName);
     let subscriberEmails = alertDiv.locator('span[data-name="subscriber-email-address"]');
     let originalNumberOfSubscriberEmails = await subscriberEmails.count();
     // Remove the user if the user is already in the alert
     const expectedEmailSpan = subscriberEmails.filter({ hasText: memberEmail });
     if ( await expectedEmailSpan.count() > 0 ) {
         // Removing button is the sibling of the expectedEmailSpan [data-name="subscriber-email-address"]
+        console.log(memberEmail + ' exists in ' + alertName + '. Removing ' + memberEmail);
         const removeSubscriberBtn = expectedEmailSpan.locator('..').locator('[data-name="remove-subscriber"]').first();
         await removeSubscriberBtn.scrollIntoViewIfNeeded();
         await removeSubscriberBtn.click();
@@ -220,6 +220,7 @@ test ('add user to a random alert', async ({ page }) => {
     }
 
     //add the user to the alert
+    console.log('Adding user to alert: ' + alertName + ' with email: ' + memberEmail);
     page.once('dialog', async dialog => {
         expect(dialog.type()).toBe('prompt');
         expect(dialog.message()).toBe(
@@ -236,6 +237,7 @@ test ('add user to a random alert', async ({ page }) => {
     await expect(subscriberEmails.filter({ hasText: memberEmail })).toBeVisible();
 
     //remove the user from the alert
+    console.log('Removing user from alert: ' + alertName + ' with email: ' + memberEmail);
     const removeSubscriberBtn = expectedEmailSpan.locator('..').locator('[data-name="remove-subscriber"]').first();
     await removeSubscriberBtn.scrollIntoViewIfNeeded();
     await removeSubscriberBtn.click();

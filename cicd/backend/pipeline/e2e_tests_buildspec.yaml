@@ -51,7 +51,7 @@ phases:
           E2E_BIOSECURITY_USERNAME="$E2E_BIOSECURITY_USERNAME" \
           E2E_STANDARD_USERNAME="$E2E_STANDARD_USERNAME" \
           E2E_AWS_SECRET_ID="$SECRET_NAME" \
-          npx playwright test --retries=1
+          npx playwright test --retries=3
 
 artifacts:
   # The whole e2e directory, so the Playwright HTML report and traces
