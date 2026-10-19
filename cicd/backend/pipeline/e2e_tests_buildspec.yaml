@@ -15,6 +15,10 @@ phases:
       - echo Installing dependencies...
       # Ensure artifact upload succeeds if the gate is skipped or Playwright writes no report.
       - mkdir -p "$CODEBUILD_SRC_DIR/e2e/playwright-report" "$CODEBUILD_SRC_DIR/e2e/test-results"
+  pre_build:
+    commands:
+      - echo "Waiting for Alerts server to start..."
+      - sleep 180
 
   build:
     commands:
