@@ -136,13 +136,21 @@ test ('test quick entry to add and remove users to biosecurity', async ({ page }
     await submitQuickEntryBtn.click();
 
     //after adding the user, the alert card should be moved to the top of the list,
-    // and the alert name should be displayed in the alert card, and the user email should be displayed in the alert card.
-    await page.waitForTimeout(1000);
-    let alertDiv = page.locator('div[data-name="alert-card"]').first();
-    await expect(alertDiv).toBeVisible();
-    let alertNameLink = alertDiv.locator('a[data-name="alert-name"]').first();
-    await expect(alertNameLink).toHaveText(alertName);
+    const alertCard = page
+        .locator('div[data-name="alert-card"]')
+        .filter({
+            has: page.locator('a[data-name="alert-name"]', {
+                hasText: alertName
+            })
+        });
 
+    await expect(alertCard.first()).toBeVisible();
+    await expect(
+        alertCard.first().locator('a[data-name="alert-name"]')
+    ).toHaveText(alertName);
+
+
+    let alertDiv = page.locator('div[data-name="alert-card"]').first();
     let alertEmails = alertDiv.locator('span[data-name="subscriber-email-address"]');
     let numberOfEmails = await alertEmails.count();
     expect(numberOfEmails).toBeGreaterThan(0);
@@ -152,6 +160,7 @@ test ('test quick entry to add and remove users to biosecurity', async ({ page }
     await removeSubscriberBtn.scrollIntoViewIfNeeded();
     await removeSubscriberBtn.click();
     await page.waitForTimeout(1000);
+
     alertDiv = page.locator('div[data-name="alert-card"]').first();
     await expect(alertCards.first()).toBeVisible();
     alertEmails = alertDiv.locator('span[data-name="subscriber-email-address"]');
@@ -165,11 +174,11 @@ test ('test quick entry to add and remove users to biosecurity', async ({ page }
         for (const removeSubscriberBtn of removeSubscriberBtns) {
             await removeSubscriberBtn.scrollIntoViewIfNeeded();
             await removeSubscriberBtn.click();
-            await page.waitForTimeout(500);
         }
     }
     await page.waitForTimeout(1000);
     const deleteAlertBtn = alertDiv.locator('[name="delete-subscription"]').first();
+    await expect(deleteAlertBtn).toBeVisible();
     await deleteAlertBtn.scrollIntoViewIfNeeded();
     page.once('dialog', async dialog => {
         expect(dialog.type()).toBe('confirm');
@@ -180,7 +189,7 @@ test ('test quick entry to add and remove users to biosecurity', async ({ page }
     });
     await deleteAlertBtn.click();
     await page.waitForTimeout(1000);
-    alertNameLink = alertDiv.locator('a[data-name="alert-name"]', { hasText: alertName });
+    const alertNameLink = alertDiv.locator('a[data-name="alert-name"]', { hasText: alertName });
     await expect(alertNameLink).toHaveCount(0);
 })
 
