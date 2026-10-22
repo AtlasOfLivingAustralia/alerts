@@ -4,7 +4,7 @@ This is a small app responsible for sending email alerts when there are changes 
 
 Scheduling is handled by Quartz plugin in the app. It works like RSS - it checks the JSON service and reads the results and then compares that with the previously stored check and if there are new records, it triggers an email. Relies on records being sorted by date loaded. Works with any endpoint that can return date-sorted JSON output.
 
-## The latest version is: `6.0.0-SNAPSHOT`, which supports Grails 7.1.1.
+## Version > `6.0.0-SNAPSHOT`, supports Grails 7.1.1.
 NOTES:
 Grails 7.1.1 is not compatible with Grails 6
 
@@ -72,6 +72,16 @@ Run [smtp4dev](https://github.com/rnwood/smtp4dev) via Docker:
 Emails will be sent on SMTP port 2525 (configure sending emails via `mail.enabled=true`, `grails.mail.port=2525` and `grails.mail.server=localhost`. Note: emails will not be delivered externally so you don't have to worry about spamming users.
 
 You can view all sent emails via the smtp4dev UI on http://localhost:3000/, inlcuding HTML emails which are nicely displayed.
+
+
+## Releases
+
+### 6.3.1
+Implement E2E Playwright tests 
+
+### 6.3.0
+Add a monitoring team to track the completion of the Biosecurity alerts
+and other minor features and fixex
 
 ### 6.2.0
 Biosecurity code restructure - improve usability and avoid silent failures
