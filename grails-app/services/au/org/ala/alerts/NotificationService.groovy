@@ -418,21 +418,7 @@ class NotificationService {
                 boolean hasUpdated = qr?.succeeded && qr?.hasChanged
 
                 if (hasUpdated) {
-                    List<Notification> matchedNotifications = Notification.createCriteria().list {
-                        eq('query', query)
-                        eq('enabled', true)
-                        user {
-                            eq('frequency', frequency)
-                            or {
-                                isNull('locked')
-                                ne('locked', true)
-                            }
-                        }
-                    } as List<Notification>
-
-                    def recipients = matchedNotifications.collect { Notification n ->
-                        [email: n.user.email, userUnsubToken: n.user.unsubscribeToken, notificationUnsubToken: n.unsubscribeToken]
-                    }
+                    def recipients = queryService.getRecipients(query.id, frequency.name)
 
                     log.debug("Sending emails to...." + recipients*.email.join(","))
                     def emails = recipients*.email

@@ -12,17 +12,9 @@
     a {
         color: #003A70;
     }
-    .info-button {
-        border: 1pt solid #C44D34;
-        text-decoration: none;
-        font-size: 14px;
-        padding: 10px 15px 10px 15px;
-        color: black;
-        border-radius: 8px;
-    }
 </style>
 <body style="background-color: #f4f4f4;margin: 0;padding: 0;font-family: 'Roboto', sans-serif;font-size: 16px;line-height: 1.5;">
-<table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f4f4f4;border-spacing: 0;border-collapse: collapse;">
+<table style="border: 0; width: 100%; background-color: #f4f4f4;border-spacing: 0;border-collapse: collapse;">
     <tr>
         <td align="center" style="padding: 20px;font-family: 'Roboto', sans-serif;font-size: 16px;line-height: 1.5;">
             <table border="0" cellpadding="0" cellspacing="0" width="650" style="background-color: #ffffff;font-family: 'Roboto', sans-serif;font-size: 16px;line-height: 1.5;border-spacing: 0;border-collapse: collapse;">
@@ -46,7 +38,9 @@
                         <div>Annotations on ${totalRecords} occurrence ${totalRecords == 1 ? 'record' : 'records'} have been updated
                         </div>
                         <div style="padding-top: 20px;">
-                            <a class="btn info-button" href="${moreInfo}">View all records</a>
+                            <g:if test="${moreInfo?.queryUrlUIUsed}">
+                                <a class="btn info-button" href="${moreInfo.queryUrlUIUsed}">View all records</a>
+                            </g:if>
                         </div>
                     </td>
                 </tr>

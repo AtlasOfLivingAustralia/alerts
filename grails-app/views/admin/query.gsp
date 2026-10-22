@@ -108,26 +108,31 @@
                     <ul>
                         <g:each var="query" in="${queries[queryType]}">
                             <li id="query-${query.id}">
-                                <g:if test="${query.custom}">
+                                <g:if test="${query.custom || query.name == 'My Annotations'}">
                                     <a href="javascript:void(0);" onclick="wipeQuery(${query.id})"
                                        data-bs-toggle="tooltip" data-bs-placement="top"
                                        title="Delete this custom alert and all of its subscriptions"><i class="fas fa-trash" aria-hidden="true"></i></a>
                                 </g:if>
-                                <g:link controller="query" action="show" params="[id: query.id]" target="_blank" data-bs-toggle="tooltip" data-bs-placement="top" title="View query details"> <span class="badge badge-outline-primary"><i class="fa fa-info-circle" aria-hidden="true"></i> ${query.id}</span></g:link>
+                                <g:link controller="query" action="show" params="[id: query.id]" target="_blank" data-bs-toggle="tooltip" data-bs-placement="top" title="View query details">
+                                    <span class="badge badge-outline-primary"><i class="fa fa-info-circle" aria-hidden="true"></i> ${query.id}</span>
+                                </g:link>
 
                                 <a href="javascript:void(0);" class="toggle-more-query-details" data-target="#more-${query.id}"  data-bs-toggle="tooltip" data-bs-placement="top" title="Click to show more functions">
-                                 <g:if test="${query.name == 'My Annotations'}">
+                                 <g:if test="${query?.isMyAnnotations()}">
                                       <g:if test="${query.notifications}">
                                          <g:each var="notification" in="${query.notifications}">
+                                             ${notification.user?.email}
                                              <g:link controller="notification"
                                                      action="delete"
                                                      params="[id: notification.id]"
                                                      target="_blank"
                                                      data-bs-toggle="tooltip"
                                                      data-bs-placement="top"
-                                                     title="Delete this subscription">
-                                                      <i class="fa fa-trash" aria-hidden="true"></i>
-                                             </g:link>${notification.user?.email}</g:each>
+                                                     title="Delete this subscriber">
+                                                      <i class="fa fa-user-times" aria-hidden="true"></i>
+                                             </g:link>
+                                             &nbsp;
+                                         </g:each>
                                        </g:if>
                                       <g:else>
                                          No users

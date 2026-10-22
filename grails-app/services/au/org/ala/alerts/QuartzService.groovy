@@ -46,10 +46,6 @@ class QuartzService {
             }
         }
 
-        results.each { job ->
-            job.error = getLastError(job.jobName)
-        }
-
         return results.sort { a, b ->
             a.jobGroup <=> b.jobGroup ?: a.jobName <=> b.jobName
         }
@@ -80,20 +76,4 @@ class QuartzService {
     void runNow(String jobName, String jobGroup) throws SchedulerException {
         quartzScheduler.triggerJob(new JobKey(jobName, jobGroup))
     }
-
-    // store last error per job
-    Map<String, String> lastJobErrors = [:]
-
-    void recordError(String jobName, Exception e) {
-        lastJobErrors[jobName] = e.message
-    }
-
-    String getLastError(String jobName) {
-        return lastJobErrors[jobName]
-    }
-
-    void clearError(String jobName) {
-        lastJobErrors.remove(jobName)
-    }
-
 }

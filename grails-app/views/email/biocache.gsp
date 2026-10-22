@@ -12,15 +12,6 @@
     a {
         color: #003A70;
     }
-
-    .info-button {
-        border: 1pt solid #C44D34;
-        text-decoration: none;
-        font-size: 14px;
-        padding: 10px 15px 10px 15px;
-        color: black;
-        border-radius: 8px;
-    }
 </style>
 <body style="background-color: #f4f4f4;margin: 0;padding: 0;font-family: 'Roboto', sans-serif;font-size: 16px;line-height: 1.5;">
 <table style="width: 100%; background-color: #f4f4f4;border-spacing: 0;border-collapse: collapse;">
@@ -47,7 +38,9 @@
                         <div> <g:formatNumber number="${totalRecords}" format="###,###" /> occurrence ${totalRecords == 1 ? 'record' : 'records'} ${totalRecords == 1 ? 'has' : 'have'} been added
                         </div>
                         <div>
-                            <a class="btn info-button" href="${moreInfo}">View all new records</a>
+                            <g:if test="${moreInfo?.queryUrlUIUsed}">
+                                <a class="btn info-button" href="${moreInfo.queryUrlUIUsed}">View all new records</a>
+                            </g:if>
                         </div>
                     </td>
                 </tr>

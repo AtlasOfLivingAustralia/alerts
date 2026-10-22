@@ -197,7 +197,7 @@ class QueryController {
             if (!query) {
                 result['status'] = 1
                 result['message'] = "Query not found for id: ${queryId}"
-            } else if (!query.custom) {
+            } else if (!query.custom && !query.isMyAnnotations()) {
                 result['status'] = 1
                 result['message'] = "Query with id: ${queryId} is not a custom query and cannot be deleted."
             } else {

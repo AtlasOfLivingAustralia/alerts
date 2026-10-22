@@ -83,7 +83,7 @@ class BiosecurityS3CSVService extends BiosecurityCSVService{
         long totalFiles = (foldersAndFiles.sum { it.fileCount } ?: 0L) as long
         long totalSize  = (foldersAndFiles.sum { it.totalSize } ?: 0L) as long
 
-        return [status:0, foldersAndFiles: foldersAndFiles, totalFiles: totalFiles, totalSize: formatSize(totalSize)]
+        return [status:0, foldersAndFiles: foldersAndFiles, totalFiles: totalFiles, totalSize: formatSize(totalSize), rawTotalSize: totalSize]
     }
 
     /**

@@ -9,21 +9,6 @@
     <title><g:message code="alert.title" args="[query.resourceName]" /></title>
     <style>
     /* Gallery styling */
-    .imgCon {
-        display: inline-block;
-        /* margin-right: 8px; */
-        text-align: center;
-        line-height: 1.3em;
-        background-color: #DDD;
-        color: #DDD;
-        font-size: 12px;
-        /*text-shadow: 2px 2px 6px rgba(255, 255, 255, 1);*/
-        /* padding: 5px; */
-        /* margin-bottom: 8px; */
-        margin: 2px 4px 2px 0;
-        position: relative;
-    }
-
     .info-button {
         border: 1pt solid #C44D34;
         text-decoration: none;
@@ -64,7 +49,9 @@
                         </div>
                         <br/>
                         <div>
-                            <a class="btn info-button" href="${moreInfo}">View all records with new images</a>
+                            <g:if test="${moreInfo?.queryUrlUIUsed}">
+                                <a class="btn info-button" href="${moreInfo.queryUrlUIUsed}">View all records with new images</a>
+                            </g:if>
                         </div>
                     </td>
                 </tr>

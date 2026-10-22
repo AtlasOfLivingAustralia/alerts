@@ -7,28 +7,34 @@
 
 <h1>Custom Alert Test links</h1>
 <h2>Create Alerts</h2>
-<ul>
+<ul name="createAlerts">
   <li>
     <g:link controller="webservice" action="createTaxonAlert"
-            params="${[taxonGuid:'urn:lsid:biodiversity.org.au:afd.taxon:aa745ff0-c776-4d0e-851d-369ba0e6f537', taxonName:'Macropus rufus : Red Kangaroo']}">
+            params="${[taxonGuid:'urn:lsid:biodiversity.org.au:afd.taxon:aa745ff0-c776-4d0e-851d-369ba0e6f537', taxonName:'Macropus rufus : Red Kangaroo']}"
+            title = "New records for Macropus rufus : Red Kangaroo"
+    >
       Create taxon alert for Red Kangaroo
     </g:link>
   </li>
   <li>
     <g:link controller="webservice" action="createRegionAlert"
-            params="${[regionName:'New South Wales', layerId:'state']}">
+            params="${[regionName:'New South Wales', layerId:'state']}"
+            title = "New records for New South Wales"
+    >
       Create region alert for NSW
     </g:link>
   </li>
   <li>
     <g:link controller="webservice" action="createTaxonRegionAlert"
-            params="${[taxonGuid:'urn:lsid:biodiversity.org.au:afd.taxon:17c9fd64-3c07-4df5-a33d-eda1e065e99f', taxonName:'Insecta', regionName:'New South Wales', layerId:'state']}">
+            params="${[taxonGuid:'urn:lsid:biodiversity.org.au:afd.taxon:17c9fd64-3c07-4df5-a33d-eda1e065e99f', taxonName:'Insecta', regionName:'New South Wales', layerId:'state']}"
+            title = "New records for Insecta recorded in New South Wales">
       Create taxon & region alert for Insects and NSW
     </g:link>
   </li>
   <li>
     <g:link controller="webservice" action="createSpeciesGroupRegionAlert"
-            params="${[speciesGroup:'Insects', regionName:'New South Wales', layerId:'state']}">
+            params="${[speciesGroup:'Insects', regionName:'New South Wales', layerId:'state']}"
+            title = "New records for Insects recorded in New South Wales">
       Create species group & region alert for Insects and NSW
     </g:link>
   </li>
@@ -41,7 +47,9 @@
             baseUrlForWS:'https://biocache-ws.ala.org.au/ws',
             baseUrlForUI:'https://avh.ala.org.au',
             resourceName:'Australian Virtual Herbarium'
-    ]}">Create an AdHoc biocache alerts for new records AVH records
+          ]}"
+          title = "New records for AVH" >
+      Create an AdHoc biocache alerts for new records AVH records
     </g:link>
   </li>
 
@@ -53,13 +61,15 @@
             baseUrlForWS:'https://biocache-ws.ala.org.au/ws',
             baseUrlForUI:'https://avh.ala.org.au',
             resourceName:'Australian Virtual Herbarium'
-    ]}">Create an AdHoc biocache alerts for new annotations AVH records
+          ]}"
+          title = "New annotations on records for Annotations in AVH" >
+      Create an AdHoc biocache alerts for new annotations AVH records
     </g:link>
   </li>
 </ul>
 
 <h2>Check Alerts - for embedding JSON</h2>
-<ul>
+<ul name="checkAlerts">
   <li>
     <g:link controller="webservice" action="taxonAlerts"
             params="${[taxonGuid:'urn:lsid:biodiversity.org.au:afd.taxon:aa745ff0-c776-4d0e-851d-369ba0e6f537', taxonName:'Macropus rufus : Red Kangaroo',

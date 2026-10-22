@@ -147,7 +147,8 @@
 <body>
     <div>
         <h4 class="float-end">
-            <span class="badge bg-info">
+            <span class="badge bg-info" data-name="csv-stats">
+                <span class="hidden" data-name="raw-total-size" data-raw-total-size="${rawTotalSize}"></span>
                 <g:if test="${totalFiles}">${totalFiles} files </g:if>
                 <g:if test="${totalSize}">, ${totalSize} in total, </g:if>
                 %{-- Indicate the storage type being used with a BS label --}%
@@ -161,7 +162,8 @@
 
         <div class="row" >
             <div class="col-auto">
-                <a class="btn btn-primary " href="${createLink( namespace: 'biosecurity', controller: 'csv', action: 'aggregate', params: [name:'/'])}" onclick="return confirmDownload();">
+                <a class="btn btn-primary " id="download-full-zipped-csv"
+                     href="${createLink( namespace: 'biosecurity', controller: 'csv', action: 'aggregate', params: [name:'/'])}" onclick="return confirmDownload();">
                     <i class="fas fa-cloud-arrow-down" aria-hidden="true" ></i>&nbsp;&nbsp;Download Full CSV Report (ZIP)
                 </a>
             </div>
@@ -259,13 +261,13 @@
     </div>
 
     <g:if test="${status == 0}">
-        <div>
+        <div data-name="csv-folders-files">
             <h2>Individual Biosecurity Alerts Data</h2>
             Download individual CSV files for each biosecurity alert email, detailing all occurrence records. Files are sorted by the date the alert was sent.
             <g:each in="${foldersAndFiles}" var="folder">
                 <div class="folder" data-folder="${folder.name}">
                     <i class="fa fa-folder folder-icon folder" aria-hidden="true"></i> ${folder.name}
-                    <a href="${createLink(
+                    <a data-name="download-aggregated-csv" href="${createLink(
                         namespace: 'biosecurity',
                         controller: 'csv',
                         action: 'aggregate',
@@ -277,17 +279,18 @@
                 <div class="file-list" id="files-${folder.name}">
                     <g:each in="${folder.files}" var="file">
                         <div>
-                            <a href="${createLink(namespace: 'biosecurity', controller: 'csv', action: 'download', params: [filename: folder.name + '/' + file.name])}">
+                            <a data-name="download-file-csv" href="${createLink(namespace: 'biosecurity', controller: 'csv', action: 'download', params: [filename: folder.name + '/' + file.name])}">
                                 <i class="fa fa-download" aria-hidden="true"></i>  ${file.name}
                             </a>
                             <span class="text-muted ms-2">(
+                                <span class="hidden" data-name="file-size" data-file-size="${file.size}"></span>
                                 ${file.formattedSize},
                                 <g:if test="${file.lastUpdated}">
                                     <g:formatDate date="${new Date(file.lastUpdated as Long)}" format="yyyy-MM-dd HH:mm"/>
                                 </g:if>
                                 )
                             </span>
-                            <a href="#" onclick="deleteFile('${folder.name}/${file.name}'); return false;">
+                            <a data-name="delete-file" href="#" onclick="deleteFile('${folder.name}/${file.name}'); return false;">
                                 <i class="fa fa-trash-o" aria-hidden="true"></i>
                             </a>
                         </div>

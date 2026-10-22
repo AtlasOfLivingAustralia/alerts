@@ -24,27 +24,6 @@ class QuartzController {
 
     def index(){
         def jobs = quartzService.getJobs()
-
-        // Build an HTML block for errors
-        def errorHtml = new StringBuilder()
-
-        jobs.each { job ->
-            def err = quartzService.getLastError(job.jobName)
-            if (err) {
-                errorHtml << """
-                <div class="alert alert-danger" style="margin-bottom:10px">
-                    <strong>${job.jobName}</strong><br/>
-                    ${err.encodeAsHTML()}
-                </div>
-            """
-            }
-        }
-
-        if (errorHtml) {
-            flash.message = errorHtml.toString()
-        }
-
-
         [jobs: jobs]
     }
 

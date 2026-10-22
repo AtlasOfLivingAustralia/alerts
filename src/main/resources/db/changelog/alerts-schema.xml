@@ -276,6 +276,32 @@
         </addColumn>
     </changeSet>
 
+    <changeSet id="32-remove-error-log-table" author="alert">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="error_log"/>
+        </preConditions>
+        <dropTable tableName="error_log"/>
+    </changeSet>
+
+    <changeSet id="33-add-monitoring-team-table" author="alert">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="monitoring_team"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="monitoring_team">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="team" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="email" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
     <!-- ===================== FOREIGN KEYS (COMMENTED OUT) ===================== -->
 
     <!--

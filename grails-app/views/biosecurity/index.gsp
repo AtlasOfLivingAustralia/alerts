@@ -38,13 +38,13 @@
         <div x-show.important="loading && alerts.length === 0" class="text-muted">Loading alerts...</div>
         <!-- No alerts -->
         <div x-show.important="!loading && alerts.length === 0 && !failed" class="alert alert-info " x-cloak>
-            You don't have any alerts.
+        No alerts match your search criteria.
         </div>
 
         <div class="card card-body mt-20">
             <div class="container-fluid">
                 <h4>Quick entry for adding subscribers</h4>
-                    <div class="row align-items-center mb-2" >
+                    <div class="row align-items-center mb-2" data-name="quick-entry">
                         <div class="col-sm-3">
                             <label class="form-label"> <g:message code="biosecurity.view.body.label.specieslistid" default="Species list uid"/></label>
                             <input type="text" name="listid" class="form-control" x-model="newQuery.listId" placeholder='Species list ID, AKA drid'/>
@@ -59,7 +59,6 @@
                             <label class="form-label invisible" >control</label>
                             <button type="submit" id="quick-submit" class="btn btn-primary" @click="newSubscription()" :disabled="newQuery.isProcessing"><g:message code="biosecurity.view.body.button.subscribe" default="Subscribe"/></button>
                         </div>
-
                     </div>
             </div>
         </div>
@@ -94,15 +93,15 @@
         </div>
 
         <template x-for="query in alerts" :key="query.id">
-            <div class="card mb-3">
-                <div class="card-body border" :class="activeId === query.id ? 'border-primary' : 'border-light'" >
+            <div class="card mb-3" :id="query.id" data-name="alert-card">
+                <div class="card-body" :class="activeId === query.id ? 'border-primary' : 'border-light'" >
                     <div class="row">
                         <div class="col-md-4">
                             <div>
                                 <span x-show.important="editingId !== query.id" >
-                                    <a :href="'${createLink(controller: 'query', action: 'show')}/' + query.id"  target="_blank" class="btn btn-link fw-bold text-wrap text-start p-0" x-text="query.name"></a>
+                                    <a :href="'${createLink(controller: 'query', action: 'show')}/' + query.id"  target="_blank" class="btn btn-link fw-bold text-wrap text-start p-0" x-text="query.name" data-name="alert-name"></a>
                                     <span class="badge-outline-secondary"><a :href="'${grailsApplication.config.lists.baseURL}' + '/speciesListItem/list/' + query.listId" target="_blank" x-text="query.listId"></a></span>
-                                    <button class="btn btn-link btn-sm p-0 ms-1" title="Edit title" @click="editTitle(query.id)">
+                                    <button class="btn btn-link btn-sm p-0 ms-1" title="Edit title" @click="editTitle(query.id)" name="edit-title">
                                         <i class="fa-solid fa-pencil"></i>
                                     </button>
                                 </span>
@@ -126,19 +125,33 @@
                         </div>
                         <div class="col-md-5">
                             <template x-for="subscriber in query.subscribers" :key="subscriber.id">
-                                <span class="badge border rounded  text-primary me-1" :class="subscriber.isActive ? 'border-primary' : 'badge-outline-secondary bg-light'">
-                                    <span :class="subscriber.isActive ? '' : 'text-decoration-line-through text-muted'" x-text="subscriber.email"></span>
-                                    <i @click="unsubscribe(query.id, subscriber.id, subscriber.email)" class="fa fa-trash clickable"></i>
+                                <span class="badge-outline-primary text-primary me-1" :class="subscriber.isActive && !subscriber.locked ? 'border-primary' : 'badge-outline-secondary bg-light'"
+                                    data-name="subscriber-email"
+                                      style="display: inline-block; white-space: nowrap; margin-bottom: 4px;">
+                                    <span class="fa fa-lock text-muted" x-show="subscriber.locked"
+                                          aria-hidden="true"
+                                          data-bs-toggle="tooltip"
+                                          data-bs-placement="top"
+                                          title="This user is locked. Alert emails will not be sent to this email address."
+                                          x-init="$nextTick(() => new bootstrap.Tooltip($el))">
+                                    </span>
+                                    <span  :class="subscriber.isActive && !subscriber.locked ? '' : 'text-decoration-line-through text-muted'" x-text="subscriber.email"
+                                           data-name="subscriber-email-address"
+                                          :title="!subscriber.isActive ? 'This user has opted out of receiving this alert.' : subscriber.locked ? 'This user is locked. Alert emails will not be sent to this email address.' : ''"
+                                    ></span>
+                                    <i @click="unsubscribe(query.id, subscriber.id, subscriber.email)" class="fa fa-user-times clickable cursor-pointer"
+                                       data-name="remove-subscriber"
+                                       data-bs-toggle="tooltip"
+                                       data-bs-placement="top"
+                                       title="Unsubscribe this user"
+                                       x-init="$nextTick(() => new bootstrap.Tooltip($el))"></i>
                                 </span>
                             </template>
-                            <button x-show.important="query.subscribers.length === 0" class="btn btn-primary" @click="deleteSubscription(query.id)">Delete this subscription</button>
+                            <span   data-name="add-subscriber"
+                                    class="fa fa-user-plus clickable cursor-pointer badge-outline-primary"
+                                    @click="addSubscribers(query.id)"></span>
+                            <button x-show.important="query.subscribers.length === 0" class="btn btn-primary" @click="deleteSubscription(query.id)" name="delete-subscription">Delete this subscription</button>
 
-                            <div class="mt-2">
-                                <input class="form-control"  x-model="query.newSubscribers"
-                                       placeholder="You can input multiple user emails by separating them with ';'"/>
-                                <button type="button" class="btn btn-primary mt-2"  :disabled="!query.newSubscribers || query.newSubscribers.trim().length === 0"
-                                        @click="addSubscribers(query.id, query.newSubscribers)">Add</button>
-                            </div>
                         </div>
                         <div class="col-md-3">
                             <label >Check alerts since</label>
@@ -215,7 +228,13 @@
             previewDate: new Date().toISOString().split('T')[0],
 
             init() {
-                this.loadAlerts();
+                const params = new URLSearchParams(window.location.search);
+                if (params.has('id')){
+                    id = params.get('id');
+                    this.get(id)
+                } else {
+                    this.loadAlerts();
+                }
             },
 
             async loadAlerts(page = 0) {
@@ -231,7 +250,7 @@
                     var result = await response.json();
                     // Seed newSubscriber on every alert so the "add subscriber" input is bound to a
                     // defined value. Without it x-model reads undefined and the box can show "undefined".
-                    this.alerts = (result.alerts || []).map(alert => ({ ...alert, newSubscribers: '', showLog: false, showHelp: false }));
+                    this.alerts = (result.alerts || []).map(alert => ({ ...alert, showLog: false, showHelp: false }));
                     this.total = result.total;
                 } catch (e) {
                     console.error(e);
@@ -282,7 +301,7 @@
                     } else {
                         var result = await response.json();
                         if (result.success && result.alert) {
-                            let theAlert = {...result.alert, newSubscribers:"", showHelp:false, showLog:false,active:true};
+                            let theAlert = {...result.alert, showHelp:false, showLog:false,active:true};
                             const index = this.alerts.findIndex(a => a.id === result.alert.id);
                             if (index !== -1) {
                                 this.alerts.splice(index, 1);
@@ -335,34 +354,64 @@
                 }
             },
 
-            async addSubscribers(queryId, userEmails) {
-                try {
-                    const response = await fetch(CONTEXT_PATH + '/biosecurity/subscribe?queryId='
-                        + queryId + '&userEmails=' + encodeURIComponent(userEmails.trim()), {
-                        method: 'POST'
-                    });
-                    if (!response.ok) {
-                        throw new Error('Failed to add subscriber to this alert');
-                    } else {
-                        let result = await response.json();
-                        if (result.success ) {
-                            // Add the subscriber to the local alert's subscriber list
-                            this.activeId = queryId;
-                            const alert = this.alerts.find(a => a.id === queryId);
-                            var subscribersResponse = await fetch(CONTEXT_PATH + '/biosecurity/subscribers.json?queryId=' + queryId);
-                            var subscribers = await subscribersResponse.json();
-                            if (alert) {
-                                alert.subscribers = subscribers.subscribers;
-                                alert.newSubscribers = '';
-                            }
-                        } else {
-                            throw new Error( result.message);
-                        }
+            async addSubscribers(queryId) {
+                let emailString;
+                while (true) {
+                    emailString = prompt(
+                        "Multiple user email addresses separated by ';'",
+                        emailString || ""
+                    );
+
+                    if (emailString === null) {
+                        // User clicked Cancel, exit the loop and do not proceed with adding subscribers
+                        break;
                     }
-                } catch (e) {
-                    console.error(e);
-                    // window.alert, because the 'alert' parameter shadows the global here
-                    window.alert('Failed! ' + e.message);
+
+                    const emails = emailString.split(";").map(email => email.trim()).filter(Boolean);
+                    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    const invalidEmails = emails.filter(
+                        email => !emailPattern.test(email)
+                    );
+
+                    if (invalidEmails.length > 0) {
+                        alert(
+                            "The following email address(es) are invalid:\n\n" +
+                            invalidEmails.join("\n") +
+                            "\n\nPlease correct them."
+                        );
+                        continue; // Show prompt again
+                    }
+                    break;
+                }
+
+                if (emailString) {
+                    try {
+                        const response = await fetch(CONTEXT_PATH + '/biosecurity/subscribe?queryId='
+                            + queryId + '&userEmails=' + encodeURIComponent(emailString.trim()), {
+                            method: 'POST'
+                        });
+                        if (!response.ok) {
+                            throw new Error('Failed to add subscriber to this alert');
+                        } else {
+                            let result = await response.json();
+                            if (result.success ) {
+                                // Add the subscriber to the local alert's subscriber list
+                                this.activeId = queryId;
+                                const alert = this.alerts.find(a => a.id === queryId);
+                                var subscribersResponse = await fetch(CONTEXT_PATH + '/biosecurity/subscribers.json?queryId=' + queryId);
+                                var subscribersResult = await subscribersResponse.json();
+                                if (alert) {
+                                    alert.subscribers = subscribersResult.subscribers;
+                                }
+                            } else {
+                                throw new Error( result.message);
+                            }
+                        }
+                    } catch (e) {
+                        console.error(e);
+                        // window.alert, because the 'alert' parameter shadows the global here
+                        window.alert('Failed! ' + e.message);
+                    }
                 }
             },
 
@@ -452,6 +501,7 @@
                         if (result.length > 0) {
                             this.alerts = result.map(alert => ({ ...alert, showLog: false, showHelp: false,newSubscribers:'' }));
                             this.isSearching = true;
+                            this.loading = false;
                         }
                     } else {
                        console.error('Failed to search keywords' + response.status + ' ' + response.statusText);
@@ -460,6 +510,27 @@
                     //It means it was searching before, but now the keyword is less than 3 characters, so reset the search
                     this.resetSearch();
                     this.isSearching = false;
+                    this.loading = false;
+                }
+            },
+
+            async get(id) {
+                const response = await fetch(CONTEXT_PATH + '/biosecurity/subscription/' + id);
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result) {
+                        this.alerts = [
+                            {...result,
+                            showLog: false,
+                            showHelp: false }
+                            ];
+                        this.isSearching = true;
+                        this.searchKeyword = result.name;
+                        this.loading = false;
+                    }
+                } else {
+                    this.loading = false;
+                    console.error('Failed to find the Biosecurity Alerts for id ' + id + ': ' + response.status + ' ' + response.statusText);
                 }
             },
 
@@ -512,7 +583,6 @@
                     if (response.ok) {
                         const result = await response.json();
                         if (result.success) {
-                            window.alert("Notification triggered successfully.");
                             const alert = this.alerts.find(a => a.id === queryId);
                             const resp = await fetch(CONTEXT_PATH + "/biosecurity/subscription/" + queryId+".json");
                             Object.assign(alert, await resp.json());

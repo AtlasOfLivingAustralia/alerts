@@ -2,7 +2,6 @@ package au.org.ala.alerts
 
 import grails.gorm.transactions.NotTransactional
 import grails.util.Holders
-import groovy.sql.Sql
 import org.apache.http.entity.ContentType
 import org.springframework.dao.DataIntegrityViolationException
 import grails.gorm.transactions.Transactional
@@ -10,16 +9,21 @@ import grails.gorm.transactions.Transactional
 
 class QueryService {
 
-    def serviceMethod() {}
-    def grailsApplication, notificationService, webService,utilService
-    def messageSource, dataSource
+    def grailsApplication, notificationService, webService
+    def messageSource
     def siteLocale = new Locale.Builder().setLanguageTag(Holders.config.siteDefaultLanguage as String).build()
 
-    def get(id){
-        Query.get(id)
+    def get(long id){
+        Query query = Query.createCriteria().get {
+            eq('id', id)
+            notifications {
+                eq('enabled', true)
+            }
+        }
+        query
     }
 
-    def getFrequency(name) {
+    def getFrequency(String name) {
         Frequency.withTransaction {
            return Frequency.findByName(name)
         }
@@ -152,9 +156,9 @@ class QueryService {
         [OrphanQuery: toBeRemoved.size(), OrphanNotification: ophanedNotifications]
     }
 
-    // return true if a new query is created, otherwise return false
     /**
      * Legacy support for other queries creation
+     * @obsolete replaced with addUserToQuery
      * @param newQuery
      * @param user
      * @param setPropertyPath
@@ -171,9 +175,8 @@ class QueryService {
     }
 
     /**
-     * implemented for Biosecurity.
-     * However, the method createQueryForUserIfNotExists is used in other places, e.g. for My Annotations, and it is not clear if this method is needed for those cases.
-     * We should only use this one, and remove the other.
+     * The method createQueryForUserIfNotExists is used in My Annotations, biosecurity alerts creation.
+     * It is not clear if this method is needed for those cases.
      *
      * Add a user to a query, creating the query if it does not exist.
      *
@@ -212,7 +215,6 @@ class QueryService {
             }
             newQuery.save(validate: true, flush: true)
         }
-
     }
 
     /**
@@ -363,8 +365,8 @@ class QueryService {
                 name          : messageSource.getMessage("query.myannotations.title", null, siteLocale),
                 updateMessage : messageSource.getMessage("myannotations.update.message", null, siteLocale),
                 description   : messageSource.getMessage("query.myannotations.descr", null, siteLocale),
-                queryPath     : "/occurrences/search?fq=assertion_user_id:${userId}&dir=desc&pageSize=${grailsApplication.config.biocacheService.pageSize}&fq=lastAssertionDate:[___DATEPARAM___%20TO%20*]&sort=lastAssertionDate",
-                queryPathForUI: "/occurrences/search?fq=assertion_user_id:${userId}&dir=desc&pageSize=${grailsApplication.config.biocacheService.pageSize}&fq=lastAssertionDate:[___DATEPARAM___%20TO%20*]&sort=lastAssertionDate",
+                queryPath     : "/occurrences/search?fq=assertion_user_id:${userId}&dir=desc&pageSize=${grailsApplication.config.biocacheService.pageSize}&fq=lastAssertionDate:[___DATEPARAM___%20TO%20*]&sort=lastAssertionDate&disableAllQualityFilters=true",
+                queryPathForUI: "/occurrences/search?fq=assertion_user_id:${userId}&dir=desc&pageSize=${grailsApplication.config.biocacheService.pageSize}&fq=lastAssertionDate:[___DATEPARAM___%20TO%20*]&sort=lastAssertionDate&disableAllQualityFilters=true",
                 dateFormat    : """yyyy-MM-dd'T'HH:mm:ss'Z'""",
                 emailTemplate : '/email/myAnnotations',
                 recordJsonPath: '\$.occurrences[*]',
@@ -384,49 +386,6 @@ class QueryService {
         }
     }
 
-    /**
-     * NOTE: Biosecurity query code does not use the queryPath stored in the database
-     * @param listid
-     * @return
-     */
-
-    Query createBioSecurityQuery(String listid) {
-        def sList = getSpeciesListName(listid)
-        String speciesListName = sList.name
-        //differentiate non-authoritative / authoritative list
-        //demo purpose only, the queryPath is not used in Biosecurity query process
-        String queryPathForUITemplate = grailsApplication.config.getProperty("biosecurity.query.template.nonAuthoritativeList", String, "/occurrences/search?q=species_list:___LISTIDPARAM___&fq=decade:2020&fq=country:Australia&fq=first_loaded_date:"+"[___DATEPARAM___ TO *]".encodeAsURL()+"&fq=occurrence_date:"+"[___LASTYEARPARAM___ TO *]".encodeAsURL() +"&sort=first_loaded_date&dir=desc&disableAllQualityFilters=true")
-        if (sList.isAuthoritative) {
-            queryPathForUITemplate = grailsApplication.config.getProperty("biosecurity.query.template.authoritativeList", String, "/occurrences/search?q=species_list_uid:___LISTIDPARAM___&fq=decade:2020&fq=country:Australia&fq=first_loaded_date:"+"[___DATEPARAM___ TO *]".encodeAsURL()+"&fq=occurrence_date:"+"[___LASTYEARPARAM___ TO *]".encodeAsURL()+"&sort=first_loaded_date&dir=desc&disableAllQualityFilters=true")
-        }
-
-        String queryPathForUI = queryPathForUITemplate.replaceAll("___LISTIDPARAM___", listid)
-
-        new Query([
-                //Not used
-                baseUrl       : grailsApplication.config.biocacheService.baseURL,
-                baseUrlForUI  : grailsApplication.config.biocache.baseURL,
-                name          : messageSource.getMessage("query.biosecurity.title", null, siteLocale) + ' ' + speciesListName,
-                resourceName  : grailsApplication.config.mail.details.defaultResourceName,
-                updateMessage : 'more.biosecurity.update.message',
-                description   : messageSource.getMessage("query.biosecurity.descr", null, siteLocale) + ' ' + speciesListName,
-                //Not used
-                queryPath     : queryPathForUI + '&pageSize=20&facets=basis_of_record',
-                //Not used
-                queryPathForUI: queryPathForUI,
-                dateFormat    : """yyyy-MM-dd'T'HH:mm:ss'Z'""",
-                emailTemplate : '/email/biosecurity',
-                recordJsonPath: '\$.occurrences[*]',
-                idJsonPath    : 'uuid',
-                custom        : true
-        ])
-    }
-
-    def subscribeBioSecurity(User user, String listid) {
-        Query query = createBioSecurityQuery(listid)
-        query = addUserToQuery(query, user, true, true)
-        return query
-    }
 
     // remove all user notifications for the specified query
     def unsubscribeAllUsers(Long queryId) {
@@ -448,82 +407,15 @@ class QueryService {
         }
     }
 
-    // return the number of biosecurity queries
-    def countBiosecurityQuery() {
-        int count = 0
-        Query.withTransaction {
-            count = Query.countByEmailTemplate('/email/biosecurity')
-        }
-        return count
-    }
-
-    /**
-     * All biosecurity queries, with their notifications (and each notification's user + frequency)
-     * eagerly fetched.
-     *
-     * The queries become detached as soon as this method's session closes, so the associations are
-     * join fetched here. Without this, callers such as
-     * BiosecurityService#triggerBiosecuritySubscription -> query.getSubscribers() would hit a
-     * LazyInitializationException - opening a new session/transaction does NOT help, because the
-     * uninitialised collection is still bound to the original closed session.
-     */
-    def getALLBiosecurityQuery() {
-        List<Query> queries = []
-        Query.withTransaction {
-            queries = Query.executeQuery("""
-                select distinct q
-                from Query q
-                left join fetch q.notifications n
-                left join fetch n.user u
-                left join fetch u.frequency
-                where q.emailTemplate = :emailTemplate
-                order by q.id desc
-            """, [emailTemplate: '/email/biosecurity'])
-        }
-        return queries
-    }
-
-    // get biosecurity queries with offset and limit
-    def getBiosecurityQuery(int offset,int limit) {
-        def criteria = Query.createCriteria()
-        List<Query> queries = criteria.list(max: limit, offset: offset) {
-            eq('emailTemplate', '/email/biosecurity')
-            order('id', 'desc')
-        }
-
-
-        def results = queries.collect{ query ->
-            // Bioseurity queries are weekly ONLY, so filter out the other frequencies
-            def filteredQueryResults = query.queryResults.findAll { it.frequency?.name == 'weekly' }
-            // Get the last QueryResult from the filtered list, if it exists
-            QueryResult qr = !filteredQueryResults.isEmpty() ? filteredQueryResults.first() : null
-
-            // Update the query's lastChecked property if a QueryResult was found
-            if (qr) {
-                query.lastChecked = qr.lastChecked
-            }
-            query
-        }
-
-        return results.toList()
-    }
-
-
-    def findBiosecurityQueryById(id) {
-        Query subscription = Query.get(id)
-        QueryResult qr = QueryResult.findByQuery(subscription)
-        if (qr) {
-            subscription.lastChecked = qr.lastChecked
-        }
-        return subscription
-    }
-
 
     // get all subscribers to the specified query (only enabled notifications)
     // NOTE: Some standard queries (e.g. New records) may have a further filter on the frequency which users select (e.g. daily, weekly, monthly).
     // This method does not filter on frequency, it returns all users who have enabled notifications for the query.
     def getSubscribers(Long queryId) {
-        Query query = Query.findById(queryId)
+        Query query = Query.createCriteria().get {
+            eq('id', queryId)
+            fetchMode('notifications', org.hibernate.FetchMode.JOIN)
+        }
         return query ? query.getSubscribers() : []
     }
 
@@ -531,8 +423,35 @@ class QueryService {
     // NOTE: Some standard queries (e.g. New records) may have a further filter on the frequency which users select (e.g. daily, weekly, monthly).
     // This method does not filter on frequency, it returns all users who have enabled notifications for the query.
     def getInactiveSubscribers(Long queryId) {
-        Query query = Query.findById(queryId)
+        def query = Query.createCriteria().get {
+            eq('id', queryId)
+            fetchMode('notifications', org.hibernate.FetchMode.JOIN)
+        }
         return query ? query.getInactiveSubscribers() : []
+    }
+
+    /**
+     * Collect the email addresses of all ACTIVE users subscribed to a given query, optionally filtered by frequency.
+     * including the user's unsubscribe token and the notification's unsubscribe token for that query.
+     * @param queryId
+     * @param frequency
+     * @return [email, unsubscribeToken, notificationUnsubscribeToken] for each user
+     */
+    def getRecipients(Long queryId, String frequency = null) {
+        def recipients = []
+        Query.withTransaction {
+            Query query = Query.createCriteria().get {
+                eq('id', queryId)
+                fetchMode('notifications', org.hibernate.FetchMode.JOIN)
+            }
+            User[] users = query ? query.getSubscribers(frequency).findAll{!it.locked} : []
+
+            recipients = users.collect { user ->
+                def notificationUnsubToken = user.notifications.find { it.query.id == query.id }?.unsubscribeToken
+                [email: user.email, userUnsubToken: user.unsubscribeToken, notificationUnsubToken: notificationUnsubToken]
+            }
+        }
+        return recipients
     }
 
     boolean speciesListExists(String listid) {

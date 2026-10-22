@@ -31,14 +31,14 @@
             <div class="alert alert-danger" role="alert">${flash.errorMessage}</div>
         </g:if>
 
-        <g:form controller="admin" action="findUser" method="post">
+        <g:form controller="admin" action="findUser" method="post" name="find-user-form">
             <div class="row">
                 <div class="col-lg-6 col-sm-6">
                     <label for="term" class="form-label">Email contains:</label>
                     <div class="input-group">
                         <g:textField name="term" id="term" value="${params.term}" class="form-control"
                                      placeholder="Search for..." autocomplete="off"/>
-                        <g:actionSubmit value="Find" class="btn btn-primary" action="findUser"/>
+                        <g:actionSubmit value="Find" class="btn btn-primary" action="findUser" id="find-user-button"/>
                     </div><!-- /input-group -->
                     <div class="form-text">Start typing at least 3 characters, then pick a user to manage their alerts.</div>
                 </div><!-- /.col-lg-6 -->
@@ -46,7 +46,7 @@
         </g:form>
 
         %{-- submitted by addUser() below, when the searched email is not in the alerts database yet --}%
-        <g:form name="addUserForm" controller="admin" action="addUser" method="post">
+        <g:form name="addUserForm" controller="admin" action="addUser" method="post" >
             <input type="hidden" name="term" id="addUserTerm"/>
         </g:form>
     </div>
@@ -117,7 +117,7 @@
                 templates: {
                     notFound: '<div class="tt-suggestion text-muted">' +
                               'No matching users. Do you want to add this user? ' +
-                              '<button type="button" class="btn btn-sm btn-outline-primary" onclick="addUser()">Yes</button>' +
+                              '<button type="button" class="btn btn-sm btn-outline-primary" onclick="addUser()" name="add-user-btn">Yes</button>' +
                               '</div>'
                 }
             }).bind('typeahead:select', function (ev, user) {

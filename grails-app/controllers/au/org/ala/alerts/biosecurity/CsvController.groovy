@@ -62,6 +62,9 @@ class CsvController {
         csvService.aggregateCSVFiles(name, zipOut)
         zipOut.closeEntry()
         zipOut.finish()
+        zipOut.flush()
+        response.outputStream.flush()
+        webRequest.renderView = false
     }
 
     @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true,redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to view that page.")
@@ -118,6 +121,8 @@ class CsvController {
             zipOut.finish()
             zipOut.flush()
         }
+        response.outputStream.flush()
+        webRequest.renderView = false
     }
 
     @AlaSecured(value = ['ROLE_ADMIN', 'ROLE_BIOSECURITY_ADMIN'], anyRole = true,redirectController = 'notification', redirectAction = 'myAlerts', message = "You don't have permission to view that page.")
@@ -141,6 +146,7 @@ class CsvController {
             response.outputStream << stream
         }
         response.outputStream.flush()
+        webRequest.renderView = false
     }
 
     /**
@@ -163,6 +169,8 @@ class CsvController {
             response.contentType = 'application/octet-stream'
             response.setHeader('Content-Disposition', "attachment; filename=\"${saveToFile}\"")
             response.outputStream << tempFile.bytes
+            response.outputStream.flush()
+            webRequest.renderView = false
         } else {
             render(status: 200, text: "QueryResult not found")
         }
