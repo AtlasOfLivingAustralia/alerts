@@ -24,16 +24,16 @@
 <div id="page-body" role="main" class="mt-3">
     <div class="mt-2">
         <i class="fas fa-envelope"></i>
-        <g:if test="${isMyOwnAlerts}">Notifications will be sent to</g:if>
-        <g:else>Notifications for this user will be sent to</g:else>
+        <g:if test="${isMyOwnAlerts}"><g:message code="my.alerts.notifications.sent.own"/></g:if>
+        <g:else><g:message code="my.alerts.notifications.sent.other"/></g:else>
         <b>${user.email}</b>
     </div>
 
     <div class="mt-3">
-        <i class="fas fa-clock"></i> Notification frequency
+        <i class="fas fa-clock"></i> <g:message code="my.alerts.notification.frequency"/>
         <g:select name="userFrequency" from="${frequencies}" id="userFrequency" value="${user?.frequency?.name}"
                   optionKey="name"
-                  optionValue="${ { name -> g.message(code: 'frequency.' + name) } }"/> &nbsp;applies to all active notifications
+                  optionValue="${ { name -> g.message(code: 'frequency.' + name) } }"/> &nbsp;<g:message code="my.alerts.frequency.applies.to.all"/>
     </div>
 </div>
 
@@ -41,10 +41,10 @@
 <div class="row mt-4">
     <div class="col-12">
         <div class="nav nav-tabs" id="alertTabs" role="tablist">
-            <button class="nav-link active" id="standard-alerts-tab" data-bs-toggle="tab" data-bs-target="#standard-alerts" role="tab" aria-controls="standard-alerts">Standard Alerts</button>
-            <button class="nav-link" id="custom-alerts-tab" data-bs-toggle="tab" data-bs-target="#custom-alerts" role="tab" aria-controls="custom-alerts">Custom Alerts</button>
+            <button class="nav-link active" id="standard-alerts-tab" data-bs-toggle="tab" data-bs-target="#standard-alerts" role="tab" aria-controls="standard-alerts"><g:message code="my.alerts.tab.standard"/></button>
+            <button class="nav-link" id="custom-alerts-tab" data-bs-toggle="tab" data-bs-target="#custom-alerts" role="tab" aria-controls="custom-alerts"><g:message code="my.alerts.tab.custom"/></button>
             <g:if test="${biosecurityAlerts.size() > 0}">
-                <button class="nav-link" id="biosecurity-alerts-tab" data-bs-toggle="tab" data-bs-target="#biosecurity-alerts" role="tab" aria-controls="biosecurity-alerts">Biosecurity</button>
+                <button class="nav-link" id="biosecurity-alerts-tab" data-bs-toggle="tab" data-bs-target="#biosecurity-alerts" role="tab" aria-controls="biosecurity-alerts"><g:message code="my.alerts.tab.biosecurity"/></button>
             </g:if>
         </div>
 
@@ -56,8 +56,7 @@
                 <div class="row">
                     <div class="col-12 col-lg-7">
                         <div class="pt-1">
-                            <i>Enable alerts to have notifications sent to
-                                <g:if test="${isMyOwnAlerts}">your</g:if><g:else>this user's</g:else> email address</i>
+                            <i><g:if test="${isMyOwnAlerts}"><g:message code="my.alerts.standard.enable.own"/></g:if><g:else><g:message code="my.alerts.standard.enable.other"/></g:else></i>
                         </div>
 
                         <div class="list-group mt-2">
@@ -92,7 +91,7 @@
 
                         <div class="mt-2">
                             <g:if test="${isMyOwnAlerts}">
-                                <g:link controller="unsubscribe" action="index" class="btn btn-outline-primary">Disable all alerts</g:link>
+                                <g:link controller="unsubscribe" action="index" class="btn btn-outline-primary"><g:message code="my.alerts.disable.all"/></g:link>
                             </g:if>
                         </div>
                     </div>
@@ -104,8 +103,7 @@
                 <div class="row">
                     <div class="col-12 col-lg-7">
                         <div class="pt-1">
-                            <i>Enable or disable notifications sent to
-                                <g:if test="${isMyOwnAlerts}">your</g:if><g:else>this user's</g:else> email address, or delete an alert</i>
+                            <i><g:if test="${isMyOwnAlerts}"><g:message code="my.alerts.custom.enable.own"/></g:if><g:else><g:message code="my.alerts.custom.enable.other"/></g:else></i>
                         </div>
 
                         <g:set var="enabledNonBiosecurity" value="${(enabledCustomQueries ?: []).findAll { !it?.biosecurity }}"/>
@@ -146,26 +144,26 @@
                         <g:else>
                             <div class="card card-body mt-1">
                                 <g:if test="${isMyOwnAlerts}">
-                                    <p>You have no custom alerts.</p>
+                                    <p><g:message code="my.alerts.custom.none.own"/></p>
                                 </g:if>
                                 <g:else>
-                                    <p>This user has no custom alerts.</p>
+                                    <p><g:message code="my.alerts.custom.none.other"/></p>
                                 </g:else>
-                                <p>Custom alerts allow you to create specific notifications based on your unique interests and needs.</p>
+                                <p><g:message code="my.alerts.custom.description"/></p>
                             </div>
                         </g:else>
                     </div>
 
                     <div class="col-12 col-lg-5">
                         <div class="card card-body mt-1">
-                            <p>You can set up specific alerts in various sections of the ALA, including</p>
+                            <p><g:message code="my.alerts.custom.where" args="[grailsApplication.config.skin.orgNameShort]"/></p>
                             <ul>
                                 <li><g:message code="my.alerts.data.resource.desc" args="[grailsApplication.config.collection.searchURL, grailsApplication.config.collection.searchTitle]"/></li>
                                 <li><g:message code="my.alerts.species.desc" args="[grailsApplication.config.speciesPages.searchURL, grailsApplication.config.speciesPages.searchTitle]"/></li>
                                 <li><g:message code="my.alerts.region.desc" args="[grailsApplication.config.regions.searchURL, grailsApplication.config.regions.searchTitle]"/></li>
                                 <li><g:message code="my.alerts.new.record.desc" args="[grailsApplication.config.occurrence.searchURL, grailsApplication.config.occurrence.searchTitle]"/></li>
                             </ul>
-                            <p>Look for the <a class="btn btn-outline-secondary disabled"><i class="fa-regular fa-bell"></i> Alerts</a> button.</p>
+                            <p><g:message code="my.alerts.look.for.alerts.btn"/></p>
                         </div>
                     </div>
                 </div>
@@ -177,8 +175,7 @@
                     <div class="row">
                         <div class="col-12 col-lg-7">
                             <div class="pt-1">
-                                <i>Enable or disable BioSecurity notifications sent to
-                                    <g:if test="${isMyOwnAlerts}">your</g:if><g:else>this user's</g:else> email address</i>
+                                <i><g:if test="${isMyOwnAlerts}"><g:message code="my.alerts.biosecurity.enable.own"/></g:if><g:else><g:message code="my.alerts.biosecurity.enable.other"/></g:else></i>
                             </div>
                             <g:set var="enabledBiosecurityAlerts" value="${(enabledCustomQueries ?: []).findAll { it?.biosecurity }}"/>
                             <g:set var="disabledBiosecurityAlerts" value="${(disabledCustomQueries ?: []).findAll { it?.biosecurity }}"/>
@@ -266,7 +263,7 @@
                     console.log("Success", resp);
                 })
                 .fail(function (err) {
-                    alert("Operation failed. Please contact the Alerts administrator.");
+                    alert('<g:message code="my.alerts.operation.failed" encodeAs="JavaScript"/>');
                     console.error("Error", err);
                 });
         });
